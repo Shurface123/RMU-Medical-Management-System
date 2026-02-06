@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Insert new user
-    $sql = "INSERT INTO users (name, email, phone, user_name, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    $sql = "INSERT INTO users (name, email, phone, user_name, password, user_role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "ssssss", $fullname, $email, $phone, $username, $hashed_password, $role);
     

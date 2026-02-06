@@ -1,2 +1,10 @@
+db_conn.php
+Doctor/db_conn.php
+medicine/db_conn.php
+patient/db_conn.php
+staff/db_conn.php
+test/db_conn.php
+Ambulence/db_conn.php
+bed/db_conn.php
 
-
+README.md

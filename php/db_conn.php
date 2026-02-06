@@ -2,7 +2,7 @@
 
 $sname= "localhost";
 $unmae= "root";
-$password = "";
+$password = "Confrontation@433";
 
 $db_name = "rmu_medical_sickbay";
 

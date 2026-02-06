@@ -79,7 +79,7 @@ If not, copy the project folder to `C:\wamp64\www\`
    $servername = "localhost";
    $username = "root";
    $password = "";  // Default WAMP password is empty
-   $dbname = "rmu_medical";  // Your database name
+   $dbname = "rmu_medical_sickbay";  // Your database name
    
    $conn = new mysqli($servername, $username, $password, $dbname);
    
@@ -194,7 +194,7 @@ RMU-Medical-Management-System/
 **Error: "Connection failed"**
 - Verify MySQL service is running in WAMP
 - Check database credentials in `php/db_conn.php`
-- Ensure database `rmu_medical` exists
+- Ensure database `rmu_medical_sickbay` exists
 
 **Error: "Table doesn't exist"**
 - Import the SQL schema file
