@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Doctors - RMU Medical Sickbay</title>
+    <link rel="shortcut icon"
+        href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8iLCWYue_TYmdWLVce7EYTVG4wZBjW9FJtw&s">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/chatbot.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="../image/logo-ju-small.png" alt="RMU Logo" class="logo-img">
+            <a href="/RMU-Medical-Management-System/html/index.html" class="logo">RMU <span>Medical</span> Sickbay</a>
+        </div>
+        <nav class="navbar">
+            <a href="/RMU-Medical-Management-System/html/index.html">Home</a>
+            <a href="/RMU-Medical-Management-System/html/services.html">Services</a>
+            <a href="/RMU-Medical-Management-System/html/about.html">About</a>
+            <a href="/RMU-Medical-Management-System/php/booking.php">Booking</a>
+            <a href="/RMU-Medical-Management-System/php/index.php">Login</a>
+            <a href="/RMU-Medical-Management-System/php/register.php">Signup</a>
+        </nav>
+        <div id="menu-btn" class="fas fa-bars"></div>
+    </header>
+
+    <section class="hero bg-overlay" style="background-image: url('../image/d2.jpg'); min-height: 50vh;">
+        <div class="hero-content">
+            <h1>Our <span>Doctors</span></h1>
+            <p>Experienced medical professionals dedicated to your health</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="text-center mb-4">Meet Our Medical Team</h2>
+            <p class="text-center mb-4" style="font-size: 1.8rem; max-width: 700px; margin: 0 auto 4rem;">
+                Our team of qualified doctors brings years of experience and expertise to serve the RMU community
+            </p>
+            <div class="grid grid-3">
+                <div class="card text-center">
+                    <img src="../image/Dr. Likhan Chandra.jpg" alt="Dr. Likhan Chandra"
+                        style="width: 100%; max-width: 250px; height: 250px; object-fit: cover; border-radius: 50%; margin: 0 auto 2rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);">
+                    <h3>Dr. Likhan Chandra</h3>
+                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem;">General Physician</p>
+                    <p>Specializing in internal medicine and preventive care with over 10 years of experience.</p>
+                    <button class="btn btn-primary btn-sm mt-2" data-modal-target="doctorModal1">View Profile</button>
+                </div>
+                <div class="card text-center">
+                    <img src="../image/d4..jpg" alt="Dr. Sarah Osei"
+                        style="width: 100%; max-width: 250px; height: 250px; object-fit: cover; border-radius: 50%; margin: 0 auto 2rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);">
+                    <h3>Dr. Sarah Osei</h3>
+                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem;">Emergency Medicine
+                    </p>
+                    <p>Expert in emergency care and trauma management, available 24/7 for critical cases.</p>
+                    <button class="btn btn-primary btn-sm mt-2" data-modal-target="doctorModal2">View Profile</button>
+                </div>
+                <div class="card text-center">
+                    <img src="../image/d6..jpg" alt="Dr. Kwame Asante"
+                        style="width: 100%; max-width: 250px; height: 250px; object-fit: cover; border-radius: 50%; margin: 0 auto 2rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);">
+                    <h3>Dr. Kwame Asante</h3>
+                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem;">Family Medicine</p>
+                    <p>Dedicated to comprehensive healthcare for students and staff with a holistic approach.</p>
+                    <button class="btn btn-primary btn-sm mt-2" data-modal-target="doctorModal3">View Profile</button>
+                </div>
+                <div class="card text-center">
+                    <img src="../image/d8.jpg" alt="Dr. Ama Mensah"
+                        style="width: 100%; max-width: 250px; height: 250px; object-fit: cover; border-radius: 50%; margin: 0 auto 2rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);">
+                    <h3>Dr. Ama Mensah</h3>
+                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem;">Mental Health</p>
+                    <p>Specializing in student mental health and wellness counseling services.</p>
+                    <button class="btn btn-primary btn-sm mt-2" data-modal-target="doctorModal4">View Profile</button>
+                </div>
+                <div class="card text-center">
+                    <img src="../image/default-img-person.jpg" alt="Dr. John Boateng"
+                        style="width: 100%; max-width: 250px; height: 250px; object-fit: cover; border-radius: 50%; margin: 0 auto 2rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);">
+                    <h3>Dr. John Boateng</h3>
+                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem;">Sports Medicine</p>
+                    <p>Expert in treating sports injuries and promoting athletic health and performance.</p>
+                    <button class="btn btn-primary btn-sm mt-2" data-modal-target="doctorModal5">View Profile</button>
+                </div>
+                <div class="card text-center">
+                    <img src="../image/default-img-person.jpg" alt="Dr. Grace Addo"
+                        style="width: 100%; max-width: 250px; height: 250px; object-fit: cover; border-radius: 50%; margin: 0 auto 2rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);">
+                    <h3>Dr. Grace Addo</h3>
+                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 1rem;">Women's Health</p>
+                    <p>Specialized care for women's health issues and reproductive wellness.</p>
+                    <button class="btn btn-primary btn-sm mt-2" data-modal-target="doctorModal6">View Profile</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section section-alt">
+        <div class="container text-center">
+            <h2 class="mb-4">Book an Appointment</h2>
+            <p style="font-size: 1.8rem; margin-bottom: 3rem;">Ready to see one of our doctors? Book your appointment
+                today!</p>
+            <a href="/RMU-Medical-Management-System/php/booking.php" class="btn btn-primary btn-lg">
+                <i class="fas fa-calendar-check"></i> Book Appointment
+            </a>
+        </div>
+    </section>
+
+    <!-- Doctor Modals -->
+    <div class="modal" id="doctorModal1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Dr. Likhan Chandra</h3>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Specialization:</strong> General Physician & Internal Medicine</p>
+                <p><strong>Qualifications:</strong> MBChB, FGCP</p>
+                <p><strong>Experience:</strong> 10+ years in university healthcare</p>
+                <p><strong>About:</strong> Dr. Chandra specializes in preventive medicine and managing chronic
+                    conditions. He is passionate about student health and wellness education.</p>
+                <p><strong>Availability:</strong> Monday - Friday, 8:00 AM - 4:00 PM</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/RMU-Medical-Management-System/php/booking.php" class="btn btn-primary">Book Appointment</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="doctorModal2">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Dr. Sarah Osei</h3>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Specialization:</strong> Emergency Medicine</p>
+                <p><strong>Qualifications:</strong> MBChB, Emergency Medicine Certification</p>
+                <p><strong>Experience:</strong> 8+ years in emergency care</p>
+                <p><strong>About:</strong> Dr. Osei leads our emergency response team and is trained in advanced trauma
+                    life support.</p>
+                <p><strong>Availability:</strong> 24/7 Emergency Services</p>
+            </div>
+            <div class="modal-footer">
+                <a href="tel:153" class="btn btn-accent">Emergency: 153</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="doctorModal3">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Dr. Kwame Asante</h3>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Specialization:</strong> Family Medicine</p>
+                <p><strong>Qualifications:</strong> MBChB, MPH</p>
+                <p><strong>Experience:</strong> 12+ years in family practice</p>
+                <p><strong>About:</strong> Dr. Asante provides comprehensive care with a focus on preventive health and
+                    lifestyle medicine.</p>
+                <p><strong>Availability:</strong> Tuesday - Saturday, 9:00 AM - 5:00 PM</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/RMU-Medical-Management-System/php/booking.php" class="btn btn-primary">Book Appointment</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="doctorModal4">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Dr. Ama Mensah</h3>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Specialization:</strong> Mental Health & Counseling</p>
+                <p><strong>Qualifications:</strong> MBChB, Psychiatry Diploma</p>
+                <p><strong>Experience:</strong> 7+ years in student mental health</p>
+                <p><strong>About:</strong> Dr. Mensah provides confidential mental health support and counseling for
+                    students dealing with stress, anxiety, and other challenges.</p>
+                <p><strong>Availability:</strong> Monday - Friday, 10:00 AM - 6:00 PM</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/RMU-Medical-Management-System/php/booking.php" class="btn btn-primary">Book Appointment</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="doctorModal5">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Dr. John Boateng</h3>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Specialization:</strong> Sports Medicine</p>
+                <p><strong>Qualifications:</strong> MBChB, Sports Medicine Certification</p>
+                <p><strong>Experience:</strong> 9+ years treating athletes</p>
+                <p><strong>About:</strong> Dr. Boateng works closely with RMU's sports teams to prevent and treat
+                    athletic injuries.</p>
+                <p><strong>Availability:</strong> Monday - Friday, 2:00 PM - 7:00 PM</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/RMU-Medical-Management-System/php/booking.php" class="btn btn-primary">Book Appointment</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="doctorModal6">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Dr. Grace Addo</h3>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Specialization:</strong> Women's Health</p>
+                <p><strong>Qualifications:</strong> MBChB, Obstetrics & Gynecology</p>
+                <p><strong>Experience:</strong> 11+ years in women's healthcare</p>
+                <p><strong>About:</strong> Dr. Addo provides comprehensive women's health services including
+                    reproductive health counseling.</p>
+                <p><strong>Availability:</strong> Monday, Wednesday, Friday, 9:00 AM - 3:00 PM</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/RMU-Medical-Management-System/php/booking.php" class="btn btn-primary">Book Appointment</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="box-container">
+            <div class="box">
+                <h3>Quick Links</h3>
+                <a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-chevron-right"></i> Home</a>
+                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i>
+                    Services</a>
+                <a href="/RMU-Medical-Management-System/html/about.html"><i class="fas fa-chevron-right"></i> About</a>
+                <a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-chevron-right"></i>
+                    Doctors</a>
+                <a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-chevron-right"></i>
+                    Booking</a>
+            </div>
+            <div class="box">
+                <h3>Our Services</h3>
+                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Free
+                    Checkups</a>
+                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> 24/7
+                    Ambulance</a>
+                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i>
+                    Medicines</a>
+                <a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-chevron-right"></i> Expert
+                    Doctors</a>
+                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Bed
+                    Facility</a>
+            </div>
+            <div class="box">
+                <h3>Contact Info</h3>
+                <a href="tel:153"><i class="fas fa-phone"></i> 153 (Emergency)</a>
+                <a href="tel:0502371207"><i class="fas fa-phone"></i> 0502371207</a>
+                <a href="mailto:medicalju123@gmail.com"><i class="fas fa-envelope"></i> medicalju123@gmail.com</a>
+                <a href="https://www.google.com/maps/place/Regional+Maritime+University/@5.8613756,-0.3410349,10z"
+                    target="_blank"><i class="fas fa-map-marker-alt"></i> Regional Maritime University, Accra, Ghana</a>
+            </div>
+            <div class="box">
+                <h3>Follow Us</h3>
+                <a href="https://www.facebook.com/rmuofficial/" target="_blank"><i class="fab fa-facebook-f"></i>
+                    Facebook</a>
+                <a href="https://x.com/rmuofficial?lang=ens" target="_blank"><i class="fab fa-twitter"></i> Twitter</a>
+                <a href="https://www.instagram.com/rmuofficial/?hl=en" target="_blank"><i class="fab fa-instagram"></i>
+                    Instagram</a>
+                <a href="https://www.linkedin.com/school/regional-maritime-university/" target="_blank"><i
+                        class="fab fa-linkedin"></i> LinkedIn</a>
+            </div>
+        </div>
+        <div class="credit">&copy; 2026 RMU Medical Sickbay | Created by <span>Lovelace & Craig (Group Six)</span> | All
+            Rights Reserved</div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <script src="../js/theme-switcher.js"></script>
+    <script src="../js/modals.js"></script>
+    <script src="../js/chatbot.js"></script>
+</body>
+
+</html>

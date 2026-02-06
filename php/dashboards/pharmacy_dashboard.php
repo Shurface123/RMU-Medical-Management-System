@@ -1,0 +1,607 @@
+<?php
+require_once '../session_check.php';
+require_once '../db_conn.php';
+
+// Verify user is a pharmacist
+if ($_SESSION['role'] !== 'pharmacist') {
+    header("Location: ../index.php?error=Unauthorized access");
+    exit();
+}
+
+$pharmacist_id = $_SESSION['user_id'];
+$pharmacist_name = $_SESSION['name'];
+
+// Get current date
+date_default_timezone_set('Africa/Accra');
+$currentDate = date('l, F j, Y');
+$currentTime = date('g:i A');
+
+// Fetch pharmacy statistics
+$stats = [];
+
+// Total medicines
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicine");
+$stats['total_medicines'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+
+// Low stock (less than 50)
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicine WHERE M_Quantity < 50");
+$stats['low_stock'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+
+// Out of stock
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicine WHERE M_Quantity = 0");
+$stats['out_of_stock'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+
+// Total prescriptions
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM prescriptions");
+$stats['prescriptions'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Dashboard - RMU Medical Sickbay</title>
+    <link rel="shortcut icon" href="https://juniv.edu/images/favicon.ico">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="../../css/main.css">
+    
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --primary-color: #16a085;
+            --primary-dark: #138871;
+            --accent-color: #e74c3c;
+            --text-dark: #2c3e50;
+            --white: #ffffff;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #ecf0f1;
+            color: var(--text-dark);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: var(--white);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 2rem 0;
+        }
+
+        .sidebar-menu li {
+            margin: 0.5rem 0;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 1.2rem 2rem;
+            color: var(--white);
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.1);
+            padding-left: 2.5rem;
+        }
+
+        .sidebar-menu a i {
+            margin-right: 1.5rem;
+            font-size: 1.8rem;
+            width: 25px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 3rem);
+        }
+
+        .logout-btn a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem;
+            background: var(--accent-color);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn a:hover {
+            background: #c0392b;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: var(--white);
+            height: var(--header-height);
+            padding: 0 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-bar h1 {
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info .date-time {
+            font-size: 1.4rem;
+            color: #7f8c8d;
+        }
+
+        .dashboard-content {
+            padding: 3rem;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: var(--white);
+            padding: 3rem;
+            border-radius: 1rem;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow);
+        }
+
+        .welcome-section h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-section p {
+            font-size: 1.6rem;
+            opacity: 0.95;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: var(--white);
+        }
+
+        .stat-card-icon.green {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        .stat-card-icon.orange {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .stat-card-icon.red {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .stat-card-icon.blue {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .stat-card-body h3 {
+            font-size: 1.4rem;
+            color: #7f8c8d;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .stat-card-body .number {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Medicine Inventory */
+        .inventory-section {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 3rem;
+        }
+
+        .inventory-section h3 {
+            font-size: 2.2rem;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+        }
+
+        .search-bar {
+            margin-bottom: 2rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            font-size: 1.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 0.8rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .medicine-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .medicine-table th,
+        .medicine-table td {
+            padding: 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .medicine-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.4rem;
+        }
+
+        .medicine-table td {
+            font-size: 1.4rem;
+            color: #6c757d;
+        }
+
+        .medicine-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .stock-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .stock-badge.in-stock {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .stock-badge.low-stock {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .stock-badge.out-of-stock {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .medicine-table {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-pills"></i>
+            <h2>PHARMACY</h2>
+            <p><?php echo htmlspecialchars($pharmacist_name); ?></p>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li>
+                <a href="#" class="active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="../medicine/medicine.php">
+                    <i class="fas fa-pills"></i>
+                    <span>Medicine Inventory</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-prescription"></i>
+                    <span>Prescriptions</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-box"></i>
+                    <span>Stock Management</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Low Stock Alerts</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class="fas fa-user-circle"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="logout-btn">
+            <a href="../logout.php">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="top-bar">
+            <h1>Pharmacy Dashboard</h1>
+            <div class="user-info">
+                <div class="date-time">
+                    <i class="far fa-calendar"></i> <?php echo $currentDate; ?> | 
+                    <i class="far fa-clock"></i> <?php echo $currentTime; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h2>Welcome, <?php echo htmlspecialchars($pharmacist_name); ?>!</h2>
+                <p>Manage pharmacy inventory and prescriptions efficiently.</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon green">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-body">
+                        <h3>Total Medicines</h3>
+                        <div class="number"><?php echo $stats['total_medicines']; ?></div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon orange">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-body">
+                        <h3>Low Stock</h3>
+                        <div class="number"><?php echo $stats['low_stock']; ?></div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon red">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-body">
+                        <h3>Out of Stock</h3>
+                        <div class="number"><?php echo $stats['out_of_stock']; ?></div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon blue">
+                            <i class="fas fa-prescription"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-body">
+                        <h3>Prescriptions</h3>
+                        <div class="number"><?php echo $stats['prescriptions']; ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicine Inventory -->
+            <div class="inventory-section">
+                <h3><i class="fas fa-box"></i> Medicine Inventory</h3>
+                
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search medicines..." onkeyup="searchMedicines()">
+                </div>
+
+                <table class="medicine-table" id="medicineTable">
+                    <thead>
+                        <tr>
+                            <th>Medicine Name</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $medicines_query = "SELECT * FROM medicine ORDER BY M_Name ASC LIMIT 20";
+                        $medicines_result = mysqli_query($conn, $medicines_query);
+                        
+                        if (mysqli_num_rows($medicines_result) > 0) {
+                            while ($medicine = mysqli_fetch_assoc($medicines_result)) {
+                                $quantity = $medicine['M_Quantity'];
+                                $status_class = 'in-stock';
+                                $status_text = 'In Stock';
+                                
+                                if ($quantity == 0) {
+                                    $status_class = 'out-of-stock';
+                                    $status_text = 'Out of Stock';
+                                } elseif ($quantity < 50) {
+                                    $status_class = 'low-stock';
+                                    $status_text = 'Low Stock';
+                                }
+                                
+                                echo '<tr>';
+                                echo '<td><strong>' . htmlspecialchars($medicine['M_Name']) . '</strong></td>';
+                                echo '<td>' . htmlspecialchars($medicine['M_Type'] ?? 'General') . '</td>';
+                                echo '<td>' . htmlspecialchars($quantity) . '</td>';
+                                echo '<td>GH₵ ' . number_format($medicine['M_Cost'] ?? 0, 2) . '</td>';
+                                echo '<td><span class="stock-badge ' . $status_class . '">' . $status_text . '</span></td>';
+                                echo '</tr>';
+                            }
+                        } else {
+                            echo '<tr><td colspan="5" style="text-align: center; padding: 2rem;">No medicines in inventory</td></tr>';
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function searchMedicines() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('medicineTable');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td')[0];
+                if (td) {
+                    const txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = '';
+                    } else {
+                        tr[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

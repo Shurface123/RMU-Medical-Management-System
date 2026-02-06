@@ -1,0 +1,72 @@
+.director .box-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
+    gap: 2rem;
+    justify-content: center;
+}
+
+.director .box-container .box {
+    text-align: center;
+    background: #fff;
+    border-radius: .5rem;
+    border: var(--border);
+    box-shadow: var(--box-shadow);
+    padding: 2rem;
+    max-width: 50rem;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.director .box-container .box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, .15);
+}
+
+.director .box-container .box img {
+    height: 25rem;
+    width: 25rem;
+    object-fit: cover;
+    border: var(--border);
+    border-radius: .5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.director .box-container .box:hover img {
+    transform: scale(1.05);
+}
+
+.director .box-container .box h3 {
+    color: var(--black);
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.director .box-container .box span {
+    color: var(--green);
+    font-size: 1.6rem;
+    display: block;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.director .box-container .box .share {
+    padding-top: 1rem;
+    border-top: 0.1rem solid rgba(0, 0, 0, 0.1);
+    margin-top: 1rem;
+}
+
+.director .box-container .box .share h4 {
+    font-size: 1.3rem;
+    color: var(--light-color);
+    font-weight: 400;
+    margin: 0.5rem 0;
+    text-transform: none;
+}
+
+.director .box-container .box .share a:hover {
+    background: var(--green);
+    color: #fff;
+    box-shadow: var(--box-shadow);
+}
