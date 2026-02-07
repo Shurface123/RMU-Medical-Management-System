@@ -5,6 +5,7 @@ A comprehensive medical facility management system for Regional Maritime Univers
 ![Version](https://img.shields.io/badge/version-2.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+
 ## 🏥 Features
 
 - **Patient Management** - Register and manage patient records
@@ -301,3 +302,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 3. Navigate to: http://localhost/RMU-Medical-Management-System/html/index.html
 4. Enjoy! 🎉
 ```
+
