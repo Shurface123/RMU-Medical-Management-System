@@ -51,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($password_valid && $row['user_role'] === $role) {
                     // Create session using SessionManager
                     $sessionManager = new SessionManager($conn);
-                    $sessionManager->createSession($row['id'], $role);
+                    $sessionManager->startSession($row['id'], $role);
+
                     
                     // Set basic session variables for compatibility
                     $_SESSION['user_id'] = $row['id'];

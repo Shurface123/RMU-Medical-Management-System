@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .content h2 {
+            color: #16a085;
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        .appointment-details {
+            background: #f8f9fa;
+            border-left: 4px solid #16a085;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .appointment-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .appointment-details td {
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .appointment-details td:first-child {
+            font-weight: 600;
+            color: #2c3e50;
+            width: 120px;
+        }
+
+        .success-icon {
+            text-align: center;
+            font-size: 60px;
+            margin: 20px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #16a085;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>✅ Appointment Confirmed</h1>
+        </div>
+
+        <div class="content">
+            <div class="success-icon">✓</div>
+
+            <h2>Your Appointment is Confirmed!</h2>
+
+            <p>Dear <strong>{{name}}</strong>,</p>
+
+            <p>Your appointment at RMU Medical Sickbay has been successfully confirmed. Please find the details below:
+            </p>
+
+            <div class="appointment-details">
+                <table>
+                    <tr>
+                        <td>📅 Date:</td>
+                        <td><strong>{{date}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>🕐 Time:</td>
+                        <td><strong>{{time}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>👨‍⚕️ Doctor:</td>
+                        <td><strong>{{doctor}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>📋 Type:</td>
+                        <td><strong>{{type}}</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+            <p><strong>Important Reminders:</strong></p>
+            <ul>
+                <li>Please arrive 10 minutes before your scheduled time</li>
+                <li>Bring your ID card and any relevant medical documents</li>
+                <li>If you need to reschedule, please contact us at least 24 hours in advance</li>
+            </ul>
+
+            <p>We look forward to seeing you!</p>
+
+            <p><strong>The RMU Medical Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Contact Us</strong></p>
+            <p>📞 Phone: 0502371207 | 🚨 Emergency: 153</p>
+            <p>📧 Email: Sickbay.txt@rmu.edu.gh</p>
+            <p>📍 Regional Maritime University, Accra, Ghana</p>
+        </div>
+    </div>
+</body>
+
+</html>

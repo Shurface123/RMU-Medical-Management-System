@@ -1,0 +1,86 @@
+/* ===================================
+   LIGHT THEME STYLES
+   RMU Medical Management System
+   =================================== */
+
+:root.light-theme,
+[data-theme="light"] {
+    /* Primary Colors */
+    --primary-color: #16a085;
+    --primary-dark: #138871;
+    --primary-light: #1abc9c;
+    --accent-color: #e74c3c;
+    --accent-dark: #c0392b;
+
+    /* Text Colors */
+    --text-dark: #1d1d1d;
+    --text-light: #2c2929;
+    --text-muted: #6c757d;
+    --white: #ffffff;
+    --black: #000000;
+
+    /* Background Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e9ecef;
+    --bg-light: #ecf0f1;
+
+    /* Border & Shadow */
+    --border-color: #dee2e6;
+    --box-shadow: 0.5rem 0.5rem 0 rgba(22, 160, 133, 0.2);
+    --box-shadow-hover: 0.5rem 0.5rem 1rem rgba(22, 160, 133, 0.3);
+    --text-shadow: 0.4rem 0.4rem 0 rgba(0, 0, 0, 0.2);
+
+    /* Card Shadows */
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* ===================================
+   BODY & GENERAL ELEMENTS
+   =================================== */
+
+[data-theme="light"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-dark);
+}
+
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+    color: var(--text-dark);
+}
+
+[data-theme="light"] p {
+    color: var(--text-light);
+}
+
+/* ===================================
+   THEME TOGGLE BUTTON
+   =================================== */
+
+[data-theme="light"] .theme-toggle,
+[data-theme="light"] #theme-toggle {
+    background: var(--bg-secondary);
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .theme-toggle:hover,
+[data-theme="light"] #theme-toggle:hover {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+/* ===================================
+   SMOOTH TRANSITIONS
+   =================================== */
+
+[data-theme="light"] * {
+    transition: background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}

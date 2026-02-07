@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .content h2 {
+            color: #f39c12;
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        .reminder-box {
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .reminder-box table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .reminder-box td {
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .reminder-box td:first-child {
+            font-weight: 600;
+            color: #2c3e50;
+            width: 120px;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>⏰ Appointment Reminder</h1>
+        </div>
+
+        <div class="content">
+            <h2>Don't Forget Your Appointment!</h2>
+
+            <p>Dear <strong>{{name}}</strong>,</p>
+
+            <p>This is a friendly reminder about your upcoming appointment at RMU Medical Sickbay.</p>
+
+            <div class="reminder-box">
+                <table>
+                    <tr>
+                        <td>📅 Date:</td>
+                        <td><strong>{{date}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>🕐 Time:</td>
+                        <td><strong>{{time}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>👨‍⚕️ Doctor:</td>
+                        <td><strong>{{doctor}}</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+            <p><strong>Please Remember:</strong></p>
+            <ul>
+                <li>Arrive 10 minutes early</li>
+                <li>Bring your ID card</li>
+                <li>Bring any relevant medical documents</li>
+                <li>Wear a face mask</li>
+            </ul>
+
+            <p><strong>Need to Reschedule?</strong></p>
+            <p>If you cannot make it, please contact us at least 24 hours in advance:</p>
+            <ul>
+                <li>📞 Phone: 0502371207</li>
+                <li>📧 Email: Sickbay.txt@rmu.edu.gh</li>
+            </ul>
+
+            <p>We look forward to seeing you!</p>
+
+            <p><strong>The RMU Medical Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Contact Us</strong></p>
+            <p>📞 Phone: 0502371207 | 🚨 Emergency: 153</p>
+            <p>📧 Email: Sickbay.txt@rmu.edu.gh</p>
+            <p>📍 Regional Maritime University, Accra, Ghana</p>
+        </div>
+    </div>
+</body>
+
+</html>

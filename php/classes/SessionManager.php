@@ -132,6 +132,14 @@ class SessionManager {
     }
     
     /**
+     * Alias for destroyCurrentSession() - for backward compatibility
+     * Use this when you want to end/logout the current user's session
+     */
+    public function endSession() {
+        return $this->destroyCurrentSession();
+    }
+    
+    /**
      * Get current user information
      */
     public function getCurrentUser() {

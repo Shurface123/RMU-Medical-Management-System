@@ -1,4 +1,8 @@
 <?php
+// AUTHENTICATION CHECK - Require login to book appointments
+require_once 'includes/auth_middleware.php';
+requireAuth('index.php'); // Redirect to login if not authenticated
+
 require_once 'db_conn.php';
 ?>
 <!DOCTYPE html>

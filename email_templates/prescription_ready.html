@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .content h2 {
+            color: #9b59b6;
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        .prescription-box {
+            background: #f3e5f5;
+            border-left: 4px solid #9b59b6;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #9b59b6;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>💊 Prescription Ready</h1>
+        </div>
+
+        <div class="content">
+            <h2>Your Prescription is Ready for Pickup</h2>
+
+            <p>Dear <strong>{{name}}</strong>,</p>
+
+            <p>Good news! Your prescription has been prepared and is ready for pickup at the RMU Medical Sickbay
+                pharmacy.</p>
+
+            <div class="prescription-box">
+                <p><strong>Prescription Details:</strong></p>
+                <p><strong>Prescribed by:</strong> {{doctor}}</p>
+                <p><strong>Date:</strong> {{date}}</p>
+                <p><strong>Status:</strong> Ready for Pickup</p>
+            </div>
+
+            <p><strong>Pickup Information:</strong></p>
+            <ul>
+                <li><strong>Location:</strong> RMU Medical Sickbay Pharmacy</li>
+                <li><strong>Hours:</strong> Monday - Friday, 8:00 AM - 5:00 PM</li>
+                <li><strong>What to Bring:</strong> Valid ID card</li>
+            </ul>
+
+            <p><strong>Important Reminders:</strong></p>
+            <ul>
+                <li>Please collect your prescription within 7 days</li>
+                <li>Follow the dosage instructions carefully</li>
+                <li>Ask the pharmacist if you have any questions</li>
+                <li>Store medications as directed</li>
+            </ul>
+
+            <p><strong>Questions?</strong></p>
+            <p>Contact our pharmacy team:</p>
+            <ul>
+                <li>📞 Phone: 0502371207</li>
+                <li>📧 Email: Sickbay.txt@rmu.edu.gh</li>
+            </ul>
+
+            <p>Thank you for choosing RMU Medical Sickbay!</p>
+
+            <p><strong>The RMU Pharmacy Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Contact Us</strong></p>
+            <p>📞 Phone: 0502371207 | 🚨 Emergency: 153</p>
+            <p>📧 Email: Sickbay.txt@rmu.edu.gh</p>
+            <p>📍 Regional Maritime University, Accra, Ghana</p>
+        </div>
+    </div>
+</body>
+
+</html>
