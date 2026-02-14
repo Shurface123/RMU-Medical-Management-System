@@ -107,6 +107,8 @@ CREATE TABLE IF NOT EXISTS prescription_refills (
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- CONTINUE FROM HERE
+
 -- ===================================
 -- NOTIFICATION SYSTEM TABLES
 -- ===================================

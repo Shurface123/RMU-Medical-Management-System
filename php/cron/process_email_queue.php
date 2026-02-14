@@ -49,9 +49,9 @@ try {
     $emailConfig = [
         'smtp_host' => 'smtp.gmail.com',
         'smtp_port' => 587,
-        'smtp_username' => '', // Set your SMTP username
-        'smtp_password' => '', // Set your SMTP password
-        'from_email' => 'Sickbay.txt@rmu.edu.gh',
+        'smtp_username' => 'sickbay.text@st.rmu.edu.gh', // Set your SMTP username
+        'smtp_password' => 'hqrr kkat ruqg nutf', // Set your SMTP password
+        'from_email' => 'sickbay.text@st.rmu.edu.gh',
         'from_name' => 'RMU Medical Sickbay'
     ];
     

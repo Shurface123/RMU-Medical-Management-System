@@ -1,0 +1,9 @@
+[2026-02-14 01:36:58] === Email Queue Processor Started ===
+[2026-02-14 01:36:58] Database connection established
+[2026-02-14 01:36:58] EmailService initialized
+[2026-02-14 01:36:58] Processing up to 50 emails...
+[2026-02-14 01:36:59] Processing complete:
+[2026-02-14 01:36:59]   - Emails sent: 0
+[2026-02-14 01:36:59]   - Emails failed: 0
+[2026-02-14 01:36:59] Queue is empty
+[2026-02-14 01:36:59] === Email Queue Processor Finished Successfully ===

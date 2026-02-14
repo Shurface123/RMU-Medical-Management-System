@@ -4,7 +4,7 @@
 // Handles email sending and queue management
 // ===================================
 
-require_once __DIR__ . '/../vendor/autoload.php'; // For PHPMailer if using Composer
+require_once __DIR__ . '/../../vendor/autoload.php'; // For PHPMailer if using Composer
 // OR include PHPMailer manually if not using Composer
 
 use PHPMailer\PHPMailer\PHPMailer;
