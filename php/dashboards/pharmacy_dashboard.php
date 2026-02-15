@@ -20,15 +20,15 @@ $currentTime = date('g:i A');
 $stats = [];
 
 // Total medicines
-$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicine");
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicines");
 $stats['total_medicines'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
 // Low stock (less than 50)
-$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicine WHERE M_Quantity < 50");
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicines WHERE stock_quantity < 50");
 $stats['low_stock'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
 // Out of stock
-$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicine WHERE M_Quantity = 0");
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicines WHERE stock_quantity = 0");
 $stats['out_of_stock'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
 // Total prescriptions
@@ -548,12 +548,12 @@ $stats['prescriptions'] = mysqli_fetch_assoc($result)['total'] ?? 0;
                     </thead>
                     <tbody>
                         <?php
-                        $medicines_query = "SELECT * FROM medicine ORDER BY M_Name ASC LIMIT 20";
+                        $medicines_query = "SELECT * FROM medicines ORDER BY medicine_name ASC LIMIT 20";
                         $medicines_result = mysqli_query($conn, $medicines_query);
                         
                         if (mysqli_num_rows($medicines_result) > 0) {
                             while ($medicine = mysqli_fetch_assoc($medicines_result)) {
-                                $quantity = $medicine['M_Quantity'];
+                                $quantity = $medicine['stock_quantity'];
                                 $status_class = 'in-stock';
                                 $status_text = 'In Stock';
                                 
@@ -566,10 +566,10 @@ $stats['prescriptions'] = mysqli_fetch_assoc($result)['total'] ?? 0;
                                 }
                                 
                                 echo '<tr>';
-                                echo '<td><strong>' . htmlspecialchars($medicine['M_Name']) . '</strong></td>';
-                                echo '<td>' . htmlspecialchars($medicine['M_Type'] ?? 'General') . '</td>';
+                                echo '<td><strong>' . htmlspecialchars($medicine['medicine_name']) . '</strong></td>';
+                                echo '<td>' . htmlspecialchars($medicine['category'] ?? 'General') . '</td>';
                                 echo '<td>' . htmlspecialchars($quantity) . '</td>';
-                                echo '<td>GH₵ ' . number_format($medicine['M_Cost'] ?? 0, 2) . '</td>';
+                                echo '<td>GH₵ ' . number_format($medicine['unit_price'] ?? 0, 2) . '</td>';
                                 echo '<td><span class="stock-badge ' . $status_class . '">' . $status_text . '</span></td>';
                                 echo '</tr>';
                             }

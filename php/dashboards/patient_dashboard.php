@@ -557,9 +557,9 @@ $stats['lab_tests'] = mysqli_fetch_assoc($result)['total'] ?? 0;
             <div class="appointments-section">
                 <h3><i class="fas fa-calendar-alt"></i> Upcoming Appointments</h3>
                 <?php
-                $appointments_query = "SELECT a.*, d.D_Name as doctor_name 
+                $appointments_query = "SELECT a.*, d.full_name as doctor_name 
                                       FROM appointments a 
-                                      LEFT JOIN doctor d ON a.doctor_id = d.D_ID 
+                                      LEFT JOIN doctors d ON a.doctor_id = d.id 
                                       WHERE a.patient_id = (SELECT id FROM patients WHERE user_id = $patient_id) 
                                       AND a.appointment_date >= '$today' 
                                       AND a.status != 'Cancelled'

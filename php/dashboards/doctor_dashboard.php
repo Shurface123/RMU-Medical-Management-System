@@ -511,9 +511,9 @@ $stats['completed'] = mysqli_fetch_assoc($result)['total'] ?? 0;
             <div class="appointments-section">
                 <h3><i class="fas fa-calendar-day"></i> Today's Appointments</h3>
                 <?php
-                $appointments_query = "SELECT a.*, p.P_Name as patient_name 
+                $appointments_query = "SELECT a.*, p.full_name as patient_name 
                                       FROM appointments a 
-                                      LEFT JOIN patient p ON a.patient_id = p.P_ID 
+                                      LEFT JOIN patients p ON a.patient_id = p.id 
                                       WHERE a.doctor_id = (SELECT id FROM doctors WHERE user_id = $doctor_id) 
                                       AND a.appointment_date = '$today' 
                                       ORDER BY a.appointment_time ASC 
