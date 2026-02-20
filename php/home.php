@@ -76,16 +76,73 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
         :root {
             --sidebar-width: 280px;
             --header-height: 70px;
-            --primary-color: #16a085;
-            --primary-dark: #138871;
-            --accent-color: #e74c3c;
+            --primary-color: #2F80ED;
+            --primary-dark: #2366CC;
+            --secondary-color: #56CCF2;
+            --accent-color: #2F80ED;
             --text-dark: #2c3e50;
             --text-light: #7f8c8d;
-            --bg-light: #ecf0f1;
+            --bg-light: #F4F8FF;
             --white: #ffffff;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
+            --shadow-hover: 0px 15px 40px rgba(47, 128, 237, 0.12);
             --transition: all 0.3s ease;
         }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --bg-light: #1a1a1a;
+            --white: #2d2d2d;
+            --text-dark: #f8f9fa;
+            --text-light: #b0b0b0;
+            --shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0px 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="dark"] body {
+            background: #1a1a1a;
+            color: #f8f9fa;
+        }
+
+        [data-theme="dark"] .top-bar {
+            background: #2d2d2d;
+            color: #f8f9fa;
+        }
+
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .quick-action-card,
+        [data-theme="dark"] .activity-card {
+            background: #2d2d2d;
+            color: #f8f9fa;
+        }
+
+        [data-theme="dark"] .stat-card h3 {
+            color: #b0b0b0;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            bottom: 100px;
+            left: calc(var(--sidebar-width) / 2 - 25px);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
 
         * {
             margin: 0;
@@ -106,17 +163,18 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
             top: 0;
             width: var(--sidebar-width);
             height: 100vh;
-            background: linear-gradient(135deg, #16a085 0%, #138871 100%);
+            background: linear-gradient(to right, #2F80ED, #56CCF2);
             color: var(--white);
             transition: var(--transition);
             z-index: 1000;
             overflow-y: auto;
+            box-shadow: var(--shadow);
         }
 
         .sidebar-header {
             padding: 2rem 1.5rem;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .sidebar-header i {
@@ -133,7 +191,7 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
         .sidebar-header p {
             font-size: 1.2rem;
-            opacity: 0.9;
+            opacity: 0.95;
         }
 
         .sidebar-menu {
@@ -155,12 +213,14 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
             font-weight: 500;
             transition: var(--transition);
             position: relative;
+            border-radius: 12px;
+            margin: 0 1rem;
         }
 
         .sidebar-menu a:hover,
         .sidebar-menu a.active {
-            background: rgba(255, 255, 255, 0.1);
-            padding-left: 2.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
         }
 
         .sidebar-menu a i {
@@ -183,19 +243,19 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
             align-items: center;
             justify-content: center;
             padding: 1.2rem;
-            background: var(--accent-color);
+            background: rgba(255, 255, 255, 0.2);
             color: var(--white);
             text-decoration: none;
-            border-radius: 0.5rem;
+            border-radius: 12px;
             font-size: 1.5rem;
             font-weight: 600;
             transition: var(--transition);
+            backdrop-filter: blur(10px);
         }
 
         .logout-btn a:hover {
-            background: #c0392b;
+            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
         }
 
         .logout-btn a i {
@@ -257,7 +317,7 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
             background: var(--bg-secondary);
             border: none;
             padding: 0.8rem 1.2rem;
-            border-radius: 0.5rem;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1.8rem;
             color: var(--primary-color);
@@ -279,10 +339,10 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
         }
 
         .welcome-section {
-            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: var(--white);
             padding: 3rem;
-            border-radius: 1rem;
+            border-radius: 24px;
             margin-bottom: 3rem;
             box-shadow: var(--shadow);
         }
@@ -308,7 +368,7 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
         .stat-card {
             background: var(--white);
             padding: 2.5rem;
-            border-radius: 1rem;
+            border-radius: 24px;
             box-shadow: var(--shadow);
             transition: var(--transition);
             cursor: pointer;
@@ -319,7 +379,7 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-hover);
         }
 
         .stat-card-header {
@@ -332,7 +392,7 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
         .stat-card-icon {
             width: 60px;
             height: 60px;
-            border-radius: 1rem;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -341,31 +401,31 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
         }
 
         .stat-card-icon.doctors {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
         }
 
         .stat-card-icon.staff {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            background: linear-gradient(135deg, #BB6BD9, #C89EFF);
         }
 
         .stat-card-icon.patients {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            background: linear-gradient(135deg, #FF6B9D, #FFA06B);
         }
 
         .stat-card-icon.tests {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
+            background: linear-gradient(135deg, #FFB946, #FFA06B);
         }
 
         .stat-card-icon.beds {
-            background: linear-gradient(135deg, #1abc9c, #16a085);
+            background: linear-gradient(135deg, #6FCF97, #A8E6CF);
         }
 
         .stat-card-icon.ambulance {
-            background: linear-gradient(135deg, #e67e22, #d35400);
+            background: linear-gradient(135deg, #FFB946, #FFA06B);
         }
 
         .stat-card-icon.medicine {
-            background: linear-gradient(135deg, #27ae60, #229954);
+            background: linear-gradient(135deg, #6FCF97, #A8E6CF);
         }
 
         .stat-card-body h3 {
@@ -387,7 +447,7 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
         .stat-card-footer {
             margin-top: 1.5rem;
             padding-top: 1.5rem;
-            border-top: 1px solid var(--bg-light);
+            border-top: 1px solid #E8F0FE;
             font-size: 1.3rem;
             color: var(--text-light);
         }
@@ -400,7 +460,7 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
         .quick-actions {
             background: var(--white);
             padding: 2.5rem;
-            border-radius: 1rem;
+            border-radius: 24px;
             box-shadow: var(--shadow);
             margin-bottom: 3rem;
         }
@@ -423,19 +483,20 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
             justify-content: center;
             gap: 1rem;
             padding: 1.5rem 2rem;
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: var(--white);
             text-decoration: none;
-            border-radius: 0.5rem;
+            border-radius: 12px;
             font-size: 1.5rem;
             font-weight: 600;
             transition: var(--transition);
+            box-shadow: var(--shadow);
         }
 
         .action-btn:hover {
-            background: var(--primary-dark);
+            background: linear-gradient(135deg, #2366CC, #2F80ED);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3);
+            box-shadow: var(--shadow-hover);
         }
 
         .action-btn i {
@@ -1451,6 +1512,40 @@ $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
                 link.classList.add('active');
             }
         });
+    </script>
+
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        const themeIcon = themeToggle.querySelector('i');
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        }
     </script>
 </body>
 </html>

@@ -165,7 +165,7 @@
 
             </li>
             <li>
-                <a href="/php/Ambulence/ambulence.php"><i class="fas fa-ambulance"></i> AMBULENCE </a>
+                <a href="/php/Ambulence/ambulence.php"><i class="fas fa-ambulance"></i> AMBULANCE </a>
 
             </li>
             <li>
@@ -204,10 +204,10 @@
 
         <div class="row">
             <div style="margin-left: 45%; margin-top: 5%;">
-                <h2>MANAGE <b>AMBULENCE</b></h2>
+                <h2>MANAGE <b>AMBULANCE</b></h2>
             </div>
             <div style="margin-left: 80%; margin-top: 3%;">
-                <button><a href="/php/Ambulence/add-ambulence.php">Add AMBULENCE</a></button>
+                <button><a href="/php/Ambulence/add-ambulence.php">ADD AMBULANCE</a></button>
             </div>
         </div>
     </div>
@@ -215,20 +215,23 @@
     <div class="card-body">
         <div style="margin-left: 20%; margin-top: 1%;">
 
-
-        <!-- (A) SEARCH FORM -->
-        <form method="post" action="search.php">
+            <!-- (A) SEARCH FORM -->
+            <form method="post" action="search.php">
                 <input type="text" name="search" required />
                 <input type="submit" value="Search" />
             </form>
             <br>
 
-
             <table id="dataTable" width="90%" cellspacing="10">
                 <thead>
                     <tr>
-                        <th>AMBULENCE ID</th>
-                        <th>AMBULENCE STATUS</th>
+                        <th>AMBULANCE ID</th>
+                        <th>VEHICLE NUMBER</th>
+                        <th>DRIVER NAME</th>
+                        <th>DRIVER PHONE</th>
+                        <th>STATUS</th>
+                        <th>LAST SERVICE DATE</th>
+                        <th>NEXT SERVICE DATE</th>
                         <th>OPERATION</th>
                     </tr>
                 </thead>
@@ -237,27 +240,25 @@
                     <?php
                     include 'db_conn.php';
 
-                    $sql = " SELECT * FROM ambulence LIMIT 5";
+                    $sql = "SELECT * FROM ambulances LIMIT 5";
                     $query = mysqli_query($conn, $sql);
-                    while ($Patient_data = mysqli_fetch_array($query)) {
-
+                    while ($amb_data = mysqli_fetch_assoc($query)) {
                     ?>
                         <tr>
-                            <td><b><?php echo $Patient_data['Amb_ID']; ?></b></td>
-                            <td><?php echo $Patient_data['Amb_Status'];  ?></td>
+                            <td><b><?php echo $amb_data['ambulance_id']; ?></b></td>
+                            <td><?php echo $amb_data['vehicle_number']; ?></td>
+                            <td><?php echo $amb_data['driver_name']; ?></td>
+                            <td><?php echo $amb_data['driver_phone']; ?></td>
+                            <td><?php echo $amb_data['status']; ?></td>
+                            <td><?php echo $amb_data['last_service_date']; ?></td>
+                            <td><?php echo $amb_data['next_service_date']; ?></td>
                             <td style="width: 140px;">
-
-                                <button> <a href="/php/Ambulence/update.php?Amb_ID=<?php echo $Patient_data['Amb_ID'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/Ambulence/Delete.php?Amb_ID=<?php echo $Patient_data['Amb_ID']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
-
-
-
+                                <button><a href="/php/Ambulence/update.php?ambulance_id=<?php echo $amb_data['ambulance_id']; ?>" class="btn btn-success"><b>UPDATE</b></a></button>
+                                <button><a href="/php/Ambulence/Delete.php?ambulance_id=<?php echo $amb_data['ambulance_id']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
                             </td>
                         </tr>
                     <?php
-
                     }
-
                     ?>
 
                 </tbody>

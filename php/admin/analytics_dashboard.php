@@ -91,7 +91,7 @@ $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
         
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
+            background: #F4F8FF;
             padding: 20px;
         }
         
@@ -101,16 +101,20 @@ $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
         }
         
         .header {
-            background: white;
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             padding: 25px;
-            border-radius: 10px;
+            border-radius: 24px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
         }
         
         .header h1 {
-            color: #2c3e50;
+            color: white;
             font-size: 28px;
+        }
+        
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
         }
         
         .stats-grid {
@@ -123,8 +127,8 @@ $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
         .stat-card {
             background: white;
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 24px;
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             position: relative;
             overflow: hidden;
         }
@@ -136,7 +140,7 @@ $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
             left: 0;
             width: 4px;
             height: 100%;
-            background: var(--accent-color, #3498db);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
         }
         
         .stat-card h3 {
@@ -183,8 +187,8 @@ $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
         .chart-card {
             background: white;
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 24px;
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
         }
         
         .chart-card h3 {
@@ -195,8 +199,8 @@ $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
         .table-card {
             background: white;
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 24px;
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             margin-bottom: 20px;
         }
         
@@ -237,8 +241,13 @@ $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
         }
         
         .btn-primary {
-            background: #3498db;
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
         
         .health-indicator {

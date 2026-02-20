@@ -12,7 +12,7 @@ require_once '../db_conn.php';
     <link rel="stylesheet" href="../../css/main.css">
     <style>
         .beds-header {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: white;
             padding: 6rem 2rem 4rem;
             text-align: center;
@@ -34,8 +34,8 @@ require_once '../db_conn.php';
         .stat-card {
             background: white;
             padding: 3rem;
-            border-radius: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 24px;
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             text-align: center;
             border-top: 4px solid var(--primary-color);
         }
@@ -63,9 +63,9 @@ require_once '../db_conn.php';
         
         .ward-card {
             background: white;
-            border-radius: 1rem;
+            border-radius: 24px;
             padding: 3rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             transition: transform 0.3s, box-shadow 0.3s;
         }
         
@@ -77,7 +77,7 @@ require_once '../db_conn.php';
         .ward-icon {
             width: 70px;
             height: 70px;
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -176,9 +176,9 @@ require_once '../db_conn.php';
         .facility-item {
             background: white;
             padding: 2.5rem;
-            border-radius: 1rem;
+            border-radius: 24px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
         }
         
         .facility-item i {
@@ -208,6 +208,12 @@ require_once '../db_conn.php';
             <a href="/RMU-Medical-Management-System/html/about.html">About</a>
             <a href="/RMU-Medical-Management-System/php/index.php">Login</a>
         </nav>
+        
+        <!-- Theme Toggle -->
+        <button class="theme-toggle-header" id="themeToggle" aria-label="Toggle theme" title="Toggle Dark Mode">
+            <i class="fas fa-moon"></i>
+        </button>
+        
         <div id="menu-btn" class="fas fa-bars"></div>
     </header>
 
@@ -367,5 +373,34 @@ require_once '../db_conn.php';
     </footer>
 
     <script src="../../js/main.js"></script>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        const themeIcon = themeToggle.querySelector('i');
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        }
+    </script>
 </body>
 </html>

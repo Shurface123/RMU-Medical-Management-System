@@ -214,9 +214,8 @@
     <div class="card-body">
         <div style="margin-left: 20%; margin-top: 1%;">
 
-
-         <!-- (A) SEARCH FORM -->
-         <form method="post" action="search.php">
+            <!-- (A) SEARCH FORM -->
+            <form method="post" action="search.php">
                 <input type="text" name="search" required />
                 <input type="submit" value="Search" />
             </form>
@@ -225,9 +224,12 @@
             <table id="dataTable" width="90%" cellspacing="10">
                 <thead>
                     <tr>
+                        <th> BED ID </th>
                         <th> BED NUMBER </th>
-                        <th> DATE </th>
-                        <th> BED STATUS </th>
+                        <th> WARD </th>
+                        <th> BED TYPE </th>
+                        <th> STATUS </th>
+                        <th> DAILY RATE </th>
                         <th> OPERATION </th>
                     </tr>
                 </thead>
@@ -236,28 +238,24 @@
                     <?php
                     include 'db_conn.php';
 
-                    $sql = " SELECT * FROM bed LIMIT 5";
+                    $sql = "SELECT * FROM beds LIMIT 5";
                     $query = mysqli_query($conn, $sql);
-                    while ($Patient_data = mysqli_fetch_array($query)) {
-
+                    while ($bed_data = mysqli_fetch_assoc($query)) {
                     ?>
                         <tr>
-                            <td><b><?php echo $Patient_data['Bed_Num'];  ?></b></td>
-                            <td><?php echo $Patient_data['Date'];  ?></td>
-                            <td><?php echo $Patient_data['Bed_Status'];  ?></td>
+                            <td><b><?php echo $bed_data['bed_id']; ?></b></td>
+                            <td><?php echo $bed_data['bed_number']; ?></td>
+                            <td><?php echo $bed_data['ward']; ?></td>
+                            <td><?php echo $bed_data['bed_type']; ?></td>
+                            <td><?php echo $bed_data['status']; ?></td>
+                            <td><?php echo $bed_data['daily_rate']; ?></td>
                             <td style="width: 140px;">
-
-                                <button> <a href="/php/bed/update.php?Bed_Num=<?php echo $Patient_data['Bed_Num'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/bed/Delete.php?Bed_Num=<?php echo $Patient_data['Bed_Num']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
-
-
-
+                                <button><a href="/php/bed/update.php?bed_id=<?php echo $bed_data['bed_id']; ?>" class="btn btn-success"><b>UPDATE</b></a></button>
+                                <button><a href="/php/bed/Delete.php?bed_id=<?php echo $bed_data['bed_id']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
                             </td>
                         </tr>
                     <?php
-
                     }
-
                     ?>
 
                 </tbody>

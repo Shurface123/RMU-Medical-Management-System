@@ -20,12 +20,12 @@
     
     <style>
         :root {
-            --primary-color: #16a085;
-            --primary-dark: #138871;
+            --primary-color: #2F80ED;
+            --primary-dark: #2366CC;
             --accent-color: #e74c3c;
             --text-dark: #2c3e50;
             --white: #ffffff;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
         }
 
         * {
@@ -40,7 +40,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #16a085 0%, #1abc9c 50%, #16a085 100%);
+            background: linear-gradient(135deg, #2F80ED 0%, #56CCF2 50%, #2F80ED 100%);
             position: relative;
             overflow: hidden;
         }
@@ -66,8 +66,8 @@
             z-index: 10;
             background: var(--white);
             padding: 4rem 3rem;
-            border-radius: 2rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            box-shadow: 0px 20px 60px rgba(47, 128, 237, 0.2);
             width: 90%;
             max-width: 450px;
             animation: slideIn 0.5s ease-out;
@@ -92,13 +92,13 @@
         .login-header .logo-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #16a085, #1abc9c);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
-            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
 
         .login-header .logo-icon i {
@@ -150,7 +150,7 @@
             padding: 1.3rem 1.5rem 1.3rem 4.5rem;
             font-size: 1.5rem;
             border: 2px solid #e0e0e0;
-            border-radius: 1rem;
+            border-radius: 24px;
             transition: all 0.3s;
             font-family: 'Poppins', sans-serif;
         }
@@ -158,7 +158,7 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(22, 160, 133, 0.1);
+            box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.1);
         }
 
         .form-control:focus + i {
@@ -177,7 +177,7 @@
             background: #fee;
             color: var(--accent-color);
             padding: 1.2rem 1.5rem;
-            border-radius: 0.8rem;
+            border-radius: 24px;
             margin-bottom: 2rem;
             font-size: 1.4rem;
             border-left: 4px solid var(--accent-color);
@@ -200,20 +200,20 @@
             padding: 1.5rem;
             font-size: 1.6rem;
             font-weight: 600;
-            background: linear-gradient(135deg, #16a085, #1abc9c);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: var(--white);
             border: none;
-            border-radius: 1rem;
+            border-radius: 24px;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(22, 160, 133, 0.3);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(22, 160, 133, 0.4);
+            box-shadow: 0px 15px 40px rgba(47, 128, 237, 0.4);
         }
 
         .btn-login:active {
@@ -260,17 +260,17 @@
             background: rgba(255, 255, 255, 0.95);
             color: var(--primary-color);
             text-decoration: none;
-            border-radius: 5rem;
+            border-radius: 50px;
             font-size: 1.5rem;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.2);
             transition: all 0.3s;
         }
 
         .back-home a:hover {
             background: var(--white);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            box-shadow: 0px 15px 40px rgba(47, 128, 237, 0.3);
         }
 
         /* Responsive */

@@ -1,20 +1,27 @@
 <?php
-session_start(); 
-include "db_conn.php";
+include_once 'db_conn.php';
 
-
-if (isset($_POST['D_ID']) && isset($_POST['D_Name']) && isset($_POST['Gender']) && isset($_POST['Work_Day']) && isset($_POST['Speciality'])) {
-
-    $D_ID = $_POST['D_ID'];
-    $D_Name = $_POST['D_Name'];
-    $Gender = $_POST['Gender'];
-    $Work_Day = $_POST['Work_Day'];
-    $Speciality = $_POST['Speciality'];
-
-
-   $sql = "insert into doctor(D_ID,D_Name,Gender,Work_Day,Speciality) values('$D_ID','$D_Name','$Gender','$Work_Day','$Speciality')";
-   mysqli_query($conn,$sql);
-   header("location:doctor.php");
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get form data
+    $doctor_name = mysqli_real_escape_string($conn, $_POST['D_Name']);
+    $gender = mysqli_real_escape_string($conn, $_POST['Gender']);
+    $work_day = mysqli_real_escape_string($conn, $_POST['Work_Day']);
+    $speciality = mysqli_real_escape_string($conn, $_POST['Speciality']);
+    
+    // Note: You'll need to handle user_id and doctor_id separately
+    // This assumes you have a user creation process that provides these IDs
+    // For now, this is a placeholder - you'll need to adjust based on your user creation flow
+    
+    $sql = "INSERT INTO doctors (full_name, gender, available_days, specialization) 
+            VALUES ('$doctor_name', '$gender', '$work_day', '$speciality')";
+    
+    if (mysqli_query($conn, $sql)) {
+        header("Location: doctor.php?success=Doctor added successfully");
+        exit();
+    } else {
+        echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+    }
+    
+    mysqli_close($conn);
 }
-
 ?>

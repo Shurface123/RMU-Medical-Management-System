@@ -1,14 +1,14 @@
 <?php
-$Gender = isset($_POST['Gender']) ? $_POST['Gender'] : '';
+$Gender = isset($_POST['Gender']) ? $_POST['Gender'] : (isset($Patient_data['gender']) ? $Patient_data['gender'] : '');
 include_once 'db_conn.php';
 if (count($_POST) > 0) {
 
-  mysqli_query($conn, "UPDATE doctor set D_ID='" . $_POST['D_ID'] . "', D_Name='" . $_POST['D_Name'] . "' ,Gender='" . $_POST['Gender'] . "' ,Work_Day='" . $_POST['Work_Day'] . "' ,Speciality='" . $_POST['Speciality'] . "' WHERE D_ID='" . $_POST['D_ID'] . "'");
+  mysqli_query($conn, "UPDATE doctors SET full_name='" . $_POST['D_Name'] . "', gender='" . $_POST['Gender'] . "', available_days='" . $_POST['Work_Day'] . "', specialization='" . $_POST['Speciality'] . "' WHERE id='" . $_POST['D_ID'] . "'");
   $message = "Record Modified Successfully";
 }
-$query = mysqli_query($conn, "SELECT * FROM doctor WHERE D_ID='" . $_GET['D_ID'] . "'");
+$query = mysqli_query($conn, "SELECT * FROM doctors WHERE id='" . $_GET['D_ID'] . "'");
 $Patient_data = mysqli_fetch_array($query);
-
+$Gender = isset($_POST['Gender']) ? $_POST['Gender'] : (isset($Patient_data['gender']) ? $Patient_data['gender'] : '');
 ?>
 
 <!DOCTYPE html>
@@ -74,14 +74,14 @@ $Patient_data = mysqli_fetch_array($query);
 
       <div>
         <h3>DOCTOR ID</h3>
-        <input type="hidden" name="D_ID" class="form-control" value="<?php echo $Patient_data['D_ID']; ?>">
-        <input type="number" name="D_ID" value="<?php echo $Patient_data['D_ID']; ?>">
+        <input type="hidden" name="D_ID" class="form-control" value="<?php echo $Patient_data['id']; ?>">
+        <input type="number" name="D_ID" value="<?php echo $Patient_data['id']; ?>" readonly>
         <br>
       </div>
 
       <div>
         <h3>DOCTOR NAME</h3>
-        <input name="D_Name" type="text" class="form-control" value="<?php echo $Patient_data['D_Name']; ?>" required>
+        <input name="D_Name" type="text" class="form-control" value="<?php echo $Patient_data['full_name']; ?>" required>
       </div>
 
 
@@ -94,12 +94,12 @@ $Patient_data = mysqli_fetch_array($query);
 
       <div>
         <h3>WORK DAY</h3>
-        <input type="date" id="day" class="form-control" name="Work_Day" value="<?php echo $Patient_data['Work_Day']; ?>" required>
+        <input type="date" id="day" class="form-control" name="Work_Day" value="<?php echo $Patient_data['available_days']; ?>" required>
       </div>
 
       <div>
         <h3>SPECIALITY</h3>
-        <input name="Speciality" type="text" class="form-control" value="<?php echo $Patient_data['Speciality']; ?>" required>
+        <input name="Speciality" type="text" class="form-control" value="<?php echo $Patient_data['specialization']; ?>" required>
       </div>
       <br>
 

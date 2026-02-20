@@ -25,8 +25,8 @@ require_once 'db_conn.php';
     
     <style>
         :root {
-            --primary-color: #16a085;
-            --primary-dark: #138871;
+            --primary-color: #2F80ED;
+            --primary-dark: #2366CC;
             --accent-color: #e74c3c;
             --success-color: #27ae60;
             --text-dark: #2c3e50;
@@ -35,7 +35,7 @@ require_once 'db_conn.php';
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            background: linear-gradient(135deg, #2F80ED 0%, #56CCF2 100%);
             min-height: 100vh;
             padding: 2rem 0;
         }
@@ -44,13 +44,13 @@ require_once 'db_conn.php';
             max-width: 900px;
             margin: 2rem auto;
             background: var(--white);
-            border-radius: 2rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            box-shadow: 0px 20px 60px rgba(47, 128, 237, 0.2);
             overflow: hidden;
         }
 
         .booking-header {
-            background: linear-gradient(135deg, #16a085, #1abc9c);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: var(--white);
             padding: 3rem;
             text-align: center;
@@ -191,7 +191,7 @@ require_once 'db_conn.php';
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(22, 160, 133, 0.1);
+            box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.1);
         }
 
         select.form-control {
@@ -238,7 +238,7 @@ require_once 'db_conn.php';
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #16a085, #1abc9c);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -310,14 +310,14 @@ require_once 'db_conn.php';
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #16a085, #1abc9c);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: var(--white);
             flex: 1;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
 
         .btn-secondary {
@@ -368,11 +368,47 @@ require_once 'db_conn.php';
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Back to Home Button */
+        .back-home {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 100;
+        }
+
+        .back-home a {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.2);
+            transition: all 0.3s;
+        }
+
+        .back-home a:hover {
+            background: var(--white);
+            transform: translateY(-2px);
+            box-shadow: 0px 15px 40px rgba(47, 128, 237, 0.3);
+        }
     </style>
 </head>
 <body>
+    <!-- Back to Home Button -->
+    <div class="back-home">
+        <a href="/RMU-Medical-Management-System/html/index.html">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Home</span>
+        </a>
+    </div>
+
     <div class="booking-container">
-        <div class="booking-header">
             <h1><i class="fas fa-calendar-check"></i> Book Appointment</h1>
             <p>Schedule your visit to RMU Medical Sickbay</p>
         </div>

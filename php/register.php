@@ -20,8 +20,8 @@
     
     <style>
         :root {
-            --primary-color: #16a085;
-            --primary-dark: #138871;
+            --primary-color: #2F80ED;
+            --primary-dark: #2366CC;
             --accent-color: #e74c3c;
             --success-color: #27ae60;
             --text-dark: #2c3e50;
@@ -40,15 +40,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #16a085 0%, #1abc9c 50%, #16a085 100%);
+            background: linear-gradient(135deg, #2F80ED 0%, #56CCF2 50%, #2F80ED 100%);
             padding: 3rem 0;
         }
 
         .register-container {
             background: var(--white);
             padding: 4rem 3rem;
-            border-radius: 2rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            box-shadow: 0px 20px 60px rgba(47, 128, 237, 0.2);
             width: 90%;
             max-width: 550px;
             animation: slideIn 0.5s ease-out;
@@ -74,13 +74,13 @@
         .register-header .logo-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #16a085, #1abc9c);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
-            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
 
         .register-header .logo-icon i {
@@ -140,7 +140,7 @@
             padding: 1.2rem 1.5rem 1.2rem 4.2rem;
             font-size: 1.5rem;
             border: 2px solid #e0e0e0;
-            border-radius: 1rem;
+            border-radius: 24px;
             transition: all 0.3s;
             font-family: 'Poppins', sans-serif;
         }
@@ -148,7 +148,7 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(22, 160, 133, 0.1);
+            box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.1);
         }
 
         select.form-control {
@@ -246,20 +246,20 @@
             padding: 1.5rem;
             font-size: 1.6rem;
             font-weight: 600;
-            background: linear-gradient(135deg, #16a085, #1abc9c);
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: var(--white);
             border: none;
-            border-radius: 1rem;
+            border-radius: 24px;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(22, 160, 133, 0.3);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
 
         .btn-register:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(22, 160, 133, 0.4);
+            box-shadow: 0px 15px 40px rgba(47, 128, 237, 0.4);
         }
 
         .btn-register:disabled {
@@ -305,10 +305,10 @@
             background: rgba(255, 255, 255, 0.95);
             color: var(--primary-color);
             text-decoration: none;
-            border-radius: 5rem;
+            border-radius: 50px;
             font-size: 1.5rem;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.2);
             transition: all 0.3s;
         }
 

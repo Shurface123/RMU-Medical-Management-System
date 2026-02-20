@@ -161,7 +161,7 @@ $stats = mysqli_fetch_assoc($statsResult);
         
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
+            background: #F4F8FF;
             padding: 20px;
         }
         
@@ -171,18 +171,18 @@ $stats = mysqli_fetch_assoc($statsResult);
         }
         
         .header {
-            background: white;
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             padding: 25px;
-            border-radius: 10px;
+            border-radius: 24px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .header h1 {
-            color: #2c3e50;
+            color: white;
             font-size: 28px;
         }
         
@@ -196,8 +196,8 @@ $stats = mysqli_fetch_assoc($statsResult);
         .stat-card {
             background: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 24px;
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
         }
         
         .stat-card h3 {
@@ -251,12 +251,13 @@ $stats = mysqli_fetch_assoc($statsResult);
         }
         
         .btn-primary {
-            background: #3498db;
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
         
         .btn-success {
@@ -281,9 +282,9 @@ $stats = mysqli_fetch_assoc($statsResult);
         
         .table-container {
             background: white;
-            border-radius: 10px;
+            border-radius: 24px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             overflow-x: auto;
         }
         
@@ -364,7 +365,7 @@ $stats = mysqli_fetch_assoc($statsResult);
         
         .modal-content {
             background: white;
-            border-radius: 10px;
+            border-radius: 24px;
             padding: 30px;
             max-width: 500px;
             width: 90%;
@@ -415,7 +416,7 @@ $stats = mysqli_fetch_assoc($statsResult);
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: #2F80ED;
         }
         
         .search-box {

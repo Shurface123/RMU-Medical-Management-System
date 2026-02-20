@@ -6,11 +6,11 @@
 
 :root {
     /* Primary Colors */
-    --primary-color: #16a085;
-    --primary-dark: #138871;
-    --primary-light: #1abc9c;
-    --accent-color: #e74c3c;
-    --accent-dark: #c0392b;
+    --primary-color: #2F80ED;
+    --primary-dark: #2366CC;
+    --primary-light: #56CCF2;
+    --accent-color: #2F80ED;
+    --accent-dark: #2366CC;
 
     /* Neutral Colors */
     --text-dark: #1d1d1d;
@@ -21,15 +21,15 @@
 
     /* Background Colors */
     --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-tertiary: #e9ecef;
+    --bg-secondary: #F4F8FF;
+    --bg-tertiary: #E8F0FE;
 
     /* Border & Shadow */
-    --border-color: #dee2e6;
-    --box-shadow: 0.5rem 0.5rem 0 rgba(22, 160, 133, 0.2);
-    --box-shadow-hover: 0.5rem 0.5rem 1rem rgba(22, 160, 133, 0.3);
+    --border-color: #E8F0FE;
+    --box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
+    --box-shadow-hover: 0px 15px 40px rgba(47, 128, 237, 0.12);
     --text-shadow: 0.4rem 0.4rem 0 rgba(0, 0, 0, 0.2);
-    --border-radius: 0.5rem;
+    --border-radius: 24px;
 
     /* Spacing */
     --spacing-xs: 0.5rem;
@@ -288,7 +288,7 @@ a:hover {
     background: var(--primary-dark);
     border-color: var(--primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .btn-outline {
@@ -432,6 +432,37 @@ a:hover {
     transform: rotate(15deg);
 }
 
+/* Theme Toggle for Header */
+.theme-toggle-header {
+    background: var(--primary-color);
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 2rem;
+    color: var(--white);
+    margin-left: 1.5rem;
+    transition: all var(--transition-normal);
+    box-shadow: 0px 4px 15px rgba(47, 128, 237, 0.3);
+}
+
+.theme-toggle-header:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px) rotate(15deg);
+    box-shadow: 0px 8px 25px rgba(47, 128, 237, 0.4);
+}
+
+[data-theme="dark"] .theme-toggle-header {
+    background: var(--bg-secondary);
+    color: var(--primary-light);
+}
+
+[data-theme="dark"] .theme-toggle-header:hover {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+
 /* ===================================
    HERO SECTION
    =================================== */
@@ -500,7 +531,7 @@ a:hover {
     background: var(--white);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    box-shadow: var(--box-shadow);
     transition: all var(--transition-normal);
 }
 
@@ -510,7 +541,7 @@ a:hover {
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .card-icon {
@@ -642,7 +673,7 @@ a:hover {
 
 .form-control:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+    box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.1);
 }
 
 .form-control.error {

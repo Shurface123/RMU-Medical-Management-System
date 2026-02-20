@@ -343,8 +343,8 @@
                         <th> DOCTOR ID </th>
                         <th> DOCTOR NAME </th>
                         <th> GENDER </th>
-                        <th> WORK DAY </th>
-                        <th> SPECIALITY </th>
+                        <th> SPECIALIZATION </th>
+                        <th> AVAILABLE DAYS </th>
                         <th> OPERATION </th>
                     </tr>
                 </thead>
@@ -353,21 +353,21 @@
                     <?php
                     include 'db_conn.php';
 
-                    $sql = " SELECT * FROM doctor LIMIT 5";
+                    $sql = " SELECT * FROM doctors LIMIT 5";
                     $query = mysqli_query($conn, $sql);
                     while ($Patient_data = mysqli_fetch_array($query)) {
 
 
                     ?>
                         <tr>
-                            <td><?php echo  $Patient_data['D_ID']; ?></td>
-                            <td><?php echo $Patient_data['D_Name'];  ?></td>
-                            <td><?php echo $Patient_data['Gender'];  ?></td>
-                            <td><?php echo $Patient_data['Work_Day'];  ?></td>
-                            <td><?php echo $Patient_data['Speciality'];  ?></td>
+                            <td><?php echo  $Patient_data['id']; ?></td>
+                            <td><?php echo $Patient_data['full_name'];  ?></td>
+                            <td><?php echo $Patient_data['gender'] ?? 'N/A';  ?></td>
+                            <td><?php echo $Patient_data['specialization'];  ?></td>
+                            <td><?php echo $Patient_data['available_days'] ?? 'N/A';  ?></td>
                             <td style="width: 140px;">
-                                <button class="tabbutton" style="background:yellow;"><a href="/php/Doctor/update-doctor.php?D_ID=<?php echo $Patient_data['D_ID']; ?>" class="btn btn-danger"><b>UPDATE</b></a></button>
-                                <button class="tabbutton" style="background:red;"> <a href="/php/Doctor/Delete.php?D_ID=<?php echo $Patient_data['D_ID'];  ?>" class="btn btn-success"><b>DELETE</b></a></button> &nbsp;
+                                <button class="tabbutton" style="background:yellow;"><a href="/php/Doctor/update-doctor.php?D_ID=<?php echo $Patient_data['id']; ?>" class="btn btn-danger"><b>UPDATE</b></a></button>
+                                <button class="tabbutton" style="background:red;"> <a href="/php/Doctor/Delete.php?D_ID=<?php echo $Patient_data['id'];  ?>" class="btn btn-success"><b>DELETE</b></a></button> &nbsp;
 
 
                             </td>

@@ -1,6 +1,6 @@
 <?php
 include_once 'db_conn.php';
-$sql = "DELETE FROM doctor WHERE D_ID='" . $_GET["D_ID"] . "'";
+$sql = "DELETE FROM doctors WHERE id='" . $_GET["D_ID"] . "'";
 if (mysqli_query($conn, $sql)) {
     include 'doctor.php';
 } else {

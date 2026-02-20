@@ -243,22 +243,22 @@
                     include 'db_conn.php';
 
 
-                    $sql = " SELECT * FROM patient LIMIT 5";
+                    $sql = " SELECT * FROM patients LIMIT 5";
                     $query = mysqli_query($conn, $sql);
                     while ($Patient_data = mysqli_fetch_array($query)) {
 
                     ?>
                         <tr>
-                            <td><b><?php echo $Patient_data['P_ID'];  ?></b></td>
-                            <td><?php echo $Patient_data['P_Name'];  ?></td>
-                            <td><?php echo $Patient_data['Gender'];  ?></td>
-                            <td><?php echo $Patient_data['Age'];  ?></td>
-                            <td><?php echo $Patient_data['P_Type'];  ?></td>
-                            <td><?php echo $Patient_data['A_Date'];  ?></td>
+                            <td><b><?php echo $Patient_data['id'];  ?></b></td>
+                            <td><?php echo $Patient_data['full_name'];  ?></td>
+                            <td><?php echo $Patient_data['gender'] ?? 'N/A';  ?></td>
+                            <td><?php echo $Patient_data['age'] ?? 'N/A';  ?></td>
+                            <td><?php echo $Patient_data['patient_type'] ?? 'N/A';  ?></td>
+                            <td><?php echo $Patient_data['admit_date'] ?? 'N/A';  ?></td>
                             <td style="width: 140px;">
 
-                                <button> <a href="/php/patient/update.php?P_ID=<?php echo $Patient_data['P_ID'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/patient/Delete.php?P_ID=<?php echo $Patient_data['P_ID']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
+                                <button> <a href="/php/patient/update.php?P_ID=<?php echo $Patient_data['id'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
+                                <button><a href="/php/patient/Delete.php?P_ID=<?php echo $Patient_data['id']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
 
 
 

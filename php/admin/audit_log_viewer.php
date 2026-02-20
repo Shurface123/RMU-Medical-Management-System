@@ -101,7 +101,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
+            background: #F4F8FF;
             padding: 20px;
         }
         
@@ -111,18 +111,18 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         }
         
         .header {
-            background: white;
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             padding: 25px;
-            border-radius: 10px;
+            border-radius: 24px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .header h1 {
-            color: #2c3e50;
+            color: white;
             font-size: 28px;
         }
         
@@ -136,8 +136,8 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         .stat-card {
             background: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 24px;
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
         }
         
         .stat-card h3 {
@@ -155,9 +155,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         .filters {
             background: white;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 24px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
         }
         
         .filters h3 {
@@ -207,8 +207,13 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         }
         
         .btn-primary {
-            background: #3498db;
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
         }
         
         .btn-success {
@@ -223,9 +228,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         
         .table-container {
             background: white;
-            border-radius: 10px;
+            border-radius: 24px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
             overflow-x: auto;
         }
         
@@ -301,13 +306,13 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         }
         
         .pagination a.active {
-            background: #3498db;
+            background: linear-gradient(135deg, #2F80ED, #56CCF2);
             color: white;
-            border-color: #3498db;
+            border-color: #2F80ED;
         }
         
         .pagination a:hover {
-            border-color: #3498db;
+            border-color: #2F80ED;
         }
         
         .details-cell {
