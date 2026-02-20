@@ -1,391 +1,146 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <title>RMU MEDICAL SICKBAY</title>
-    <link rel="shortcut icon" href="https://juniv.edu/images/favicon.ico">
-
-
-    <!-- fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-
-    <!-- CSS STYILE  -->
-
-
-    <style>
-        /* navbar style starts here */
-        .slidebar {
-
-            border: 20px;
-            width: 15%;
-            height: 700px;
-            position: fixed;
-            top: 0px;
-            background-color: rgba(195, 179, 179, 0.493);
-        }
-
-        .slidebar header {
-            padding: 30px 10px;
-            text-align: center;
-            font-family: 'Mochiy Pop P One', sans-serif;
-            font-size: 30px;
-            font-weight: bolder;
-            color: rgb(16, 95, 98);
-        }
-
-        .slidebar header span {
-            font-size: 50px;
-            color: rgb(89, 161, 87);
-        }
-
-
-        .slidebar ul li {
-
-            list-style: none;
-            padding: 10px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-weight: bolder;
-
-        }
-
-        .slidebar ul li:hover {
-            transform: scale(1.1);
-            transition: .5s;
-            border-radius: 10px;
-            background-color: rgb(89, 150, 152);
-            margin-right: 20px;
-        }
-
-        .slidebar ul li a {
-            text-decoration: none;
-        }
-
-
-        body {
-            background-color: #8CD2AB;
-        }
-
-        table,
-        th,
-        td {
-            border: 2px solid black;
-            border-collapse: collapse;
-            font-weight: bold;
-            padding: 5px 0px 5px 10px;
-        }
-
-        .row h2 {
-            font-family: 'Mochiy Pop P One', sans-serif;
-            font-size: 30px;
-            color: rgb(30, 60, 62)
-        }
-
-        table th {
-            font-size: 20px;
-            font-family: sans-serif;
-        }
-
-        .docadd {
-            background: none;
-            border: solid black 3px;
-            padding: 5px;
-            border-radius: 15px;
-        }
-
-        .docadd:hover {
-            transform: scale(1.1);
-            transition: .5s;
-        }
-
-        a {
-            text-decoration: none;
-            color: black;
-            font-weight: bold;
-        }
-
-        .tabbutton {
-            background: none;
-            border: solid black 3px;
-            padding: 5px;
-            border-radius: 15px;
-
-        }
-
-
-
-        .tabbutton:hover {
-            transform: scale(1.1);
-            transition: .5s;
-        }
-    </style>
-
-    <!-- fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-
-    <!-- CSS STYILE  -->
-
-
-    <style>
-        /* navbar style starts here */
-        .slidebar {
-
-            border: 20px;
-            width: 15%;
-            height: 700px;
-            position: fixed;
-            top: 0px;
-            background-color: rgba(195, 179, 179, 0.493);
-        }
-
-        .slidebar header {
-            padding: 30px 10px;
-            text-align: center;
-            font-family: 'Mochiy Pop P One', sans-serif;
-            font-size: 30px;
-            font-weight: bolder;
-            color: rgb(16, 95, 98);
-        }
-
-        .slidebar header span {
-            font-size: 50px;
-            color: rgb(89, 161, 87);
-        }
-
-
-        .slidebar ul li {
-
-            list-style: none;
-            padding: 10px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-weight: bolder;
-
-        }
-
-        .slidebar ul li:hover {
-            transform: scale(1.1);
-            transition: .5s;
-            border-radius: 10px;
-            background-color: rgb(89, 150, 152);
-            margin-right: 20px;
-        }
-
-        .slidebar ul li a {
-            text-decoration: none;
-        }
-
-
-        /* slidebar ends */
-
-
-        body {
-            background-color: #8CD2AB;
-        }
-
-        table,
-        th,
-        td {
-            border: 2px solid black;
-            border-collapse: collapse;
-            font-weight: bold;
-            padding: 5px 0px 5px 10px;
-        }
-
-        .row h2 {
-            font-family: 'Mochiy Pop P One', sans-serif;
-            font-size: 30px;
-            color: rgb(30, 60, 62)
-        }
-
-        table th {
-            font-size: 20px;
-            font-family: sans-serif;
-        }
-
-        .docadd {
-            background: none;
-            border: solid black 3px;
-            padding: 5px;
-            border-radius: 15px;
-        }
-
-        .docadd:hover {
-            transform: scale(1.1);
-            transition: .5s;
-        }
-
-        a {
-            text-decoration: none;
-            color: black;
-            font-weight: bold;
-        }
-
-        .tabbutton {
-            background: none;
-            border: solid black 3px;
-            padding: 5px;
-            border-radius: 15px;
-
-        }
-
-
-
-        .tabbutton:hover {
-            transform: scale(1.1);
-            transition: .5s;
-        }
-    </style>
-
-</head>
-
-<body>
-
-
-    <!-- sildebar starts -->
-
-
-    <div class="slidebar">
-        <header>
-            <span>
-                <i class="fas fa-users-cog"></i><br>
-            </span>
-            ADMIN
-        </header>
-        <ul>
-            <li>
-                <a href="/php/home.php"><i class="fas fa-home"></i> HOME </a>
-            </li>
-            <li>
-                <a href="/php/Doctor/doctor.php"><i class="fas fa-user-md"></i> DOCTORS </a>
-            </li>
-            <li>
-                <a href="/php/staff/staff.php"><i class="fas fa-user-nurse"></i> STAFFS </a>
-            </li>
-            <li>
-                <a href="/php/patient/patient.php"><i class="fas fa-user-injured"></i> PATIENTS </a>
-            </li>
-            <li>
-                <a href="/php/test/test.php"><i class="fas fa-file-medical-alt"></i> TESTS </a>
-
-            </li>
-            <li>
-                <a href="/php/bed/bed.php"><i class="fas fa-procedures"></i> BED </a>
-
-            </li>
-            <li>
-                <a href="/php/Ambulence/ambulence.php"><i class="fas fa-ambulance"></i> AMBULENCE </a>
-
-            </li>
-            <li>
-                <a href="/php/medicine/medicine.php"><i class="fas fa-medkit"></i> MEDICINE</a>
-
-            </li>
-
-        </ul>
-
-        <!-- logoutbutton -->
-        <div>
-            <style>
-                .logout {
-                    text-align: center;
-                    margin-top: 10px;
-                    font-family: 'Mochiy Pop P One', sans-serif;
-                    font-weight: bolder;
-                }
-
-                .logout:hover {
-                    transform: scale(1.2);
-                    color: red;
-                    transition: 1s;
-                }
-            </style>
-            <a style="text-decoration: none;" href="/php/index.php">
-                <div class="logout">
-                    LOG OUT
-                </div>
+<?php
+include 'db_conn.php';
+
+$active_page = 'doctors';
+$page_title  = 'Doctors';
+include '../includes/_sidebar.php';
+?>
+
+<main class="adm-main">
+    <!-- Top Bar -->
+    <div class="adm-topbar">
+        <div class="adm-topbar-left">
+            <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <span class="adm-page-title"><i class="fas fa-user-md" style="color:var(--primary);margin-right:.8rem;"></i>Doctors</span>
+        </div>
+        <div class="adm-topbar-right">
+            <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+        </div>
+    </div>
+
+    <div class="adm-content">
+        <!-- Page Header -->
+        <div class="adm-page-header">
+            <div class="adm-page-header-left">
+                <h1>Manage Doctors</h1>
+                <p>View, search, and manage all registered doctors in the sickbay.</p>
+            </div>
+            <a href="/RMU-Medical-Management-System/php/Doctor/add-doctor.php" class="adm-btn adm-btn-primary">
+                <i class="fas fa-user-plus"></i> Add New Doctor
             </a>
         </div>
-    </div>
 
-    <!-- slidebar ends -->
-
-
-    <div class="container">
-
-        <div class="row">
-            <div style="margin-left: 50%; margin-top: 5%;">
-                <h2>MANAGE <b>DOCTOR</b></h2>
+        <!-- Summary Strip -->
+        <?php
+        $total_doc = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors"))[0] ?? 0;
+        $male_doc  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors WHERE gender='Male' OR gender='male'"))[0] ?? 0;
+        $fem_doc   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors WHERE gender='Female' OR gender='female'"))[0] ?? 0;
+        ?>
+        <div class="adm-summary-strip">
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num"><?php echo $total_doc; ?></div>
+                <div class="adm-mini-card-label">Total Doctors</div>
             </div>
-            <div style="margin-left: 83%; margin-top: 3%;">
-                <button class="docadd"><a href="/php/Doctor/add-doctor.php">ADD DOCTOR</a></button>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num green"><?php echo $male_doc; ?></div>
+                <div class="adm-mini-card-label">Male</div>
+            </div>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num orange"><?php echo $fem_doc; ?></div>
+                <div class="adm-mini-card-label">Female</div>
             </div>
         </div>
-    </div>
 
-    <div class="card-body">
-        <div style="margin-left: 20%; margin-top: 1%;">
-
-            <!-- (A) SEARCH FORM -->
-            <form method="post" action="search-con.php">
-                <input type="text" name="search" required />
-                <input type="submit" value="Search" />
-            </form>
-            <br>
-
-            <table id="dataTable" width="90%" cellspacing="10">
-                <thead>
-                    <tr>
-                        <th> DOCTOR ID </th>
-                        <th> DOCTOR NAME </th>
-                        <th> GENDER </th>
-                        <th> SPECIALIZATION </th>
-                        <th> AVAILABLE DAYS </th>
-                        <th> OPERATION </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php
-                    include 'db_conn.php';
-
-                    $sql = " SELECT * FROM doctors LIMIT 5";
-                    $query = mysqli_query($conn, $sql);
-                    while ($Patient_data = mysqli_fetch_array($query)) {
-
-
-                    ?>
+        <!-- Search + Table Card -->
+        <div class="adm-card">
+            <div class="adm-card-header">
+                <h3><i class="fas fa-list"></i> Doctor Records</h3>
+                <form method="post" action="search-con.php" class="adm-search-form" style="margin:0;">
+                    <div class="adm-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" class="adm-search-input" placeholder="Search by name or specialization...">
+                    </div>
+                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+            </div>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
                         <tr>
-                            <td><?php echo  $Patient_data['id']; ?></td>
-                            <td><?php echo $Patient_data['full_name'];  ?></td>
-                            <td><?php echo $Patient_data['gender'] ?? 'N/A';  ?></td>
-                            <td><?php echo $Patient_data['specialization'];  ?></td>
-                            <td><?php echo $Patient_data['available_days'] ?? 'N/A';  ?></td>
-                            <td style="width: 140px;">
-                                <button class="tabbutton" style="background:yellow;"><a href="/php/Doctor/update-doctor.php?D_ID=<?php echo $Patient_data['id']; ?>" class="btn btn-danger"><b>UPDATE</b></a></button>
-                                <button class="tabbutton" style="background:red;"> <a href="/php/Doctor/Delete.php?D_ID=<?php echo $Patient_data['id'];  ?>" class="btn btn-success"><b>DELETE</b></a></button> &nbsp;
-
-
+                            <th>#</th>
+                            <th>Doctor ID</th>
+                            <th>Full Name</th>
+                            <th>Gender</th>
+                            <th>Specialization</th>
+                            <th>Available Days</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $sql = "SELECT * FROM doctors ORDER BY id DESC";
+                        $query = mysqli_query($conn, $sql);
+                        if (!$query || mysqli_num_rows($query) === 0) {
+                            echo "<tr><td colspan='7' style='text-align:center;padding:3rem;color:var(--text-muted);'>No doctors found. <a href='add-doctor.php' style='color:var(--primary);font-weight:600;'>Add one now.</a></td></tr>";
+                        } else {
+                            $n = 1;
+                            while ($d = mysqli_fetch_assoc($query)):
+                        ?>
+                        <tr>
+                            <td><?php echo $n++; ?></td>
+                            <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($d['id']); ?></span></td>
+                            <td><strong><?php echo htmlspecialchars($d['full_name']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($d['gender'] ?? 'N/A'); ?></td>
+                            <td><span class="adm-badge adm-badge-info"><?php echo htmlspecialchars($d['specialization']); ?></span></td>
+                            <td><?php echo htmlspecialchars($d['available_days'] ?? 'N/A'); ?></td>
+                            <td>
+                                <div class="adm-table-actions">
+                                    <a href="/RMU-Medical-Management-System/php/Doctor/update-doctor.php?D_ID=<?php echo $d['id']; ?>"
+                                       class="adm-btn adm-btn-warning adm-btn-sm">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="/RMU-Medical-Management-System/php/Doctor/Delete.php?D_ID=<?php echo $d['id']; ?>"
+                                       class="adm-btn adm-btn-danger adm-btn-sm"
+                                       onclick="return confirm('Delete this doctor?');">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
-                    <?php
-
-                    }
-
-                    ?>
-
-                </tbody>
-            </table>
+                        <?php endwhile; } ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-
     </div>
+</main>
 
-
+<script>
+// Mobile sidebar
+const sidebar = document.getElementById('admSidebar');
+const overlay = document.getElementById('admOverlay');
+document.getElementById('menuToggle')?.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+});
+overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+});
+// Theme toggle
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon   = document.getElementById('themeIcon');
+const html        = document.documentElement;
+function applyTheme(t) {
+    html.setAttribute('data-theme', t);
+    localStorage.setItem('rmu_theme', t);
+    themeIcon.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+applyTheme(localStorage.getItem('rmu_theme') || 'light');
+themeToggle?.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+</script>
 </body>
-
 </html>

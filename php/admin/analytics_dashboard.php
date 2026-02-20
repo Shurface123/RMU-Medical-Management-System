@@ -35,7 +35,6 @@ $loginActivityQuery = "SELECT
                         COUNT(*) as logins
                        FROM audit_log
                        WHERE action = 'login' 
-                       AND success = 1
                        AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
                        GROUP BY DATE(created_at)
                        ORDER BY date ASC";
@@ -66,8 +65,8 @@ $topUsers = mysqli_query($conn, $topUsersQuery);
 
 // System health
 $systemHealthQuery = "SELECT 
-                       (SELECT COUNT(*) FROM login_attempts WHERE success = 0 AND last_attempt > DATE_SUB(NOW(), INTERVAL 1 HOUR)) as failed_logins_1h,
-                       (SELECT COUNT(*) FROM users WHERE status = 'locked') as locked_accounts,
+                       (SELECT COUNT(*) FROM audit_log WHERE action = 'login_failed' AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)) as failed_logins_1h,
+                       (SELECT COUNT(*) FROM users WHERE is_active = 0) as locked_accounts,
                        (SELECT COUNT(*) FROM audit_log WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)) as events_1h";
 $systemHealth = mysqli_fetch_assoc(mysqli_query($conn, $systemHealthQuery));
 ?>

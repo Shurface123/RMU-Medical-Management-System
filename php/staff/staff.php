@@ -1,288 +1,122 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+include 'db_conn.php';
 
-<head>
-    <title>RMU MEDICAL SICKBAY</title>
-    <link rel="shortcut icon" href="https://juniv.edu/images/favicon.ico">
+$active_page = 'staff';
+$page_title  = 'Staff';
+include '../includes/_sidebar.php';
+?>
 
+<main class="adm-main">
+    <div class="adm-topbar">
+        <div class="adm-topbar-left">
+            <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <span class="adm-page-title"><i class="fas fa-user-nurse" style="color:var(--primary);margin-right:.8rem;"></i>Staff</span>
+        </div>
+        <div class="adm-topbar-right">
+            <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+        </div>
+    </div>
 
-    <!-- fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-
-    <!-- font ends -->
-
-    <style>
-        /* navbar style starts here */
-        body {
-            background: rgba(96, 193, 138, 0.722);
-        }
-
-        .slidebar {
-
-            border: 20px;
-            width: 15%;
-            height: 700px;
-            position: fixed;
-            top: 0px;
-            background-color: rgba(195, 179, 179, 0.493);
-        }
-
-        .slidebar header {
-            padding: 30px 10px;
-            text-align: center;
-            font-family: 'Mochiy Pop P One', sans-serif;
-            font-size: 30px;
-            font-weight: bolder;
-            color: rgb(16, 95, 98);
-        }
-
-        .slidebar header span {
-            font-size: 50px;
-            color: rgb(89, 161, 87);
-        }
-
-        .slidebar ul {}
-
-        .slidebar ul li {
-
-            list-style: none;
-            padding: 10px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-weight: bolder;
-
-        }
-
-        .slidebar ul li:hover {
-            transform: scale(1.1);
-            transition: .5s;
-            border-radius: 10px;
-            background-color: rgb(89, 150, 152);
-            margin-right: 20px;
-        }
-
-        .slidebar ul li a {
-            text-decoration: none;
-        }
-
-
-        /* slidebar ends */
-
-
-
-        table,
-        th,
-        td {
-            border: 1px solid black;
-            border-collapse: collapse;
-        }
-
-        body {
-            background: rgba(96, 193, 138, 0.722);
-        }
-
-
-
-        /* internal style */
-
-        h2 {
-            font-size: 40px;
-
-        }
-
-        table {
-            border: 2px solid black;
-        }
-
-        tr {}
-
-        th {
-            padding: 7px;
-            border: 2px solid black;
-            font-size: 22px;
-
-        }
-
-        td {
-            border: 2px solid black;
-            padding: 5px 10px 5px 20px;
-            font-size: 15px;
-            font-weight: bolder;
-
-        }
-
-        button {
-
-            border: solid 2px black;
-            border-radius: 15px;
-            padding: 2px 6px;
-            background-color: rgb(167, 127, 169);
-
-        }
-
-        button a {
-            text-decoration: none;
-            color: black;
-            font-weight: bolder;
-            padding: 2px 3px;
-
-        }
-
-        button:hover {
-            background-color: greenyellow;
-            transition: .5s;
-            transform: scale(1.1);
-        }
-
-        /* internal style end */
-    </style>
-
-</head>
-
-<body>
-
-    <!-- sildebar starts -->
-
-    <div class="slidebar">
-        <header>
-            <span>
-                <i class="fas fa-users-cog"></i><br>
-            </span>
-            ADMIN
-        </header>
-        <ul>
-            <li>
-                <a href="/php/home.php"><i class="fas fa-home"></i> HOME </a>
-            </li>
-            <li>
-                <a href="/php/Doctor/doctor.php"><i class="fas fa-user-md"></i> DOCTORS </a>
-            </li>
-            <li>
-                <a href="/php/staff/staff.php"><i class="fas fa-user-nurse"></i> STAFFS </a>
-            </li>
-            <li>
-                <a href="/php/patient/patient.php"><i class="fas fa-user-injured"></i> PATIENTS </a>
-            </li>
-            <li>
-                <a href="/php/test/test.php"><i class="fas fa-file-medical-alt"></i> TESTS </a>
-
-            </li>
-            <li>
-                <a href="/php/bed/bed.php"><i class="fas fa-procedures"></i> BED </a>
-
-            </li>
-            <li>
-                <a href="/php/Ambulence/ambulence.php"><i class="fas fa-ambulance"></i> AMBULENCE </a>
-
-            </li>
-            <li>
-                <a href="/php/medicine/medicine.php"><i class="fas fa-medkit"></i> MEDICINE </a>
-            </li>
-
-        </ul>
-
-        <!-- logoutbutton -->
-        <div>
-            <style>
-                .logout {
-                    text-align: center;
-                    margin-top: 10px;
-                    font-family: 'Mochiy Pop P One', sans-serif;
-                    font-weight: bolder;
-                }
-
-                .logout:hover {
-                    transform: scale(1.2);
-                    color: red;
-                    transition: 1s;
-                }
-            </style>
-            <a style="text-decoration: none;" href="/php/index.php">
-                <div class="logout">
-                    LOG OUT
-                </div>
+    <div class="adm-content">
+        <div class="adm-page-header">
+            <div class="adm-page-header-left">
+                <h1>Manage Staff</h1>
+                <p>View and manage all medical and administrative staff members.</p>
+            </div>
+            <a href="/RMU-Medical-Management-System/php/staff/add-staff.php" class="adm-btn adm-btn-primary">
+                <i class="fas fa-user-plus"></i> Add New Staff
             </a>
         </div>
-    </div>
 
-    <!-- slidebar ends -->
-
-
-    <div class="container">
-
-        <div class="row">
-            <div style="margin-left: 50%; margin-top: 5%;">
-                <h2>MANAGE <b>STAFF</b></h2>
+        <?php
+        $total_staff = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff"))[0] ?? 0;
+        $male_staff  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff WHERE Gender='Male' OR Gender='male'"))[0] ?? 0;
+        $fem_staff   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff WHERE Gender='Female' OR Gender='female'"))[0] ?? 0;
+        ?>
+        <div class="adm-summary-strip">
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num"><?php echo $total_staff; ?></div>
+                <div class="adm-mini-card-label">Total Staff</div>
             </div>
-            <div style="margin-left: 82%; margin-top: 3%;">
-                <button><a href="/php/staff/add-staff.php">ADD STAFF</a></button>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num green"><?php echo $male_staff; ?></div>
+                <div class="adm-mini-card-label">Male</div>
+            </div>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num orange"><?php echo $fem_staff; ?></div>
+                <div class="adm-mini-card-label">Female</div>
             </div>
         </div>
-    </div>
 
-    <div class="card-body">
-        <div style="margin-left: 20%; margin-top: 1%;">
-
-
-            <!-- (A) SEARCH FORM -->
-            <form method="post" action="search.php">
-
-                <input type="text" name="search" required />
-                <input type="submit" value="Search" />
-            </form>
-            <br>
-
-            <table id="dataTable" width="90%" cellspacing="10">
-                <thead>
-                    <tr>
-                        <th> STAFF ID </th>
-                        <th> STAFF NAME </th>
-                        <th> GENDER </th>
-                        <th> WORK DAY </th>
-                        <th> OPERATION </th>
-
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php
-                    include 'db_conn.php';
-
-
-                    $sql = " SELECT * FROM staff LIMIT 5";
-                    $query = mysqli_query($conn, $sql);
-                    while ($Patient_data = mysqli_fetch_array($query)) {
-
-                    ?>
+        <div class="adm-card">
+            <div class="adm-card-header">
+                <h3><i class="fas fa-list"></i> Staff Records</h3>
+                <form method="post" action="search.php" class="adm-search-form" style="margin:0;">
+                    <div class="adm-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" class="adm-search-input" placeholder="Search by name or work day...">
+                    </div>
+                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-search"></i> Search</button>
+                </form>
+            </div>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
                         <tr>
-                            <td><b><?php echo $Patient_data['S_ID'];  ?></b></td>
-                            <td><?php echo $Patient_data['S_Name'];  ?></td>
-                            <td><?php echo $Patient_data['Gender'];  ?></td>
-                            <td><?php echo $Patient_data['Work_Day'];  ?></td>
-                            <td style="width: 140px;">
-
-                                <button> <a href="/php/staff/update.php?S_ID=<?php echo $Patient_data['S_ID'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/staff/Delete.php?S_ID=<?php echo $Patient_data['S_ID']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
-
-
+                            <th>#</th>
+                            <th>Staff ID</th>
+                            <th>Full Name</th>
+                            <th>Gender</th>
+                            <th>Work Day</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $sql = "SELECT * FROM staff ORDER BY S_ID DESC";
+                        $query = mysqli_query($conn, $sql);
+                        if (!$query || mysqli_num_rows($query) === 0) {
+                            echo "<tr><td colspan='6' style='text-align:center;padding:3rem;color:var(--text-muted);'>No staff found. <a href='add-staff.php' style='color:var(--primary);font-weight:600;'>Add one now.</a></td></tr>";
+                        } else {
+                            $n = 1;
+                            while ($s = mysqli_fetch_assoc($query)):
+                        ?>
+                        <tr>
+                            <td><?php echo $n++; ?></td>
+                            <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($s['S_ID']); ?></span></td>
+                            <td><strong><?php echo htmlspecialchars($s['S_Name']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($s['Gender']); ?></td>
+                            <td><?php echo htmlspecialchars($s['Work_Day']); ?></td>
+                            <td>
+                                <div class="adm-table-actions">
+                                    <a href="/RMU-Medical-Management-System/php/staff/update.php?S_ID=<?php echo $s['S_ID']; ?>"
+                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="/RMU-Medical-Management-System/php/staff/Delete.php?S_ID=<?php echo $s['S_ID']; ?>"
+                                       class="adm-btn adm-btn-danger adm-btn-sm"
+                                       onclick="return confirm('Delete this staff member?');"><i class="fas fa-trash"></i> Delete</a>
+                                </div>
                             </td>
                         </tr>
-                    <?php
-
-                    }
-
-                    ?>
-
-                </tbody>
-            </table>
+                        <?php endwhile; } ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-
     </div>
+</main>
 
-
+<script>
+const sidebar = document.getElementById('admSidebar');
+const overlay = document.getElementById('admOverlay');
+document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
+overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon   = document.getElementById('themeIcon');
+const html        = document.documentElement;
+function applyTheme(t) { html.setAttribute('data-theme',t); localStorage.setItem('rmu_theme',t); themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon'; }
+applyTheme(localStorage.getItem('rmu_theme') || 'light');
+themeToggle?.addEventListener('click', () => applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+</script>
 </body>
-
 </html>

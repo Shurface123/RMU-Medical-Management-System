@@ -5,1547 +5,442 @@
 
 // AUTHENTICATION CHECK - Admin Only
 require_once 'includes/auth_middleware.php';
-enforceSingleDashboard('admin'); // Only admin can access this page
+enforceSingleDashboard('admin');
 
-// Include database connection
+// Database
 include 'db_conn.php';
 
-// Get current date and time
+// Date & Time
 date_default_timezone_set('Africa/Accra');
 $currentDate = date('l, F j, Y');
 $currentTime = date('g:i A');
 
-// Fetch statistics
+// ── Statistics ──────────────────────────────
 $stats = [];
 
-// Doctors count
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM doctors");
 $stats['doctors'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-// Staff count
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM staff");
 $stats['staff'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-// Patients count
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM patients");
 $stats['patients'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-// Tests count
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM tests");
 $stats['tests'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-// Beds count
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM beds");
 $stats['beds'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-// Ambulance count
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM ambulances");
 $stats['ambulance'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-// Medicine count
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicines");
 $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-// NOW we can start outputting HTML
+// ── Medicine Low-Stock Alerts ────────────────
+$low_stock_meds = [];
+$q_low = mysqli_query($conn, "SELECT medicine_name, stock_quantity, reorder_level FROM medicines WHERE stock_quantity <= reorder_level ORDER BY stock_quantity ASC LIMIT 5");
+if ($q_low) {
+    while ($row = mysqli_fetch_assoc($q_low)) {
+        $low_stock_meds[] = $row;
+    }
+}
+
+// ── Recent Patients  ─────────────────────────
+$recent_patients = [];
+$q_patients = mysqli_query($conn, "SELECT full_name, patient_type, admit_date, gender FROM patients ORDER BY id DESC LIMIT 6");
+if ($q_patients) {
+    while ($row = mysqli_fetch_assoc($q_patients)) {
+        $recent_patients[] = $row;
+    }
+}
+
+// ── Chart Data: Monthly Patient Admissions ───
+$monthly_labels = [];
+$monthly_patients = [];
+for ($i = 5; $i >= 0; $i--) {
+    $month_label = date('M', strtotime("-$i months"));
+    $month_num   = date('Y-m', strtotime("-$i months"));
+    $monthly_labels[] = $month_label;
+    $q = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM patients WHERE DATE_FORMAT(admit_date,'%Y-%m') = '$month_num'");
+    $monthly_patients[] = $q ? (mysqli_fetch_assoc($q)['cnt'] ?? 0) : 0;
+}
+
+$active_page = 'dashboard';
+$page_title  = 'Admin Dashboard';
+include 'includes/_sidebar.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - RMU Medical Sickbay</title>
-    <link rel="shortcut icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8iLCWYue_TYmdWLVce7EYTVG4wZBjW9FJtw&s">
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="../css/main.css">
-    
-    <!-- Theme CSS -->
-    <link rel="stylesheet" href="../css/themes/light-theme.css">
-    <link rel="stylesheet" href="../css/themes/dark-theme.css">
-    
-    <style>
-        :root {
-            --sidebar-width: 280px;
-            --header-height: 70px;
-            --primary-color: #2F80ED;
-            --primary-dark: #2366CC;
-            --secondary-color: #56CCF2;
-            --accent-color: #2F80ED;
-            --text-dark: #2c3e50;
-            --text-light: #7f8c8d;
-            --bg-light: #F4F8FF;
-            --white: #ffffff;
-            --shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-            --shadow-hover: 0px 15px 40px rgba(47, 128, 237, 0.12);
-            --transition: all 0.3s ease;
-        }
 
-        /* Dark Theme */
-        [data-theme="dark"] {
-            --bg-light: #1a1a1a;
-            --white: #2d2d2d;
-            --text-dark: #f8f9fa;
-            --text-light: #b0b0b0;
-            --shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
-            --shadow-hover: 0px 15px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        [data-theme="dark"] body {
-            background: #1a1a1a;
-            color: #f8f9fa;
-        }
-
-        [data-theme="dark"] .top-bar {
-            background: #2d2d2d;
-            color: #f8f9fa;
-        }
-
-        [data-theme="dark"] .stat-card,
-        [data-theme="dark"] .quick-action-card,
-        [data-theme="dark"] .activity-card {
-            background: #2d2d2d;
-            color: #f8f9fa;
-        }
-
-        [data-theme="dark"] .stat-card h3 {
-            color: #b0b0b0;
-        }
-
-        /* Theme Toggle Button */
-        .theme-toggle {
-            position: fixed;
-            bottom: 100px;
-            left: calc(var(--sidebar-width) / 2 - 25px);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 1001;
-            backdrop-filter: blur(10px);
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
-        }
-
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--bg-light);
-            color: var(--text-dark);
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: linear-gradient(to right, #2F80ED, #56CCF2);
-            color: var(--white);
-            transition: var(--transition);
-            z-index: 1000;
-            overflow-y: auto;
-            box-shadow: var(--shadow);
-        }
-
-        .sidebar-header {
-            padding: 2rem 1.5rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .sidebar-header i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            color: var(--white);
-        }
-
-        .sidebar-header h2 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .sidebar-header p {
-            font-size: 1.2rem;
-            opacity: 0.95;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 2rem 0;
-        }
-
-        .sidebar-menu li {
-            margin: 0.5rem 0;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 1.2rem 2rem;
-            color: var(--white);
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: 500;
-            transition: var(--transition);
-            position: relative;
-            border-radius: 12px;
-            margin: 0 1rem;
-        }
-
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(5px);
-        }
-
-        .sidebar-menu a i {
-            margin-right: 1.5rem;
-            font-size: 1.8rem;
-            width: 25px;
-            text-align: center;
-        }
-
-        .logout-btn {
-            position: absolute;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 3rem);
-        }
-
-        .logout-btn a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.2rem;
-            background: rgba(255, 255, 255, 0.2);
-            color: var(--white);
-            text-decoration: none;
-            border-radius: 12px;
-            font-size: 1.5rem;
-            font-weight: 600;
-            transition: var(--transition);
-            backdrop-filter: blur(10px);
-        }
-
-        .logout-btn a:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .logout-btn a i {
-            margin-right: 1rem;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-            transition: var(--transition);
-        }
-
-        .top-bar {
-            background: var(--white);
-            height: var(--header-height);
-            padding: 0 3rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .top-bar h1 {
-            font-size: 2.5rem;
-            color: var(--text-dark);
-            font-weight: 700;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .user-info .date-time {
-            font-size: 1.4rem;
-            color: var(--text-light);
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-
-        /* Theme Toggle Button */
-        .theme-toggle {
-            background: var(--bg-secondary);
-            border: none;
-            padding: 0.8rem 1.2rem;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1.8rem;
-            color: var(--primary-color);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .theme-toggle:hover {
-            background: var(--primary-color);
-            color: var(--white);
-            transform: rotate(15deg);
-        }
-
-        /* Dashboard Content */
-        .dashboard-content {
-            padding: 3rem;
-        }
-
-        .welcome-section {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            color: var(--white);
-            padding: 3rem;
-            border-radius: 24px;
-            margin-bottom: 3rem;
-            box-shadow: var(--shadow);
-        }
-
-        .welcome-section h2 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .welcome-section p {
-            font-size: 1.6rem;
-            opacity: 0.95;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .stat-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: var(--white);
-        }
-
-        .stat-card-icon.doctors {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-        }
-
-        .stat-card-icon.staff {
-            background: linear-gradient(135deg, #BB6BD9, #C89EFF);
-        }
-
-        .stat-card-icon.patients {
-            background: linear-gradient(135deg, #FF6B9D, #FFA06B);
-        }
-
-        .stat-card-icon.tests {
-            background: linear-gradient(135deg, #FFB946, #FFA06B);
-        }
-
-        .stat-card-icon.beds {
-            background: linear-gradient(135deg, #6FCF97, #A8E6CF);
-        }
-
-        .stat-card-icon.ambulance {
-            background: linear-gradient(135deg, #FFB946, #FFA06B);
-        }
-
-        .stat-card-icon.medicine {
-            background: linear-gradient(135deg, #6FCF97, #A8E6CF);
-        }
-
-        .stat-card-body h3 {
-            font-size: 1.4rem;
-            color: var(--text-light);
-            font-weight: 500;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-card-body .number {
-            font-size: 4rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            line-height: 1;
-        }
-
-        .stat-card-footer {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #E8F0FE;
-            font-size: 1.3rem;
-            color: var(--text-light);
-        }
-
-        .stat-card-footer i {
-            margin-right: 0.5rem;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            margin-bottom: 3rem;
-        }
-
-        .quick-actions h3 {
-            font-size: 2.2rem;
-            margin-bottom: 2rem;
-            color: var(--text-dark);
-        }
-
-        .action-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1.5rem 2rem;
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            color: var(--white);
-            text-decoration: none;
-            border-radius: 12px;
-            font-size: 1.5rem;
-            font-weight: 600;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-        }
-
-        .action-btn:hover {
-            background: linear-gradient(135deg, #2366CC, #2F80ED);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .action-btn i {
-            font-size: 1.8rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 991px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .top-bar {
-                padding: 0 2rem;
-            }
-
-            .dashboard-content {
-                padding: 2rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 1.5rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .top-bar h1 {
-                font-size: 2rem;
-            }
-
-            .welcome-section h2 {
-                font-size: 2.5rem;
-            }
-
-            .stat-card-body .number {
-                font-size: 3rem;
-            }
-
-            .user-info .date-time {
-                display: none;
-            }
-        }
-
-        @media (max-width: 450px) {
-            .dashboard-content {
-                padding: 1.5rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar"><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - RMU Medical Sickbay</title>
-    <link rel="shortcut icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8iLCWYue_TYmdWLVce7EYTVG4wZBjW9FJtw&s">
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="../css/main.css">
-    
-    <style>
-        :root {
-            --sidebar-width: 280px;
-            --header-height: 70px;
-            --primary-color: #16a085;
-            --primary-dark: #138871;
-            --accent-color: #e74c3c;
-            --text-dark: #2c3e50;
-            --text-light: #7f8c8d;
-            --bg-light: #ecf0f1;
-            --white: #ffffff;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--bg-light);
-            color: var(--text-dark);
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: linear-gradient(135deg, #16a085 0%, #138871 100%);
-            color: var(--white);
-            transition: var(--transition);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .sidebar-header {
-            padding: 2rem 1.5rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar-header i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            color: var(--white);
-        }
-
-        .sidebar-header h2 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .sidebar-header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 2rem 0;
-        }
-
-        .sidebar-menu li {
-            margin: 0.5rem 0;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 1.2rem 2rem;
-            color: var(--white);
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: 500;
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: rgba(255, 255, 255, 0.1);
-            padding-left: 2.5rem;
-        }
-
-        .sidebar-menu a i {
-            margin-right: 1.5rem;
-            font-size: 1.8rem;
-            width: 25px;
-            text-align: center;
-        }
-
-        .logout-btn {
-            position: absolute;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 3rem);
-        }
-
-        .logout-btn a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.2rem;
-            background: var(--accent-color);
-            color: var(--white);
-            text-decoration: none;
-            border-radius: 0.5rem;
-            font-size: 1.5rem;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .logout-btn a:hover {
-            background: #c0392b;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
-        }
-
-        .logout-btn a i {
-            margin-right: 1rem;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-            transition: var(--transition);
-        }
-
-        .top-bar {
-            background: var(--white);
-            height: var(--header-height);
-            padding: 0 3rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .top-bar h1 {
-            font-size: 2.5rem;
-            color: var(--text-dark);
-            font-weight: 700;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .user-info .date-time {
-            font-size: 1.4rem;
-            color: var(--text-light);
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-
-        /* Dashboard Content */
-        .dashboard-content {
-            padding: 3rem;
-        }
-
-        .welcome-section {
-            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
-            color: var(--white);
-            padding: 3rem;
-            border-radius: 1rem;
-            margin-bottom: 3rem;
-            box-shadow: var(--shadow);
-        }
-
-        .welcome-section h2 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .welcome-section p {
-            font-size: 1.6rem;
-            opacity: 0.95;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: var(--white);
-        }
-
-        .stat-card-icon.doctors {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-        }
-
-        .stat-card-icon.staff {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-        }
-
-        .stat-card-icon.patients {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-        }
-
-        .stat-card-icon.tests {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-        }
-
-        .stat-card-icon.beds {
-            background: linear-gradient(135deg, #1abc9c, #16a085);
-        }
-
-        .stat-card-icon.ambulance {
-            background: linear-gradient(135deg, #e67e22, #d35400);
-        }
-
-        .stat-card-icon.medicine {
-            background: linear-gradient(135deg, #27ae60, #229954);
-        }
-
-        .stat-card-body h3 {
-            font-size: 1.4rem;
-            color: var(--text-light);
-            font-weight: 500;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-card-body .number {
-            font-size: 4rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            line-height: 1;
-        }
-
-        .stat-card-footer {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--bg-light);
-            font-size: 1.3rem;
-            color: var(--text-light);
-        }
-
-        .stat-card-footer i {
-            margin-right: 0.5rem;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: var(--shadow);
-            margin-bottom: 3rem;
-        }
-
-        .quick-actions h3 {
-            font-size: 2.2rem;
-            margin-bottom: 2rem;
-            color: var(--text-dark);
-        }
-
-        .action-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1.5rem 2rem;
-            background: var(--primary-color);
-            color: var(--white);
-            text-decoration: none;
-            border-radius: 0.5rem;
-            font-size: 1.5rem;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .action-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3);
-        }
-
-        .action-btn i {
-            font-size: 1.8rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 991px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .top-bar {
-                padding: 0 2rem;
-            }
-
-            .dashboard-content {
-                padding: 2rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 1.5rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .top-bar h1 {
-                font-size: 2rem;
-            }
-
-            .welcome-section h2 {
-                font-size: 2.5rem;
-            }
-
-            .stat-card-body .number {
-                font-size: 3rem;
-            }
-
-            .user-info .date-time {
-                display: none;
-            }
-        }
-
-        @media (max-width: 450px) {
-            .dashboard-content {
-                padding: 1.5rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-user-shield"></i>
-            <h2>ADMIN</h2>
-            <p>Dashboard</p>
+<!-- ══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<main class="adm-main">
+
+    <!-- Top Bar -->
+    <div class="adm-topbar">
+        <div class="adm-topbar-left">
+            <button class="adm-menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="adm-page-title">Admin Dashboard</span>
+        </div>
+        <div class="adm-topbar-right">
+            <div class="adm-topbar-datetime">
+                <i class="far fa-calendar-alt"></i>
+                <span id="liveDate"><?php echo $currentDate; ?></span>
+                &nbsp;|&nbsp;
+                <i class="far fa-clock"></i>
+                <span id="liveTime"><?php echo $currentTime; ?></span>
+            </div>
+            <!-- Low-Stock Notification -->
+            <button class="adm-notif-btn" title="<?php echo count($low_stock_meds); ?> low-stock medicines">
+                <i class="fas fa-bell"></i>
+                <?php if (count($low_stock_meds) > 0): ?>
+                    <span class="adm-notif-badge"><?php echo count($low_stock_meds); ?></span>
+                <?php endif; ?>
+            </button>
+            <!-- Theme Toggle -->
+            <button class="adm-theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="adm-content">
+
+        <!-- Welcome Banner -->
+        <div class="adm-welcome">
+            <h2><i class="fas fa-hand-sparkles" style="margin-right:.8rem;"></i>Welcome Back, Administrator!</h2>
+            <p>Here's a live overview of RMU Medical Sickbay — <?php echo $currentDate; ?></p>
         </div>
 
-        <ul class="sidebar-menu">
-            <li>
-                <a href="/RMU-Medical-Management-System/php/home.php" class="active">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php">
-                    <i class="fas fa-user-md"></i>
-                    <span>Doctors</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/staff/staff.php">
-                    <i class="fas fa-user-nurse"></i>
-                    <span>Staff</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/patient/patient.php">
-                    <i class="fas fa-user-injured"></i>
-                    <span>Patients</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/test/test.php">
-                    <i class="fas fa-file-medical-alt"></i>
-                    <span>Tests</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/bed/bed.php">
-                    <i class="fas fa-procedures"></i>
-                    <span>Beds</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php">
-                    <i class="fas fa-ambulance"></i>
-                    <span>Ambulance</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/medicine/medicine.php">
-                    <i class="fas fa-pills"></i>
-                    <span>Medicine</span>
-                </a>
-            </li>
-        </ul>
+        <!-- ── Low-Stock Medicine Alert ── -->
+        <?php if (!empty($low_stock_meds)): ?>
+        <div class="adm-alert adm-alert-warning" style="margin-bottom:2rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>Low-Stock Alert:</strong>
+                <?php
+                $names = array_column($low_stock_meds, 'medicine_name');
+                echo implode(', ', array_map('htmlspecialchars', array_slice($names, 0, 3)));
+                if (count($names) > 3) echo ' and ' . (count($names) - 3) . ' more';
+                echo ' are running low.';
+                ?>
+                <a href="/RMU-Medical-Management-System/php/medicine/medicine.php" style="color:inherit;font-weight:700;text-decoration:underline;margin-left:.5rem;">View Inventory →</a>
+            </div>
+        </div>
+        <?php endif; ?>
 
-        <div class="logout-btn">
-            <a href="/RMU-Medical-Management-System/php/index.php">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
+        <!-- ── Statistics Grid ── -->
+        <div class="adm-stats-grid">
+            <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="adm-stat-card">
+                <div class="adm-stat-icon doctors"><i class="fas fa-user-md"></i></div>
+                <div class="adm-stat-label">Total Doctors</div>
+                <div class="adm-stat-value"><?php echo $stats['doctors']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Manage Doctors</div>
+            </a>
+            <a href="/RMU-Medical-Management-System/php/staff/staff.php" class="adm-stat-card">
+                <div class="adm-stat-icon staff"><i class="fas fa-user-nurse"></i></div>
+                <div class="adm-stat-label">Total Staff</div>
+                <div class="adm-stat-value"><?php echo $stats['staff']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Manage Staff</div>
+            </a>
+            <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="adm-stat-card">
+                <div class="adm-stat-icon patients"><i class="fas fa-user-injured"></i></div>
+                <div class="adm-stat-label">Total Patients</div>
+                <div class="adm-stat-value"><?php echo $stats['patients']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Manage Patients</div>
+            </a>
+            <a href="/RMU-Medical-Management-System/php/test/test.php" class="adm-stat-card">
+                <div class="adm-stat-icon tests"><i class="fas fa-flask"></i></div>
+                <div class="adm-stat-label">Lab Tests</div>
+                <div class="adm-stat-value"><?php echo $stats['tests']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> View Tests</div>
+            </a>
+            <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="adm-stat-card">
+                <div class="adm-stat-icon beds"><i class="fas fa-procedures"></i></div>
+                <div class="adm-stat-label">Beds</div>
+                <div class="adm-stat-value"><?php echo $stats['beds']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Bed Status</div>
+            </a>
+            <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="adm-stat-card">
+                <div class="adm-stat-icon ambulance"><i class="fas fa-ambulance"></i></div>
+                <div class="adm-stat-label">Ambulances</div>
+                <div class="adm-stat-value"><?php echo $stats['ambulance']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Fleet Status</div>
+            </a>
+            <a href="/RMU-Medical-Management-System/php/medicine/medicine.php" class="adm-stat-card">
+                <div class="adm-stat-icon medicine"><i class="fas fa-pills"></i></div>
+                <div class="adm-stat-label">Medicines</div>
+                <div class="adm-stat-value"><?php echo $stats['medicine']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Inventory</div>
             </a>
         </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <h1>RMU Medical Sickbay</h1>
-            <div class="user-info">
-                <div class="date-time">
-                    <i class="far fa-calendar"></i> <?php echo $currentDate; ?> | 
-                    <i class="far fa-clock"></i> <?php echo $currentTime; ?>
+        <!-- ── Analytics Charts ── -->
+        <div class="adm-charts-grid">
+            <!-- Patient Admissions Trend -->
+            <div class="adm-chart-card">
+                <h3><i class="fas fa-chart-line"></i> Patient Admissions (Last 6 Months)</h3>
+                <canvas id="chartAdmissions" height="200"></canvas>
+            </div>
+            <!-- Medicine Inventory Overview -->
+            <div class="adm-chart-card">
+                <h3><i class="fas fa-chart-doughnut"></i> Medicine Stock Overview</h3>
+                <canvas id="chartMedicine" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- ── Two-Column Row: Recent Patients + Report Generator ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2.8rem;" class="adm-two-col">
+
+            <!-- Recent Patients / Triage Queue -->
+            <div class="adm-card">
+                <div class="adm-card-header">
+                    <h3><i class="fas fa-users"></i> Recent Patient Queue</h3>
+                    <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="adm-btn adm-btn-ghost adm-btn-sm">
+                        <i class="fas fa-eye"></i> View All
+                    </a>
                 </div>
-                <!-- Theme Toggle Button -->
-                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
+                <div class="adm-card-body" style="padding:0;">
+                    <?php if (empty($recent_patients)): ?>
+                        <p style="padding:2.5rem;color:var(--text-muted);text-align:center;">No patients found.</p>
+                    <?php else: ?>
+                    <table class="adm-table">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Type / Triage</th>
+                                <th>Admitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recent_patients as $pat): 
+                                $type = strtolower($pat['patient_type'] ?? 'routine');
+                                if (str_contains($type, 'emerg')) {
+                                    $triage_class = 'adm-triage adm-triage-emergency';
+                                    $triage_label = '🔴 Emergency';
+                                } elseif (str_contains($type, 'urgent') || str_contains($type, 'semi')) {
+                                    $triage_class = 'adm-triage adm-triage-urgent';
+                                    $triage_label = '🟡 Urgent';
+                                } else {
+                                    $triage_class = 'adm-triage adm-triage-routine';
+                                    $triage_label = '🟢 Routine';
+                                }
+                            ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo htmlspecialchars($pat['full_name']); ?></strong>
+                                    <br><small style="color:var(--text-muted);"><?php echo htmlspecialchars($pat['gender'] ?? ''); ?></small>
+                                </td>
+                                <td><span class="<?php echo $triage_class; ?>"><?php echo $triage_label; ?></span></td>
+                                <td style="font-size:1.25rem;color:var(--text-secondary);"><?php echo htmlspecialchars($pat['admit_date'] ?? 'N/A'); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Quick Report Export Hub -->
+            <div class="adm-card">
+                <div class="adm-card-header">
+                    <h3><i class="fas fa-file-export"></i> Report Export Hub</h3>
+                </div>
+                <div class="adm-card-body">
+                    <p style="color:var(--text-secondary);margin-bottom:2rem;font-size:1.35rem;">
+                        Export data snapshots for records and compliance.
+                    </p>
+                    <div style="display:flex;flex-direction:column;gap:1.2rem;">
+                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=patients&fmt=csv"
+                           class="adm-btn adm-btn-success" style="justify-content:flex-start;">
+                            <i class="fas fa-file-csv"></i> Export Patients (CSV)
+                        </a>
+                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=doctors&fmt=csv"
+                           class="adm-btn adm-btn-primary" style="justify-content:flex-start;">
+                            <i class="fas fa-file-csv"></i> Export Doctors (CSV)
+                        </a>
+                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=medicines&fmt=csv"
+                           class="adm-btn adm-btn-warning" style="justify-content:flex-start;">
+                            <i class="fas fa-pills"></i> Export Medicine Inventory (CSV)
+                        </a>
+                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=ambulances&fmt=csv"
+                           class="adm-btn adm-btn-danger" style="justify-content:flex-start;">
+                            <i class="fas fa-ambulance"></i> Export Ambulance Fleet (CSV)
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Dashboard Content -->
-        <div class="dashboard-content">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <h2>Welcome Back, Administrator!</h2>
-                <p>Here's what's happening with your medical facility today.</p>
-            </div>
-
-            <!-- Statistics Grid -->
-            <div class="stats-grid">
-                <!-- Doctors Card -->
-                <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon doctors">
-                            <i class="fas fa-user-md"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Total Doctors</h3>
-                        <div class="number"><?php echo $stats['doctors']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Doctors
-                    </div>
-                </a>
-
-                <!-- Staff Card -->
-                <a href="/RMU-Medical-Management-System/php/staff/staff.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon staff">
-                            <i class="fas fa-user-nurse"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Total Staff</h3>
-                        <div class="number"><?php echo $stats['staff']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Staff
-                    </div>
-                </a>
-
-                <!-- Patients Card -->
-                <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon patients">
-                            <i class="fas fa-user-injured"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Total Patients</h3>
-                        <div class="number"><?php echo $stats['patients']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Patients
-                    </div>
-                </a>
-
-                <!-- Tests Card -->
-                <a href="/RMU-Medical-Management-System/php/test/test.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon tests">
-                            <i class="fas fa-file-medical-alt"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Lab Tests</h3>
-                        <div class="number"><?php echo $stats['tests']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Tests
-                    </div>
-                </a>
-
-                <!-- Beds Card -->
-                <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon beds">
-                            <i class="fas fa-procedures"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Available Beds</h3>
-                        <div class="number"><?php echo $stats['beds']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> Manage Beds
-                    </div>
-                </a>
-
-                <!-- Ambulance Card -->
-                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon ambulance">
-                            <i class="fas fa-ambulance"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Ambulances</h3>
-                        <div class="number"><?php echo $stats['ambulance']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> Manage Fleet
-                    </div>
-                </a>
-
-                <!-- Medicine Card -->
-                <a href="/RMU-Medical-Management-System/php/medicine/medicine.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon medicine">
-                            <i class="fas fa-pills"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Medicines</h3>
-                        <div class="number"><?php echo $stats['medicine']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> Manage Inventory
-                    </div>
-                </a>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
+        <!-- ── Quick Actions ── -->
+        <div class="adm-card">
+            <div class="adm-card-header">
                 <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-                <div class="action-buttons">
-                    <a href="/RMU-Medical-Management-System/php/booking.php" class="action-btn">
-                        <i class="fas fa-calendar-plus"></i>
-                        <span>New Appointment</span>
-                    </a>
-                    <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="action-btn">
+            </div>
+            <div class="adm-card-body">
+                <div class="adm-quick-actions">
+                    <a href="/RMU-Medical-Management-System/php/patient/add-patient.php" class="adm-action-tile">
                         <i class="fas fa-user-plus"></i>
                         <span>Add Patient</span>
                     </a>
-                    <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="action-btn">
+                    <a href="/RMU-Medical-Management-System/php/Doctor/add-doctor.php" class="adm-action-tile">
                         <i class="fas fa-user-md"></i>
                         <span>Add Doctor</span>
                     </a>
-                    <a href="/RMU-Medical-Management-System/php/medicine/medicine.php" class="action-btn">
+                    <a href="/RMU-Medical-Management-System/php/staff/add-staff.php" class="adm-action-tile">
+                        <i class="fas fa-user-nurse"></i>
+                        <span>Add Staff</span>
+                    </a>
+                    <a href="/RMU-Medical-Management-System/php/medicine/add-medicine.php" class="adm-action-tile">
                         <i class="fas fa-pills"></i>
                         <span>Add Medicine</span>
                     </a>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        // Update time every second
-        setInterval(() => {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            const timeElements = document.querySelectorAll('.date-time');
-            timeElements.forEach(el => {
-                const dateText = el.textContent.split('|')[0];
-                el.innerHTML = `${dateText}| <i class="far fa-clock"></i> ${timeString}`;
-            });
-        }, 1000);
-
-        // Active link highlighting
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.sidebar-menu a').forEach(link => {
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('active');
-            }
-        });
-    </script>
-
-    <!-- Theme Manager -->
-    <script src="../js/theme-manager.js"></script>
-</body>
-</html>
-        <div class="sidebar-header">
-            <i class="fas fa-user-shield"></i>
-            <h2>ADMIN</h2>
-            <p>Dashboard</p>
-        </div>
-
-        <ul class="sidebar-menu">
-            <li>
-                <a href="/RMU-Medical-Management-System/php/home.php" class="active">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php">
-                    <i class="fas fa-user-md"></i>
-                    <span>Doctors</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/staff/staff.php">
-                    <i class="fas fa-user-nurse"></i>
-                    <span>Staff</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/patient/patient.php">
-                    <i class="fas fa-user-injured"></i>
-                    <span>Patients</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/test/test.php">
-                    <i class="fas fa-file-medical-alt"></i>
-                    <span>Tests</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/bed/bed.php">
-                    <i class="fas fa-procedures"></i>
-                    <span>Beds</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php">
-                    <i class="fas fa-ambulance"></i>
-                    <span>Ambulance</span>
-                </a>
-            </li>
-            <li>
-                <a href="/RMU-Medical-Management-System/php/medicine/medicine.php">
-                    <i class="fas fa-pills"></i>
-                    <span>Medicine</span>
-                </a>
-            </li>
-        </ul>
-
-        <div class="logout-btn">
-            <a href="/RMU-Medical-Management-System/php/index.php">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <h1>RMU Medical Sickbay</h1>
-            <div class="user-info">
-                <div class="date-time">
-                    <i class="far fa-calendar"></i> <?php echo $currentDate; ?> | 
-                    <i class="far fa-clock"></i> <?php echo $currentTime; ?>
-                </div>
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dashboard Content -->
-        <div class="dashboard-content">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <h2>Welcome Back, Administrator!</h2>
-                <p>Here's what's happening with your medical facility today.</p>
-            </div>
-
-            <!-- Statistics Grid -->
-            <div class="stats-grid">
-                <!-- Doctors Card -->
-                <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon doctors">
-                            <i class="fas fa-user-md"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Total Doctors</h3>
-                        <div class="number"><?php echo $stats['doctors']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Doctors
-                    </div>
-                </a>
-
-                <!-- Staff Card -->
-                <a href="/RMU-Medical-Management-System/php/staff/staff.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon staff">
-                            <i class="fas fa-user-nurse"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Total Staff</h3>
-                        <div class="number"><?php echo $stats['staff']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Staff
-                    </div>
-                </a>
-
-                <!-- Patients Card -->
-                <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon patients">
-                            <i class="fas fa-user-injured"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Total Patients</h3>
-                        <div class="number"><?php echo $stats['patients']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Patients
-                    </div>
-                </a>
-
-                <!-- Tests Card -->
-                <a href="/RMU-Medical-Management-System/php/test/test.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon tests">
-                            <i class="fas fa-file-medical-alt"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Lab Tests</h3>
-                        <div class="number"><?php echo $stats['tests']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> View All Tests
-                    </div>
-                </a>
-
-                <!-- Beds Card -->
-                <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon beds">
-                            <i class="fas fa-procedures"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Available Beds</h3>
-                        <div class="number"><?php echo $stats['beds']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> Manage Beds
-                    </div>
-                </a>
-
-                <!-- Ambulance Card -->
-                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon ambulance">
-                            <i class="fas fa-ambulance"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Ambulances</h3>
-                        <div class="number"><?php echo $stats['ambulance']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> Manage Fleet
-                    </div>
-                </a>
-
-                <!-- Medicine Card -->
-                <a href="/RMU-Medical-Management-System/php/medicine/medicine.php" class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon medicine">
-                            <i class="fas fa-pills"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Medicines</h3>
-                        <div class="number"><?php echo $stats['medicine']; ?></div>
-                    </div>
-                    <div class="stat-card-footer">
-                        <i class="fas fa-arrow-right"></i> Manage Inventory
-                    </div>
-                </a>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-                <div class="action-buttons">
-                    <a href="/RMU-Medical-Management-System/php/booking.php" class="action-btn">
-                        <i class="fas fa-calendar-plus"></i>
-                        <span>New Appointment</span>
+                    <a href="/RMU-Medical-Management-System/php/booking.php" class="adm-action-tile">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Book Appointment</span>
                     </a>
-                    <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="action-btn">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Add Patient</span>
+                    <a href="/RMU-Medical-Management-System/php/test/add-test.php" class="adm-action-tile">
+                        <i class="fas fa-flask"></i>
+                        <span>Add Lab Test</span>
                     </a>
-                    <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="action-btn">
-                        <i class="fas fa-user-md"></i>
-                        <span>Add Doctor</span>
+                    <a href="/RMU-Medical-Management-System/php/Ambulence/add-ambulence.php" class="adm-action-tile">
+                        <i class="fas fa-ambulance"></i>
+                        <span>Add Ambulance</span>
                     </a>
-                    <a href="/RMU-Medical-Management-System/php/medicine/medicine.php" class="action-btn">
-                        <i class="fas fa-pills"></i>
-                        <span>Add Medicine</span>
+                    <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php" class="adm-action-tile">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
                     </a>
                 </div>
             </div>
         </div>
-    </main>
 
-    <script>
-        // Update time every second
-        setInterval(() => {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            const timeElements = document.querySelectorAll('.date-time');
-            timeElements.forEach(el => {
-                const dateText = el.textContent.split('|')[0];
-                el.innerHTML = `${dateText}| <i class="far fa-clock"></i> ${timeString}`;
-            });
-        }, 1000);
+    </div><!-- /adm-content -->
+</main><!-- /adm-main -->
 
-        // Active link highlighting
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.sidebar-menu a').forEach(link => {
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('active');
-            }
-        });
-    </script>
+<!-- ── Chart.js CDN ── -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- Theme Toggle Button -->
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <i class="fas fa-moon"></i>
-    </button>
+<script>
+// ─── Live Clock ────────────────────────────────────
+function updateClock() {
+    const now = new Date();
+    document.getElementById('liveTime').textContent = now.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit',hour12:true});
+}
+setInterval(updateClock, 1000);
 
-    <!-- Theme Toggle Script -->
-    <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        const themeIcon = themeToggle.querySelector('i');
+// ─── Mobile Sidebar Toggle ─────────────────────────
+const sidebar  = document.getElementById('admSidebar');
+const overlay  = document.getElementById('admOverlay');
+const menuBtn  = document.getElementById('menuToggle');
+menuBtn?.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+});
+overlay?.addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+});
 
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
+// ─── Theme Toggle ──────────────────────────────────
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon   = document.getElementById('themeIcon');
+const html        = document.documentElement;
 
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
+function applyTheme(t) {
+    html.setAttribute('data-theme', t);
+    localStorage.setItem('rmu_theme', t);
+    if (t === 'dark') {
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+    } else {
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+    }
+}
 
-        function updateThemeIcon(theme) {
-            if (theme === 'dark') {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
+// Init from saved preference
+applyTheme(localStorage.getItem('rmu_theme') || 'light');
+
+themeToggle?.addEventListener('click', () => {
+    applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+// ─── Chart: Patient Admissions ────────────────────
+const labels   = <?php echo json_encode($monthly_labels); ?>;
+const patients = <?php echo json_encode($monthly_patients); ?>;
+
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const gridColor = () => isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+const textColor = () => isDark() ? '#9AAECB' : '#5A6A85';
+
+const ctxAdm = document.getElementById('chartAdmissions')?.getContext('2d');
+if (ctxAdm) {
+    const admChart = new Chart(ctxAdm, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Patients Admitted',
+                data: patients,
+                backgroundColor: 'rgba(47,128,237,0.18)',
+                borderColor: '#2F80ED',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0, color: textColor() }, grid: { color: gridColor() } },
+                x: { ticks: { color: textColor() }, grid: { display: false } }
             }
         }
-    </script>
+    });
+}
+
+// ─── Chart: Medicine Overview ─────────────────────
+<?php
+$total_med   = $stats['medicine'];
+$low_med_cnt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM medicines WHERE stock_quantity <= reorder_level AND stock_quantity > 0"))[0] ?? 0;
+$out_med_cnt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM medicines WHERE stock_quantity = 0"))[0] ?? 0;
+$ok_med_cnt  = max(0, $total_med - $low_med_cnt - $out_med_cnt);
+?>
+const ctxMed = document.getElementById('chartMedicine')?.getContext('2d');
+if (ctxMed) {
+    new Chart(ctxMed, {
+        type: 'doughnut',
+        data: {
+            labels: ['In Stock', 'Low Stock', 'Out of Stock'],
+            datasets: [{
+                data: [<?php echo $ok_med_cnt; ?>, <?php echo $low_med_cnt; ?>, <?php echo $out_med_cnt; ?>],
+                backgroundColor: ['rgba(39,174,96,0.8)', 'rgba(243,156,18,0.8)', 'rgba(231,76,60,0.8)'],
+                borderColor: ['#27AE60', '#F39C12', '#E74C3C'],
+                borderWidth: 2,
+                hoverOffset: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '68%',
+            plugins: {
+                legend: { position: 'bottom', labels: { color: textColor(), padding: 16, font: { size: 13 } } }
+            }
+        }
+    });
+}
+
+// Active nav highlights
+document.querySelectorAll('.adm-nav-item').forEach(link => {
+    if (link.getAttribute('href') === window.location.pathname) link.classList.add('active');
+});
+</script>
+
 </body>
 </html>

@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt->execute();
             }
             
-            $auditLogger->logAction($_SESSION['user_id'], 'config_update', 'system_config', null, 'Updated general settings');
+            $auditLogger->log($_SESSION['user_id'], 'config_update', 'system_config', null, null, 'Updated general settings');
             $message = "General settings updated successfully!";
             break;
             
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt->execute();
             }
             
-            $auditLogger->logAction($_SESSION['user_id'], 'config_update', 'system_config', null, 'Updated security settings');
+            $auditLogger->log($_SESSION['user_id'], 'config_update', 'system_config', null, null, 'Updated security settings');
             $message = "Security settings updated successfully!";
             break;
             
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt->execute();
             }
             
-            $auditLogger->logAction($_SESSION['user_id'], 'config_update', 'system_config', null, 'Updated email settings');
+            $auditLogger->log($_SESSION['user_id'], 'config_update', 'system_config', null, null, 'Updated email settings');
             $message = "Email settings updated successfully!";
             break;
     }

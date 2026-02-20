@@ -19,9 +19,9 @@ class EmailService {
     // Email configuration
     private $smtp_host = 'smtp.gmail.com'; // Change as needed
     private $smtp_port = 587;
-    private $smtp_username = ''; // Set in constructor or config
-    private $smtp_password = ''; // Set in constructor or config
-    private $from_email = 'Sickbay.txt@rmu.edu.gh';
+    private $smtp_username = 'sickbay.text@st.rmu.edu.gh'; // Set in constructor or config
+    private $smtp_password = 'hqrr kkat ruqg nutf'; // Set in constructor or config
+    private $from_email = 'sickbay.text@st.rmu.edu.gh';
     private $from_name = 'RMU Medical Sickbay';
     
     public function __construct($db_connection, $config = []) {

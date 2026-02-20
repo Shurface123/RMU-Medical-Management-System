@@ -1,274 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+include 'db_conn.php';
 
-<head>
+$active_page = 'ambulance';
+$page_title  = 'Ambulance Fleet';
+include '../includes/_sidebar.php';
+?>
 
-    <title>RMU MEDICAL SICKBAY</title>
-    <link rel="shortcut icon" href="https://juniv.edu/images/favicon.ico">
-    <!-- fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+<main class="adm-main">
+    <div class="adm-topbar">
+        <div class="adm-topbar-left">
+            <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <span class="adm-page-title"><i class="fas fa-ambulance" style="color:var(--primary);margin-right:.8rem;"></i>Ambulance Fleet</span>
+        </div>
+        <div class="adm-topbar-right">
+            <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+        </div>
+    </div>
 
-    <!-- font ends -->
-
-    <style>
-        /* navbar style starts here */
-        body {
-            background: rgba(96, 193, 138, 0.722);
-        }
-
-        .slidebar {
-
-            border: 20px;
-            width: 15%;
-            height: 700px;
-            position: fixed;
-            top: 0px;
-            background-color: rgba(195, 179, 179, 0.493);
-        }
-
-        .slidebar header {
-            padding: 30px 10px;
-            text-align: center;
-            font-family: 'Mochiy Pop P One', sans-serif;
-            font-size: 30px;
-            font-weight: bolder;
-            color: rgb(16, 95, 98);
-        }
-
-        .slidebar header span {
-            font-size: 50px;
-            color: rgb(89, 161, 87);
-        }
-
-        .slidebar ul {}
-
-        .slidebar ul li {
-
-            list-style: none;
-            padding: 10px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-weight: bolder;
-
-        }
-
-        .slidebar ul li:hover {
-            transform: scale(1.1);
-            transition: .5s;
-            border-radius: 10px;
-            background-color: rgb(89, 150, 152);
-            margin-right: 20px;
-        }
-
-        .slidebar ul li a {
-            text-decoration: none;
-        }
-
-
-        /* slidebar ends */
-
-        table,
-        th,
-        td {
-            border: 1px solid black;
-            border-collapse: collapse;
-        }
-
-        /* internal style */
-
-        h2 {
-            font-size: 40px;
-
-        }
-
-        table {
-            border: 2px solid black;
-        }
-
-        tr {}
-
-        th {
-            padding: 7px;
-            border: 2px solid black;
-            font-size: 22px;
-
-        }
-
-        td {
-            border: 2px solid black;
-            padding: 5px 10px 5px 20px;
-            font-size: 15px;
-            font-weight: bolder;
-
-        }
-
-        button {
-
-            border: solid 2px black;
-            border-radius: 15px;
-            padding: 2px 6px;
-            background-color: rgb(167, 127, 169);
-
-        }
-
-        button a {
-            text-decoration: none;
-            color: black;
-            font-weight: bolder;
-            padding: 2px 3px;
-
-        }
-
-        button:hover {
-            background-color: greenyellow;
-            transition: .5s;
-            transform: scale(1.1);
-        }
-
-        /* internal style end */
-    </style>
-
-</head>
-
-<body>
-
-    <!-- sildebar starts -->
-
-    <div class="slidebar">
-        <header>
-            <span>
-                <i class="fas fa-users-cog"></i><br>
-            </span>
-            ADMIN
-        </header>
-        <ul>
-            <li>
-                <a href="/php/home.php"><i class="fas fa-home"></i> HOME </a>
-            </li>
-            <li>
-                <a href="/php/Doctor/doctor.php"><i class="fas fa-user-md"></i> DOCTORS </a>
-            </li>
-            <li>
-                <a href="/php/staff/staff.php"><i class="fas fa-user-nurse"></i> STAFFS </a>
-            </li>
-            <li>
-                <a href="/php/patient/patient.php"><i class="fas fa-user-injured"></i> PATIENTS </a>
-            </li>
-            <li>
-                <a href="/php/test/test.php"><i class="fas fa-file-medical-alt"></i> TESTS</a>
-
-            </li>
-            <li>
-                <a href="/php/bed/bed.php"><i class="fas fa-procedures"></i> BED </a>
-
-            </li>
-            <li>
-                <a href="/php/Ambulence/ambulence.php"><i class="fas fa-ambulance"></i> AMBULANCE </a>
-
-            </li>
-            <li>
-                <a href="/php/medicine/medicine.php"><i class="fas fa-medkit"></i> MEDICINE </a>
-            </li>
-
-        </ul>
-
-        <!-- logoutbutton -->
-        <div>
-            <style>
-                .logout {
-                    text-align: center;
-                    margin-top: 10px;
-                    font-family: 'Mochiy Pop P One', sans-serif;
-                    font-weight: bolder;
-                }
-
-                .logout:hover {
-                    transform: scale(1.2);
-                    color: red;
-                    transition: 1s;
-                }
-            </style>
-            <a style="text-decoration: none;" href="/php/index.php">
-                <div class="logout">
-                    LOG OUT
-                </div>
+    <div class="adm-content">
+        <div class="adm-page-header">
+            <div class="adm-page-header-left">
+                <h1>Ambulance Fleet Management</h1>
+                <p>Monitor fleet availability, driver assignments, and service schedules.</p>
+            </div>
+            <a href="/RMU-Medical-Management-System/php/Ambulence/add-ambulence.php" class="adm-btn adm-btn-primary">
+                <i class="fas fa-plus"></i> Add Ambulance
             </a>
         </div>
-    </div>
 
-    <!-- slidebar ends -->
-
-    <div class="container">
-
-        <div class="row">
-            <div style="margin-left: 45%; margin-top: 5%;">
-                <h2>MANAGE <b>AMBULANCE</b></h2>
+        <?php
+        $total_amb = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances"))[0] ?? 0;
+        $avail_amb = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='Available' OR status='available'"))[0] ?? 0;
+        $busy_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='On Duty' OR status='on duty' OR status='OnDuty'"))[0] ?? 0;
+        $maint_amb = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='Maintenance' OR status='maintenance'"))[0] ?? 0;
+        ?>
+        <div class="adm-summary-strip">
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num"><?php echo $total_amb; ?></div>
+                <div class="adm-mini-card-label">Total Fleet</div>
             </div>
-            <div style="margin-left: 80%; margin-top: 3%;">
-                <button><a href="/php/Ambulence/add-ambulence.php">ADD AMBULANCE</a></button>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num green"><?php echo $avail_amb; ?></div>
+                <div class="adm-mini-card-label">Available</div>
+            </div>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num orange"><?php echo $busy_amb; ?></div>
+                <div class="adm-mini-card-label">On Duty</div>
+            </div>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num red"><?php echo $maint_amb; ?></div>
+                <div class="adm-mini-card-label">Maintenance</div>
             </div>
         </div>
-    </div>
 
-    <div class="card-body">
-        <div style="margin-left: 20%; margin-top: 1%;">
-
-            <!-- (A) SEARCH FORM -->
-            <form method="post" action="search.php">
-                <input type="text" name="search" required />
-                <input type="submit" value="Search" />
-            </form>
-            <br>
-
-            <table id="dataTable" width="90%" cellspacing="10">
-                <thead>
-                    <tr>
-                        <th>AMBULANCE ID</th>
-                        <th>VEHICLE NUMBER</th>
-                        <th>DRIVER NAME</th>
-                        <th>DRIVER PHONE</th>
-                        <th>STATUS</th>
-                        <th>LAST SERVICE DATE</th>
-                        <th>NEXT SERVICE DATE</th>
-                        <th>OPERATION</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php
-                    include 'db_conn.php';
-
-                    $sql = "SELECT * FROM ambulances LIMIT 5";
-                    $query = mysqli_query($conn, $sql);
-                    while ($amb_data = mysqli_fetch_assoc($query)) {
-                    ?>
+        <div class="adm-card">
+            <div class="adm-card-header">
+                <h3><i class="fas fa-truck-medical"></i> Vehicle Registry</h3>
+                <form method="post" action="search.php" class="adm-search-form" style="margin:0;">
+                    <div class="adm-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" class="adm-search-input" placeholder="Search by vehicle number or driver...">
+                    </div>
+                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-search"></i> Search</button>
+                </form>
+            </div>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
                         <tr>
-                            <td><b><?php echo $amb_data['ambulance_id']; ?></b></td>
-                            <td><?php echo $amb_data['vehicle_number']; ?></td>
-                            <td><?php echo $amb_data['driver_name']; ?></td>
-                            <td><?php echo $amb_data['driver_phone']; ?></td>
-                            <td><?php echo $amb_data['status']; ?></td>
-                            <td><?php echo $amb_data['last_service_date']; ?></td>
-                            <td><?php echo $amb_data['next_service_date']; ?></td>
-                            <td style="width: 140px;">
-                                <button><a href="/php/Ambulence/update.php?ambulance_id=<?php echo $amb_data['ambulance_id']; ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/Ambulence/Delete.php?ambulance_id=<?php echo $amb_data['ambulance_id']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
+                            <th>#</th>
+                            <th>Ambulance ID</th>
+                            <th>Vehicle No.</th>
+                            <th>Driver</th>
+                            <th>Driver Phone</th>
+                            <th>Status</th>
+                            <th>Last Service</th>
+                            <th>Next Service</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $sql   = "SELECT * FROM ambulances ORDER BY ambulance_id";
+                        $query = mysqli_query($conn, $sql);
+                        if (!$query || mysqli_num_rows($query) === 0) {
+                            echo "<tr><td colspan='9' style='text-align:center;padding:3rem;color:var(--text-muted);'>No ambulances found. <a href='add-ambulence.php' style='color:var(--primary);font-weight:600;'>Add one now.</a></td></tr>";
+                        } else {
+                            $n = 1;
+                            while ($amb = mysqli_fetch_assoc($query)):
+                                $status = strtolower($amb['status'] ?? '');
+                                if (str_contains($status, 'avail')) {
+                                    $badge_class = 'adm-badge adm-badge-success';
+                                } elseif (str_contains($status, 'duty') || str_contains($status, 'on')) {
+                                    $badge_class = 'adm-badge adm-badge-warning';
+                                } else {
+                                    $badge_class = 'adm-badge adm-badge-danger';
+                                }
+                                // Next service highlight
+                                $svc_style = '';
+                                if (!empty($amb['next_service_date'])) {
+                                    $days = (strtotime($amb['next_service_date']) - time()) / 86400;
+                                    if ($days <= 7) $svc_style = 'color:var(--danger);font-weight:700;';
+                                    elseif ($days <= 30) $svc_style = 'color:var(--warning);font-weight:600;';
+                                }
+                        ?>
+                        <tr>
+                            <td><?php echo $n++; ?></td>
+                            <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($amb['ambulance_id']); ?></span></td>
+                            <td><strong><?php echo htmlspecialchars($amb['vehicle_number']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($amb['driver_name']); ?></td>
+                            <td><?php echo htmlspecialchars($amb['driver_phone']); ?></td>
+                            <td><span class="<?php echo $badge_class; ?>"><?php echo htmlspecialchars($amb['status']); ?></span></td>
+                            <td style="color:var(--text-secondary);"><?php echo htmlspecialchars($amb['last_service_date'] ?? 'N/A'); ?></td>
+                            <td style="<?php echo $svc_style; ?>"><?php echo htmlspecialchars($amb['next_service_date'] ?? 'N/A'); ?></td>
+                            <td>
+                                <div class="adm-table-actions">
+                                    <a href="/RMU-Medical-Management-System/php/Ambulence/update.php?ambulance_id=<?php echo $amb['ambulance_id']; ?>"
+                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="/RMU-Medical-Management-System/php/Ambulence/Delete.php?ambulance_id=<?php echo $amb['ambulance_id']; ?>"
+                                       class="adm-btn adm-btn-danger adm-btn-sm"
+                                       onclick="return confirm('Remove this ambulance from the fleet?');"><i class="fas fa-trash"></i> Delete</a>
+                                </div>
                             </td>
                         </tr>
-                    <?php
-                    }
-                    ?>
-
-                </tbody>
-            </table>
+                        <?php endwhile; } ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-
     </div>
+</main>
 
-
+<script>
+const sidebar = document.getElementById('admSidebar');
+const overlay = document.getElementById('admOverlay');
+document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
+overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon   = document.getElementById('themeIcon');
+const html        = document.documentElement;
+function applyTheme(t) { html.setAttribute('data-theme',t); localStorage.setItem('rmu_theme',t); themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon'; }
+applyTheme(localStorage.getItem('rmu_theme') || 'light');
+themeToggle?.addEventListener('click', () => applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+</script>
 </body>
-
 </html>

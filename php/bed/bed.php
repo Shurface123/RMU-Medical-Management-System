@@ -1,271 +1,162 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+include 'db_conn.php';
 
-<head>
+$active_page = 'beds';
+$page_title  = 'Bed Management';
+include '../includes/_sidebar.php';
+?>
 
-    <title>RMU MEDICAL SICKBAY</title>
-    <link rel="shortcut icon" href="https://juniv.edu/images/favicon.ico">
-    <!-- fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+<main class="adm-main">
+    <div class="adm-topbar">
+        <div class="adm-topbar-left">
+            <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <span class="adm-page-title"><i class="fas fa-procedures" style="color:var(--primary);margin-right:.8rem;"></i>Bed Management</span>
+        </div>
+        <div class="adm-topbar-right">
+            <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+        </div>
+    </div>
 
-    <!-- font ends -->
-
-    <style>
-        /* navbar style starts here */
-        body {
-            background: rgba(96, 193, 138, 0.722);
-        }
-
-        .slidebar {
-
-            border: 20px;
-            width: 15%;
-            height: 700px;
-            position: fixed;
-            top: 0px;
-            background-color: rgba(195, 179, 179, 0.493);
-        }
-
-        .slidebar header {
-            padding: 30px 10px;
-            text-align: center;
-            font-family: 'Mochiy Pop P One', sans-serif;
-            font-size: 30px;
-            font-weight: bolder;
-            color: rgb(16, 95, 98);
-        }
-
-        .slidebar header span {
-            font-size: 50px;
-            color: rgb(89, 161, 87);
-        }
-
-
-        .slidebar ul li {
-
-            list-style: none;
-            padding: 10px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-weight: bolder;
-
-        }
-
-        .slidebar ul li:hover {
-            transform: scale(1.1);
-            transition: .5s;
-            border-radius: 10px;
-            background-color: rgb(89, 150, 152);
-            margin-right: 20px;
-        }
-
-        .slidebar ul li a {
-            text-decoration: none;
-        }
-
-
-        /* slidebar ends */
-
-        table,
-        th,
-        td {
-            border: 1px solid black;
-            border-collapse: collapse;
-        }
-
-        /* internal style */
-
-        h2 {
-            font-size: 40px;
-
-        }
-
-        table {
-            border: 2px solid black;
-        }
-
-
-
-        th {
-            padding: 7px;
-            border: 2px solid black;
-            font-size: 22px;
-
-        }
-
-        td {
-            border: 2px solid black;
-            padding: 5px 10px 5px 20px;
-            font-size: 15px;
-            font-weight: bolder;
-
-        }
-
-        button {
-
-            border: solid 2px black;
-            border-radius: 15px;
-            padding: 2px 6px;
-            background-color: rgb(167, 127, 169);
-
-        }
-
-        button a {
-            text-decoration: none;
-            color: black;
-            font-weight: bolder;
-            padding: 2px 3px;
-
-        }
-
-        button:hover {
-            background-color: greenyellow;
-            transition: .5s;
-            transform: scale(1.1);
-        }
-
-        /* internal style end */
-    </style>
-
-</head>
-
-<body>
-
-    <!-- sildebar starts -->
-
-    <div class="slidebar">
-        <header>
-            <span>
-                <i class="fas fa-users-cog"></i><br>
-            </span>
-            ADMIN
-        </header>
-        <ul>
-            <li>
-                <a href="/php/home.php"><i class="fas fa-home"></i> HOME </a>
-            </li>
-            <li>
-                <a href="/php/Doctor/doctor.php"><i class="fas fa-user-md"></i> DOCTORS </a>
-            </li>
-            <li>
-                <a href="/php/staff/staff.php"><i class="fas fa-user-nurse"></i> STAFFS </a>
-            </li>
-            <li>
-                <a href="/php/patient/patient.php"><i class="fas fa-user-injured"></i> PATIENTS </a>
-            </li>
-            <li>
-                <a href="/php/test/test.php"><i class="fas fa-file-medical-alt"></i> TESTS </a>
-
-            </li>
-            <li>
-                <a href="/php/bed/bed.php"><i class="fas fa-procedures"></i> BEDS </a>
-
-            </li>
-            <li>
-                <a href="/php/Ambulence/ambulence.php"><i class="fas fa-ambulance"></i> AMBULANCES </a>
-
-            </li>
-            <li>
-                <a href="/php/medicine/medicine.php"><i class="fas fa-medkit"></i> MEDICINES </a>
-            </li>
-
-        </ul>
-
-        <!-- logoutbutton -->
-        <div>
-            <style>
-                .logout {
-                    text-align: center;
-                    margin-top: 10px;
-                    font-family: 'Mochiy Pop P One', sans-serif;
-                    font-weight: bolder;
-                }
-
-                .logout:hover {
-                    transform: scale(1.2);
-                    color: red;
-                    transition: 1s;
-                }
-            </style>
-            <a style="text-decoration: none;" href="/php/index.php">
-                <div class="logout">
-                    LOG OUT
-                </div>
+    <div class="adm-content">
+        <div class="adm-page-header">
+            <div class="adm-page-header-left">
+                <h1>Bed Management</h1>
+                <p>Monitor real-time bed availability, occupancy, and ward assignments across the sickbay.</p>
+            </div>
+            <a href="/RMU-Medical-Management-System/php/bed/add-bed.php" class="adm-btn adm-btn-primary">
+                <i class="fas fa-plus"></i> Add Bed
             </a>
         </div>
-    </div>
 
-    <!-- slidebar ends -->
-
-    <div class="container">
-
-        <div class="row">
-            <div style="margin-left: 50%; margin-top: 5%;">
-                <h2>MANAGE <b>BED</b></h2>
+        <?php
+        $total_beds = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM beds"))[0] ?? 0;
+        $occupied   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM beds WHERE status='Occupied' OR status='occupied'"))[0] ?? 0;
+        $available  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM beds WHERE status='Available' OR status='available'"))[0] ?? 0;
+        $maintenance= mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM beds WHERE status='Maintenance' OR status='maintenance'"))[0] ?? 0;
+        $occupancy_rate = $total_beds > 0 ? round(($occupied / $total_beds) * 100) : 0;
+        ?>
+        <div class="adm-summary-strip">
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num"><?php echo $total_beds; ?></div>
+                <div class="adm-mini-card-label">Total Beds</div>
             </div>
-            <div style="margin-left: 83%; margin-top: 3%;">
-                <button><a href="/php/bed/add-bed.php">ADD BED</a></button>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num green"><?php echo $available; ?></div>
+                <div class="adm-mini-card-label">Available</div>
+            </div>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num red"><?php echo $occupied; ?></div>
+                <div class="adm-mini-card-label">Occupied</div>
+            </div>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num orange"><?php echo $maintenance; ?></div>
+                <div class="adm-mini-card-label">Maintenance</div>
+            </div>
+            <div class="adm-mini-card">
+                <div class="adm-mini-card-num <?php echo $occupancy_rate >= 90 ? 'red' : ($occupancy_rate >= 70 ? 'orange' : 'green'); ?>">
+                    <?php echo $occupancy_rate; ?>%
+                </div>
+                <div class="adm-mini-card-label">Occupancy Rate</div>
             </div>
         </div>
-    </div>
 
-    <div class="card-body">
-        <div style="margin-left: 20%; margin-top: 1%;">
+        <!-- High occupancy alert -->
+        <?php if ($occupancy_rate >= 90): ?>
+        <div class="adm-alert adm-alert-danger">
+            <i class="fas fa-bed"></i>
+            <div><strong>Critical Bed Shortage!</strong> Occupancy is at <?php echo $occupancy_rate; ?>%. Consider activating overflow protocols immediately.</div>
+        </div>
+        <?php elseif ($occupancy_rate >= 75): ?>
+        <div class="adm-alert adm-alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div><strong>High Bed Occupancy:</strong> <?php echo $occupancy_rate; ?>% of beds are occupied. Monitor incoming admissions carefully.</div>
+        </div>
+        <?php endif; ?>
 
-            <!-- (A) SEARCH FORM -->
-            <form method="post" action="search.php">
-                <input type="text" name="search" required />
-                <input type="submit" value="Search" />
-            </form>
-            <br>
-
-            <table id="dataTable" width="90%" cellspacing="10">
-                <thead>
-                    <tr>
-                        <th> BED ID </th>
-                        <th> BED NUMBER </th>
-                        <th> WARD </th>
-                        <th> BED TYPE </th>
-                        <th> STATUS </th>
-                        <th> DAILY RATE </th>
-                        <th> OPERATION </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php
-                    include 'db_conn.php';
-
-                    $sql = "SELECT * FROM beds LIMIT 5";
-                    $query = mysqli_query($conn, $sql);
-                    while ($bed_data = mysqli_fetch_assoc($query)) {
-                    ?>
+        <div class="adm-card">
+            <div class="adm-card-header">
+                <h3><i class="fas fa-list"></i> Bed Registry</h3>
+                <form method="post" action="search.php" class="adm-search-form" style="margin:0;">
+                    <div class="adm-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" class="adm-search-input" placeholder="Search by ward, bed number, or type...">
+                    </div>
+                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-search"></i> Search</button>
+                </form>
+            </div>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
                         <tr>
-                            <td><b><?php echo $bed_data['bed_id']; ?></b></td>
-                            <td><?php echo $bed_data['bed_number']; ?></td>
-                            <td><?php echo $bed_data['ward']; ?></td>
-                            <td><?php echo $bed_data['bed_type']; ?></td>
-                            <td><?php echo $bed_data['status']; ?></td>
-                            <td><?php echo $bed_data['daily_rate']; ?></td>
-                            <td style="width: 140px;">
-                                <button><a href="/php/bed/update.php?bed_id=<?php echo $bed_data['bed_id']; ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/bed/Delete.php?bed_id=<?php echo $bed_data['bed_id']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
+                            <th>#</th>
+                            <th>Bed ID</th>
+                            <th>Bed No.</th>
+                            <th>Ward</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Daily Rate (GH₵)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $sql   = "SELECT * FROM beds ORDER BY ward, bed_number";
+                        $query = mysqli_query($conn, $sql);
+                        if (!$query || mysqli_num_rows($query) === 0) {
+                            echo "<tr><td colspan='8' style='text-align:center;padding:3rem;color:var(--text-muted);'>No beds found. <a href='add-bed.php' style='color:var(--primary);font-weight:600;'>Add one now.</a></td></tr>";
+                        } else {
+                            $n = 1;
+                            while ($bed = mysqli_fetch_assoc($query)):
+                                $status = strtolower($bed['status'] ?? '');
+                                if (str_contains($status, 'avail')) {
+                                    $badge = 'adm-badge adm-badge-success';
+                                    $row_cls = 'row-ok';
+                                } elseif (str_contains($status, 'occup')) {
+                                    $badge = 'adm-badge adm-badge-danger';
+                                    $row_cls = 'row-danger';
+                                } else {
+                                    $badge = 'adm-badge adm-badge-warning';
+                                    $row_cls = 'row-warning';
+                                }
+                        ?>
+                        <tr class="<?php echo $row_cls; ?>">
+                            <td><?php echo $n++; ?></td>
+                            <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($bed['bed_id']); ?></span></td>
+                            <td><strong><?php echo htmlspecialchars($bed['bed_number']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($bed['ward']); ?></td>
+                            <td><span class="adm-badge adm-badge-info"><?php echo htmlspecialchars($bed['bed_type']); ?></span></td>
+                            <td><span class="<?php echo $badge; ?>"><?php echo htmlspecialchars($bed['status']); ?></span></td>
+                            <td><?php echo number_format($bed['daily_rate'], 2); ?></td>
+                            <td>
+                                <div class="adm-table-actions">
+                                    <a href="/RMU-Medical-Management-System/php/bed/update.php?bed_id=<?php echo $bed['bed_id']; ?>"
+                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="/RMU-Medical-Management-System/php/bed/Delete.php?bed_id=<?php echo $bed['bed_id']; ?>"
+                                       class="adm-btn adm-btn-danger adm-btn-sm"
+                                       onclick="return confirm('Remove this bed?');"><i class="fas fa-trash"></i> Delete</a>
+                                </div>
                             </td>
                         </tr>
-                    <?php
-                    }
-                    ?>
-
-                </tbody>
-            </table>
+                        <?php endwhile; } ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-
     </div>
+</main>
 
-
+<script>
+const sidebar = document.getElementById('admSidebar');
+const overlay = document.getElementById('admOverlay');
+document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
+overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon   = document.getElementById('themeIcon');
+const html        = document.documentElement;
+function applyTheme(t) { html.setAttribute('data-theme',t); localStorage.setItem('rmu_theme',t); themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon'; }
+applyTheme(localStorage.getItem('rmu_theme') || 'light');
+themeToggle?.addEventListener('click', () => applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+</script>
 </body>
-
 </html>
