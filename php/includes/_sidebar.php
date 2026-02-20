@@ -78,6 +78,12 @@ $active_page = $active_page ?? '';
 
         <span class="adm-nav-section-label">Clinical</span>
 
+        <a href="/RMU-Medical-Management-System/php/Appointment/appointment.php"
+           class="adm-nav-item <?php echo $active_page === 'appointments' ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Appointments</span>
+        </a>
+
         <a href="/RMU-Medical-Management-System/php/test/test.php"
            class="adm-nav-item <?php echo $active_page === 'tests' ? 'active' : ''; ?>">
             <i class="fas fa-flask"></i>
@@ -102,12 +108,18 @@ $active_page = $active_page ?? '';
             <span>Ambulance</span>
         </a>
 
+        <a href="/RMU-Medical-Management-System/php/payment/payment.php"
+           class="adm-nav-item <?php echo $active_page === 'payment' ? 'active' : ''; ?>">
+            <i class="fas fa-credit-card"></i>
+            <span>Payments</span>
+        </a>
+
         <span class="adm-nav-section-label">System</span>
 
         <a href="/RMU-Medical-Management-System/php/booking.php"
            class="adm-nav-item <?php echo $active_page === 'booking' ? 'active' : ''; ?>">
-            <i class="fas fa-calendar-check"></i>
-            <span>Appointments</span>
+            <i class="fas fa-calendar-plus"></i>
+            <span>Book Appointment</span>
         </a>
 
         <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php"

@@ -36,6 +36,12 @@ $stats['beds'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM ambulances");
 $stats['ambulance'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
+// ── Today's Appointments ──────────────────────────
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM appointments WHERE appointment_date='" . date('Y-m-d') . "'");
+$stats['appointments_today'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+
+$today = date('Y-m-d');
+
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM medicines");
 $stats['medicine'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
@@ -56,6 +62,21 @@ if ($q_patients) {
         $recent_patients[] = $row;
     }
 }
+
+// ── Today's Appointments ─────────────────────────────────────
+$today_apts = [];
+$q_tapts = mysqli_query($conn,
+    "SELECT a.appointment_id, a.appointment_time, a.service_type, a.status, a.urgency_level,
+            u_p.name AS patient_name, u_d.name AS doctor_name
+     FROM appointments a
+     LEFT JOIN patients p ON a.patient_id = p.id
+     LEFT JOIN users u_p ON p.user_id = u_p.id
+     JOIN doctors d ON a.doctor_id = d.id
+     JOIN users u_d ON d.user_id = u_d.id
+     WHERE a.appointment_date = '" . date('Y-m-d') . "'
+     ORDER BY a.appointment_time ASC LIMIT 5"
+);
+if ($q_tapts) while ($row = mysqli_fetch_assoc($q_tapts)) $today_apts[] = $row;
 
 // ── Chart Data: Monthly Patient Admissions ───
 $monthly_labels = [];
@@ -94,13 +115,50 @@ include 'includes/_sidebar.php';
                 <i class="far fa-clock"></i>
                 <span id="liveTime"><?php echo $currentTime; ?></span>
             </div>
-            <!-- Low-Stock Notification -->
-            <button class="adm-notif-btn" title="<?php echo count($low_stock_meds); ?> low-stock medicines">
-                <i class="fas fa-bell"></i>
-                <?php if (count($low_stock_meds) > 0): ?>
-                    <span class="adm-notif-badge"><?php echo count($low_stock_meds); ?></span>
-                <?php endif; ?>
-            </button>
+            <?php
+            // Live notification count: prefer notifications table, fallback to low-stock
+            $notif_count = 0;
+            $notif_items = [];
+            $notif_tbl = mysqli_query($conn, "SHOW TABLES LIKE 'notifications'");
+            if ($notif_tbl && mysqli_num_rows($notif_tbl) > 0) {
+                $notif_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM notifications WHERE is_read=0"))[0] ?? 0;
+                $nq = mysqli_query($conn, "SELECT title, message, created_at FROM notifications WHERE is_read=0 ORDER BY created_at DESC LIMIT 5");
+                if ($nq) while ($nr = mysqli_fetch_assoc($nq)) $notif_items[] = $nr;
+            } else {
+                $notif_count = count($low_stock_meds);
+                foreach ($low_stock_meds as $med) {
+                    $notif_items[] = ['title' => 'Low Stock', 'message' => htmlspecialchars($med['medicine_name']).' has only '.$med['stock_quantity'].' left.', 'created_at' => null];
+                }
+            }
+            ?>
+            <div style="position:relative;">
+                <button class="adm-notif-btn" id="notifBtn" title="Notifications" style="position:relative;">
+                    <i class="fas fa-bell"></i>
+                    <?php if ($notif_count > 0): ?>
+                    <span class="adm-notif-badge" id="notifBadge"><?php echo $notif_count > 9 ? '9+' : $notif_count; ?></span>
+                    <?php endif; ?>
+                </button>
+                <!-- Dropdown -->
+                <div id="notifDropdown" style="display:none;position:absolute;right:0;top:calc(100% + 8px);width:300px;background:var(--bg-card);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.15);border:1px solid var(--border);z-index:200;overflow:hidden;">
+                    <div style="padding:.85rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+                        <strong style="font-size:.9rem;"><i class="fas fa-bell" style="color:var(--primary);margin-right:.4rem;"></i>Notifications</strong>
+                        <?php if ($notif_count > 0): ?><span style="font-size:.75rem;color:var(--text-muted);"><?php echo $notif_count; ?> unread</span><?php endif; ?>
+                    </div>
+                    <div style="max-height:280px;overflow-y:auto;">
+                    <?php if (empty($notif_items)): ?>
+                        <p style="padding:2rem;text-align:center;color:var(--text-muted);font-size:.85rem;"><i class="fas fa-check-circle" style="display:block;font-size:1.5rem;margin-bottom:.5rem;color:var(--success);"></i>All caught up!</p>
+                    <?php else: foreach ($notif_items as $ni): ?>
+                        <div style="padding:.75rem 1.2rem;border-bottom:1px solid var(--border);">
+                            <div style="font-weight:600;font-size:.82rem;margin-bottom:.2rem;"><?php echo htmlspecialchars($ni['title']); ?></div>
+                            <div style="font-size:.78rem;color:var(--text-muted);"><?php echo htmlspecialchars($ni['message']); ?></div>
+                        </div>
+                    <?php endforeach; endif; ?>
+                    </div>
+                    <div style="padding:.75rem 1.2rem;text-align:center;border-top:1px solid var(--border);">
+                        <a href="/RMU-Medical-Management-System/php/medicine/medicine.php" style="font-size:.82rem;color:var(--primary);font-weight:600;">View All →</a>
+                    </div>
+                </div>
+            </div>
             <!-- Theme Toggle -->
             <button class="adm-theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
                 <i class="fas fa-moon" id="themeIcon"></i>
@@ -179,6 +237,12 @@ include 'includes/_sidebar.php';
                 <div class="adm-stat-value"><?php echo $stats['medicine']; ?></div>
                 <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Inventory</div>
             </a>
+            <a href="/RMU-Medical-Management-System/php/Appointment/appointment.php?date=<?php echo date('Y-m-d'); ?>" class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:rgba(139,92,246,.12);"><i class="fas fa-calendar-check" style="color:#8b5cf6;"></i></div>
+                <div class="adm-stat-label">Today's Appointments</div>
+                <div class="adm-stat-value"><?php echo $stats['appointments_today']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> View Today</div>
+            </a>
         </div>
 
         <!-- ── Analytics Charts ── -->
@@ -195,7 +259,7 @@ include 'includes/_sidebar.php';
             </div>
         </div>
 
-        <!-- ── Two-Column Row: Recent Patients + Report Generator ── -->
+        <!-- ── Two-Column Row: Recent Patients + Today's Appointments ── -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2.8rem;" class="adm-two-col">
 
             <!-- Recent Patients / Triage Queue -->
@@ -247,33 +311,32 @@ include 'includes/_sidebar.php';
                 </div>
             </div>
 
-            <!-- Quick Report Export Hub -->
+            <!-- Today's Appointments widget -->
             <div class="adm-card">
                 <div class="adm-card-header">
-                    <h3><i class="fas fa-file-export"></i> Report Export Hub</h3>
+                    <h3><i class="fas fa-calendar-day"></i> Today's Appointments</h3>
+                    <a href="/RMU-Medical-Management-System/php/Appointment/appointment.php?date=<?php echo date('Y-m-d'); ?>" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-eye"></i> View All</a>
                 </div>
-                <div class="adm-card-body">
-                    <p style="color:var(--text-secondary);margin-bottom:2rem;font-size:1.35rem;">
-                        Export data snapshots for records and compliance.
-                    </p>
-                    <div style="display:flex;flex-direction:column;gap:1.2rem;">
-                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=patients&fmt=csv"
-                           class="adm-btn adm-btn-success" style="justify-content:flex-start;">
-                            <i class="fas fa-file-csv"></i> Export Patients (CSV)
-                        </a>
-                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=doctors&fmt=csv"
-                           class="adm-btn adm-btn-primary" style="justify-content:flex-start;">
-                            <i class="fas fa-file-csv"></i> Export Doctors (CSV)
-                        </a>
-                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=medicines&fmt=csv"
-                           class="adm-btn adm-btn-warning" style="justify-content:flex-start;">
-                            <i class="fas fa-pills"></i> Export Medicine Inventory (CSV)
-                        </a>
-                        <a href="/RMU-Medical-Management-System/php/api/export.php?type=ambulances&fmt=csv"
-                           class="adm-btn adm-btn-danger" style="justify-content:flex-start;">
-                            <i class="fas fa-ambulance"></i> Export Ambulance Fleet (CSV)
-                        </a>
-                    </div>
+                <div class="adm-card-body" style="padding:0;">
+                    <?php if (empty($today_apts)): ?>
+                        <p style="padding:2.5rem;color:var(--text-muted);text-align:center;"><i class="fas fa-calendar-times" style="display:block;font-size:2rem;opacity:.3;margin-bottom:.75rem;"></i>No appointments scheduled for today.</p>
+                    <?php else: ?>
+                    <table class="adm-table">
+                        <thead><tr><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($today_apts as $ta):
+                            $sc = $ta['status']==='Confirmed'?'success':($ta['status']==='Completed'?'info':($ta['status']==='Cancelled'?'danger':'warning'));
+                        ?>
+                        <tr>
+                            <td><strong><?php echo date('g:i A', strtotime($ta['appointment_time'])); ?></strong></td>
+                            <td><?php echo htmlspecialchars($ta['patient_name'] ?? 'Walk-in'); ?></td>
+                            <td style="font-size:.8rem;">Dr. <?php echo htmlspecialchars($ta['doctor_name']); ?></td>
+                            <td><span class="adm-badge adm-badge-<?php echo $sc;?>"><?php echo $ta['status']; ?></span></td>
+                        </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -440,6 +503,15 @@ if (ctxMed) {
 document.querySelectorAll('.adm-nav-item').forEach(link => {
     if (link.getAttribute('href') === window.location.pathname) link.classList.add('active');
 });
+
+// Notification bell toggle
+const notifBtn = document.getElementById('notifBtn');
+const notifDd  = document.getElementById('notifDropdown');
+if (notifBtn && notifDd) {
+    notifBtn.addEventListener('click', e => { e.stopPropagation(); notifDd.style.display = notifDd.style.display === 'none' ? 'block' : 'none'; });
+    document.addEventListener('click', () => { notifDd.style.display = 'none'; });
+    notifDd.addEventListener('click', e => e.stopPropagation());
+}
 </script>
 
 </body>

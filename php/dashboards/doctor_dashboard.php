@@ -1,651 +1,332 @@
 <?php
-require_once '../session_check.php';
-require_once '../db_conn.php';
-
-// Verify user is a doctor
-if ($_SESSION['role'] !== 'doctor') {
-    header("Location: ../index.php?error=Unauthorized access");
-    exit();
+// ============================================================
+// DOCTOR DASHBOARD  — RMU Medical Sickbay
+// ============================================================
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'doctor') {
+    header('Location: /RMU-Medical-Management-System/php/login.php');
+    exit;
 }
 
-$doctor_id = $_SESSION['user_id'];
-$doctor_name = $_SESSION['name'];
-
-// Get current date
+require_once '../db_conn.php';
 date_default_timezone_set('Africa/Accra');
-$currentDate = date('l, F j, Y');
-$currentTime = date('g:i A');
+$user_id = (int)$_SESSION['user_id'];
 
-// Fetch doctor's statistics
+// ── Doctor Record ─────────────────────────────────────────────────────────
+$doc_row = mysqli_fetch_assoc(mysqli_query($conn,
+    "SELECT d.id AS doc_pk, d.doctor_id, d.specialization, d.experience_years,
+            d.available_days, d.is_available,
+            u.name, u.email, u.phone, u.gender, u.profile_image
+     FROM doctors d
+     JOIN users u ON d.user_id = u.id
+     WHERE d.user_id = $user_id
+     LIMIT 1"
+));
+
+if (!$doc_row) {
+    // No doctor profile yet
+    $doc_pk = 0;
+    $doc_row = ['name'=>$_SESSION['user_name']??'Doctor','specialization'=>'','doctor_id'=>'N/A','is_available'=>0,'experience_years'=>0,'profile_image'=>'default-avatar.png'];
+} else {
+    $doc_pk = (int)$doc_row['doc_pk'];
+}
+
+$today = date('Y-m-d');
+
+// ── Stats ─────────────────────────────────────────────────────────────────
 $stats = [];
 
-// Total patients assigned to this doctor
-$result = mysqli_query($conn, "SELECT COUNT(DISTINCT patient_id) as total FROM appointments WHERE doctor_id = (SELECT id FROM doctors WHERE user_id = $doctor_id)");
-$stats['patients'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+// Total unique patients ever seen
+$r = mysqli_query($conn, "SELECT COUNT(DISTINCT patient_id) as t FROM appointments WHERE doctor_id=$doc_pk");
+$stats['patients'] = $r ? (mysqli_fetch_assoc($r)['t'] ?? 0) : 0;
 
 // Today's appointments
-$today = date('Y-m-d');
-$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM appointments WHERE doctor_id = (SELECT id FROM doctors WHERE user_id = $doctor_id) AND appointment_date = '$today'");
-$stats['appointments_today'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+$r = mysqli_query($conn, "SELECT COUNT(*) as t FROM appointments WHERE doctor_id=$doc_pk AND appointment_date='$today'");
+$stats['today'] = $r ? (mysqli_fetch_assoc($r)['t'] ?? 0) : 0;
 
-// Pending appointments
-$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM appointments WHERE doctor_id = (SELECT id FROM doctors WHERE user_id = $doctor_id) AND status = 'Pending'");
-$stats['pending'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+// Pending (status = Pending or Confirmed)
+$r = mysqli_query($conn, "SELECT COUNT(*) as t FROM appointments WHERE doctor_id=$doc_pk AND status IN('Pending','Confirmed') AND appointment_date>='$today'");
+$stats['pending'] = $r ? (mysqli_fetch_assoc($r)['t'] ?? 0) : 0;
 
-// Completed appointments
-$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM appointments WHERE doctor_id = (SELECT id FROM doctors WHERE user_id = $doctor_id) AND status = 'Completed'");
-$stats['completed'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+// Completed this month
+$month_start = date('Y-m-01');
+$r = mysqli_query($conn, "SELECT COUNT(*) as t FROM appointments WHERE doctor_id=$doc_pk AND status='Completed' AND appointment_date>='$month_start'");
+$stats['completed'] = $r ? (mysqli_fetch_assoc($r)['t'] ?? 0) : 0;
+
+// Pending prescriptions — written by this doctor, not yet dispensed
+$r = mysqli_query($conn, "SELECT COUNT(*) as t FROM prescriptions WHERE doctor_id=$doc_pk AND status='Pending'");
+$stats['prescriptions'] = $r ? (mysqli_fetch_assoc($r)['t'] ?? 0) : 0;
+
+// ── Today's Appointments ─────────────────────────────────────────────────
+$today_appts = [];
+$q = mysqli_query($conn,
+    "SELECT a.id, a.appointment_id, a.appointment_time, a.service_type, a.status, a.symptoms,
+            u.name AS patient_name, u.gender AS patient_gender, u.phone AS patient_phone,
+            p.patient_id AS patient_pid, p.blood_group, p.allergies
+     FROM appointments a
+     JOIN patients p ON a.patient_id = p.id
+     JOIN users u    ON p.user_id    = u.id
+     WHERE a.doctor_id = $doc_pk AND a.appointment_date = '$today'
+     ORDER BY a.appointment_time ASC"
+);
+if ($q) while ($row = mysqli_fetch_assoc($q)) $today_appts[] = $row;
+
+// ── Recent Prescriptions ─────────────────────────────────────────────────
+$recent_rx = [];
+$q = mysqli_query($conn,
+    "SELECT pr.prescription_id, pr.prescription_date, pr.medication_name, pr.status, pr.dosage,
+            u.name AS patient_name
+     FROM prescriptions pr
+     JOIN patients p ON pr.patient_id = p.id
+     JOIN users u    ON p.user_id = u.id
+     WHERE pr.doctor_id = $doc_pk
+     ORDER BY pr.prescription_date DESC
+     LIMIT 5"
+);
+if ($q) while ($row = mysqli_fetch_assoc($q)) $recent_rx[] = $row;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Dashboard - RMU Medical Sickbay</title>
-    <link rel="shortcut icon" href="https://juniv.edu/images/favicon.ico">
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="../../css/main.css">
-    
-    <style>
-        :root {
-            --sidebar-width: 280px;
-            --header-height: 70px;
-            --primary-color: #2F80ED;
-            --primary-dark: #2366CC;
-            --secondary-color: #56CCF2;
-            --accent-color: #2F80ED;
-            --text-dark: #2c3e50;
-            --white: #ffffff;
-            --bg-light: #F4F8FF;
-            --shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-            --shadow-hover: 0px 15px 40px rgba(47, 128, 237, 0.12);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doctor Dashboard — RMU Medical Sickbay</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+<style>
+  /* Doctor-specific accent */
+  :root { --role-accent:#1abc9c; --role-accent-light:#e8f8f5; }
+  [data-theme="dark"] { --role-accent-light:#0d4034; }
 
-        /* Dark Theme */
-        [data-theme="dark"] {
-            --bg-light: #1a1a1a;
-            --white: #2d2d2d;
-            --text-dark: #f8f9fa;
-            --shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
-            --shadow-hover: 0px 15px 40px rgba(0, 0, 0, 0.4);
-        }
+  .doc-header { background:linear-gradient(135deg,var(--primary),var(--role-accent)); color:#fff; border-radius:var(--radius-lg); padding:2rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; }
+  .doc-avatar { width:72px; height:72px; border-radius:50%; background:#fff3; display:flex; align-items:center; justify-content:center; font-size:2rem; border:3px solid rgba(255,255,255,.4); flex-shrink:0; }
+  .doc-info h2 { font-size:1.4rem; font-weight:700; margin:0 0 .25rem; }
+  .doc-info p { margin:0; opacity:.85; font-size:.9rem; }
+  .doc-badge { background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.35); border-radius:50px; padding:.3rem .9rem; font-size:.8rem; display:inline-flex; align-items:center; gap:.4rem; margin:.3rem .3rem 0 0; }
 
-        [data-theme="dark"] body {
-            background: #1a1a1a;
-            color: #f8f9fa;
-        }
+  .appt-card { border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:.75rem; background:var(--bg-card); display:flex; align-items:flex-start; gap:1rem; transition:transform .2s; }
+  .appt-card:hover { transform:translateX(4px); border-color:var(--primary); }
+  .appt-time { text-align:center; min-width:60px; }
+  .appt-time .time { font-size:1.1rem; font-weight:700; color:var(--primary); }
+  .appt-time .period { font-size:.75rem; color:var(--text-muted); }
+  .appt-body { flex:1; }
+  .appt-name { font-weight:600; font-size:1rem; margin-bottom:.2rem; }
+  .appt-meta { font-size:.8rem; color:var(--text-secondary); display:flex; flex-wrap:wrap; gap:.75rem; margin:.3rem 0; }
+  .appt-actions { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
 
-        [data-theme="dark"] .top-bar {
-            background: #2d2d2d;
-            color: #f8f9fa;
-        }
-
-        [data-theme="dark"] .stat-card,
-        [data-theme="dark"] .appointment-card {
-            background: #2d2d2d;
-            color: #f8f9fa;
-        }
-
-        [data-theme="dark"] .stat-card h3,
-        [data-theme="dark"] .appointment-header {
-            color: #b0b0b0;
-        }
-
-        /* Theme Toggle Button */
-        .theme-toggle {
-            position: fixed;
-            bottom: 100px;
-            left: calc(var(--sidebar-width) / 2 - 25px);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 1001;
-            backdrop-filter: blur(10px);
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
-        }
-
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--bg-light);
-            color: var(--text-dark);
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: linear-gradient(to right, #2F80ED, #56CCF2);
-            color: var(--white);
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: var(--shadow);
-        }
-
-        .sidebar-header {
-            padding: 2rem 1.5rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .sidebar-header i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .sidebar-header h2 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .sidebar-header p {
-            font-size: 1.2rem;
-            opacity: 0.95;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 2rem 0;
-        }
-
-        .sidebar-menu li {
-            margin: 0.5rem 0;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 1.2rem 2rem;
-            color: var(--white);
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border-radius: 12px;
-            margin: 0 1rem;
-        }
-
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(5px);
-        }
-
-        .sidebar-menu a i {
-            margin-right: 1.5rem;
-            font-size: 1.8rem;
-            width: 25px;
-        }
-
-        .logout-btn {
-            position: absolute;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 3rem);
-        }
-
-        .logout-btn a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.2rem;
-            background: rgba(255, 255, 255, 0.2);
-            color: var(--white);
-            text-decoration: none;
-            border-radius: 12px;
-            font-size: 1.5rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .logout-btn a:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-        }
-
-        .top-bar {
-            background: var(--white);
-            height: var(--header-height);
-            padding: 0 3rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .top-bar h1 {
-            font-size: 2.5rem;
-            color: var(--text-dark);
-            font-weight: 700;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .user-info .date-time {
-            font-size: 1.4rem;
-            color: #7f8c8d;
-        }
-
-        .dashboard-content {
-            padding: 3rem;
-        }
-
-        .welcome-section {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            color: var(--white);
-            padding: 3rem;
-            border-radius: 24px;
-            margin-bottom: 3rem;
-            box-shadow: var(--shadow);
-        }
-
-        .welcome-section h2 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .welcome-section p {
-            font-size: 1.6rem;
-            opacity: 0.95;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .stat-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: var(--white);
-        }
-
-        .stat-card-icon.blue {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-        }
-
-        .stat-card-icon.green {
-            background: linear-gradient(135deg, #6FCF97, #A8E6CF);
-        }
-
-        .stat-card-icon.orange {
-            background: linear-gradient(135deg, #FFB946, #FFA06B);
-        }
-
-        .stat-card-icon.purple {
-            background: linear-gradient(135deg, #BB6BD9, #C89EFF);
-        }
-
-        .stat-card-body h3 {
-            font-size: 1.4rem;
-            color: #7f8c8d;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-card-body .number {
-            font-size: 4rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        /* Appointments List */
-        .appointments-section {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            margin-bottom: 3rem;
-        }
-
-        .appointments-section h3 {
-            font-size: 2.2rem;
-            margin-bottom: 2rem;
-            color: var(--text-dark);
-        }
-
-        .appointment-item {
-            padding: 1.5rem;
-            padding-left: 2rem;
-            border-left: 4px solid #2F80ED;
-            background: #F8FBFF;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .appointment-item:hover {
-            transform: translateX(5px);
-            box-shadow: var(--shadow);
-            background: var(--white);
-        }
-
-        .appointment-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .appointment-patient {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .appointment-time {
-            font-size: 1.4rem;
-            color: #7f8c8d;
-        }
-
-        .appointment-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            font-size: 1.4rem;
-            color: #6c757d;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .status-badge.pending {
-            background: #FFF4E6;
-            color: #E67E22;
-        }
-
-        .status-badge.completed {
-            background: #E8F8F5;
-            color: #27AE60;
-        }
-
-        @media (max-width: 991px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-        }
-    </style>
+  .rx-item { display:flex; align-items:center; gap:1rem; padding:.75rem 0; border-bottom:1px solid var(--border); }
+  .rx-item:last-child { border:none; }
+  .rx-icon { width:38px; height:38px; border-radius:50%; background:var(--role-accent-light); display:flex; align-items:center; justify-content:center; color:var(--role-accent); flex-shrink:0; }
+  .rx-body { flex:1; }
+  .rx-name { font-weight:600; font-size:.9rem; }
+  .rx-meta { font-size:.78rem; color:var(--text-secondary); }
+</style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-user-md"></i>
-            <h2>DOCTOR</h2>
-            <p><?php echo htmlspecialchars($doctor_name); ?></p>
+
+<div class="adm-layout">
+  <!-- LEFT SIDEBAR -->
+  <aside class="adm-sidebar" id="admSidebar">
+    <div class="adm-sidebar-brand">
+      <div class="adm-brand-icon"><i class="fas fa-stethoscope"></i></div>
+      <div class="adm-brand-text"><span class="adm-brand-name">RMU Sickbay</span><span class="adm-brand-role">Doctor Portal</span></div>
+    </div>
+    <nav class="adm-nav">
+      <div class="adm-nav-label">Navigation</div>
+      <a href="doctor_dashboard.php" class="adm-nav-item active"><i class="fas fa-home"></i><span>Dashboard</span></a>
+      <a href="/RMU-Medical-Management-System/php/booking.php" class="adm-nav-item"><i class="fas fa-calendar-plus"></i><span>Appointments</span></a>
+      <a href="/RMU-Medical-Management-System/php/medical_records.php" class="adm-nav-item"><i class="fas fa-file-medical"></i><span>Medical Records</span></a>
+      <a href="/RMU-Medical-Management-System/php/prescriptions.php" class="adm-nav-item"><i class="fas fa-prescription"></i><span>Prescriptions</span></a>
+      <a href="/RMU-Medical-Management-System/php/lab_results.php" class="adm-nav-item"><i class="fas fa-flask"></i><span>Lab Results</span></a>
+    </nav>
+    <div class="adm-sidebar-footer">
+      <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-nav-item" style="color:#e74c3c;"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+    </div>
+  </aside>
+  <div class="adm-overlay" id="admOverlay"></div>
+
+  <!-- MAIN -->
+  <main class="adm-main">
+    <div class="adm-topbar">
+      <div class="adm-topbar-left">
+        <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <span class="adm-page-title"><i class="fas fa-user-md" style="color:var(--role-accent);margin-right:.6rem;"></i>Doctor Dashboard</span>
+      </div>
+      <div class="adm-topbar-right">
+        <span style="font-size:.85rem;color:var(--text-secondary);"><?php echo date('D, d M Y'); ?></span>
+        <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+        <div class="adm-avatar"><i class="fas fa-user-md"></i></div>
+      </div>
+    </div>
+
+    <div class="adm-content">
+
+      <!-- Profile Header -->
+      <div class="doc-header">
+        <div class="doc-avatar"><i class="fas fa-user-md"></i></div>
+        <div class="doc-info">
+          <h2>Dr. <?php echo htmlspecialchars($doc_row['name']); ?></h2>
+          <p><?php echo htmlspecialchars($doc_row['specialization'] ?: 'General Practitioner'); ?></p>
+          <div>
+            <span class="doc-badge"><i class="fas fa-id-badge"></i> <?php echo htmlspecialchars($doc_row['doctor_id']); ?></span>
+            <?php if ($doc_row['experience_years']): ?><span class="doc-badge"><i class="fas fa-star"></i> <?php echo $doc_row['experience_years']; ?> yrs exp</span><?php endif; ?>
+            <span class="doc-badge <?php echo $doc_row['is_available']?'':''; ?>" style="background:<?php echo $doc_row['is_available']?'rgba(39,174,96,.3)':'rgba(231,76,60,.3)'; ?>;">
+              <i class="fas fa-circle" style="font-size:.5rem;"></i> <?php echo $doc_row['is_available'] ? 'Available' : 'Unavailable'; ?>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Strip -->
+      <div class="adm-summary-strip">
+        <div class="adm-mini-card">
+          <div class="adm-mini-card-num"><?php echo $stats['patients']; ?></div>
+          <div class="adm-mini-card-label">Total Patients</div>
+        </div>
+        <div class="adm-mini-card">
+          <div class="adm-mini-card-num green"><?php echo $stats['today']; ?></div>
+          <div class="adm-mini-card-label">Today's Appointments</div>
+        </div>
+        <div class="adm-mini-card">
+          <div class="adm-mini-card-num orange"><?php echo $stats['pending']; ?></div>
+          <div class="adm-mini-card-label">Upcoming</div>
+        </div>
+        <div class="adm-mini-card">
+          <div class="adm-mini-card-num blue"><?php echo $stats['completed']; ?></div>
+          <div class="adm-mini-card-label">Completed (Month)</div>
+        </div>
+        <div class="adm-mini-card">
+          <div class="adm-mini-card-num <?php echo $stats['prescriptions']>0?'orange':'green'; ?>"><?php echo $stats['prescriptions']; ?></div>
+          <div class="adm-mini-card-label">Pending Rx</div>
+        </div>
+      </div>
+
+      <!-- Main Grid -->
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start;">
+
+        <!-- Today's Schedule -->
+        <div class="adm-card">
+          <div class="adm-card-header">
+            <h3><i class="fas fa-calendar-day" style="color:var(--primary);"></i> Today's Schedule
+              <span class="adm-badge adm-badge-primary" style="margin-left:.5rem;"><?php echo count($today_appts); ?></span>
+            </h3>
+            <a href="/RMU-Medical-Management-System/php/booking.php" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-plus"></i> New</a>
+          </div>
+          <?php if (empty($today_appts)): ?>
+          <div style="text-align:center;padding:3rem;color:var(--text-muted);">
+            <i class="fas fa-calendar-check" style="font-size:2.5rem;margin-bottom:1rem;"></i>
+            <p>No appointments scheduled for today.</p>
+          </div>
+          <?php else: ?>
+          <div style="padding:.5rem;">
+            <?php foreach ($today_appts as $apt):
+              $apt_status = $apt['status'];
+              $sc = ($apt_status === 'Confirmed') ? 'success' : (($apt_status === 'Completed') ? 'info' : (($apt_status === 'Cancelled') ? 'danger' : 'warning'));
+              [$h,$m] = explode(':', $apt['appointment_time']);
+              $h_12 = $h > 12 ? $h-12 : ($h==0?12:(int)$h);
+              $ampm = $h >= 12 ? 'PM' : 'AM';
+            ?>
+            <div class="appt-card">
+              <div class="appt-time">
+                <div class="time"><?php echo $h_12.':'.$m; ?></div>
+                <div class="period"><?php echo $ampm; ?></div>
+              </div>
+              <div class="appt-body">
+                <div class="appt-name"><?php echo htmlspecialchars($apt['patient_name']); ?></div>
+                <div class="appt-meta">
+                  <span><i class="fas fa-id-card"></i> <?php echo htmlspecialchars($apt['patient_pid']); ?></span>
+                  <span><i class="fas fa-venus-mars"></i> <?php echo htmlspecialchars($apt['patient_gender']); ?></span>
+                  <?php if ($apt['blood_group']): ?><span><i class="fas fa-tint"></i> <?php echo htmlspecialchars($apt['blood_group']); ?></span><?php endif; ?>
+                  <span><i class="fas fa-stethoscope"></i> <?php echo htmlspecialchars($apt['service_type'] ?? 'Consultation'); ?></span>
+                </div>
+                <?php if ($apt['symptoms']): ?>
+                <div style="font-size:.8rem;color:var(--text-secondary);font-style:italic;margin:.25rem 0;">
+                  <i class="fas fa-notes-medical"></i> <?php echo htmlspecialchars(substr($apt['symptoms'],0,80)).'…'; ?>
+                </div>
+                <?php endif; ?>
+                <div class="appt-actions">
+                  <span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo $apt['status']; ?></span>
+                  <?php if ($apt['patient_phone']): ?>
+                  <a href="tel:<?php echo htmlspecialchars($apt['patient_phone']); ?>" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-phone"></i></a>
+                  <?php endif; ?>
+                  <a href="/RMU-Medical-Management-System/php/medical_records.php?patient_id=<?php echo $apt['patient_pid']; ?>" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-file-medical"></i> Records</a>
+                </div>
+              </div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+          <?php endif; ?>
         </div>
 
-        <ul class="sidebar-menu">
-            <li>
-                <a href="#" class="active">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>Appointments</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-users"></i>
-                    <span>My Patients</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-file-medical"></i>
-                    <span>Medical Records</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-prescription"></i>
-                    <span>Prescriptions</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-user-circle"></i>
-                    <span>My Profile</span>
-                </a>
-            </li>
-        </ul>
+        <!-- Right Panel -->
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
 
-        <div class="logout-btn">
-            <a href="../logout.php">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="top-bar">
-            <h1>Doctor Dashboard</h1>
-            <div class="user-info">
-                <div class="date-time">
-                    <i class="far fa-calendar"></i> <?php echo $currentDate; ?> | 
-                    <i class="far fa-clock"></i> <?php echo $currentTime; ?>
-                </div>
+          <!-- Quick Actions -->
+          <div class="adm-card">
+            <div class="adm-card-header"><h3><i class="fas fa-bolt"></i> Quick Actions</h3></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:.5rem;">
+              <a href="/RMU-Medical-Management-System/php/prescriptions.php" class="adm-btn adm-btn-primary" style="padding:.75rem;display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;height:auto;">
+                <i class="fas fa-prescription" style="font-size:1.2rem;"></i><span style="font-size:.8rem;">Write Prescription</span>
+              </a>
+              <a href="/RMU-Medical-Management-System/php/lab_results.php" class="adm-btn adm-btn-warning" style="padding:.75rem;display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;height:auto;">
+                <i class="fas fa-flask" style="font-size:1.2rem;"></i><span style="font-size:.8rem;">Order Lab Test</span>
+              </a>
+              <a href="/RMU-Medical-Management-System/php/medical_records.php" class="adm-btn adm-btn-success" style="padding:.75rem;display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;height:auto;">
+                <i class="fas fa-file-medical" style="font-size:1.2rem;"></i><span style="font-size:.8rem;">Add Record</span>
+              </a>
+              <a href="/RMU-Medical-Management-System/php/booking.php" class="adm-btn adm-btn-danger" style="padding:.75rem;display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;height:auto;">
+                <i class="fas fa-calendar-plus" style="font-size:1.2rem;"></i><span style="font-size:.8rem;">Schedule Follow-up</span>
+              </a>
             </div>
-        </div>
+          </div>
 
-        <div class="dashboard-content">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <h2>Welcome Back, Dr. <?php echo htmlspecialchars($doctor_name); ?>!</h2>
-                <p>Here's an overview of your medical practice today.</p>
+          <!-- Recent Prescriptions -->
+          <div class="adm-card">
+            <div class="adm-card-header"><h3><i class="fas fa-pills"></i> Recent Prescriptions</h3></div>
+            <div style="padding:.5rem;">
+              <?php if (empty($recent_rx)): ?>
+              <p style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.9rem;">No prescriptions yet.</p>
+              <?php else: ?>
+              <?php foreach ($recent_rx as $rx):
+                $rx_status = $rx['status'];
+                $rx_sc = ($rx_status === 'Dispensed') ? 'success' : (($rx_status === 'Cancelled') ? 'danger' : 'warning');
+              ?>
+              <div class="rx-item">
+                <div class="rx-icon"><i class="fas fa-pills"></i></div>
+                <div class="rx-body">
+                  <div class="rx-name"><?php echo htmlspecialchars($rx['medication_name']); ?></div>
+                  <div class="rx-meta">
+                    <?php echo htmlspecialchars($rx['patient_name']); ?> · <?php echo htmlspecialchars($rx['dosage']); ?> ·
+                    <?php echo date('d M', strtotime($rx['prescription_date'])); ?>
+                  </div>
+                </div>
+                <span class="adm-badge adm-badge-<?php echo $rx_sc; ?>"><?php echo $rx['status']; ?></span>
+              </div>
+              <?php endforeach; ?>
+              <?php endif; ?>
             </div>
+          </div>
 
-            <!-- Statistics -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon blue">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Total Patients</h3>
-                        <div class="number"><?php echo $stats['patients']; ?></div>
-                    </div>
-                </div>
+        </div><!-- /right panel -->
+      </div><!-- /grid -->
 
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon green">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Today's Appointments</h3>
-                        <div class="number"><?php echo $stats['appointments_today']; ?></div>
-                    </div>
-                </div>
+    </div>
+  </main>
+</div>
 
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon orange">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Pending</h3>
-                        <div class="number"><?php echo $stats['pending']; ?></div>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div class="stat-card-icon purple">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-body">
-                        <h3>Completed</h3>
-                        <div class="number"><?php echo $stats['completed']; ?></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Today's Appointments -->
-            <div class="appointments-section">
-                <h3><i class="fas fa-calendar-day"></i> Today's Appointments</h3>
-                <?php
-                $appointments_query = "SELECT a.*, p.full_name as patient_name 
-                                      FROM appointments a 
-                                      LEFT JOIN patients p ON a.patient_id = p.id 
-                                      WHERE a.doctor_id = (SELECT id FROM doctors WHERE user_id = $doctor_id) 
-                                      AND a.appointment_date = '$today' 
-                                      ORDER BY a.appointment_time ASC 
-                                      LIMIT 10";
-                $appointments_result = mysqli_query($conn, $appointments_query);
-                
-                if (mysqli_num_rows($appointments_result) > 0) {
-                    while ($appointment = mysqli_fetch_assoc($appointments_result)) {
-                        $patient_display_name = $appointment['patient_name'] ?? $appointment['patient_name'] ?? 'Unknown Patient';
-                        echo '<div class="appointment-item">';
-                        echo '<div class="appointment-header">';
-                        echo '<div class="appointment-patient"><i class="fas fa-user"></i> ' . htmlspecialchars($patient_display_name) . '</div>';
-                        echo '<div class="appointment-time"><i class="far fa-clock"></i> ' . htmlspecialchars($appointment['appointment_time']) . '</div>';
-                        echo '</div>';
-                        echo '<div class="appointment-details">';
-                        echo '<div><strong>Type:</strong> ' . htmlspecialchars($appointment['appointment_type']) . '</div>';
-                        echo '<div><strong>Status:</strong> <span class="status-badge ' . strtolower($appointment['status']) . '">' . htmlspecialchars($appointment['status']) . '</span></div>';
-                        if (!empty($appointment['symptoms'])) {
-                            echo '<div><strong>Symptoms:</strong> ' . htmlspecialchars($appointment['symptoms']) . '</div>';
-                        }
-                        echo '</div>';
-                        echo '</div>';
-                    }
-                } else {
-                    echo '<p style="text-align: center; color: #6c757d; padding: 2rem;">No appointments scheduled for today.</p>';
-                }
-                ?>
-            </div>
-        </div>
-    </main>
-
-    <!-- Theme Toggle Button -->
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <i class="fas fa-moon"></i>
-    </button>
-
-    <!-- Theme Toggle Script -->
-    <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        const themeIcon = themeToggle.querySelector('i');
-
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-
-        // Toggle theme
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-
-        // Update icon
-        function updateThemeIcon(theme) {
-            if (theme === 'dark') {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-        }
-    </script>
+<script>
+const sidebar = document.getElementById('admSidebar');
+const overlay = document.getElementById('admOverlay');
+document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
+overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon   = document.getElementById('themeIcon');
+const html        = document.documentElement;
+function applyTheme(t) { html.setAttribute('data-theme',t); localStorage.setItem('rmu_theme',t); themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon'; }
+applyTheme(localStorage.getItem('rmu_theme') || 'light');
+themeToggle?.addEventListener('click', () => applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+</script>
 </body>
 </html>

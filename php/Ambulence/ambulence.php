@@ -4,6 +4,12 @@ include 'db_conn.php';
 $active_page = 'ambulance';
 $page_title  = 'Ambulance Fleet';
 include '../includes/_sidebar.php';
+
+// Stats
+$total_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances"))[0] ?? 0;
+$avail_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='Available'"))[0] ?? 0;
+$onduty_amb = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='On Duty'"))[0] ?? 0;
+$maint_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='Maintenance'"))[0] ?? 0;
 ?>
 
 <main class="adm-main">
@@ -22,19 +28,23 @@ include '../includes/_sidebar.php';
         <div class="adm-page-header">
             <div class="adm-page-header-left">
                 <h1>Ambulance Fleet Management</h1>
-                <p>Monitor fleet availability, driver assignments, and service schedules.</p>
+                <p>Track ambulance availability, maintenance schedules, and emergency dispatch records.</p>
             </div>
             <a href="/RMU-Medical-Management-System/php/Ambulence/add-ambulence.php" class="adm-btn adm-btn-primary">
-                <i class="fas fa-plus"></i> Add Ambulance
+                <i class="fas fa-plus"></i> Register Ambulance
             </a>
         </div>
 
         <?php
-        $total_amb = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances"))[0] ?? 0;
-        $avail_amb = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='Available' OR status='available'"))[0] ?? 0;
-        $busy_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='On Duty' OR status='on duty' OR status='OnDuty'"))[0] ?? 0;
-        $maint_amb = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE status='Maintenance' OR status='maintenance'"))[0] ?? 0;
-        ?>
+        // Maintenance due alert
+        $due_maint = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulances WHERE next_service_date IS NOT NULL AND next_service_date <= DATE_ADD(CURDATE(), INTERVAL 14 DAY)"))[0] ?? 0;
+        if ($due_maint > 0): ?>
+        <div class="adm-alert adm-alert-warning">
+            <i class="fas fa-tools"></i>
+            <div><strong>Maintenance Due!</strong> <b><?php echo $due_maint; ?></b> ambulance(s) need servicing within the next 14 days. Please schedule maintenance.</div>
+        </div>
+        <?php endif; ?>
+
         <div class="adm-summary-strip">
             <div class="adm-mini-card">
                 <div class="adm-mini-card-num"><?php echo $total_amb; ?></div>
@@ -45,96 +55,109 @@ include '../includes/_sidebar.php';
                 <div class="adm-mini-card-label">Available</div>
             </div>
             <div class="adm-mini-card">
-                <div class="adm-mini-card-num orange"><?php echo $busy_amb; ?></div>
+                <div class="adm-mini-card-num blue"><?php echo $onduty_amb; ?></div>
                 <div class="adm-mini-card-label">On Duty</div>
             </div>
             <div class="adm-mini-card">
-                <div class="adm-mini-card-num red"><?php echo $maint_amb; ?></div>
+                <div class="adm-mini-card-num orange"><?php echo $maint_amb; ?></div>
                 <div class="adm-mini-card-label">Maintenance</div>
             </div>
         </div>
 
+        <!-- Ambulance Grid -->
+        <div class="adm-fleet-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;">
+            <?php
+            $ambs = mysqli_query($conn, "SELECT * FROM ambulances ORDER BY status ASC, ambulance_id ASC");
+            if ($ambs && mysqli_num_rows($ambs) > 0):
+                while ($amb = mysqli_fetch_assoc($ambs)):
+                    if ($amb['status'] === 'Available') {
+                        $sc = ['adm-badge-success', '#27ae60', 'fa-check-circle'];
+                    } elseif ($amb['status'] === 'On Duty') {
+                        $sc = ['adm-badge-info', '#2980b9', 'fa-truck-medical'];
+                    } elseif ($amb['status'] === 'Maintenance') {
+                        $sc = ['adm-badge-warning', '#f39c12', 'fa-tools'];
+                    } elseif ($amb['status'] === 'Out of Service') {
+                        $sc = ['adm-badge-danger', '#e74c3c', 'fa-times-circle'];
+                    } else {
+                        $sc = ['adm-badge-primary', 'var(--primary)', 'fa-question'];
+                    }
+                    $next_svc = $amb['next_service_date'] ? date('d M Y', strtotime($amb['next_service_date'])) : 'Not scheduled';
+                    $svc_style = ($amb['next_service_date'] && strtotime($amb['next_service_date']) <= strtotime('+14 days')) ? 'color:#e74c3c;font-weight:700;' : '';
+            ?>
+            <div class="adm-card" style="padding:1.5rem;position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;gap:.75rem;">
+                        <div style="width:44px;height:44px;background:<?php echo $sc[1]; ?>22;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="fas <?php echo $sc[2]; ?>" style="color:<?php echo $sc[1]; ?>;font-size:1.2rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700;font-size:1rem;"><?php echo htmlspecialchars($amb['vehicle_number']); ?></div>
+                            <div style="font-size:.8rem;color:var(--text-secondary);"><?php echo htmlspecialchars($amb['ambulance_id']); ?></div>
+                        </div>
+                    </div>
+                    <span class="adm-badge <?php echo $sc[0]; ?>"><?php echo $amb['status']; ?></span>
+                </div>
+                <div style="font-size:.875rem;color:var(--text-secondary);line-height:2;">
+                    <div><i class="fas fa-user" style="margin-right:.5rem;width:16px;"></i><strong>Driver:</strong> <?php echo htmlspecialchars($amb['driver_name'] ?? 'Unassigned'); ?></div>
+                    <div><i class="fas fa-phone" style="margin-right:.5rem;width:16px;"></i><strong>Phone:</strong> <?php echo htmlspecialchars($amb['driver_phone'] ?? 'N/A'); ?></div>
+                    <div><i class="fas fa-calendar-check" style="margin-right:.5rem;width:16px;"></i><strong>Last Serviced:</strong> <?php echo $amb['last_service_date'] ? date('d M Y', strtotime($amb['last_service_date'])) : 'N/A'; ?></div>
+                    <div style="<?php echo $svc_style; ?>"><i class="fas fa-calendar-times" style="margin-right:.5rem;width:16px;"></i><strong>Next Service:</strong> <?php echo $next_svc; ?></div>
+                </div>
+                <div style="display:flex;gap:.5rem;margin-top:1rem;">
+                    <a href="/RMU-Medical-Management-System/php/Ambulence/update.php?id=<?php echo $amb['id']; ?>"
+                       class="adm-btn adm-btn-warning adm-btn-sm" style="flex:1;text-align:center;"><i class="fas fa-edit"></i> Edit</a>
+                    <a href="/RMU-Medical-Management-System/php/Ambulence/Delete.php?id=<?php echo $amb['id']; ?>"
+                       class="adm-btn adm-btn-danger adm-btn-sm"
+                       onclick="return confirm('Remove this ambulance from fleet?');"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+            <?php endwhile;
+            else: ?>
+            <div class="adm-card" style="padding:3rem;text-align:center;grid-column:1/-1;">
+                <i class="fas fa-ambulance" style="font-size:3rem;color:var(--text-muted);margin-bottom:1rem;"></i>
+                <p style="color:var(--text-muted);">No ambulances registered yet.</p>
+                <a href="add-ambulence.php" class="adm-btn adm-btn-primary" style="margin-top:1rem;"><i class="fas fa-plus"></i> Register First Ambulance</a>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Active Emergency Requests -->
+        <?php
+        $reqs = mysqli_query($conn, "SELECT * FROM ambulance_requests WHERE status NOT IN ('Completed','Cancelled') ORDER BY request_time DESC LIMIT 10");
+        if ($reqs && mysqli_num_rows($reqs) > 0): ?>
         <div class="adm-card">
             <div class="adm-card-header">
-                <h3><i class="fas fa-truck-medical"></i> Vehicle Registry</h3>
-                <form method="post" action="search.php" class="adm-search-form" style="margin:0;">
-                    <div class="adm-search-wrap">
-                        <i class="fas fa-search"></i>
-                        <input type="text" name="search" class="adm-search-input" placeholder="Search by vehicle number or driver...">
-                    </div>
-                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-search"></i> Search</button>
-                </form>
+                <h3><i class="fas fa-exclamation-triangle" style="color:#e74c3c;"></i> Active Emergency Requests</h3>
             </div>
             <div class="adm-table-wrap">
                 <table class="adm-table">
                     <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Ambulance ID</th>
-                            <th>Vehicle No.</th>
-                            <th>Driver</th>
-                            <th>Driver Phone</th>
-                            <th>Status</th>
-                            <th>Last Service</th>
-                            <th>Next Service</th>
-                            <th>Actions</th>
-                        </tr>
+                        <tr><th>#</th><th>Request ID</th><th>Patient</th><th>Phone</th><th>Pickup</th><th>Type</th><th>Requested</th><th>Status</th></tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $sql   = "SELECT * FROM ambulances ORDER BY ambulance_id";
-                        $query = mysqli_query($conn, $sql);
-                        if (!$query || mysqli_num_rows($query) === 0) {
-                            echo "<tr><td colspan='9' style='text-align:center;padding:3rem;color:var(--text-muted);'>No ambulances found. <a href='add-ambulence.php' style='color:var(--primary);font-weight:600;'>Add one now.</a></td></tr>";
-                        } else {
-                            $n = 1;
-                            while ($amb = mysqli_fetch_assoc($query)):
-                                $status = strtolower($amb['status'] ?? '');
-                                if (str_contains($status, 'avail')) {
-                                    $badge_class = 'adm-badge adm-badge-success';
-                                } elseif (str_contains($status, 'duty') || str_contains($status, 'on')) {
-                                    $badge_class = 'adm-badge adm-badge-warning';
-                                } else {
-                                    $badge_class = 'adm-badge adm-badge-danger';
-                                }
-                                // Next service highlight
-                                $svc_style = '';
-                                if (!empty($amb['next_service_date'])) {
-                                    $days = (strtotime($amb['next_service_date']) - time()) / 86400;
-                                    if ($days <= 7) $svc_style = 'color:var(--danger);font-weight:700;';
-                                    elseif ($days <= 30) $svc_style = 'color:var(--warning);font-weight:600;';
-                                }
-                        ?>
+                        <?php $n=1; while ($req = mysqli_fetch_assoc($reqs)): $req_status = $req['status']; $sc2 = ($req_status === 'Dispatched') ? 'info' : (($req_status === 'In Transit') ? 'warning' : 'danger'); ?>
                         <tr>
                             <td><?php echo $n++; ?></td>
-                            <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($amb['ambulance_id']); ?></span></td>
-                            <td><strong><?php echo htmlspecialchars($amb['vehicle_number']); ?></strong></td>
-                            <td><?php echo htmlspecialchars($amb['driver_name']); ?></td>
-                            <td><?php echo htmlspecialchars($amb['driver_phone']); ?></td>
-                            <td><span class="<?php echo $badge_class; ?>"><?php echo htmlspecialchars($amb['status']); ?></span></td>
-                            <td style="color:var(--text-secondary);"><?php echo htmlspecialchars($amb['last_service_date'] ?? 'N/A'); ?></td>
-                            <td style="<?php echo $svc_style; ?>"><?php echo htmlspecialchars($amb['next_service_date'] ?? 'N/A'); ?></td>
-                            <td>
-                                <div class="adm-table-actions">
-                                    <a href="/RMU-Medical-Management-System/php/Ambulence/update.php?ambulance_id=<?php echo $amb['ambulance_id']; ?>"
-                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i> Edit</a>
-                                    <a href="/RMU-Medical-Management-System/php/Ambulence/Delete.php?ambulance_id=<?php echo $amb['ambulance_id']; ?>"
-                                       class="adm-btn adm-btn-danger adm-btn-sm"
-                                       onclick="return confirm('Remove this ambulance from the fleet?');"><i class="fas fa-trash"></i> Delete</a>
-                                </div>
-                            </td>
+                            <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($req['request_id']); ?></span></td>
+                            <td><?php echo htmlspecialchars($req['patient_name']); ?></td>
+                            <td><?php echo htmlspecialchars($req['patient_phone']); ?></td>
+                            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars($req['pickup_location']); ?></td>
+                            <td><?php echo htmlspecialchars($req['emergency_type'] ?? 'General'); ?></td>
+                            <td><?php echo date('d M, g:i A', strtotime($req['request_time'])); ?></td>
+                            <td><span class="adm-badge adm-badge-<?php echo $sc2; ?>"><?php echo $req['status']; ?></span></td>
                         </tr>
-                        <?php endwhile; } ?>
+                        <?php endwhile; ?>
                     </tbody>
                 </table>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 </main>
 
 <script>
-const sidebar = document.getElementById('admSidebar');
-const overlay = document.getElementById('admOverlay');
+const sidebar  = document.getElementById('admSidebar');
+const overlay  = document.getElementById('admOverlay');
 document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
 overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 const themeToggle = document.getElementById('themeToggle');
