@@ -191,7 +191,7 @@ if ($next_appt) {
             <span class="pat-badge"><i class="fas fa-id-card"></i> <?php echo htmlspecialchars($pat_row['patient_id']); ?></span>
             <?php if ($pat_row['blood_group']): ?><span class="pat-badge" style="background:rgba(231,76,60,.3);"><i class="fas fa-tint"></i> <?php echo htmlspecialchars($pat_row['blood_group']); ?></span><?php endif; ?>
             <?php if ($pat_row['gender']): ?><span class="pat-badge"><i class="fas fa-venus-mars"></i> <?php echo htmlspecialchars($pat_row['gender']); ?></span><?php endif; ?>
-            <?php if ($pat_row['phone']): ?><span class="pat-badge"><i class="fas fa-phone"></i> <?php echo htmlspecialchars($pat_row['phone']); ?></span><?php endif; ?>
+            <?php if (!empty($pat_row['phone'] ?? '')): ?><span class="pat-badge"><i class="fas fa-phone"></i> <?php echo htmlspecialchars($pat_row['phone']); ?></span><?php endif; ?>
           </div>
         </div>
       </div>
@@ -217,13 +217,13 @@ if ($next_appt) {
       </div>
 
       <!-- Alerts for allergies/chronic conditions -->
-      <?php if ($pat_row['allergies']): ?>
+      <?php if (!empty($pat_row['allergies'] ?? '')): ?>
       <div class="adm-alert adm-alert-danger">
         <i class="fas fa-exclamation-triangle"></i>
         <div><strong>Known Allergies:</strong> <?php echo htmlspecialchars($pat_row['allergies']); ?></div>
       </div>
       <?php endif; ?>
-      <?php if ($pat_row['chronic_conditions']): ?>
+      <?php if (!empty($pat_row['chronic_conditions'] ?? '')): ?>
       <div class="adm-alert adm-alert-warning">
         <i class="fas fa-heartbeat"></i>
         <div><strong>Chronic Conditions:</strong> <?php echo htmlspecialchars($pat_row['chronic_conditions']); ?></div>
@@ -358,7 +358,7 @@ if ($next_appt) {
           </div>
 
           <!-- Emergency Contact -->
-          <?php if ($pat_row['emergency_contact_name']): ?>
+          <?php if (!empty($pat_row['emergency_contact_name'] ?? '')): ?>
           <div class="adm-card">
             <div class="adm-card-header"><h3><i class="fas fa-phone-alt" style="color:#e74c3c;"></i> Emergency Contact</h3></div>
             <div style="padding:1rem;font-size:.9rem;line-height:2;">
