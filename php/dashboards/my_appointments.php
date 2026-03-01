@@ -1,556 +1,264 @@
 <?php
+// ============================================================
+// MY APPOINTMENTS — Patient-facing appointments page
+// Updated: Phase 4 — correct schema, admin-dashboard.css
+// ============================================================
 session_start();
 require_once '../db_conn.php';
 require_once '../classes/AppointmentManager.php';
 
-// Check authentication
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'patient') {
-    header("Location: ../index.php");
-    exit();
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role']??$_SESSION['role']??'', ['patient'])) {
+    header('Location: ../index.php'); exit;
 }
-
+date_default_timezone_set('Africa/Accra');
 $appointmentManager = new AppointmentManager($conn);
-$userId = $_SESSION['user_id'];
+$userId   = (int)$_SESSION['user_id'];
+$userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'patient';
+$today    = date('Y-m-d');
 
-// Get patient ID
-$query = "SELECT P_ID FROM patients WHERE user_id = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$result = $stmt->get_result();
-$patient = $result->fetch_assoc();
-$patientId = $patient['P_ID'];
+// ── Patient ID (new schema: patients.id, not P_ID) ────────
+$pidRow   = mysqli_fetch_assoc(mysqli_query($conn,"SELECT id, patient_id AS p_ref FROM patients WHERE user_id=$userId LIMIT 1"));
+$patId    = (int)($pidRow['id'] ?? 0);
 
-$message = '';
-$error = '';
+$message = ''; $error = '';
 
-// Handle reschedule request
+// ── POST actions ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $apptId = (int)$_POST['appointment_id'];
+    $reason = trim($_POST['reason'] ?? '');
+
     if ($_POST['action'] === 'reschedule') {
-        $appointmentId = $_POST['appointment_id'];
-        $newDate = $_POST['new_date'];
-        $newTime = $_POST['new_time'];
-        $reason = $_POST['reason'] ?? '';
-        
-        $result = $appointmentManager->requestReschedule($appointmentId, $userId, $newDate, $newTime, $reason);
-        
-        if ($result['success']) {
-            $message = $result['message'];
-        } else {
-            $error = $result['message'];
+        $newDate = $_POST['new_date'] ?? '';
+        $newTime = $_POST['new_time'] ?? '';
+        $result  = $appointmentManager->requestReschedule($apptId, $userId, $newDate, $newTime, $reason);
+        // Notify the doctor
+        $appt = mysqli_fetch_assoc(mysqli_query($conn,"SELECT a.doctor_id, u.name AS pat_name FROM appointments a JOIN users u ON u.id=$userId WHERE a.id=$apptId LIMIT 1"));
+        if ($appt) {
+            $docUid = (int)(mysqli_fetch_assoc(mysqli_query($conn,"SELECT user_id FROM doctors WHERE id={$appt['doctor_id']} LIMIT 1"))['user_id'] ?? 0);
+            if ($docUid) {
+                $pname = mysqli_real_escape_string($conn,$appt['pat_name']??'Patient');
+                mysqli_query($conn,"INSERT INTO notifications (user_id,user_role,type,title,message,is_read,related_module,created_at)
+                  VALUES($docUid,'doctor','appointment','Reschedule Request','{$pname} has requested to reschedule appointment #$apptId.',0,'appointments',NOW())");
+            }
         }
     } elseif ($_POST['action'] === 'cancel') {
-        $appointmentId = $_POST['appointment_id'];
-        $reason = $_POST['reason'] ?? '';
-        
-        $result = $appointmentManager->cancelAppointment($appointmentId, $userId, $reason);
-        
-        if ($result['success']) {
-            $message = $result['message'];
-        } else {
-            $error = $result['message'];
-        }
+        $result = $appointmentManager->cancelAppointment($apptId, $userId, $reason);
+    }
+    if (isset($result)) {
+        $result['success'] ? $message = $result['message'] : $error = $result['message'];
     }
 }
 
-// Get patient appointments
-$appointments = $appointmentManager->getPatientAppointments($patientId);
-
-// Get available slots for AJAX
+// ── AJAX: available slots ─────────────────────────────────
 if (isset($_GET['get_slots'])) {
-    $doctorId = $_GET['doctor_id'];
-    $date = $_GET['date'];
-    $slots = $appointmentManager->getAvailableSlots($doctorId, $date);
-    header('Content-Type: application/json');
-    echo json_encode($slots);
-    exit;
+    $slots = $appointmentManager->getAvailableSlots((int)$_GET['doctor_id'], $_GET['date']);
+    header('Content-Type: application/json'); echo json_encode($slots); exit;
 }
+
+// ── Fetch appointments ────────────────────────────────────
+$aResult = mysqli_query($conn,
+    "SELECT a.*, u.name AS doctor_name, d.specialization, d.doctor_id AS doc_ref
+     FROM appointments a
+     JOIN doctors d ON a.doctor_id=d.id JOIN users u ON d.user_id=u.id
+     WHERE a.patient_id=$patId ORDER BY a.appointment_date DESC, a.appointment_time DESC");
+$appointments = []; if($aResult) while($r=mysqli_fetch_assoc($aResult)) $appointments[]=$r;
+
+// ── Unread notifications ──────────────────────────────────
+$unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifications WHERE user_id=$userId AND is_read=0"))[0] ?? 0);
+
+// ── Stats ─────────────────────────────────────────────────
+$stat_today    = count(array_filter($appointments, fn($a)=>$a['appointment_date']===$today));
+$stat_upcoming = count(array_filter($appointments, fn($a)=>$a['appointment_date']>$today && $a['status']==='Confirmed'));
+$stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pending'));
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Appointments - RMU Medical Sickbay</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .header h1 {
-            color: #2c3e50;
-            font-size: 28px;
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .appointment-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 20px;
-            align-items: center;
-        }
-        
-        .appointment-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-        }
-        
-        .appointment-details h3 {
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-        
-        .appointment-info {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-        
-        .appointment-info span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .appointment-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-        
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .status-scheduled {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-rescheduled {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-completed {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #2c3e50;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #7f8c8d;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .time-slots {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .time-slot {
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .time-slot:hover {
-            border-color: #3498db;
-            background: #e7f3ff;
-        }
-        
-        .time-slot.selected {
-            background: #3498db;
-            color: white;
-            border-color: #3498db;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #7f8c8d;
-        }
-        
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #bdc3c7;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>My Appointments — RMU Medical Sickbay</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+<style>
+:root{--role-accent:#9B59B6;}
+[data-theme="dark"]{--role-accent-light:#2d1b40;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;padding:1rem;}
+.modal-bg.open{display:flex;}
+.modal-box{background:var(--surface);border-radius:var(--radius-lg);padding:2.4rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
+.modal-close{background:none;border:none;font-size:2rem;cursor:pointer;color:var(--text-muted);}
+.form-group{margin-bottom:1.3rem;}
+.form-group label{display:block;font-size:1.2rem;font-weight:600;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);}
+.form-control{width:100%;padding:1rem 1.2rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);font-family:Poppins,sans-serif;font-size:1.3rem;outline:none;transition:var(--transition);}
+.form-control:focus{border-color:var(--role-accent);}
+.appt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.8rem;margin-bottom:1.2rem;box-shadow:var(--shadow-sm);border-left:4px solid var(--border);transition:var(--transition);}
+.appt-card:hover{box-shadow:var(--shadow-md);}
+.appt-card.Confirmed,.appt-card.Completed{border-left-color:var(--success);}
+.appt-card.Pending{border-left-color:var(--warning);}
+.appt-card.Cancelled{border-left-color:var(--danger);opacity:.75;}
+.appt-card.Rescheduled{border-left-color:var(--info);}
+.appt-card.today-card{background:linear-gradient(135deg,rgba(155,89,182,.06),rgba(47,128,237,.04));border-left-color:var(--role-accent);}
+.filter-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.ftab{padding:.55rem 1.2rem;border-radius:20px;font-size:1.2rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text-secondary);transition:var(--transition);}
+.ftab.active,.ftab:hover{background:var(--role-accent);color:#fff;border-color:var(--role-accent);}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-calendar-alt"></i> My Appointments</h1>
-        </div>
-        
-        <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if (empty($appointments)): ?>
-            <div class="empty-state">
-                <i class="fas fa-calendar-times"></i>
-                <h2>No Appointments</h2>
-                <p>You don't have any appointments scheduled.</p>
-                <a href="patient_dashboard.php" class="btn btn-primary" style="margin-top: 20px;">
-                    <i class="fas fa-plus"></i> Book Appointment
-                </a>
-            </div>
-        <?php else: ?>
-            <?php foreach ($appointments as $appointment): ?>
-                <div class="appointment-card">
-                    <div class="appointment-icon">
-                        <i class="fas fa-stethoscope"></i>
-                    </div>
-                    
-                    <div class="appointment-details">
-                        <h3>Dr. <?php echo htmlspecialchars($appointment['doctor_name']); ?></h3>
-                        <div class="appointment-info">
-                            <span>
-                                <i class="fas fa-calendar"></i>
-                                <?php echo date('F j, Y', strtotime($appointment['appointment_date'])); ?>
-                            </span>
-                            <span>
-                                <i class="fas fa-clock"></i>
-                                <?php echo date('g:i A', strtotime($appointment['appointment_time'])); ?>
-                            </span>
-                            <span>
-                                <i class="fas fa-user-md"></i>
-                                <?php echo htmlspecialchars($appointment['D_Specialization']); ?>
-                            </span>
-                            <span class="status-badge status-<?php echo strtolower($appointment['status']); ?>">
-                                <?php echo $appointment['status']; ?>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <?php if (!in_array($appointment['status'], ['Completed', 'Cancelled'])): ?>
-                        <div class="appointment-actions">
-                            <button class="btn btn-primary" onclick="openRescheduleModal(<?php echo $appointment['appointment_id']; ?>, <?php echo $appointment['doctor_id']; ?>)">
-                                <i class="fas fa-calendar-alt"></i> Reschedule
-                            </button>
-                            <button class="btn btn-danger" onclick="openCancelModal(<?php echo $appointment['appointment_id']; ?>)">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <a href="patient_dashboard.php" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
+<div class="adm-layout">
+
+<aside class="adm-sidebar" id="admSidebar">
+  <div class="adm-sidebar-brand">
+    <div class="adm-brand-icon"><i class="fas fa-hospital-user"></i></div>
+    <div class="adm-brand-text"><span class="adm-brand-name">RMU Sickbay</span><span class="adm-brand-role">Patient Portal</span></div>
+  </div>
+  <nav class="adm-nav" style="padding:1.5rem 1rem;">
+    <a href="patient_dashboard.php" class="adm-nav-item"><i class="fas fa-house"></i><span>Dashboard</span></a>
+    <a href="my_appointments.php" class="adm-nav-item active"><i class="fas fa-calendar-check"></i><span>My Appointments</span></a>
+    <a href="medical_records.php" class="adm-nav-item"><i class="fas fa-folder-open"></i><span>Medical Records</span></a>
+    <a href="prescription_refills.php" class="adm-nav-item"><i class="fas fa-prescription-bottle-medical"></i><span>Prescription Refills</span></a>
+  </nav>
+  <div class="adm-sidebar-footer">
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+<div class="adm-overlay" id="admOverlay"></div>
+
+<main class="adm-main">
+  <div class="adm-topbar">
+    <div class="adm-topbar-left">
+      <button class="adm-menu-toggle" id="menuToggle" style="display:none;"><i class="fas fa-bars"></i></button>
+      <span class="adm-page-title"><i class="fas fa-calendar-check" style="color:var(--role-accent);margin-right:.6rem;"></i>My Appointments</span>
     </div>
-    
-    <!-- Reschedule Modal -->
-    <div id="rescheduleModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Reschedule Appointment</h2>
-                <button class="close-modal" onclick="closeModal('rescheduleModal')">&times;</button>
-            </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="reschedule">
-                <input type="hidden" name="appointment_id" id="reschedule_appointment_id">
-                <input type="hidden" name="doctor_id" id="reschedule_doctor_id">
-                
-                <div class="form-group">
-                    <label>New Date</label>
-                    <input type="date" name="new_date" id="new_date" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" required onchange="loadAvailableSlots()">
-                </div>
-                
-                <div class="form-group">
-                    <label>Available Time Slots</label>
-                    <div id="timeSlotsContainer" class="time-slots">
-                        <p style="grid-column: 1/-1; text-align: center; color: #7f8c8d;">Select a date to see available slots</p>
-                    </div>
-                    <input type="hidden" name="new_time" id="selected_time" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Reason for Rescheduling</label>
-                    <textarea name="reason" rows="3" placeholder="Optional"></textarea>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-check"></i> Confirm Reschedule
-                </button>
-            </form>
-        </div>
+    <div class="adm-topbar-right">
+      <span style="font-size:1.2rem;color:var(--text-secondary);"><?=date('D, d M Y')?></span>
+      <div style="position:relative;"><button class="adm-notif-btn"><i class="fas fa-bell"></i><?php if($unread>0):?><span style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--danger);color:#fff;border-radius:50%;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;"><?=$unread?></span><?php endif;?></button></div>
+      <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+      <div class="adm-avatar" style="background:linear-gradient(135deg,#9B59B6,#2F80ED);"><?=strtoupper(substr($_SESSION['user_name']??$_SESSION['name']??'P',0,1))?></div>
     </div>
-    
-    <!-- Cancel Modal -->
-    <div id="cancelModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Cancel Appointment</h2>
-                <button class="close-modal" onclick="closeModal('cancelModal')">&times;</button>
-            </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="cancel">
-                <input type="hidden" name="appointment_id" id="cancel_appointment_id">
-                
-                <div class="form-group">
-                    <label>Reason for Cancellation</label>
-                    <textarea name="reason" rows="3" placeholder="Optional"></textarea>
-                </div>
-                
-                <p style="color: #e74c3c; margin-bottom: 20px;">
-                    <i class="fas fa-exclamation-triangle"></i> Are you sure you want to cancel this appointment?
-                </p>
-                
-                <button type="submit" class="btn btn-danger" style="width: 100%;">
-                    <i class="fas fa-times"></i> Confirm Cancellation
-                </button>
-            </form>
-        </div>
+  </div>
+
+  <div class="adm-content">
+    <?php if($message):?><div style="background:var(--success-light);color:var(--success);border-left:4px solid var(--success);border-radius:0 10px 10px 0;padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:1.3rem;"><i class="fas fa-check-circle"></i> <?=htmlspecialchars($message)?></div><?php endif;?>
+    <?php if($error):?><div style="background:var(--danger-light);color:var(--danger);border-left:4px solid var(--danger);border-radius:0 10px 10px 0;padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:1.3rem;"><i class="fas fa-exclamation-circle"></i> <?=htmlspecialchars($error)?></div><?php endif;?>
+
+    <!-- Stats Strip -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+      <div class="adm-card" style="text-align:center;padding:1.5rem;margin:0;"><div style="font-size:2.8rem;font-weight:800;color:var(--primary);"><?=$stat_today?></div><div style="font-size:1.2rem;color:var(--text-muted);">Today</div></div>
+      <div class="adm-card" style="text-align:center;padding:1.5rem;margin:0;"><div style="font-size:2.8rem;font-weight:800;color:var(--success);"><?=$stat_upcoming?></div><div style="font-size:1.2rem;color:var(--text-muted);">Upcoming</div></div>
+      <div class="adm-card" style="text-align:center;padding:1.5rem;margin:0;"><div style="font-size:2.8rem;font-weight:800;color:var(--warning);"><?=$stat_pending?></div><div style="font-size:1.2rem;color:var(--text-muted);">Pending</div></div>
     </div>
-    
-    <script>
-        function openRescheduleModal(appointmentId, doctorId) {
-            document.getElementById('reschedule_appointment_id').value = appointmentId;
-            document.getElementById('reschedule_doctor_id').value = doctorId;
-            document.getElementById('rescheduleModal').classList.add('active');
-        }
-        
-        function openCancelModal(appointmentId) {
-            document.getElementById('cancel_appointment_id').value = appointmentId;
-            document.getElementById('cancelModal').classList.add('active');
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-        
-        async function loadAvailableSlots() {
-            const date = document.getElementById('new_date').value;
-            const doctorId = document.getElementById('reschedule_doctor_id').value;
-            const container = document.getElementById('timeSlotsContainer');
-            
-            if (!date) return;
-            
-            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Loading...</p>';
-            
-            try {
-                const response = await fetch(`?get_slots=1&doctor_id=${doctorId}&date=${date}`);
-                const slots = await response.json();
-                
-                if (slots.length === 0) {
-                    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #e74c3c;">No available slots for this date</p>';
-                    return;
-                }
-                
-                container.innerHTML = '';
-                slots.forEach(slot => {
-                    const slotDiv = document.createElement('div');
-                    slotDiv.className = 'time-slot';
-                    slotDiv.textContent = slot;
-                    slotDiv.onclick = () => selectTimeSlot(slot, slotDiv);
-                    container.appendChild(slotDiv);
-                });
-            } catch (error) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #e74c3c;">Error loading slots</p>';
-            }
-        }
-        
-        function selectTimeSlot(time, element) {
-            // Remove previous selection
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('selected');
-            });
-            
-            // Select new slot
-            element.classList.add('selected');
-            document.getElementById('selected_time').value = time + ':00';
-        }
-        
-        // Close modal on outside click
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.classList.remove('active');
-            }
-        }
-    </script>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="ftab active" onclick="filterAppts('all',this)">All</button>
+      <button class="ftab" onclick="filterAppts('today',this)">Today</button>
+      <button class="ftab" onclick="filterAppts('Pending',this)">Pending</button>
+      <button class="ftab" onclick="filterAppts('Confirmed',this)">Confirmed</button>
+      <button class="ftab" onclick="filterAppts('Rescheduled',this)">Rescheduled</button>
+      <button class="ftab" onclick="filterAppts('Cancelled',this)">Cancelled</button>
+      <button class="ftab" onclick="filterAppts('Completed',this)">Completed</button>
+    </div>
+
+    <!-- Appointment Cards -->
+    <?php if(empty($appointments)):?>
+      <div class="adm-card" style="text-align:center;padding:4rem;">
+        <i class="fas fa-calendar-xmark" style="font-size:3rem;opacity:.25;display:block;margin-bottom:1rem;"></i>
+        <p style="color:var(--text-muted);font-size:1.3rem;">No appointments found.</p>
+        <a href="/RMU-Medical-Management-System/php/book.php" class="adm-btn adm-btn-primary" style="margin-top:1rem;">Book an Appointment</a>
+      </div>
+    <?php else: foreach($appointments as $ap):
+      $bStatus = $ap['status'] ?? 'Pending';
+      $is_today = ($ap['appointment_date']===$today);
+      $can_act  = !in_array($bStatus, ['Completed','Cancelled']);
+      $sc_map   = ['Confirmed'=>'success','Completed'=>'info','Cancelled'=>'danger','Rescheduled'=>'warning'];
+      $sc       = $sc_map[$bStatus] ?? 'warning';
+      $h        = date('g', strtotime($ap['appointment_time']));
+      $m        = date('i', strtotime($ap['appointment_time']));
+      $ampm     = date('A', strtotime($ap['appointment_time']));
+    ?>
+    <div class="appt-card <?=$bStatus?> <?=$is_today?'today-card':''?>" data-status="<?=$bStatus?>" data-date="<?=$ap['appointment_date']?>">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <div style="font-size:1.8rem;font-weight:800;color:var(--role-accent);line-height:1;"><?=$h.':'.$m?></div>
+              <div style="font-size:1rem;color:var(--text-muted);"><?=$ampm?></div>
+            </div>
+            <div style="border-left:2px solid var(--border);height:40px;"></div>
+            <div>
+              <div style="font-size:1rem;color:var(--text-muted);"><?=date('l, d F Y',strtotime($ap['appointment_date']))?><?=$is_today?' <span style="background:var(--role-accent);color:#fff;border-radius:20px;padding:.1rem .6rem;font-size:.8rem;margin-left:.5rem;">Today</span>':''?></div>
+              <div style="font-weight:700;font-size:1.4rem;">Dr. <?=htmlspecialchars($ap['doctor_name']??'')?></div>
+              <div style="font-size:1.2rem;color:var(--text-muted);"><?=htmlspecialchars($ap['specialization']??'General')?> &middot; <?=htmlspecialchars($ap['service_type']??'Consultation')?></div>
+            </div>
+          </div>
+          <?php if($ap['symptoms']??''):?><div style="font-size:1.2rem;color:var(--text-secondary);background:var(--surface-2);border-radius:8px;padding:.7rem 1rem;margin-top:.5rem;"><strong>Reason:</strong> <?=htmlspecialchars(substr($ap['symptoms'],0,120))?></div><?php endif;?>
+          <?php if($ap['reschedule_reason']??''):?><div style="font-size:1.1rem;color:var(--info);margin-top:.5rem;"><i class="fas fa-calendar-pen"></i> Reschedule note: <?=htmlspecialchars($ap['reschedule_reason'])?></div><?php endif;?>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;">
+          <span class="adm-badge adm-badge-<?=$sc?>" style="font-size:1.2rem;"><?=$bStatus?></span>
+          <?php if($can_act):?>
+          <button onclick="openReschedule(<?=$ap['id']?>,<?=json_encode('Dr. '.$ap['doctor_name'])?>,<?=$ap['doctor_id']?>)" class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-calendar-pen"></i> Reschedule</button>
+          <button onclick="openCancel(<?=$ap['id']?>,<?=json_encode('Dr. '.$ap['doctor_name'])?>)" class="adm-btn adm-btn-danger adm-btn-sm"><i class="fas fa-xmark"></i> Cancel</button>
+          <?php endif;?>
+        </div>
+      </div>
+    </div>
+    <?php endforeach; endif;?>
+  </div>
+</main>
+</div>
+
+<!-- Reschedule Modal -->
+<div class="modal-bg" id="modalReschedule">
+  <div class="modal-box">
+    <div class="modal-header"><h3><i class="fas fa-calendar-pen" style="color:var(--warning);"></i> Request Reschedule</h3><button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">&times;</button></div>
+    <p id="rsDoctorName" style="font-weight:600;font-size:1.4rem;margin-bottom:1.5rem;"></p>
+    <form method="POST">
+      <input type="hidden" name="action" value="reschedule">
+      <input type="hidden" name="appointment_id" id="rsApptId">
+      <div class="form-group"><label>Preferred New Date</label><input type="date" name="new_date" class="form-control" min="<?=date('Y-m-d')?>" required></div>
+      <div class="form-group"><label>Preferred New Time</label><input type="time" name="new_time" class="form-control" required></div>
+      <div class="form-group"><label>Reason</label><textarea name="reason" class="form-control" rows="3" placeholder="Why do you need to reschedule?" required></textarea></div>
+      <button type="submit" class="adm-btn adm-btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Send Reschedule Request</button>
+    </form>
+  </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal-bg" id="modalCancel">
+  <div class="modal-box">
+    <div class="modal-header"><h3><i class="fas fa-xmark" style="color:var(--danger);"></i> Cancel Appointment</h3><button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">&times;</button></div>
+    <p id="cancelDoctorName" style="font-weight:600;font-size:1.4rem;margin-bottom:.8rem;"></p>
+    <div style="background:var(--danger-light);color:var(--danger);border-radius:10px;padding:1rem 1.4rem;margin-bottom:1.2rem;font-size:1.2rem;"><i class="fas fa-triangle-exclamation"></i> Your doctor will be notified of this cancellation.</div>
+    <form method="POST">
+      <input type="hidden" name="action" value="cancel">
+      <input type="hidden" name="appointment_id" id="cancelApptId">
+      <div class="form-group"><label>Cancellation Reason</label><textarea name="reason" class="form-control" rows="3" placeholder="Please tell us why you're cancelling…" required></textarea></div>
+      <button type="submit" class="adm-btn adm-btn-danger" style="width:100%;justify-content:center;"><i class="fas fa-xmark"></i> Confirm Cancellation</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('rmu_theme',t);document.getElementById('themeIcon').className=t==='dark'?'fas fa-sun':'fas fa-moon';}
+applyTheme(localStorage.getItem('rmu_theme')||'light');
+document.getElementById('themeToggle')?.addEventListener('click',()=>{applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+document.getElementById('menuToggle')?.addEventListener('click',()=>{document.getElementById('admSidebar').classList.toggle('active');document.getElementById('admOverlay').classList.toggle('active');});
+document.getElementById('admOverlay')?.addEventListener('click',()=>{document.getElementById('admSidebar').classList.remove('active');document.getElementById('admOverlay').classList.remove('active');});
+const today='<?=$today?>';
+function filterAppts(status,btn){
+  document.querySelectorAll('.filter-tabs .ftab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.appt-card').forEach(c=>{
+    if(status==='all'){c.style.display='';return;}
+    if(status==='today'){c.style.display=c.dataset.date===today?'':'none';return;}
+    c.style.display=c.dataset.status===status?'':'none';
+  });
+}
+function openReschedule(id,doc){document.getElementById('rsApptId').value=id;document.getElementById('rsDoctorName').textContent=doc;document.getElementById('modalReschedule').classList.add('open');}
+function openCancel(id,doc){document.getElementById('cancelApptId').value=id;document.getElementById('cancelDoctorName').textContent=doc;document.getElementById('modalCancel').classList.add('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+</script>
 </body>
 </html>

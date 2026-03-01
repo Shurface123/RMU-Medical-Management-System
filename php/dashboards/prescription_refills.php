@@ -1,581 +1,270 @@
 <?php
+// ============================================================
+// PRESCRIPTION REFILLS — Patient-facing
+// Updated: Phase 4 — correct schema, admin-dashboard.css
+// Integrates with new prescriptions table & notification system
+// ============================================================
 session_start();
 require_once '../db_conn.php';
 require_once '../classes/PrescriptionRefillManager.php';
 
-// Check authentication
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'patient') {
-    header("Location: ../index.php");
-    exit();
+$role = $_SESSION['user_role'] ?? $_SESSION['role'] ?? '';
+if (!isset($_SESSION['user_id']) || $role !== 'patient') {
+    header('Location: ../index.php'); exit;
 }
-
+date_default_timezone_set('Africa/Accra');
 $refillManager = new PrescriptionRefillManager($conn);
-$userId = $_SESSION['user_id'];
+$userId  = (int)$_SESSION['user_id'];
+$today   = date('Y-m-d');
 
-// Get patient ID
-$query = "SELECT P_ID FROM patients WHERE user_id = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$result = $stmt->get_result();
-$patient = $result->fetch_assoc();
-$patientId = $patient['P_ID'];
+// Patient ID (new schema: patients.id, not P_ID)
+$pidRow  = mysqli_fetch_assoc(mysqli_query($conn,"SELECT id, patient_id AS p_ref FROM patients WHERE user_id=$userId LIMIT 1"));
+$patId   = (int)($pidRow['id'] ?? 0);
 
-$message = '';
-$error = '';
+$message = ''; $error = '';
 
-// Handle refill request
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'request_refill') {
-        $prescriptionId = $_POST['prescription_id'];
-        $notes = $_POST['notes'] ?? '';
-        
-        $result = $refillManager->requestRefill($prescriptionId, $patientId, $notes);
-        
-        if ($result['success']) {
-            $message = $result['message'];
-        } else {
-            $error = $result['message'];
-        }
-    }
-}
-
-// Get patient's prescriptions
-$prescriptionsQuery = "SELECT p.*, d.D_Name as doctor_name, 
-                       (SELECT COUNT(*) FROM prescription_refills pr 
-                        WHERE pr.prescription_id = p.prescription_id 
-                        AND pr.status = 'Pending') as pending_refills
-                       FROM prescriptions p
-                       JOIN doctors d ON p.doctor_id = d.D_ID
-                       WHERE p.patient_id = ? 
-                       AND p.status NOT IN ('Cancelled', 'Expired')
-                       ORDER BY p.prescription_date DESC";
-
-$stmt = $conn->prepare($prescriptionsQuery);
-$stmt->bind_param("i", $patientId);
-$stmt->execute();
-$prescriptions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// Get refill history
-$refillHistory = $refillManager->getPatientRefills($patientId);
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prescription Refills - RMU Medical Sickbay</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .header h1 {
-            color: #2c3e50;
-            font-size: 28px;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .tab {
-            padding: 12px 24px;
-            background: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .tab.active {
-            background: #3498db;
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .prescription-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .prescription-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-        
-        .prescription-header h3 {
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-        
-        .prescription-meta {
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-        
-        .prescription-items {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-        
-        .prescription-items h4 {
-            color: #2c3e50;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .medication-item {
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .refill-info {
-            display: flex;
-            gap: 20px;
-            margin: 15px 0;
-            font-size: 14px;
-        }
-        
-        .refill-info span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-        
-        .btn-primary:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-        }
-        
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-approved {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-denied {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #2c3e50;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #7f8c8d;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .history-item {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #7f8c8d;
-            background: white;
-            border-radius: 10px;
-        }
-        
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #bdc3c7;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-pills"></i> Prescription Refills</h1>
-        </div>
-        
-        <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('prescriptions')">
-                <i class="fas fa-prescription-bottle"></i> My Prescriptions
-            </button>
-            <button class="tab" onclick="switchTab('history')">
-                <i class="fas fa-history"></i> Refill History
-            </button>
-        </div>
-        
-        <!-- Prescriptions Tab -->
-        <div id="prescriptions" class="tab-content active">
-            <?php if (empty($prescriptions)): ?>
-                <div class="empty-state">
-                    <i class="fas fa-prescription-bottle"></i>
-                    <h2>No Active Prescriptions</h2>
-                    <p>You don't have any active prescriptions.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($prescriptions as $prescription): ?>
-                    <div class="prescription-card">
-                        <div class="prescription-header">
-                            <div>
-                                <h3>Prescription #<?php echo $prescription['prescription_id']; ?></h3>
-                                <div class="prescription-meta">
-                                    <i class="fas fa-user-md"></i> Dr. <?php echo htmlspecialchars($prescription['doctor_name']); ?>
-                                    | <i class="fas fa-calendar"></i> <?php echo date('M j, Y', strtotime($prescription['prescription_date'])); ?>
-                                </div>
-                            </div>
-                            <span class="status-badge status-<?php echo strtolower($prescription['status']); ?>">
-                                <?php echo $prescription['status']; ?>
-                            </span>
-                        </div>
-                        
-                        <?php
-                        // Get prescription items
-                        $itemsQuery = "SELECT * FROM prescription_items WHERE prescription_id = ?";
-                        $stmt = $conn->prepare($itemsQuery);
-                        $stmt->bind_param("i", $prescription['prescription_id']);
-                        $stmt->execute();
-                        $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                        ?>
-                        
-                        <?php if (!empty($items)): ?>
-                            <div class="prescription-items">
-                                <h4>Medications:</h4>
-                                <?php foreach ($items as $item): ?>
-                                    <div class="medication-item">
-                                        <div>
-                                            <strong><?php echo htmlspecialchars($item['medicine_name']); ?></strong>
-                                            <div style="font-size: 13px; color: #7f8c8d;">
-                                                <?php echo htmlspecialchars($item['dosage']); ?> - <?php echo htmlspecialchars($item['instructions']); ?>
-                                            </div>
-                                        </div>
-                                        <div style="color: #7f8c8d; font-size: 13px;">
-                                            Qty: <?php echo $item['quantity']; ?>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <div class="refill-info">
-                            <span>
-                                <i class="fas fa-sync"></i>
-                                <strong>Refills Available:</strong> <?php echo $prescription['refills_allowed']; ?>
-                            </span>
-                            <?php if ($prescription['pending_refills'] > 0): ?>
-                                <span style="color: #f39c12;">
-                                    <i class="fas fa-clock"></i>
-                                    <strong>Pending Request</strong>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <button 
-                            class="btn btn-primary" 
-                            onclick="openRefillModal(<?php echo $prescription['prescription_id']; ?>)"
-                            <?php echo ($prescription['refills_allowed'] <= 0 || $prescription['pending_refills'] > 0) ? 'disabled' : ''; ?>
-                        >
-                            <i class="fas fa-redo"></i> Request Refill
-                        </button>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-        
-        <!-- History Tab -->
-        <div id="history" class="tab-content">
-            <?php if (empty($refillHistory)): ?>
-                <div class="empty-state">
-                    <i class="fas fa-history"></i>
-                    <h2>No Refill History</h2>
-                    <p>You haven't requested any refills yet.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($refillHistory as $refill): ?>
-                    <div class="history-item">
-                        <div class="history-header">
-                            <div>
-                                <strong>Prescription #<?php echo $refill['prescription_id']; ?></strong>
-                                <div style="font-size: 13px; color: #7f8c8d; margin-top: 5px;">
-                                    Dr. <?php echo htmlspecialchars($refill['doctor_name']); ?>
-                                </div>
-                            </div>
-                            <span class="status-badge status-<?php echo strtolower($refill['status']); ?>">
-                                <?php echo $refill['status']; ?>
-                            </span>
-                        </div>
-                        
-                        <div style="margin: 10px 0; font-size: 14px; color: #7f8c8d;">
-                            <i class="fas fa-calendar"></i> Requested: <?php echo date('M j, Y g:i A', strtotime($refill['requested_at'])); ?>
-                        </div>
-                        
-                        <?php if ($refill['request_notes']): ?>
-                            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 14px;">
-                                <strong>Your Notes:</strong> <?php echo htmlspecialchars($refill['request_notes']); ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($refill['status'] !== 'Pending' && $refill['approval_notes']): ?>
-                            <div style="background: #e7f3ff; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 14px;">
-                                <strong>Doctor's Response:</strong> <?php echo htmlspecialchars($refill['approval_notes']); ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <a href="patient_dashboard.php" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
-    </div>
-    
-    <!-- Refill Request Modal -->
-    <div id="refillModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Request Prescription Refill</h2>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
-            </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="request_refill">
-                <input type="hidden" name="prescription_id" id="refill_prescription_id">
-                
-                <div class="form-group">
-                    <label>Additional Notes (Optional)</label>
-                    <textarea name="notes" rows="4" placeholder="Any additional information for your doctor..."></textarea>
-                </div>
-                
-                <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
-                    <i class="fas fa-info-circle"></i> Your doctor will review your refill request and you'll be notified once it's processed.
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-paper-plane"></i> Submit Refill Request
-                </button>
-            </form>
-        </div>
-    </div>
-    
-    <script>
-        function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Remove active class from all tab buttons
-            document.querySelectorAll('.tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked button
-            event.target.classList.add('active');
-        }
-        
-        function openRefillModal(prescriptionId) {
-            document.getElementById('refill_prescription_id').value = prescriptionId;
-            document.getElementById('refillModal').classList.add('active');
-        }
-        
-        function closeModal() {
-            document.getElementById('refillModal').classList.remove('active');
-        }
-        
-        // Close modal on outside click
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.classList.remove('active');
+// ── POST: Request Refill ──────────────────────────────────
+if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='request_refill') {
+    $rxId   = (int)$_POST['prescription_id'];
+    $notes  = trim($_POST['notes'] ?? '');
+    $result = $refillManager->requestRefill($rxId, $patId, $notes);
+    if ($result['success']) {
+        $message = $result['message'];
+        // Notify the doctor
+        $rx = mysqli_fetch_assoc(mysqli_query($conn,"SELECT pr.doctor_id, u.name AS pat_name FROM prescriptions pr JOIN users u ON u.id=$userId WHERE pr.id=$rxId LIMIT 1"));
+        if ($rx) {
+            $docUid=(int)(mysqli_fetch_assoc(mysqli_query($conn,"SELECT user_id FROM doctors WHERE id={$rx['doctor_id']} LIMIT 1"))['user_id']??0);
+            if($docUid){
+                $pname=mysqli_real_escape_string($conn,$rx['pat_name']??'Patient');
+                mysqli_query($conn,"INSERT INTO notifications(user_id,user_role,type,title,message,is_read,related_module,related_id,created_at)
+                  VALUES($docUid,'doctor','prescription','Prescription Refill Request','{$pname} has requested a prescription refill.',0,'prescriptions',$rxId,NOW())");
             }
         }
-    </script>
+    } else { $error = $result['message']; }
+}
+
+// ── Fetch prescriptions (new schema: medication_name not med_name) ──
+$prescriptions = [];
+$q = mysqli_query($conn,
+    "SELECT pr.id, pr.prescription_id, pr.medication_name, pr.dosage, pr.frequency, pr.duration,
+            pr.instructions, pr.prescription_date, pr.status, pr.quantity,
+            ud.name AS doctor_name, d.specialization,
+            (SELECT COUNT(*) FROM prescription_refills prf WHERE prf.prescription_id=pr.id AND prf.status='Pending') AS pending_refills
+     FROM prescriptions pr
+     JOIN doctors d ON pr.doctor_id=d.id JOIN users ud ON d.user_id=ud.id
+     WHERE pr.patient_id=$patId AND pr.status NOT IN ('Cancelled','Expired')
+     ORDER BY pr.prescription_date DESC");
+if($q) while($r=mysqli_fetch_assoc($q)) $prescriptions[]=$r;
+
+// ── Refill history ────────────────────────────────────────
+$refillHistory = $refillManager->getPatientRefills($patId);
+
+// ── Unread notifications ──────────────────────────────────
+$unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifications WHERE user_id=$userId AND is_read=0"))[0] ?? 0);
+
+// ── Medicine stock check helper ───────────────────────────
+function checkStock($conn, $medName) {
+    $m = mysqli_real_escape_string($conn, $medName);
+    $r = mysqli_fetch_assoc(mysqli_query($conn,"SELECT stock_quantity,stock_status FROM medicine_inventory WHERE medicine_name='$m' LIMIT 1"));
+    return $r ?? ['stock_quantity'=>0,'stock_status'=>'Unknown'];
+}
+?>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Prescription Refills — RMU Medical Sickbay</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+<style>
+:root{--role-accent:#9B59B6;}
+[data-theme="dark"]{--role-accent-light:#2d1b40;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;padding:1rem;}
+.modal-bg.open{display:flex;}
+.modal-box{background:var(--surface);border-radius:var(--radius-lg);padding:2.4rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
+.modal-close{background:none;border:none;font-size:2rem;cursor:pointer;color:var(--text-muted);}
+.form-group{margin-bottom:1.3rem;}
+.form-group label{display:block;font-size:1.2rem;font-weight:600;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);}
+.form-control{width:100%;padding:1rem 1.2rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);font-family:Poppins,sans-serif;font-size:1.3rem;outline:none;transition:var(--transition);}
+.form-control:focus{border-color:var(--role-accent);}
+.rx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.8rem;margin-bottom:1.2rem;box-shadow:var(--shadow-sm);border-left:4px solid var(--role-accent);}
+.rx-card.Dispensed{border-left-color:var(--success);}
+.rx-card.Pending{border-left-color:var(--warning);}
+.tab-btn{padding:.6rem 1.4rem;border-radius:20px;font-weight:600;font-size:1.2rem;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);transition:var(--transition);}
+.tab-btn.active,.tab-btn:hover{background:var(--role-accent);color:#fff;border-color:var(--role-accent);}
+.tab-pane{display:none;}.tab-pane.show{display:block;}
+</style>
+</head>
+<body>
+<div class="adm-layout">
+
+<aside class="adm-sidebar" id="admSidebar">
+  <div class="adm-sidebar-brand">
+    <div class="adm-brand-icon"><i class="fas fa-prescription-bottle-medical"></i></div>
+    <div class="adm-brand-text"><span class="adm-brand-name">RMU Sickbay</span><span class="adm-brand-role">Patient Portal</span></div>
+  </div>
+  <nav class="adm-nav" style="padding:1.5rem 1rem;">
+    <a href="patient_dashboard.php" class="adm-nav-item"><i class="fas fa-house"></i><span>Dashboard</span></a>
+    <a href="my_appointments.php" class="adm-nav-item"><i class="fas fa-calendar-check"></i><span>My Appointments</span></a>
+    <a href="medical_records.php" class="adm-nav-item"><i class="fas fa-folder-open"></i><span>Medical Records</span></a>
+    <a href="prescription_refills.php" class="adm-nav-item active"><i class="fas fa-prescription-bottle-medical"></i><span>Prescription Refills</span></a>
+  </nav>
+  <div class="adm-sidebar-footer">
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+<div class="adm-overlay" id="admOverlay"></div>
+
+<main class="adm-main">
+  <div class="adm-topbar">
+    <div class="adm-topbar-left">
+      <button class="adm-menu-toggle" id="menuToggle" style="display:none;"><i class="fas fa-bars"></i></button>
+      <span class="adm-page-title"><i class="fas fa-prescription-bottle-medical" style="color:var(--role-accent);margin-right:.6rem;"></i>Prescription Refills</span>
+    </div>
+    <div class="adm-topbar-right">
+      <div style="position:relative;"><button class="adm-notif-btn"><i class="fas fa-bell"></i><?php if($unread>0):?><span style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--danger);color:#fff;border-radius:50%;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;"><?=$unread?></span><?php endif;?></button></div>
+      <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+      <div class="adm-avatar" style="background:linear-gradient(135deg,#9B59B6,#2F80ED);"><?=strtoupper(substr($_SESSION['user_name']??$_SESSION['name']??'P',0,1))?></div>
+    </div>
+  </div>
+
+  <div class="adm-content">
+    <?php if($message):?><div style="background:var(--success-light);color:var(--success);border-left:4px solid var(--success);border-radius:0 10px 10px 0;padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:1.3rem;"><i class="fas fa-check-circle"></i> <?=htmlspecialchars($message)?></div><?php endif;?>
+    <?php if($error):?><div style="background:var(--danger-light);color:var(--danger);border-left:4px solid var(--danger);border-radius:0 10px 10px 0;padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:1.3rem;"><i class="fas fa-exclamation-circle"></i> <?=htmlspecialchars($error)?></div><?php endif;?>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:.5rem;margin-bottom:1.8rem;">
+      <button class="tab-btn active" onclick="switchTab('active',this)"><i class="fas fa-pills"></i> Active Prescriptions</button>
+      <button class="tab-btn" onclick="switchTab('history',this)"><i class="fas fa-clock-rotate-left"></i> Refill History</button>
+    </div>
+
+    <!-- Active Prescriptions -->
+    <div id="tab-active" class="tab-pane show">
+      <?php if(empty($prescriptions)):?>
+        <div class="adm-card" style="text-align:center;padding:4rem;">
+          <i class="fas fa-prescription-bottle-medical" style="font-size:3rem;opacity:.25;display:block;margin-bottom:1rem;"></i>
+          <p style="color:var(--text-muted);font-size:1.3rem;">No active prescriptions found.</p>
+        </div>
+      <?php else: foreach($prescriptions as $rx):
+        $stock = checkStock($conn, $rx['medication_name']);
+        $sc_map = ['Pending'=>'warning','Dispensed'=>'success','Cancelled'=>'danger'];
+        $sc = $sc_map[$rx['status']] ?? 'info';
+        $has_pending_refill = $rx['pending_refills'] > 0;
+      ?>
+      <div class="rx-card <?=$rx['status']?>">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <div style="font-size:1.7rem;font-weight:800;"><?=htmlspecialchars($rx['medication_name'])?></div>
+            <div style="font-size:1.2rem;color:var(--text-muted);">Dr. <?=htmlspecialchars($rx['doctor_name'])?> &middot; <?=htmlspecialchars($rx['specialization']??'General')?></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;">
+            <span class="adm-badge adm-badge-<?=$sc?>"><?=$rx['status']?></span>
+            <?php if($stock['stock_status']==='Out of Stock'):?>
+              <span class="adm-badge adm-badge-danger" title="Currently out of stock"><i class="fas fa-triangle-exclamation"></i> Out of Stock</span>
+            <?php elseif($stock['stock_status']==='Low Stock'):?>
+              <span class="adm-badge adm-badge-warning"><i class="fas fa-triangle-exclamation"></i> Low Stock</span>
+            <?php else:?>
+              <span class="adm-badge adm-badge-success"><i class="fas fa-circle-check"></i> <?=$stock['stock_quantity']?> in stock</span>
+            <?php endif;?>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.8rem;margin-bottom:1.2rem;">
+          <?php foreach([['Dosage',$rx['dosage'],'fa-tablets'],['Frequency',$rx['frequency'],'fa-clock'],['Duration',$rx['duration'],'fa-hourglass'],['Qty',$rx['quantity'],'fa-hashtag'],['Issued',date('d M Y',strtotime($rx['prescription_date'])),'fa-calendar']] as [$lbl,$val,$ic]):?>
+          <div style="background:var(--surface-2);border-radius:8px;padding:.8rem 1rem;">
+            <div style="font-size:1rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-weight:600;"><i class="fas <?=$ic?>" style="color:var(--role-accent);margin-right:.3rem;"></i><?=$lbl?></div>
+            <div style="font-size:1.25rem;font-weight:600;margin-top:.2rem;"><?=htmlspecialchars((string)$val)?></div>
+          </div>
+          <?php endforeach;?>
+        </div>
+        <?php if($rx['instructions']??''):?><div style="font-size:1.2rem;color:var(--text-secondary);background:var(--surface-2);border-radius:8px;padding:.8rem 1rem;margin-bottom:1rem;"><i class="fas fa-note-sticky" style="color:var(--role-accent);margin-right:.4rem;"></i><?=htmlspecialchars($rx['instructions'])?></div><?php endif;?>
+        <div style="display:flex;gap:.8rem;flex-wrap:wrap;">
+          <?php if(!$has_pending_refill && $rx['status']==='Dispensed' && $stock['stock_quantity']>0):?>
+          <button onclick="openRefill(<?=$rx['id']?>,<?=json_encode($rx['medication_name'])?>,<?=json_encode('Dr. '.$rx['doctor_name'])?>)" class="adm-btn adm-btn-primary"><i class="fas fa-rotate-right"></i> Request Refill</button>
+          <?php elseif($has_pending_refill):?>
+          <span class="adm-btn adm-btn-ghost" style="pointer-events:none;opacity:.7;"><i class="fas fa-clock"></i> Refill Pending Review</span>
+          <?php elseif($stock['stock_quantity']==0):?>
+          <span style="font-size:1.2rem;color:var(--danger);"><i class="fas fa-triangle-exclamation"></i> Refill unavailable — out of stock</span>
+          <?php endif;?>
+        </div>
+      </div>
+      <?php endforeach; endif;?>
+    </div>
+
+    <!-- Refill History -->
+    <div id="tab-history" class="tab-pane">
+      <div class="adm-card">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:1.3rem;">
+            <thead><tr>
+              <?php foreach(['Refill ID','Medicine','Requested','Status','Notes'] as $h):?>
+              <th style="background:var(--surface-2);padding:1.2rem 1.4rem;text-align:left;font-size:1.1rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--border);"><?=$h?></th>
+              <?php endforeach;?>
+            </tr></thead>
+            <tbody>
+            <?php if(empty($refillHistory)):?>
+              <tr><td colspan="5" style="text-align:center;padding:2.5rem;color:var(--text-muted);">No refill history yet.</td></tr>
+            <?php else: foreach($refillHistory as $rf):
+              $rsc=['Pending'=>'warning','Approved'=>'success','Rejected'=>'danger'][$rf['status']]??'info';
+            ?>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:1.2rem 1.4rem;"><code>#<?=$rf['id']?></code></td>
+              <td style="padding:1.2rem 1.4rem;"><?=htmlspecialchars($rf['medication_name']??$rf['medicine_name']??'—')?></td>
+              <td style="padding:1.2rem 1.4rem;"><?=date('d M Y',strtotime($rf['requested_at']??$rf['created_at']??'now'))?></td>
+              <td style="padding:1.2rem 1.4rem;"><span class="adm-badge adm-badge-<?=$rsc?>"><?=$rf['status']?></span></td>
+              <td style="padding:1.2rem 1.4rem;"><?=htmlspecialchars($rf['notes']??'—')?></td>
+            </tr>
+            <?php endforeach; endif;?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- Refill Request Modal -->
+<div class="modal-bg" id="modalRefill">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fas fa-rotate-right" style="color:var(--role-accent);"></i> Request Prescription Refill</h3>
+      <button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">&times;</button>
+    </div>
+    <div id="refillMedInfo" style="background:var(--surface-2);border-radius:10px;padding:1rem 1.4rem;margin-bottom:1.5rem;"></div>
+    <div style="background:rgba(155,89,182,.08);border-left:4px solid var(--role-accent);border-radius:0 10px 10px 0;padding:1rem 1.4rem;margin-bottom:1.2rem;font-size:1.2rem;">
+      <i class="fas fa-info-circle" style="color:var(--role-accent);"></i> Your doctor will be notified and will need to approve this refill.
+    </div>
+    <form method="POST">
+      <input type="hidden" name="action" value="request_refill">
+      <input type="hidden" name="prescription_id" id="refillRxId">
+      <div class="form-group"><label>Notes (optional)</label><textarea name="notes" id="refillNotes" class="form-control" rows="3" placeholder="Any specific instructions or notes for your doctor…"></textarea></div>
+      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Submit Refill Request</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('rmu_theme',t);document.getElementById('themeIcon').className=t==='dark'?'fas fa-sun':'fas fa-moon';}
+applyTheme(localStorage.getItem('rmu_theme')||'light');
+document.getElementById('themeToggle')?.addEventListener('click',()=>{applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+document.getElementById('menuToggle')?.addEventListener('click',()=>{document.getElementById('admSidebar').classList.toggle('active');document.getElementById('admOverlay').classList.toggle('active');});
+document.getElementById('admOverlay')?.addEventListener('click',()=>{document.getElementById('admSidebar').classList.remove('active');document.getElementById('admOverlay').classList.remove('active');});
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('show'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('show');
+  if(btn)btn.classList.add('active');
+}
+function openRefill(id,med,doc){
+  document.getElementById('refillRxId').value=id;
+  document.getElementById('refillMedInfo').innerHTML=`<strong>${med}</strong><span style="color:var(--text-muted);margin-left:.5rem;">prescribed by ${doc}</span>`;
+  document.getElementById('modalRefill').classList.add('open');
+}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+</script>
 </body>
 </html>
