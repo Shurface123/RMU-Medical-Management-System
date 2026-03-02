@@ -220,7 +220,7 @@ case 'upload_profile_photo':
     if($f['size']>2*1024*1024) fail('Max 2MB');
     $allowed=['image/jpeg','image/png','image/webp'];
     if(!in_array(mime_content_type($f['tmp_name']),$allowed)) fail('Only JPG/PNG/WebP');
-    $ext=match(mime_content_type($f['tmp_name'])){'image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp',default=>'jpg'};
+    $extMap=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp']; $ext=$extMap[mime_content_type($f['tmp_name'])]??'jpg';
     $dir=$_SERVER['DOCUMENT_ROOT'].'/RMU-Medical-Management-System/uploads/profile_photos/';
     if(!is_dir($dir)) mkdir($dir,0755,true);
     $fn='pat_'.$pat_pk.'_'.time().'.'.$ext;
@@ -247,7 +247,7 @@ case 'save_settings':
     $lang=esc($conn,$post['language_preference']??'English');
     $setStr=implode(',',$sets).",profile_visibility='$vis',language_preference='$lang'";
     mysqli_query($conn,"INSERT INTO patient_settings(patient_id,".implode(',',$fields).",profile_visibility,language_preference)
-      VALUES($pat_pk,".implode(',',array_map(fn($f)=>(int)($post[$f]??1),$fields)).",'$vis','$lang')
+      VALUES($pat_pk,".implode(',',array_map(function($f) use ($post){ return (int)($post[$f]??1); },$fields)).",'$vis','$lang')
       ON DUPLICATE KEY UPDATE $setStr,updated_at=NOW()");
     ok(['message'=>'Settings saved']);
 
