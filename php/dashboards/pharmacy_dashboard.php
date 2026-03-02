@@ -78,6 +78,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $recent_disp[]=$r;
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+<link rel="stylesheet" href="/RMU-Medical-Management-System/css/notifications.css">
 <style>
 :root{--role-accent:#27AE60;}
 [data-theme="dark"]{--role-accent-light:#0d2b19;}
@@ -130,7 +131,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $recent_disp[]=$r;
     </div>
     <div class="adm-topbar-right">
       <span style="font-size:1.2rem;color:var(--text-secondary);"><?=date('D, d M Y')?></span>
-      <div style="position:relative;"><button class="adm-notif-btn"><i class="fas fa-bell"></i><?php if($unread>0):?><span style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--danger);color:#fff;border-radius:50%;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;"><?=$unread?></span><?php endif;?></button></div>
+      <?php $bd=$unread>0?'flex':'none'; $bl=$unread>99?'99+':$unread; $bc=$unread>0?'adm-notif-btn has-unread':'adm-notif-btn'; ?>
+      <div style="position:relative;"><button id="rmuBellBtn" class="<?=$bc?>" title="Notifications"><i class="fas fa-bell"></i><span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span></button></div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
       <div class="adm-avatar" style="background:linear-gradient(135deg,#27AE60,#2F80ED);"><?=strtoupper(substr($pharmacyName,0,1))?></div>
     </div>
@@ -320,5 +322,6 @@ function filterTbl(q,tblId){q=q.toLowerCase();document.querySelectorAll('#'+tblI
 function filterMed(status,btn){document.querySelectorAll('.filter-tabs .ftab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');document.querySelectorAll('#medTable tbody tr').forEach(r=>{r.style.display=(status==='all'||r.dataset.medstatus===status)?'':'none';});}
 function openRestockModal(id,name){document.getElementById('restockMedId').value=id;document.getElementById('restockMedName').textContent=name;document.getElementById('modalRestock').style.display='flex';}
 </script>
+<script src="/RMU-Medical-Management-System/js/notifications.js"></script>
 </body>
 </html>

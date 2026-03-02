@@ -58,7 +58,7 @@ case 'reschedule_appointment':
     $q=mysqli_query($conn,"SELECT a.*, p.user_id AS pat_uid FROM appointments a JOIN patients p ON a.patient_id=p.id WHERE a.id=$id AND a.doctor_id=$doc_pk");
     $a=mysqli_fetch_assoc($q);
     if(!$a) fail('Appointment not found');
-    mysqli_query($conn,"UPDATE appointments SET status='Rescheduled',appointment_date='$nd',appointment_time='$nt',reschedule_reason='$r',notification_sent=0,updated_at=NOW() WHERE id=$id");
+    mysqli_query($conn,"UPDATE appointments SET status='Rescheduled',appointment_date='$nd',appointment_time='$nt',reschedule_date='$nd',reschedule_time='$nt',reschedule_reason='$r',notification_sent=0,updated_at=NOW() WHERE id=$id");
     $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
     $dn=$dr2['full_name']??'Your Doctor';
     notify($conn,$a['pat_uid'],'patient','appointment','Appointment Rescheduled',
@@ -72,7 +72,7 @@ case 'cancel_appointment':
     $q=mysqli_query($conn,"SELECT a.*, p.user_id AS pat_uid FROM appointments a JOIN patients p ON a.patient_id=p.id WHERE a.id=$id AND a.doctor_id=$doc_pk");
     $a=mysqli_fetch_assoc($q);
     if(!$a) fail('Appointment not found');
-    mysqli_query($conn,"UPDATE appointments SET status='Cancelled',notes=CONCAT(IFNULL(notes,''),' | Cancellation reason: $r'),updated_at=NOW() WHERE id=$id");
+    mysqli_query($conn,"UPDATE appointments SET status='Cancelled',cancellation_reason='$r',cancelled_by=$user_id,notes=CONCAT(IFNULL(notes,''),' | Cancellation reason: $r'),updated_at=NOW() WHERE id=$id");
     $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
     $dn=$dr2['full_name']??'Your Doctor';
     notify($conn,$a['pat_uid'],'patient','appointment','Appointment Cancelled',
@@ -115,7 +115,11 @@ case 'create_prescription':
 case 'cancel_prescription':
     $id=(int)($post['id']??0);
     if(!$id) fail('Invalid ID');
+    $rx=mysqli_fetch_assoc(mysqli_query($conn,"SELECT medication_name,patient_id FROM prescriptions WHERE id=$id AND doctor_id=$doc_pk LIMIT 1"));
+    if(!$rx) fail('Prescription not found');
     mysqli_query($conn,"UPDATE prescriptions SET status='Cancelled',updated_at=NOW() WHERE id=$id AND doctor_id=$doc_pk");
+    $pat_uid=getPatientUserId($conn,(int)$rx['patient_id']);
+    if($pat_uid) notify($conn,$pat_uid,'patient','prescription','Prescription Cancelled','Your prescription for '.$rx['medication_name'].' has been cancelled by your doctor.','prescriptions',$id);
     ok();
 
 // ── Create Lab Request ────────────────────────────────────
@@ -142,9 +146,20 @@ case 'create_lab_request':
 // ── Review Lab Result ─────────────────────────────────────
 case 'review_lab':
     $id=(int)($post['id']??0); $notes=esc($conn,$post['notes']??'');
+    $makeAccessible=(int)($post['patient_accessible']??1);
     if(!$id) fail('Invalid ID');
     mysqli_query($conn,"UPDATE lab_tests SET status='Reviewed',updated_at=NOW() WHERE id=$id AND doctor_id=$doc_pk");
-    if($notes) mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,doctor_notes='$notes' WHERE test_id=$id");
+    if($notes) mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,doctor_notes='$notes',patient_accessible=$makeAccessible,patient_notified=$makeAccessible WHERE test_id=$id");
+    else mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,patient_accessible=$makeAccessible,patient_notified=$makeAccessible WHERE test_id=$id");
+    // Notify the patient that results are now accessible
+    if($makeAccessible){
+      $lt=mysqli_fetch_assoc(mysqli_query($conn,"SELECT lt.test_name,lt.patient_id FROM lab_tests lt WHERE lt.id=$id LIMIT 1"));
+      if($lt){
+        $pat_uid=getPatientUserId($conn,(int)$lt['patient_id']);
+        if($pat_uid) notify($conn,$pat_uid,'patient','lab','Lab Results Available',
+          'Your '.$lt['test_name'].' lab results have been reviewed and are now available for you to view.','lab',$id);
+      }
+    }
     ok();
 
 // ── Add Patient Note ──────────────────────────────────────

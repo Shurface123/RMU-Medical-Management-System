@@ -69,6 +69,7 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+<link rel="stylesheet" href="/RMU-Medical-Management-System/css/notifications.css">
 <style>
 :root{--role-accent:<?=$userRole==='doctor'?'#1abc9c':($userRole==='patient'?'#9B59B6':'#2F80ED')?>;}
 .upload-zone{border:2.5px dashed var(--border);border-radius:var(--radius-md);padding:2.5rem;text-align:center;cursor:pointer;transition:var(--transition);background:var(--surface-2);}
@@ -114,9 +115,10 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
       <span class="adm-page-title"><i class="fas fa-folder-open" style="color:var(--role-accent);margin-right:.6rem;"></i>Medical Records &amp; Attachments</span>
     </div>
     <div class="adm-topbar-right">
+      <?php $bd=$unread>0?'flex':'none'; $bl=$unread>99?'99+':$unread; $bc=$unread>0?'adm-notif-btn has-unread':'adm-notif-btn'; ?>
       <div style="position:relative;">
-        <button class="adm-notif-btn"><i class="fas fa-bell"></i>
-          <?php if($unread>0):?><span style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--danger);color:#fff;border-radius:50%;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;"><?=$unread?></span><?php endif;?>
+        <button id="rmuBellBtn" class="<?=$bc?>" title="Notifications"><i class="fas fa-bell"></i>
+          <span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span>
         </button>
       </div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
@@ -251,5 +253,6 @@ document.querySelectorAll('.upload-zone').forEach(z=>{
 // Search filter
 function filterRecs(q){q=q.toLowerCase();document.querySelectorAll('.rec-card').forEach(c=>{c.style.display=c.dataset.text.includes(q)?'':'none';});}
 </script>
+<script src="/RMU-Medical-Management-System/js/notifications.js"></script>
 </body>
 </html>

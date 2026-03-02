@@ -308,6 +308,7 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <a href="#" class="adm-nav-item <?=($active_tab==='staff')?'active':''?>" onclick="showTab('staff',this)"><i class="fas fa-address-book"></i><span>Staff Directory</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='analytics')?'active':''?>" onclick="showTab('analytics',this)"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='reports')?'active':''?>" onclick="showTab('reports',this)"><i class="fas fa-file-export"></i><span>Reports</span></a>
+    <a href="#" class="adm-nav-item <?=($active_tab==='profile')?'active':''?>" onclick="showTab('profile',this)"><i class="fas fa-user-doctor"></i><span>My Profile</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='settings')?'active':''?>" onclick="showTab('settings',this)"><i class="fas fa-gear"></i><span>Settings</span></a>
   </nav>
   <div class="adm-sidebar-footer">
@@ -362,6 +363,7 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <?php include __DIR__.'/doc_tabs/tab_analytics.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_reports.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_settings.php'; ?>
+    <?php include __DIR__.'/doc_tabs/tab_profile.php'; ?>
 
   </div><!-- /adm-content -->
 </main>
@@ -376,11 +378,11 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 const TAB_TITLES={overview:'Overview',appointments:'Appointments',records:'Medical Records',
   prescriptions:'Prescriptions',lab:'Lab Tests',patients:'Patient Records',
   medicine:'Medicine Inventory',beds:'Bed Management',staff:'Staff Directory',
-  analytics:'Analytics',reports:'Reports',settings:'Settings'};
+  analytics:'Analytics',reports:'Reports',profile:'My Profile',settings:'Settings'};
 const TAB_ICONS={overview:'fa-house-medical',appointments:'fa-calendar-check',records:'fa-file-medical',
   prescriptions:'fa-prescription-bottle-medical',lab:'fa-flask',patients:'fa-users',
   medicine:'fa-pills',beds:'fa-bed',staff:'fa-address-book',
-  analytics:'fa-chart-bar',reports:'fa-file-export',settings:'fa-gear'};
+  analytics:'fa-chart-bar',reports:'fa-file-export',profile:'fa-user-doctor',settings:'fa-gear'};
 
 function showTab(tab, el){
   document.querySelectorAll('.dash-section').forEach(s=>s.classList.remove('active'));

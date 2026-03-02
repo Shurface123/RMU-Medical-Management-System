@@ -1,7 +1,9 @@
 <?php
 // ============================================================
 // MY APPOINTMENTS — Patient-facing appointments page
-// Updated: Phase 4 — correct schema, admin-dashboard.css
+// Updated: Phase 4 — integrated with new tabbed dashboard,
+// new columns (reschedule_date/time, cancellation_reason, cancelled_by),
+// and unified notification system
 // ============================================================
 session_start();
 require_once '../db_conn.php';
@@ -16,7 +18,7 @@ $userId   = (int)$_SESSION['user_id'];
 $userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'patient';
 $today    = date('Y-m-d');
 
-// ── Patient ID (new schema: patients.id, not P_ID) ────────
+// ── Patient ID ────────────────────────────────────────────
 $pidRow   = mysqli_fetch_assoc(mysqli_query($conn,"SELECT id, patient_id AS p_ref FROM patients WHERE user_id=$userId LIMIT 1"));
 $patId    = (int)($pidRow['id'] ?? 0);
 
@@ -31,6 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $newDate = $_POST['new_date'] ?? '';
         $newTime = $_POST['new_time'] ?? '';
         $result  = $appointmentManager->requestReschedule($apptId, $userId, $newDate, $newTime, $reason);
+        // Also store reschedule_date and reschedule_time
+        if (isset($result['success']) && $result['success']) {
+            $escDate = mysqli_real_escape_string($conn, $newDate);
+            $escTime = mysqli_real_escape_string($conn, $newTime);
+            mysqli_query($conn, "UPDATE appointments SET reschedule_date='$escDate', reschedule_time='$escTime', updated_at=NOW() WHERE id=$apptId");
+        }
         // Notify the doctor
         $appt = mysqli_fetch_assoc(mysqli_query($conn,"SELECT a.doctor_id, u.name AS pat_name FROM appointments a JOIN users u ON u.id=$userId WHERE a.id=$apptId LIMIT 1"));
         if ($appt) {
@@ -43,6 +51,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     } elseif ($_POST['action'] === 'cancel') {
         $result = $appointmentManager->cancelAppointment($apptId, $userId, $reason);
+        // Also store cancellation_reason and cancelled_by
+        if (isset($result['success']) && $result['success']) {
+            $escReason = mysqli_real_escape_string($conn, $reason);
+            mysqli_query($conn, "UPDATE appointments SET cancellation_reason='$escReason', cancelled_by=$userId, updated_at=NOW() WHERE id=$apptId");
+            // Notify doctor of cancellation
+            $appt2 = mysqli_fetch_assoc(mysqli_query($conn,"SELECT a.doctor_id, u.name AS pat_name FROM appointments a JOIN users u ON u.id=$userId WHERE a.id=$apptId LIMIT 1"));
+            if ($appt2) {
+                $docUid2 = (int)(mysqli_fetch_assoc(mysqli_query($conn,"SELECT user_id FROM doctors WHERE id={$appt2['doctor_id']} LIMIT 1"))['user_id'] ?? 0);
+                if ($docUid2) {
+                    $pname2 = mysqli_real_escape_string($conn,$appt2['pat_name']??'Patient');
+                    mysqli_query($conn,"INSERT INTO notifications (user_id,user_role,type,title,message,is_read,related_module,created_at)
+                      VALUES($docUid2,'doctor','appointment','Appointment Cancelled','{$pname2} has cancelled their appointment.',0,'appointments',NOW())");
+                }
+            }
+        }
     }
     if (isset($result)) {
         $result['success'] ? $message = $result['message'] : $error = $result['message'];
@@ -55,7 +78,7 @@ if (isset($_GET['get_slots'])) {
     header('Content-Type: application/json'); echo json_encode($slots); exit;
 }
 
-// ── Fetch appointments ────────────────────────────────────
+// ── Fetch appointments (include new columns) ──────────────
 $aResult = mysqli_query($conn,
     "SELECT a.*, u.name AS doctor_name, d.specialization, d.doctor_id AS doc_ref
      FROM appointments a
@@ -68,7 +91,7 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
 
 // ── Stats ─────────────────────────────────────────────────
 $stat_today    = count(array_filter($appointments, fn($a)=>$a['appointment_date']===$today));
-$stat_upcoming = count(array_filter($appointments, fn($a)=>$a['appointment_date']>$today && $a['status']==='Confirmed'));
+$stat_upcoming = count(array_filter($appointments, fn($a)=>$a['appointment_date']>$today && !in_array($a['status'],['Cancelled','No-Show'])));
 $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pending'));
 ?>
 <!DOCTYPE html>
@@ -80,8 +103,9 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+<link rel="stylesheet" href="/RMU-Medical-Management-System/css/notifications.css">
 <style>
-:root{--role-accent:#9B59B6;}
+:root{--role-accent:#8e44ad;}
 [data-theme="dark"]{--role-accent-light:#2d1b40;}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;padding:1rem;}
 .modal-bg.open{display:flex;}
@@ -94,11 +118,11 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
 .form-control:focus{border-color:var(--role-accent);}
 .appt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.8rem;margin-bottom:1.2rem;box-shadow:var(--shadow-sm);border-left:4px solid var(--border);transition:var(--transition);}
 .appt-card:hover{box-shadow:var(--shadow-md);}
-.appt-card.Confirmed,.appt-card.Completed{border-left-color:var(--success);}
+.appt-card.Confirmed,.appt-card.Approved,.appt-card.Completed{border-left-color:var(--success);}
 .appt-card.Pending{border-left-color:var(--warning);}
 .appt-card.Cancelled{border-left-color:var(--danger);opacity:.75;}
 .appt-card.Rescheduled{border-left-color:var(--info);}
-.appt-card.today-card{background:linear-gradient(135deg,rgba(155,89,182,.06),rgba(47,128,237,.04));border-left-color:var(--role-accent);}
+.appt-card.today-card{background:linear-gradient(135deg,rgba(142,68,173,.06),rgba(47,128,237,.04));border-left-color:var(--role-accent);}
 .filter-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;}
 .ftab{padding:.55rem 1.2rem;border-radius:20px;font-size:1.2rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text-secondary);transition:var(--transition);}
 .ftab.active,.ftab:hover{background:var(--role-accent);color:#fff;border-color:var(--role-accent);}
@@ -109,14 +133,22 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
 
 <aside class="adm-sidebar" id="admSidebar">
   <div class="adm-sidebar-brand">
-    <div class="adm-brand-icon"><i class="fas fa-hospital-user"></i></div>
+    <div class="adm-brand-icon"><i class="fas fa-heart-pulse"></i></div>
     <div class="adm-brand-text"><span class="adm-brand-name">RMU Sickbay</span><span class="adm-brand-role">Patient Portal</span></div>
   </div>
   <nav class="adm-nav" style="padding:1.5rem 1rem;">
-    <a href="patient_dashboard.php" class="adm-nav-item"><i class="fas fa-house"></i><span>Dashboard</span></a>
+    <div class="adm-nav-label">My Health</div>
+    <a href="patient_dashboard.php" class="adm-nav-item"><i class="fas fa-house-medical"></i><span>Dashboard</span></a>
+    <a href="patient_dashboard.php?tab=book" class="adm-nav-item"><i class="fas fa-calendar-plus"></i><span>Book Appointment</span></a>
     <a href="my_appointments.php" class="adm-nav-item active"><i class="fas fa-calendar-check"></i><span>My Appointments</span></a>
-    <a href="medical_records.php" class="adm-nav-item"><i class="fas fa-folder-open"></i><span>Medical Records</span></a>
-    <a href="prescription_refills.php" class="adm-nav-item"><i class="fas fa-prescription-bottle-medical"></i><span>Prescription Refills</span></a>
+    <a href="patient_dashboard.php?tab=prescriptions" class="adm-nav-item"><i class="fas fa-pills"></i><span>My Prescriptions</span></a>
+    <div class="adm-nav-label" style="margin-top:1rem;">Clinical</div>
+    <a href="patient_dashboard.php?tab=lab" class="adm-nav-item"><i class="fas fa-flask"></i><span>Lab Results</span></a>
+    <a href="patient_dashboard.php?tab=records" class="adm-nav-item"><i class="fas fa-file-medical"></i><span>Medical Records</span></a>
+    <a href="patient_dashboard.php?tab=emergency" class="adm-nav-item"><i class="fas fa-phone-alt"></i><span>Emergency Contacts</span></a>
+    <div class="adm-nav-label" style="margin-top:1rem;">Account</div>
+    <a href="patient_dashboard.php?tab=notif_page" class="adm-nav-item"><i class="fas fa-bell"></i><span>Notifications</span></a>
+    <a href="patient_dashboard.php?tab=settings" class="adm-nav-item"><i class="fas fa-gear"></i><span>Settings</span></a>
   </nav>
   <div class="adm-sidebar-footer">
     <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
@@ -132,9 +164,10 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
     </div>
     <div class="adm-topbar-right">
       <span style="font-size:1.2rem;color:var(--text-secondary);"><?=date('D, d M Y')?></span>
-      <div style="position:relative;"><button class="adm-notif-btn"><i class="fas fa-bell"></i><?php if($unread>0):?><span style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--danger);color:#fff;border-radius:50%;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;"><?=$unread?></span><?php endif;?></button></div>
+      <?php $bd=$unread>0?'flex':'none'; $bl=$unread>99?'99+':$unread; $bc=$unread>0?'adm-notif-btn has-unread':'adm-notif-btn'; ?>
+      <div style="position:relative;"><button id="rmuBellBtn" class="<?=$bc?>" title="Notifications"><i class="fas fa-bell"></i><span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span></button></div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
-      <div class="adm-avatar" style="background:linear-gradient(135deg,#9B59B6,#2F80ED);"><?=strtoupper(substr($_SESSION['user_name']??$_SESSION['name']??'P',0,1))?></div>
+      <div class="adm-avatar" style="background:var(--role-accent);"><?=strtoupper(substr($_SESSION['user_name']??$_SESSION['name']??'P',0,1))?></div>
     </div>
   </div>
 
@@ -165,13 +198,13 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
       <div class="adm-card" style="text-align:center;padding:4rem;">
         <i class="fas fa-calendar-xmark" style="font-size:3rem;opacity:.25;display:block;margin-bottom:1rem;"></i>
         <p style="color:var(--text-muted);font-size:1.3rem;">No appointments found.</p>
-        <a href="/RMU-Medical-Management-System/php/book.php" class="adm-btn adm-btn-primary" style="margin-top:1rem;">Book an Appointment</a>
+        <a href="patient_dashboard.php?tab=book" class="adm-btn adm-btn-primary" style="margin-top:1rem;">Book an Appointment</a>
       </div>
     <?php else: foreach($appointments as $ap):
       $bStatus = $ap['status'] ?? 'Pending';
       $is_today = ($ap['appointment_date']===$today);
-      $can_act  = !in_array($bStatus, ['Completed','Cancelled']);
-      $sc_map   = ['Confirmed'=>'success','Completed'=>'info','Cancelled'=>'danger','Rescheduled'=>'warning'];
+      $can_act  = in_array($bStatus, ['Pending','Confirmed','Approved']);
+      $sc_map   = ['Confirmed'=>'success','Approved'=>'success','Completed'=>'info','Cancelled'=>'danger','Rescheduled'=>'warning','No-Show'=>'danger'];
       $sc       = $sc_map[$bStatus] ?? 'warning';
       $h        = date('g', strtotime($ap['appointment_time']));
       $m        = date('i', strtotime($ap['appointment_time']));
@@ -192,8 +225,11 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
               <div style="font-size:1.2rem;color:var(--text-muted);"><?=htmlspecialchars($ap['specialization']??'General')?> &middot; <?=htmlspecialchars($ap['service_type']??'Consultation')?></div>
             </div>
           </div>
-          <?php if($ap['symptoms']??''):?><div style="font-size:1.2rem;color:var(--text-secondary);background:var(--surface-2);border-radius:8px;padding:.7rem 1rem;margin-top:.5rem;"><strong>Reason:</strong> <?=htmlspecialchars(substr($ap['symptoms'],0,120))?></div><?php endif;?>
+          <?php if($ap['reason']??$ap['symptoms']??''):?><div style="font-size:1.2rem;color:var(--text-secondary);background:var(--surface-2);border-radius:8px;padding:.7rem 1rem;margin-top:.5rem;"><strong>Reason:</strong> <?=htmlspecialchars(substr($ap['reason']??$ap['symptoms']??'',0,150))?></div><?php endif;?>
           <?php if($ap['reschedule_reason']??''):?><div style="font-size:1.1rem;color:var(--info);margin-top:.5rem;"><i class="fas fa-calendar-pen"></i> Reschedule note: <?=htmlspecialchars($ap['reschedule_reason'])?></div><?php endif;?>
+          <?php if($ap['reschedule_date']??''):?><div style="font-size:1.1rem;color:var(--info);margin-top:.3rem;"><i class="fas fa-arrow-right"></i> New date: <?=date('d M Y',strtotime($ap['reschedule_date']))?><?=$ap['reschedule_time']?' at '.date('g:i A',strtotime($ap['reschedule_time'])):''?></div><?php endif;?>
+          <?php if($ap['cancellation_reason']??''):?><div style="font-size:1.1rem;color:var(--danger);margin-top:.5rem;"><i class="fas fa-comment-slash"></i> Cancellation reason: <?=htmlspecialchars($ap['cancellation_reason'])?></div><?php endif;?>
+          <?php if($ap['notes']??''):?><div style="font-size:1.1rem;color:var(--text-secondary);margin-top:.5rem;"><i class="fas fa-notes-medical"></i> Doctor's notes: <?=htmlspecialchars(substr($ap['notes'],0,120))?></div><?php endif;?>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;">
           <span class="adm-badge adm-badge-<?=$sc?>" style="font-size:1.2rem;"><?=$bStatus?></span>
@@ -233,7 +269,7 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
     <div style="background:var(--danger-light);color:var(--danger);border-radius:10px;padding:1rem 1.4rem;margin-bottom:1.2rem;font-size:1.2rem;"><i class="fas fa-triangle-exclamation"></i> Your doctor will be notified of this cancellation.</div>
     <form method="POST">
       <input type="hidden" name="action" value="cancel">
-      <input type="hidden" name="appointment_id" id="cancelApptId">
+      <input type="hidden" name="appointment_id" id="cancelApptIdLegacy">
       <div class="form-group"><label>Cancellation Reason</label><textarea name="reason" class="form-control" rows="3" placeholder="Please tell us why you're cancelling…" required></textarea></div>
       <button type="submit" class="adm-btn adm-btn-danger" style="width:100%;justify-content:center;"><i class="fas fa-xmark"></i> Confirm Cancellation</button>
     </form>
@@ -246,6 +282,7 @@ applyTheme(localStorage.getItem('rmu_theme')||'light');
 document.getElementById('themeToggle')?.addEventListener('click',()=>{applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
 document.getElementById('menuToggle')?.addEventListener('click',()=>{document.getElementById('admSidebar').classList.toggle('active');document.getElementById('admOverlay').classList.toggle('active');});
 document.getElementById('admOverlay')?.addEventListener('click',()=>{document.getElementById('admSidebar').classList.remove('active');document.getElementById('admOverlay').classList.remove('active');});
+(function(){const mq=window.matchMedia('(max-width:900px)');function h(e){document.getElementById('menuToggle').style.display=e.matches?'flex':'none';}mq.addListener(h);h(mq);})();
 const today='<?=$today?>';
 function filterAppts(status,btn){
   document.querySelectorAll('.filter-tabs .ftab').forEach(b=>b.classList.remove('active'));
@@ -257,8 +294,9 @@ function filterAppts(status,btn){
   });
 }
 function openReschedule(id,doc){document.getElementById('rsApptId').value=id;document.getElementById('rsDoctorName').textContent=doc;document.getElementById('modalReschedule').classList.add('open');}
-function openCancel(id,doc){document.getElementById('cancelApptId').value=id;document.getElementById('cancelDoctorName').textContent=doc;document.getElementById('modalCancel').classList.add('open');}
+function openCancel(id,doc){document.getElementById('cancelApptIdLegacy').value=id;document.getElementById('cancelDoctorName').textContent=doc;document.getElementById('modalCancel').classList.add('open');}
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 </script>
+<script src="/RMU-Medical-Management-System/js/notifications.js"></script>
 </body>
 </html>
