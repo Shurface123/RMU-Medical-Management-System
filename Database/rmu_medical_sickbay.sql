@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Feb 27, 2026 at 06:45 AM
+-- Generation Time: Mar 02, 2026 at 11:17 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -58,13 +58,13 @@ DELIMITER ;
 --
 DROP VIEW IF EXISTS `active_prescriptions`;
 CREATE TABLE IF NOT EXISTS `active_prescriptions` (
-`dispensed_items` decimal(23,0)
-,`doctor_name` varchar(150)
-,`patient_name` varchar(150)
+`prescription_id` int
 ,`prescription_date` date
-,`prescription_id` int
 ,`status` enum('Pending','Dispensed','Cancelled')
+,`patient_name` varchar(150)
+,`doctor_name` varchar(150)
 ,`total_items` bigint
+,`dispensed_items` decimal(23,0)
 );
 
 -- --------------------------------------------------------
@@ -146,18 +146,25 @@ CREATE TABLE IF NOT EXISTS `appointments` (
   `appointment_time` time NOT NULL,
   `service_type` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `symptoms` text COLLATE utf8mb4_unicode_ci,
+  `reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `reschedule_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `reschedule_date` date DEFAULT NULL,
+  `reschedule_time` time DEFAULT NULL,
+  `cancellation_reason` text COLLATE utf8mb4_unicode_ci,
+  `cancelled_by` int DEFAULT NULL,
+  `notification_sent` tinyint(1) DEFAULT '0',
   `urgency_level` enum('Low','Medium','High','Critical') COLLATE utf8mb4_unicode_ci DEFAULT 'Low',
-  `status` enum('Pending','Confirmed','Completed','Cancelled','No-Show') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `status` enum('Pending','Confirmed','Completed','Cancelled','No-Show','Rescheduled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
   `notes` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `appointment_id` (`appointment_id`),
-  KEY `patient_id` (`patient_id`),
   KEY `doctor_id` (`doctor_id`),
   KEY `idx_appointment_id` (`appointment_id`),
   KEY `idx_date` (`appointment_date`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status` (`status`),
+  KEY `idx_apt_patient_date` (`patient_id`,`appointment_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -279,6 +286,70 @@ CREATE TABLE IF NOT EXISTS `bed_assignments` (
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `bed_management`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `bed_management`;
+CREATE TABLE IF NOT EXISTS `bed_management` (
+`bed_pk` int
+,`bed_id` varchar(50)
+,`bed_number` varchar(50)
+,`ward` varchar(100)
+,`bed_type` enum('General','ICU','Private','Semi-Private')
+,`bed_status` enum('Available','Occupied','Maintenance','Reserved')
+,`daily_rate` decimal(10,2)
+,`assignment_pk` int
+,`patient_id` int
+,`admission_date` datetime
+,`discharge_date` datetime
+,`admission_reason` text
+,`assignment_status` enum('Active','Discharged','Transferred')
+,`patient_ref_id` varchar(50)
+,`patient_name` varchar(200)
+,`patient_phone` varchar(20)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `departments`
+--
+
+DROP TABLE IF EXISTS `departments`;
+CREATE TABLE IF NOT EXISTS `departments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `head_doctor_id` int DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `dept_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `departments`
+--
+
+INSERT INTO `departments` (`id`, `name`, `description`, `head_doctor_id`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'General Medicine', 'General outpatient consultations', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(2, 'Pediatrics', 'Child and adolescent health', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(3, 'Surgery', 'Surgical procedures and pre/post-op care', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(4, 'Obstetrics & Gynecology', 'Women health and maternity', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(5, 'Emergency Medicine', 'Accident and emergency care', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(6, 'Internal Medicine', 'Diagnosis and treatment of adult diseases', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(7, 'Ophthalmology', 'Eye care and vision', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(8, 'Dermatology', 'Skin conditions and treatment', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(9, 'Psychiatry', 'Mental health and behavioral disorders', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(10, 'Radiology', 'Medical imaging and diagnostics', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(11, 'Dental', 'Oral health and dental procedures', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(12, 'Pharmacy', 'Medication management', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
+(13, 'Laboratory', 'Diagnostic lab services', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `doctors`
 --
 
@@ -288,14 +359,38 @@ CREATE TABLE IF NOT EXISTS `doctors` (
   `user_id` int NOT NULL,
   `doctor_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `specialization` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department_id` int DEFAULT NULL,
+  `sub_specialization` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `designation` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `professional_title` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `qualifications` text COLLATE utf8mb4_unicode_ci,
   `experience_years` int DEFAULT '0',
   `license_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_issuing_body` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_expiry_date` date DEFAULT NULL,
+  `medical_school` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `graduation_year` int DEFAULT NULL,
+  `postgraduate_details` text COLLATE utf8mb4_unicode_ci,
+  `languages_spoken` json DEFAULT NULL,
   `consultation_fee` decimal(10,2) DEFAULT '0.00',
   `available_days` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `available_hours` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `bio` text COLLATE utf8mb4_unicode_ci,
+  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `marital_status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `religion` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `national_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `secondary_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `personal_email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `street_address` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `region` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Ghana',
+  `postal_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `office_location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_available` tinyint(1) DEFAULT '1',
+  `availability_status` enum('Online','Offline','Busy') COLLATE utf8mb4_unicode_ci DEFAULT 'Offline',
+  `profile_completion_pct` tinyint DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `full_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -306,6 +401,248 @@ CREATE TABLE IF NOT EXISTS `doctors` (
   KEY `user_id` (`user_id`),
   KEY `idx_doctor_id` (`doctor_id`),
   KEY `idx_specialization` (`specialization`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_activity_log`
+--
+
+DROP TABLE IF EXISTS `doctor_activity_log`;
+CREATE TABLE IF NOT EXISTS `doctor_activity_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `action` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_dal_doctor` (`doctor_id`),
+  KEY `idx_dal_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_availability`
+--
+
+DROP TABLE IF EXISTS `doctor_availability`;
+CREATE TABLE IF NOT EXISTS `doctor_availability` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `day_of_week` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_available` tinyint(1) DEFAULT '1',
+  `start_time` time DEFAULT '08:00:00',
+  `end_time` time DEFAULT '17:00:00',
+  `max_appointments` int DEFAULT '20',
+  `slot_duration_min` int DEFAULT '30',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_doc_day` (`doctor_id`,`day_of_week`),
+  KEY `idx_da_doctor` (`doctor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_certifications`
+--
+
+DROP TABLE IF EXISTS `doctor_certifications`;
+CREATE TABLE IF NOT EXISTS `doctor_certifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `cert_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `issuing_org` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `issue_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `cert_file_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_dc_doctor` (`doctor_id`),
+  KEY `idx_dc_expiry` (`expiry_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_documents`
+--
+
+DROP TABLE IF EXISTS `doctor_documents`;
+CREATE TABLE IF NOT EXISTS `doctor_documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `file_name` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_size` int DEFAULT '0' COMMENT 'bytes',
+  `description` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_dd_doctor` (`doctor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_leave_exceptions`
+--
+
+DROP TABLE IF EXISTS `doctor_leave_exceptions`;
+CREATE TABLE IF NOT EXISTS `doctor_leave_exceptions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `exception_date` date NOT NULL,
+  `reason` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_doc_date` (`doctor_id`,`exception_date`),
+  KEY `idx_dle_doctor` (`doctor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_patient_notes`
+--
+
+DROP TABLE IF EXISTS `doctor_patient_notes`;
+CREATE TABLE IF NOT EXISTS `doctor_patient_notes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `note_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `patient_id` int NOT NULL COMMENT 'patients.id',
+  `appointment_id` int DEFAULT NULL COMMENT 'appointments.id ??? optional link',
+  `note_type` enum('General','Follow-up','Warning','Allergy','Observation','Referral') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'General',
+  `note` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_private` tinyint(1) DEFAULT '1' COMMENT '1 = only this doctor can see it',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `note_id` (`note_id`),
+  KEY `idx_doctor_id` (`doctor_id`),
+  KEY `idx_patient_id` (`patient_id`),
+  KEY `idx_appointment_id` (`appointment_id`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_profile_completeness`
+--
+
+DROP TABLE IF EXISTS `doctor_profile_completeness`;
+CREATE TABLE IF NOT EXISTS `doctor_profile_completeness` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `personal_info` tinyint(1) DEFAULT '0',
+  `professional_profile` tinyint(1) DEFAULT '0',
+  `qualifications` tinyint(1) DEFAULT '0',
+  `availability_set` tinyint(1) DEFAULT '0',
+  `photo_uploaded` tinyint(1) DEFAULT '0',
+  `security_setup` tinyint(1) DEFAULT '0',
+  `documents_uploaded` tinyint(1) DEFAULT '0',
+  `overall_pct` tinyint DEFAULT '0',
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_dpc_doctor` (`doctor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_qualifications`
+--
+
+DROP TABLE IF EXISTS `doctor_qualifications`;
+CREATE TABLE IF NOT EXISTS `doctor_qualifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `degree_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `institution` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `year_awarded` int DEFAULT NULL,
+  `cert_file_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_dq_doctor` (`doctor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_reports`
+--
+
+DROP TABLE IF EXISTS `doctor_reports`;
+CREATE TABLE IF NOT EXISTS `doctor_reports` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `report_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `report_type` enum('Patient Summary','Appointment History','Prescription Report','Lab Summary','Monthly Activity','Custom') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Custom',
+  `title` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `generated_by` int NOT NULL COMMENT 'doctors.id ??? who generated this report',
+  `date_generated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `parameters` json DEFAULT NULL COMMENT 'Filters: date_from, date_to, patient_id, etc.',
+  `file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `report_id` (`report_id`),
+  KEY `idx_generated_by` (`generated_by`),
+  KEY `idx_date_generated` (`date_generated`),
+  KEY `idx_report_type` (`report_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_sessions`
+--
+
+DROP TABLE IF EXISTS `doctor_sessions`;
+CREATE TABLE IF NOT EXISTS `doctor_sessions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `session_id` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `device_info` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `browser` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_active` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_current` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_ds_doctor` (`doctor_id`),
+  KEY `idx_ds_session` (`session_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor_settings`
+--
+
+DROP TABLE IF EXISTS `doctor_settings`;
+CREATE TABLE IF NOT EXISTS `doctor_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `doctor_id` int NOT NULL COMMENT 'doctors.id',
+  `notif_new_appointment` tinyint(1) DEFAULT '1',
+  `notif_appt_reminders` tinyint(1) DEFAULT '1',
+  `notif_appt_cancellations` tinyint(1) DEFAULT '1',
+  `notif_lab_results` tinyint(1) DEFAULT '1',
+  `notif_rx_refills` tinyint(1) DEFAULT '1',
+  `notif_record_updates` tinyint(1) DEFAULT '1',
+  `notif_nurse_messages` tinyint(1) DEFAULT '1',
+  `notif_inventory_alerts` tinyint(1) DEFAULT '1',
+  `notif_license_expiry` tinyint(1) DEFAULT '1',
+  `notif_system_announcements` tinyint(1) DEFAULT '1',
+  `preferred_channel` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'dashboard',
+  `preferred_language` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'English',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_ds_doctor` (`doctor_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -340,6 +677,28 @@ CREATE TABLE IF NOT EXISTS `email_queue` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `emergency_contacts`
+--
+
+DROP TABLE IF EXISTS `emergency_contacts`;
+CREATE TABLE IF NOT EXISTS `emergency_contacts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL COMMENT 'patients.id',
+  `contact_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `relationship` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_primary` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ec_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lab_results`
 --
 
@@ -356,6 +715,12 @@ CREATE TABLE IF NOT EXISTS `lab_results` (
   `normal_range` json DEFAULT NULL,
   `interpretation` text COLLATE utf8mb4_unicode_ci,
   `technician_notes` text COLLATE utf8mb4_unicode_ci,
+  `submitted_by` int DEFAULT NULL COMMENT 'users.id',
+  `doctor_reviewed` tinyint(1) DEFAULT '0',
+  `patient_accessible` tinyint(1) DEFAULT '0',
+  `patient_notified` tinyint(1) DEFAULT '0',
+  `patient_viewed_at` datetime DEFAULT NULL,
+  `result_file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `doctor_notes` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -363,7 +728,8 @@ CREATE TABLE IF NOT EXISTS `lab_results` (
   KEY `idx_patient_id` (`patient_id`),
   KEY `idx_test_id` (`test_id`),
   KEY `idx_status` (`status`),
-  KEY `idx_test_date` (`test_date`)
+  KEY `idx_test_date` (`test_date`),
+  KEY `idx_lr_patient` (`patient_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -378,11 +744,15 @@ CREATE TABLE IF NOT EXISTS `lab_tests` (
   `test_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `patient_id` int NOT NULL,
   `doctor_id` int NOT NULL,
+  `technician_id` int DEFAULT NULL,
+  `urgency_level` enum('Routine','Urgent','Critical') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Routine',
   `test_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `test_category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `test_date` date NOT NULL,
   `results` text COLLATE utf8mb4_unicode_ci,
-  `status` enum('Pending','In Progress','Completed','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `result_file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `request_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('Pending','Submitted','In Progress','Completed','Reviewed','Cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
   `cost` decimal(10,2) DEFAULT '0.00',
   `technician_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -392,7 +762,8 @@ CREATE TABLE IF NOT EXISTS `lab_tests` (
   KEY `patient_id` (`patient_id`),
   KEY `doctor_id` (`doctor_id`),
   KEY `idx_test_id` (`test_id`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status` (`status`),
+  KEY `fk_labtest_technician` (`technician_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -425,11 +796,11 @@ CREATE TABLE IF NOT EXISTS `login_attempts` (
 --
 DROP VIEW IF EXISTS `low_stock_medicines`;
 CREATE TABLE IF NOT EXISTS `low_stock_medicines` (
-`category` varchar(100)
-,`medicine_id` varchar(50)
+`medicine_id` varchar(50)
 ,`medicine_name` varchar(200)
-,`reorder_level` int
+,`category` varchar(100)
 ,`total_stock` decimal(32,0)
+,`reorder_level` int
 );
 
 -- --------------------------------------------------------
@@ -470,6 +841,10 @@ CREATE TABLE IF NOT EXISTS `medical_records` (
   `diagnosis` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `symptoms` text COLLATE utf8mb4_unicode_ci,
   `treatment` text COLLATE utf8mb4_unicode_ci,
+  `treatment_plan` text COLLATE utf8mb4_unicode_ci,
+  `attachments` json DEFAULT NULL COMMENT 'JSON array of file paths',
+  `severity` enum('Mild','Moderate','Severe','Critical') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `patient_visible` tinyint(1) DEFAULT '1',
   `vital_signs` json DEFAULT NULL,
   `lab_results` text COLLATE utf8mb4_unicode_ci,
   `notes` text COLLATE utf8mb4_unicode_ci,
@@ -479,10 +854,10 @@ CREATE TABLE IF NOT EXISTS `medical_records` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `record_id` (`record_id`),
-  KEY `patient_id` (`patient_id`),
   KEY `doctor_id` (`doctor_id`),
   KEY `idx_record_id` (`record_id`),
-  KEY `idx_visit_date` (`visit_date`)
+  KEY `idx_visit_date` (`visit_date`),
+  KEY `idx_mr_patient_date` (`patient_id`,`visit_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -499,9 +874,11 @@ CREATE TABLE IF NOT EXISTS `medicines` (
   `generic_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `manufacturer` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `supplier_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `unit_price` decimal(10,2) NOT NULL,
   `stock_quantity` int NOT NULL DEFAULT '0',
+  `unit` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'tablet',
   `reorder_level` int DEFAULT '10',
   `expiry_date` date DEFAULT NULL,
   `batch_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -519,12 +896,39 @@ CREATE TABLE IF NOT EXISTS `medicines` (
 -- Dumping data for table `medicines`
 --
 
-INSERT INTO `medicines` (`id`, `medicine_id`, `medicine_name`, `generic_name`, `category`, `manufacturer`, `description`, `unit_price`, `stock_quantity`, `reorder_level`, `expiry_date`, `batch_number`, `is_prescription_required`, `created_at`, `updated_at`) VALUES
-(1, 'MED001', 'Paracetamol 500mg', 'Paracetamol', 'Analgesic', 'Pharma Ltd', NULL, 0.50, 500, 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(2, 'MED002', 'Ibuprofen 400mg', 'Ibuprofen', 'NSAID', 'Pharma Ltd', NULL, 0.75, 300, 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(3, 'MED003', 'Amoxicillin 500mg', 'Amoxicillin', 'Antibiotic', 'MedCare', NULL, 2.00, 200, 30, NULL, NULL, 1, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(4, 'MED004', 'Vitamin C 1000mg', 'Ascorbic Acid', 'Vitamin', 'HealthPlus', NULL, 1.00, 400, 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(5, 'MED005', 'Omeprazole 20mg', 'Omeprazole', 'Antacid', 'MedCare', NULL, 1.50, 150, 30, NULL, NULL, 1, '2026-02-06 05:09:21', '2026-02-06 05:09:21');
+INSERT INTO `medicines` (`id`, `medicine_id`, `medicine_name`, `generic_name`, `category`, `manufacturer`, `supplier_name`, `description`, `unit_price`, `stock_quantity`, `unit`, `reorder_level`, `expiry_date`, `batch_number`, `is_prescription_required`, `created_at`, `updated_at`) VALUES
+(1, 'MED001', 'Paracetamol 500mg', 'Paracetamol', 'Analgesic', 'Pharma Ltd', NULL, NULL, 0.50, 500, 'tablet', 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(2, 'MED002', 'Ibuprofen 400mg', 'Ibuprofen', 'NSAID', 'Pharma Ltd', NULL, NULL, 0.75, 300, 'tablet', 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(3, 'MED003', 'Amoxicillin 500mg', 'Amoxicillin', 'Antibiotic', 'MedCare', NULL, NULL, 2.00, 200, 'tablet', 30, NULL, NULL, 1, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(4, 'MED004', 'Vitamin C 1000mg', 'Ascorbic Acid', 'Vitamin', 'HealthPlus', NULL, NULL, 1.00, 400, 'tablet', 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(5, 'MED005', 'Omeprazole 20mg', 'Omeprazole', 'Antacid', 'MedCare', NULL, NULL, 1.50, 150, 'tablet', 30, NULL, NULL, 1, '2026-02-06 05:09:21', '2026-02-06 05:09:21');
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `medicine_inventory`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `medicine_inventory`;
+CREATE TABLE IF NOT EXISTS `medicine_inventory` (
+`id` int
+,`medicine_id` varchar(50)
+,`medicine_name` varchar(200)
+,`generic_name` varchar(200)
+,`category` varchar(100)
+,`unit` varchar(50)
+,`unit_price` decimal(10,2)
+,`stock_quantity` int
+,`reorder_level` int
+,`expiry_date` date
+,`supplier_name` varchar(200)
+,`manufacturer` varchar(200)
+,`batch_number` varchar(100)
+,`is_prescription_required` tinyint(1)
+,`stock_status` varchar(13)
+,`created_at` timestamp
+,`updated_at` timestamp
+);
 
 -- --------------------------------------------------------
 
@@ -536,19 +940,23 @@ DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE IF NOT EXISTS `notifications` (
   `notification_id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
+  `user_role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `type` enum('appointment','prescription','test_result','system','reminder','alert') COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_read` tinyint(1) DEFAULT '0',
   `priority` enum('low','normal','high','urgent') COLLATE utf8mb4_unicode_ci DEFAULT 'normal',
   `action_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `related_module` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `related_id` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `read_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`notification_id`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_is_read` (`is_read`),
   KEY `idx_type` (`type`),
-  KEY `idx_created_at` (`created_at`)
+  KEY `idx_created_at` (`created_at`),
+  KEY `idx_notif_user_read` (`user_id`,`is_read`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -589,8 +997,26 @@ CREATE TABLE IF NOT EXISTS `patients` (
   `emergency_contact_relationship` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `insurance_provider` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `insurance_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_photo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `registration_status` enum('Active','Inactive','Suspended') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Ghanaian',
+  `religion` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `marital_status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `occupation` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `national_id` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `secondary_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `personal_email` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `street_address` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `region` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Ghana',
+  `postal_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `last_login_at` datetime DEFAULT NULL,
+  `is_online` tinyint(1) DEFAULT '0',
+  `profile_completion` tinyint UNSIGNED DEFAULT '0',
+  `account_status` enum('active','deactivation_requested','deactivated') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
   `full_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `gender` enum('Male','Female','Others') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `age` int DEFAULT NULL,
@@ -602,6 +1028,163 @@ CREATE TABLE IF NOT EXISTS `patients` (
   KEY `user_id` (`user_id`),
   KEY `idx_patient_id` (`patient_id`),
   KEY `idx_student_id` (`student_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_activity_log`
+--
+
+DROP TABLE IF EXISTS `patient_activity_log`;
+CREATE TABLE IF NOT EXISTS `patient_activity_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `action_type` varchar(50) NOT NULL,
+  `action_description` text NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `device_info` varchar(255) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `patient_id` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_documents`
+--
+
+DROP TABLE IF EXISTS `patient_documents`;
+CREATE TABLE IF NOT EXISTS `patient_documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_type` varchar(50) DEFAULT NULL,
+  `file_size` int UNSIGNED DEFAULT '0',
+  `description` varchar(255) DEFAULT NULL,
+  `document_category` enum('Medical Report','Insurance Card','National ID','Passport','Lab Report','Other') DEFAULT 'Other',
+  `uploaded_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `patient_id` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_insurance`
+--
+
+DROP TABLE IF EXISTS `patient_insurance`;
+CREATE TABLE IF NOT EXISTS `patient_insurance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `provider_name` varchar(150) DEFAULT NULL,
+  `policy_number` varchar(80) DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `coverage_type` enum('Individual','Family') DEFAULT 'Individual',
+  `payment_preference` enum('Cash','Insurance','Mobile Money') DEFAULT 'Cash',
+  `billing_address` text,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_pi_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_medical_profile`
+--
+
+DROP TABLE IF EXISTS `patient_medical_profile`;
+CREATE TABLE IF NOT EXISTS `patient_medical_profile` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `blood_type` varchar(10) DEFAULT NULL,
+  `height_cm` decimal(5,1) DEFAULT NULL,
+  `weight_kg` decimal(5,1) DEFAULT NULL,
+  `bmi` decimal(4,1) DEFAULT NULL,
+  `bmi_category` varchar(30) DEFAULT NULL,
+  `allergies` json DEFAULT NULL,
+  `chronic_conditions` json DEFAULT NULL,
+  `disabilities` text,
+  `current_medications` json DEFAULT NULL,
+  `vaccination_history` json DEFAULT NULL,
+  `family_medical_history` json DEFAULT NULL,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_pmp_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_profile_completeness`
+--
+
+DROP TABLE IF EXISTS `patient_profile_completeness`;
+CREATE TABLE IF NOT EXISTS `patient_profile_completeness` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `personal_info` tinyint(1) DEFAULT '0',
+  `medical_profile` tinyint(1) DEFAULT '0',
+  `emergency_contact` tinyint(1) DEFAULT '0',
+  `insurance_info` tinyint(1) DEFAULT '0',
+  `photo_uploaded` tinyint(1) DEFAULT '0',
+  `security_setup` tinyint(1) DEFAULT '0',
+  `documents_uploaded` tinyint(1) DEFAULT '0',
+  `overall_percentage` tinyint UNSIGNED DEFAULT '0',
+  `last_updated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_ppc_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_sessions`
+--
+
+DROP TABLE IF EXISTS `patient_sessions`;
+CREATE TABLE IF NOT EXISTS `patient_sessions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `session_token` varchar(128) DEFAULT NULL,
+  `device_info` varchar(255) DEFAULT NULL,
+  `browser` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `login_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `last_active` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_current` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `patient_id` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_settings`
+--
+
+DROP TABLE IF EXISTS `patient_settings`;
+CREATE TABLE IF NOT EXISTS `patient_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL COMMENT 'patients.id',
+  `email_notifications` tinyint(1) DEFAULT '1',
+  `sms_notifications` tinyint(1) DEFAULT '0',
+  `appointment_reminders` tinyint(1) DEFAULT '1',
+  `prescription_alerts` tinyint(1) DEFAULT '1',
+  `lab_result_alerts` tinyint(1) DEFAULT '1',
+  `medical_record_alerts` tinyint(1) DEFAULT '1',
+  `profile_visibility` enum('public','doctors_only','private') COLLATE utf8mb4_unicode_ci DEFAULT 'doctors_only',
+  `language_preference` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'English',
+  `preferred_channel` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'dashboard',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_ps_patient` (`patient_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -700,19 +1283,22 @@ CREATE TABLE IF NOT EXISTS `prescriptions` (
   `duration` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `instructions` text COLLATE utf8mb4_unicode_ci,
   `quantity` int NOT NULL,
+  `refills_allowed` int DEFAULT '0',
+  `refill_count` int DEFAULT '0',
   `status` enum('Pending','Dispensed','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `patient_notified` tinyint(1) DEFAULT '0',
   `dispensed_by` int DEFAULT NULL,
   `dispensed_date` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `prescription_id` (`prescription_id`),
-  KEY `patient_id` (`patient_id`),
   KEY `doctor_id` (`doctor_id`),
   KEY `medical_record_id` (`medical_record_id`),
   KEY `dispensed_by` (`dispensed_by`),
   KEY `idx_prescription_id` (`prescription_id`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status` (`status`),
+  KEY `idx_rx_patient_status` (`patient_id`,`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -845,6 +1431,38 @@ CREATE TABLE IF NOT EXISTS `staff` (
   KEY `user_id` (`user_id`),
   KEY `idx_staff_id` (`staff_id`),
   KEY `idx_department` (`department`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_directory`
+--
+
+DROP TABLE IF EXISTS `staff_directory`;
+CREATE TABLE IF NOT EXISTS `staff_directory` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` int DEFAULT NULL COMMENT 'users.id ??? if staff has a login account',
+  `full_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('Doctor','Nurse','Lab Technician','Pharmacist','Admin','Receptionist','Support Staff') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `specialization` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `office_location` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_image` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'default-avatar.png',
+  `status` enum('Active','On Leave','Inactive','Suspended') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `hire_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `staff_id` (`staff_id`),
+  KEY `user_id` (`user_id`),
+  KEY `idx_staff_id` (`staff_id`),
+  KEY `idx_role` (`role`),
+  KEY `idx_department` (`department`),
+  KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1008,14 +1626,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
-  `gender` enum('Male','Female','Other') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `address` text COLLATE utf8mb4_unicode_ci,
   `profile_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT 'default-avatar.png',
   `is_active` tinyint(1) DEFAULT '1',
   `is_verified` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT NULL,
+  `last_active_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_name` (`user_name`),
   UNIQUE KEY `email` (`email`),
@@ -1028,12 +1645,12 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `user_name`, `email`, `password`, `user_role`, `name`, `phone`, `date_of_birth`, `gender`, `address`, `profile_image`, `is_active`, `is_verified`, `created_at`, `updated_at`, `last_login`) VALUES
-(1, 'admin', 'admin@rmu.edu.gh', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System Administrator', '0502371207', NULL, 'Male', NULL, 'default-avatar.png', 1, 1, '2026-02-06 05:09:21', '2026-02-27 02:57:24', '2026-02-27 02:57:24'),
-(4, 'LJ', 'lovelace.baidoo@st.rmu.edu.gh', '$2y$10$o1PxWO6siYsmVuWdtLgpEOaijwF.wbWK4hmaNV3cGprmUNR7It5.O', 'patient', 'Lovelace John Kwaku Baidoo', '0257669095', NULL, 'Male', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:01:51', '2026-02-27 03:16:10', '2026-02-27 03:16:10'),
-(5, 'EC', 'craigosae1@gmail.com', '$2y$10$V/IRP.0WWfBfOOxCHPO2u.ahsW/jBO8OTSg3OOrvMMHboZzor47KG', 'doctor', 'Edwards Craig', '0554551481', NULL, 'Male', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:18:53', '2026-02-27 02:54:35', '2026-02-27 02:54:35'),
-(6, 'Neils', 'nelly.nartey@st.rmu.edu.gh', '$2y$10$HnDpNL4Ct61jF96vrWCaDe0EdcM67C.jlWhZAtw66PY42a/.YLEs.', 'pharmacist', 'Nelly Nartey', '0501234567', NULL, 'Male', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:25:39', '2026-02-06 07:26:46', '2026-02-06 07:26:46'),
-(7, 'Naa', 'es-anadjei@st.umat.edu.gh', '$2y$10$BiJxGbxJ/3VccsXMzCN2Fe.1Y8Wg/HLiJ.ci/RhXI7qbV7kqllAHa', 'pharmacist', 'Adjei Adelaide Naa Adjeley', '0507333138', NULL, 'Male', NULL, 'default-avatar.png', 1, 0, '2026-02-15 09:36:42', '2026-02-27 03:52:28', '2026-02-27 03:52:28');
+INSERT INTO `users` (`id`, `user_name`, `email`, `password`, `user_role`, `name`, `phone`, `date_of_birth`, `profile_image`, `is_active`, `is_verified`, `created_at`, `updated_at`, `last_login`, `last_active_at`) VALUES
+(1, 'admin', 'admin@rmu.edu.gh', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System Administrator', '0502371207', NULL, 'default-avatar.png', 1, 1, '2026-02-06 05:09:21', '2026-03-01 09:22:47', '2026-03-01 09:22:47', NULL),
+(4, 'LJ', 'lovelace.baidoo@st.rmu.edu.gh', '$2y$10$o1PxWO6siYsmVuWdtLgpEOaijwF.wbWK4hmaNV3cGprmUNR7It5.O', 'patient', 'Lovelace John Kwaku Baidoo', '0257669095', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:01:51', '2026-02-27 03:16:10', '2026-02-27 03:16:10', NULL),
+(5, 'EC', '', '$2y$10$V/IRP.0WWfBfOOxCHPO2u.ahsW/jBO8OTSg3OOrvMMHboZzor47KG', 'doctor', 'EC', '', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:18:53', '2026-03-01 14:25:44', '2026-03-01 14:04:20', NULL),
+(6, 'Neils', 'nelly.nartey@st.rmu.edu.gh', '$2y$10$HnDpNL4Ct61jF96vrWCaDe0EdcM67C.jlWhZAtw66PY42a/.YLEs.', 'pharmacist', 'Nelly Nartey', '0501234567', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:25:39', '2026-02-06 07:26:46', '2026-02-06 07:26:46', NULL),
+(7, 'Naa', 'es-anadjei@st.umat.edu.gh', '$2y$10$BiJxGbxJ/3VccsXMzCN2Fe.1Y8Wg/HLiJ.ci/RhXI7qbV7kqllAHa', 'pharmacist', 'Adjei Adelaide Naa Adjeley', '0507333138', NULL, 'default-avatar.png', 1, 0, '2026-02-15 09:36:42', '2026-02-27 03:52:28', '2026-02-27 03:52:28', NULL);
 
 -- --------------------------------------------------------
 
@@ -1087,6 +1704,7 @@ INSERT INTO `user_sessions` (`session_id`, `user_id`, `user_role`, `login_time`,
 ('58ff3315e9eee30989b77b7dc13a57de7f76eadcc1a2daeb65298900f83c247f', 1, 'admin', '2026-02-14 03:24:15', '2026-02-14 03:24:15', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-14 04:25:18'),
 ('5e99d750ef74c9c6f94a30b1a376b67194793da9f370ff5e3e1de8a8cfa85943', 7, 'pharmacist', '2026-02-16 17:19:13', '2026-02-16 17:19:13', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-02-16 17:19:49'),
 ('6456cb7302273c1eb5a91b7a0d8d5833c3b17a315d38104d9b9831f18542f700', 1, 'admin', '2026-02-15 16:05:18', '2026-02-15 16:05:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 05:49:20'),
+('772e55af4245051f3f2cd5f517ef06ba9c52591eb71103a6d6aafca4723a2a74', 5, 'doctor', '2026-03-01 14:04:20', '2026-03-01 14:04:20', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-01 14:27:26'),
 ('8f0de9567c4e2a55ee9e488492c25dde14bb7c796013b5c68ff166ba7a66e960', 5, 'doctor', '2026-02-06 07:20:57', '2026-02-06 07:20:57', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-07 04:07:26'),
 ('91d61c73b07a82de220db4ac646e585e1b5d8c066fa30401ee9bb3f10f15eb30', 5, 'doctor', '2026-02-16 05:48:40', '2026-02-16 05:48:40', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 05:48:53'),
 ('971cb21a48dfc78e8c727f39756d6b89603f430978d66e1ee79cbb25c59625ac', 1, 'admin', '2026-02-14 03:15:40', '2026-02-14 03:15:40', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-14 03:24:15'),
@@ -1097,6 +1715,7 @@ INSERT INTO `user_sessions` (`session_id`, `user_id`, `user_role`, `login_time`,
 ('b74231f1d5886602e9b250402ef413d77c93813cd862c57d16eacd7c9ef831ad', 4, 'patient', '2026-02-27 03:16:10', '2026-02-27 03:16:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-02-27 03:51:58'),
 ('bc65bd99669a089a701a2acd1ac8ef372059df06b51f82c6c14c24e97243eb50', 6, 'pharmacist', '2026-02-06 07:26:46', '2026-02-06 07:26:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-07 03:54:28'),
 ('ccd0443b149ff4223cda38a773081054dabfe5f712b643de919a50d010119455', 5, 'doctor', '2026-02-07 04:07:26', '2026-02-07 04:07:26', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-07 04:19:48'),
+('ce69abe88ed7f5efda98109778e485aa80117caf1669a9d2892939a1a3139b20', 1, 'admin', '2026-03-01 09:22:47', '2026-03-01 09:22:47', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-01 09:24:02'),
 ('d0c7d44aeb68462eb1b7135ee83a7b50c007bc809f5ff9f81903f441276cf058', 5, 'doctor', '2026-02-12 06:23:03', '2026-02-12 06:23:04', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-12 06:24:36'),
 ('dee24e93838901238fed2a3b8533856965c7f69801bac8e66b457b43b6c9ea2f', 7, 'pharmacist', '2026-02-15 15:56:14', '2026-02-15 15:56:14', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-15 16:04:56'),
 ('e0c327bd7355782d82397f66d0c9364ee0aa2d94ec580ed366705c7a2accc717', 4, 'patient', '2026-02-14 08:21:17', '2026-02-14 08:21:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-14 08:23:50'),
@@ -1119,12 +1738,32 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
+-- Structure for view `bed_management`
+--
+DROP TABLE IF EXISTS `bed_management`;
+
+DROP VIEW IF EXISTS `bed_management`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `bed_management`  AS SELECT `b`.`id` AS `bed_pk`, `b`.`bed_id` AS `bed_id`, `b`.`bed_number` AS `bed_number`, `b`.`ward` AS `ward`, `b`.`bed_type` AS `bed_type`, `b`.`status` AS `bed_status`, `b`.`daily_rate` AS `daily_rate`, `ba`.`id` AS `assignment_pk`, `ba`.`patient_id` AS `patient_id`, `ba`.`admission_date` AS `admission_date`, `ba`.`discharge_date` AS `discharge_date`, `ba`.`reason` AS `admission_reason`, `ba`.`status` AS `assignment_status`, `p`.`patient_id` AS `patient_ref_id`, `u`.`name` AS `patient_name`, `u`.`phone` AS `patient_phone` FROM (((`beds` `b` left join `bed_assignments` `ba` on(((`ba`.`bed_id` = `b`.`id`) and (`ba`.`status` = 'Active')))) left join `patients` `p` on((`ba`.`patient_id` = `p`.`id`))) left join `users` `u` on((`p`.`user_id` = `u`.`id`))) ;
+
+-- --------------------------------------------------------
+
+--
 -- Structure for view `low_stock_medicines`
 --
 DROP TABLE IF EXISTS `low_stock_medicines`;
 
 DROP VIEW IF EXISTS `low_stock_medicines`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `low_stock_medicines`  AS SELECT `m`.`medicine_id` AS `medicine_id`, `m`.`medicine_name` AS `medicine_name`, `m`.`category` AS `category`, sum(`pi`.`current_stock`) AS `total_stock`, `m`.`reorder_level` AS `reorder_level` FROM (`medicines` `m` left join `pharmacy_inventory` `pi` on((`m`.`medicine_id` = `pi`.`medicine_id`))) GROUP BY `m`.`medicine_id` HAVING ((`total_stock` < `m`.`reorder_level`) OR (`total_stock` is null)) ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `medicine_inventory`
+--
+DROP TABLE IF EXISTS `medicine_inventory`;
+
+DROP VIEW IF EXISTS `medicine_inventory`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `medicine_inventory`  AS SELECT `m`.`id` AS `id`, `m`.`medicine_id` AS `medicine_id`, `m`.`medicine_name` AS `medicine_name`, `m`.`generic_name` AS `generic_name`, `m`.`category` AS `category`, `m`.`unit` AS `unit`, `m`.`unit_price` AS `unit_price`, `m`.`stock_quantity` AS `stock_quantity`, `m`.`reorder_level` AS `reorder_level`, `m`.`expiry_date` AS `expiry_date`, `m`.`supplier_name` AS `supplier_name`, `m`.`manufacturer` AS `manufacturer`, `m`.`batch_number` AS `batch_number`, `m`.`is_prescription_required` AS `is_prescription_required`, (case when (`m`.`stock_quantity` = 0) then 'Out of Stock' when (`m`.`stock_quantity` <= `m`.`reorder_level`) then 'Low Stock' when ((`m`.`expiry_date` is not null) and (`m`.`expiry_date` <= (curdate() + interval 30 day)) and (`m`.`expiry_date` >= curdate())) then 'Expiring Soon' else 'In Stock' end) AS `stock_status`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `medicines` AS `m` ;
 
 --
 -- Constraints for dumped tables
@@ -1169,6 +1808,79 @@ ALTER TABLE `doctors`
   ADD CONSTRAINT `doctors_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `doctor_activity_log`
+--
+ALTER TABLE `doctor_activity_log`
+  ADD CONSTRAINT `fk_dal_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_availability`
+--
+ALTER TABLE `doctor_availability`
+  ADD CONSTRAINT `fk_da_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_certifications`
+--
+ALTER TABLE `doctor_certifications`
+  ADD CONSTRAINT `fk_dc_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_documents`
+--
+ALTER TABLE `doctor_documents`
+  ADD CONSTRAINT `fk_dd_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_leave_exceptions`
+--
+ALTER TABLE `doctor_leave_exceptions`
+  ADD CONSTRAINT `fk_dle_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_patient_notes`
+--
+ALTER TABLE `doctor_patient_notes`
+  ADD CONSTRAINT `fk_note_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_note_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_profile_completeness`
+--
+ALTER TABLE `doctor_profile_completeness`
+  ADD CONSTRAINT `fk_dpc_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_qualifications`
+--
+ALTER TABLE `doctor_qualifications`
+  ADD CONSTRAINT `fk_dq_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_reports`
+--
+ALTER TABLE `doctor_reports`
+  ADD CONSTRAINT `fk_report_doctor` FOREIGN KEY (`generated_by`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_sessions`
+--
+ALTER TABLE `doctor_sessions`
+  ADD CONSTRAINT `fk_dss_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `doctor_settings`
+--
+ALTER TABLE `doctor_settings`
+  ADD CONSTRAINT `fk_dst_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `emergency_contacts`
+--
+ALTER TABLE `emergency_contacts`
+  ADD CONSTRAINT `fk_ec_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `lab_results`
 --
 ALTER TABLE `lab_results`
@@ -1179,6 +1891,7 @@ ALTER TABLE `lab_results`
 -- Constraints for table `lab_tests`
 --
 ALTER TABLE `lab_tests`
+  ADD CONSTRAINT `fk_labtest_technician` FOREIGN KEY (`technician_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `lab_tests_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `lab_tests_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
 
@@ -1212,6 +1925,48 @@ ALTER TABLE `password_history`
 --
 ALTER TABLE `patients`
   ADD CONSTRAINT `patients_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_activity_log`
+--
+ALTER TABLE `patient_activity_log`
+  ADD CONSTRAINT `patient_activity_log_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_documents`
+--
+ALTER TABLE `patient_documents`
+  ADD CONSTRAINT `patient_documents_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_insurance`
+--
+ALTER TABLE `patient_insurance`
+  ADD CONSTRAINT `patient_insurance_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_medical_profile`
+--
+ALTER TABLE `patient_medical_profile`
+  ADD CONSTRAINT `patient_medical_profile_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_profile_completeness`
+--
+ALTER TABLE `patient_profile_completeness`
+  ADD CONSTRAINT `patient_profile_completeness_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_sessions`
+--
+ALTER TABLE `patient_sessions`
+  ADD CONSTRAINT `patient_sessions_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_settings`
+--
+ALTER TABLE `patient_settings`
+  ADD CONSTRAINT `fk_ps_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `payments`
@@ -1254,6 +2009,12 @@ ALTER TABLE `prescription_refills`
 --
 ALTER TABLE `staff`
   ADD CONSTRAINT `staff_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `staff_directory`
+--
+ALTER TABLE `staff_directory`
+  ADD CONSTRAINT `fk_staff_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `two_factor_auth`

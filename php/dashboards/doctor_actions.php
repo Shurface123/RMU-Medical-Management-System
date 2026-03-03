@@ -109,7 +109,26 @@ case 'create_prescription':
     if(!$rxid) fail('Could not create prescription');
     $pat_uid=getPatientUserId($conn,$pat_id);
     if($pat_uid) notify($conn,$pat_uid,'patient','prescription','New Prescription','A new prescription has been issued for you: '.$med,'prescriptions',$rxid);
-    ok(['prescription_id'=>$rx_id]);
+
+    // ── Cross-Dashboard: Notify ALL pharmacists about new Rx ──
+    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
+    $drName=$dr2['full_name']??'A doctor';
+    $pharmUsers=mysqli_query($conn,"SELECT u.id FROM users u WHERE u.user_role='pharmacist' AND u.is_active=1");
+    while($pu=mysqli_fetch_assoc($pharmUsers)){
+        notify($conn,$pu['id'],'pharmacist','prescription','New Prescription Pending',
+          "Dr. $drName prescribed $med (Qty: $qty) — pending dispensing.",'prescriptions',$rxid);
+    }
+
+    // ── Stock availability warning for the doctor ──
+    $stockWarn='';
+    $stkC=mysqli_fetch_assoc(mysqli_query($conn,"SELECT stock_quantity,reorder_level FROM medicines WHERE medicine_name='$med' LIMIT 1"));
+    if($stkC){
+        if((int)$stkC['stock_quantity']===0) $stockWarn='⚠️ Warning: '.$med.' is OUT OF STOCK in the pharmacy.';
+        elseif((int)$stkC['stock_quantity']<=$qty) $stockWarn='⚠️ Warning: Only '.$stkC['stock_quantity'].' units of '.$med.' available (you prescribed '.$qty.').';
+        elseif((int)$stkC['stock_quantity']<=(int)$stkC['reorder_level']) $stockWarn='ℹ️ Note: '.$med.' is running low ('.$stkC['stock_quantity'].' units left).';
+    }
+
+    ok(['prescription_id'=>$rx_id,'stock_warning'=>$stockWarn]);
 
 // ── Cancel Prescription ───────────────────────────────────
 case 'cancel_prescription':
