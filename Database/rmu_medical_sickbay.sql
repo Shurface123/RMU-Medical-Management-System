@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 02, 2026 at 11:17 AM
+-- Generation Time: Mar 03, 2026 at 03:22 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -58,13 +58,13 @@ DELIMITER ;
 --
 DROP VIEW IF EXISTS `active_prescriptions`;
 CREATE TABLE IF NOT EXISTS `active_prescriptions` (
-`prescription_id` int
-,`prescription_date` date
-,`status` enum('Pending','Dispensed','Cancelled')
-,`patient_name` varchar(150)
+`dispensed_items` decimal(23,0)
 ,`doctor_name` varchar(150)
+,`patient_name` varchar(150)
+,`prescription_date` date
+,`prescription_id` int
+,`status` enum('Pending','Dispensed','Partially Dispensed','Cancelled','Expired')
 ,`total_items` bigint
-,`dispensed_items` decimal(23,0)
 );
 
 -- --------------------------------------------------------
@@ -291,22 +291,22 @@ CREATE TABLE IF NOT EXISTS `bed_assignments` (
 --
 DROP VIEW IF EXISTS `bed_management`;
 CREATE TABLE IF NOT EXISTS `bed_management` (
-`bed_pk` int
+`admission_date` datetime
+,`admission_reason` text
+,`assignment_pk` int
+,`assignment_status` enum('Active','Discharged','Transferred')
 ,`bed_id` varchar(50)
 ,`bed_number` varchar(50)
-,`ward` varchar(100)
-,`bed_type` enum('General','ICU','Private','Semi-Private')
+,`bed_pk` int
 ,`bed_status` enum('Available','Occupied','Maintenance','Reserved')
+,`bed_type` enum('General','ICU','Private','Semi-Private')
 ,`daily_rate` decimal(10,2)
-,`assignment_pk` int
-,`patient_id` int
-,`admission_date` datetime
 ,`discharge_date` datetime
-,`admission_reason` text
-,`assignment_status` enum('Active','Discharged','Transferred')
-,`patient_ref_id` varchar(50)
+,`patient_id` int
 ,`patient_name` varchar(200)
 ,`patient_phone` varchar(20)
+,`patient_ref_id` varchar(50)
+,`ward` varchar(100)
 );
 
 -- --------------------------------------------------------
@@ -346,6 +346,33 @@ INSERT INTO `departments` (`id`, `name`, `description`, `head_doctor_id`, `is_ac
 (11, 'Dental', 'Oral health and dental procedures', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
 (12, 'Pharmacy', 'Medication management', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
 (13, 'Laboratory', 'Diagnostic lab services', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dispensing_records`
+--
+
+DROP TABLE IF EXISTS `dispensing_records`;
+CREATE TABLE IF NOT EXISTS `dispensing_records` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `prescription_id` int NOT NULL,
+  `patient_id` int NOT NULL,
+  `pharmacist_id` int NOT NULL,
+  `medicine_id` int NOT NULL,
+  `quantity_dispensed` int NOT NULL DEFAULT '0',
+  `dispensing_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `selling_price` decimal(10,2) DEFAULT '0.00',
+  `payment_status` enum('paid','unpaid','insurance') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unpaid',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_disp_prescription` (`prescription_id`),
+  KEY `idx_disp_patient` (`patient_id`),
+  KEY `idx_disp_pharmacist` (`pharmacist_id`),
+  KEY `idx_disp_medicine` (`medicine_id`),
+  KEY `idx_disp_date` (`dispensing_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -796,11 +823,11 @@ CREATE TABLE IF NOT EXISTS `login_attempts` (
 --
 DROP VIEW IF EXISTS `low_stock_medicines`;
 CREATE TABLE IF NOT EXISTS `low_stock_medicines` (
-`medicine_id` varchar(50)
+`category` varchar(100)
+,`medicine_id` varchar(50)
 ,`medicine_name` varchar(200)
-,`category` varchar(100)
-,`total_stock` decimal(32,0)
 ,`reorder_level` int
+,`total_stock` decimal(32,0)
 );
 
 -- --------------------------------------------------------
@@ -876,6 +903,9 @@ CREATE TABLE IF NOT EXISTS `medicines` (
   `manufacturer` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `supplier_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
+  `storage_instructions` text COLLATE utf8mb4_unicode_ci,
+  `side_effects` text COLLATE utf8mb4_unicode_ci,
+  `contraindications` text COLLATE utf8mb4_unicode_ci,
   `unit_price` decimal(10,2) NOT NULL,
   `stock_quantity` int NOT NULL DEFAULT '0',
   `unit` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'tablet',
@@ -883,6 +913,7 @@ CREATE TABLE IF NOT EXISTS `medicines` (
   `expiry_date` date DEFAULT NULL,
   `batch_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_prescription_required` tinyint(1) DEFAULT '1',
+  `status` enum('active','discontinued') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -896,12 +927,12 @@ CREATE TABLE IF NOT EXISTS `medicines` (
 -- Dumping data for table `medicines`
 --
 
-INSERT INTO `medicines` (`id`, `medicine_id`, `medicine_name`, `generic_name`, `category`, `manufacturer`, `supplier_name`, `description`, `unit_price`, `stock_quantity`, `unit`, `reorder_level`, `expiry_date`, `batch_number`, `is_prescription_required`, `created_at`, `updated_at`) VALUES
-(1, 'MED001', 'Paracetamol 500mg', 'Paracetamol', 'Analgesic', 'Pharma Ltd', NULL, NULL, 0.50, 500, 'tablet', 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(2, 'MED002', 'Ibuprofen 400mg', 'Ibuprofen', 'NSAID', 'Pharma Ltd', NULL, NULL, 0.75, 300, 'tablet', 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(3, 'MED003', 'Amoxicillin 500mg', 'Amoxicillin', 'Antibiotic', 'MedCare', NULL, NULL, 2.00, 200, 'tablet', 30, NULL, NULL, 1, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(4, 'MED004', 'Vitamin C 1000mg', 'Ascorbic Acid', 'Vitamin', 'HealthPlus', NULL, NULL, 1.00, 400, 'tablet', 50, NULL, NULL, 0, '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
-(5, 'MED005', 'Omeprazole 20mg', 'Omeprazole', 'Antacid', 'MedCare', NULL, NULL, 1.50, 150, 'tablet', 30, NULL, NULL, 1, '2026-02-06 05:09:21', '2026-02-06 05:09:21');
+INSERT INTO `medicines` (`id`, `medicine_id`, `medicine_name`, `generic_name`, `category`, `manufacturer`, `supplier_name`, `description`, `storage_instructions`, `side_effects`, `contraindications`, `unit_price`, `stock_quantity`, `unit`, `reorder_level`, `expiry_date`, `batch_number`, `is_prescription_required`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'MED001', 'Paracetamol 500mg', 'Paracetamol', 'Analgesic', 'Pharma Ltd', NULL, NULL, NULL, NULL, NULL, 0.50, 500, 'tablet', 50, NULL, NULL, 0, 'active', '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(2, 'MED002', 'Ibuprofen 400mg', 'Ibuprofen', 'NSAID', 'Pharma Ltd', NULL, NULL, NULL, NULL, NULL, 0.75, 300, 'tablet', 50, NULL, NULL, 0, 'active', '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(3, 'MED003', 'Amoxicillin 500mg', 'Amoxicillin', 'Antibiotic', 'MedCare', NULL, NULL, NULL, NULL, NULL, 2.00, 200, 'tablet', 30, NULL, NULL, 1, 'active', '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(4, 'MED004', 'Vitamin C 1000mg', 'Ascorbic Acid', 'Vitamin', 'HealthPlus', NULL, NULL, NULL, NULL, NULL, 1.00, 400, 'tablet', 50, NULL, NULL, 0, 'active', '2026-02-06 05:09:21', '2026-02-06 05:09:21'),
+(5, 'MED005', 'Omeprazole 20mg', 'Omeprazole', 'Antacid', 'MedCare', NULL, NULL, NULL, NULL, NULL, 1.50, 150, 'tablet', 30, NULL, NULL, 1, 'active', '2026-02-06 05:09:21', '2026-02-06 05:09:21');
 
 -- --------------------------------------------------------
 
@@ -911,22 +942,22 @@ INSERT INTO `medicines` (`id`, `medicine_id`, `medicine_name`, `generic_name`, `
 --
 DROP VIEW IF EXISTS `medicine_inventory`;
 CREATE TABLE IF NOT EXISTS `medicine_inventory` (
-`id` int
+`batch_number` varchar(100)
+,`category` varchar(100)
+,`created_at` timestamp
+,`expiry_date` date
+,`generic_name` varchar(200)
+,`id` int
+,`is_prescription_required` tinyint(1)
+,`manufacturer` varchar(200)
 ,`medicine_id` varchar(50)
 ,`medicine_name` varchar(200)
-,`generic_name` varchar(200)
-,`category` varchar(100)
+,`reorder_level` int
+,`stock_quantity` int
+,`stock_status` varchar(13)
+,`supplier_name` varchar(200)
 ,`unit` varchar(50)
 ,`unit_price` decimal(10,2)
-,`stock_quantity` int
-,`reorder_level` int
-,`expiry_date` date
-,`supplier_name` varchar(200)
-,`manufacturer` varchar(200)
-,`batch_number` varchar(100)
-,`is_prescription_required` tinyint(1)
-,`stock_status` varchar(13)
-,`created_at` timestamp
 ,`updated_at` timestamp
 );
 
@@ -1218,6 +1249,193 @@ CREATE TABLE IF NOT EXISTS `payments` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pharmacist_activity_log`
+--
+
+DROP TABLE IF EXISTS `pharmacist_activity_log`;
+CREATE TABLE IF NOT EXISTS `pharmacist_activity_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pharmacist_id` int NOT NULL,
+  `action_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'general',
+  `action_description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device_info` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_pal_pharmacist` (`pharmacist_id`),
+  KEY `idx_pal_type` (`action_type`),
+  KEY `idx_pal_date` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacist_certifications`
+--
+
+DROP TABLE IF EXISTS `pharmacist_certifications`;
+CREATE TABLE IF NOT EXISTS `pharmacist_certifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pharmacist_id` int NOT NULL,
+  `cert_name` varchar(300) NOT NULL,
+  `issuing_body` varchar(300) DEFAULT NULL,
+  `issue_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `cert_file_path` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `pharmacist_id` (`pharmacist_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacist_documents`
+--
+
+DROP TABLE IF EXISTS `pharmacist_documents`;
+CREATE TABLE IF NOT EXISTS `pharmacist_documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pharmacist_id` int NOT NULL,
+  `file_name` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_size` int NOT NULL DEFAULT '0',
+  `description` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_pd_pharmacist` (`pharmacist_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacist_profile`
+--
+
+DROP TABLE IF EXISTS `pharmacist_profile`;
+CREATE TABLE IF NOT EXISTS `pharmacist_profile` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `full_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `license_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_expiry` date DEFAULT NULL,
+  `specialization` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Pharmacy',
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `secondary_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `region` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Ghana',
+  `profile_photo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `years_of_experience` int NOT NULL DEFAULT '0',
+  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `national_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` enum('Male','Female','Other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `marital_status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `availability_status` enum('Online','Offline','Busy') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Offline',
+  `profile_completion` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `postal_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `office_location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pharmacy_school` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `graduation_year` int DEFAULT NULL,
+  `postgrad_training` text COLLATE utf8mb4_unicode_ci,
+  `license_issuing_body` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `personal_email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `street_address` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_pharm_user` (`user_id`),
+  KEY `idx_pharm_license` (`license_number`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `pharmacist_profile`
+--
+
+INSERT INTO `pharmacist_profile` (`id`, `user_id`, `full_name`, `license_number`, `license_expiry`, `specialization`, `department`, `phone`, `secondary_phone`, `email`, `address`, `city`, `region`, `country`, `profile_photo`, `bio`, `years_of_experience`, `nationality`, `national_id`, `date_of_birth`, `gender`, `marital_status`, `availability_status`, `profile_completion`, `created_at`, `updated_at`, `postal_code`, `office_location`, `pharmacy_school`, `graduation_year`, `postgrad_training`, `license_issuing_body`, `personal_email`, `street_address`) VALUES
+(1, 6, 'Nelly Nartey', NULL, NULL, NULL, 'Pharmacy', '0501234567', NULL, 'nelly.nartey@st.rmu.edu.gh', NULL, NULL, NULL, 'Ghana', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Offline', 0, '2026-03-02 11:25:17', '2026-03-02 11:25:17', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(2, 7, 'Adjei Adelaide Naa Adjeley', NULL, NULL, NULL, 'Pharmacy', '0507333138', NULL, 'es-anadjei@st.umat.edu.gh', NULL, NULL, NULL, 'Ghana', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Offline', 0, '2026-03-02 11:25:17', '2026-03-02 11:25:17', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacist_profile_completeness`
+--
+
+DROP TABLE IF EXISTS `pharmacist_profile_completeness`;
+CREATE TABLE IF NOT EXISTS `pharmacist_profile_completeness` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pharmacist_id` int NOT NULL,
+  `personal_info` tinyint(1) NOT NULL DEFAULT '0',
+  `professional_profile` tinyint(1) NOT NULL DEFAULT '0',
+  `qualifications` tinyint(1) NOT NULL DEFAULT '0',
+  `photo_uploaded` tinyint(1) NOT NULL DEFAULT '0',
+  `security_setup` tinyint(1) NOT NULL DEFAULT '0',
+  `documents_uploaded` tinyint(1) NOT NULL DEFAULT '0',
+  `overall_pct` int NOT NULL DEFAULT '0',
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ppc_pharmacist` (`pharmacist_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `pharmacist_profile_completeness`
+--
+
+INSERT INTO `pharmacist_profile_completeness` (`id`, `pharmacist_id`, `personal_info`, `professional_profile`, `qualifications`, `photo_uploaded`, `security_setup`, `documents_uploaded`, `overall_pct`, `last_updated`) VALUES
+(1, 1, 0, 0, 0, 0, 0, 0, 0, '2026-03-02 11:25:17'),
+(2, 2, 0, 0, 0, 0, 0, 0, 0, '2026-03-02 11:25:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacist_qualifications`
+--
+
+DROP TABLE IF EXISTS `pharmacist_qualifications`;
+CREATE TABLE IF NOT EXISTS `pharmacist_qualifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pharmacist_id` int NOT NULL,
+  `degree_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `institution` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `year_awarded` int DEFAULT NULL,
+  `cert_file_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_pq_pharmacist` (`pharmacist_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacist_sessions`
+--
+
+DROP TABLE IF EXISTS `pharmacist_sessions`;
+CREATE TABLE IF NOT EXISTS `pharmacist_sessions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pharmacist_id` int NOT NULL,
+  `session_token` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device_info` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `browser` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_active` datetime DEFAULT NULL,
+  `is_current` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_ps_pharmacist` (`pharmacist_id`),
+  KEY `idx_ps_token` (`session_token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `pharmacy_inventory`
 --
 
@@ -1230,16 +1448,73 @@ CREATE TABLE IF NOT EXISTS `pharmacy_inventory` (
   `expiry_date` date NOT NULL,
   `quantity_received` int NOT NULL DEFAULT '0',
   `quantity_dispensed` int NOT NULL DEFAULT '0',
+  `quantity_sold` int NOT NULL DEFAULT '0',
+  `quantity_expired` int NOT NULL DEFAULT '0',
   `current_stock` int NOT NULL DEFAULT '0',
   `received_date` date NOT NULL,
   `cost_per_unit` decimal(10,2) DEFAULT NULL,
   `selling_price` decimal(10,2) DEFAULT NULL,
+  `location` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('in_stock','low_stock','out_of_stock','expired','expiring_soon') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'in_stock',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`inventory_id`),
   KEY `fk_inventory_medicine` (`medicine_id`),
   KEY `fk_inventory_supplier` (`supplier_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacy_reports`
+--
+
+DROP TABLE IF EXISTS `pharmacy_reports`;
+CREATE TABLE IF NOT EXISTS `pharmacy_reports` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `generated_by` int NOT NULL,
+  `report_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `parameters` json DEFAULT NULL,
+  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `format` enum('PDF','CSV','XLSX') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PDF',
+  `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_pr_user` (`generated_by`),
+  KEY `idx_pr_type` (`report_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pharmacy_settings`
+--
+
+DROP TABLE IF EXISTS `pharmacy_settings`;
+CREATE TABLE IF NOT EXISTS `pharmacy_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pharmacist_id` int NOT NULL,
+  `notif_new_prescription` tinyint(1) NOT NULL DEFAULT '1',
+  `notif_low_stock` tinyint(1) NOT NULL DEFAULT '1',
+  `notif_expiring_meds` tinyint(1) NOT NULL DEFAULT '1',
+  `notif_purchase_orders` tinyint(1) NOT NULL DEFAULT '1',
+  `notif_refill_requests` tinyint(1) NOT NULL DEFAULT '1',
+  `notif_system_alerts` tinyint(1) NOT NULL DEFAULT '1',
+  `notification_prefs` json DEFAULT NULL,
+  `preferred_channel` enum('dashboard','email','sms','all') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'dashboard',
+  `theme_preference` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'light',
+  `language` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'English',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_pharm_settings` (`pharmacist_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `pharmacy_settings`
+--
+
+INSERT INTO `pharmacy_settings` (`id`, `pharmacist_id`, `notif_new_prescription`, `notif_low_stock`, `notif_expiring_meds`, `notif_purchase_orders`, `notif_refill_requests`, `notif_system_alerts`, `notification_prefs`, `preferred_channel`, `theme_preference`, `language`, `updated_at`) VALUES
+(1, 1, 1, 1, 1, 1, 1, 1, NULL, 'dashboard', 'light', 'English', '2026-03-02 11:25:17'),
+(2, 2, 1, 1, 1, 1, 1, 1, NULL, 'dashboard', 'light', 'English', '2026-03-02 11:25:17');
 
 -- --------------------------------------------------------
 
@@ -1255,6 +1530,9 @@ CREATE TABLE IF NOT EXISTS `pharmacy_suppliers` (
   `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `address` text COLLATE utf8mb4_unicode_ci,
+  `supply_categories` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_terms` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT 'Net 30',
+  `rating` decimal(2,1) DEFAULT '0.0',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1275,6 +1553,7 @@ CREATE TABLE IF NOT EXISTS `prescriptions` (
   `prescription_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `patient_id` int NOT NULL,
   `doctor_id` int NOT NULL,
+  `pharmacist_id` int DEFAULT NULL,
   `medical_record_id` int DEFAULT NULL,
   `prescription_date` date NOT NULL,
   `medication_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1285,7 +1564,7 @@ CREATE TABLE IF NOT EXISTS `prescriptions` (
   `quantity` int NOT NULL,
   `refills_allowed` int DEFAULT '0',
   `refill_count` int DEFAULT '0',
-  `status` enum('Pending','Dispensed','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `status` enum('Pending','Dispensed','Partially Dispensed','Cancelled','Expired') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
   `patient_notified` tinyint(1) DEFAULT '0',
   `dispensed_by` int DEFAULT NULL,
   `dispensed_date` datetime DEFAULT NULL,
@@ -1318,6 +1597,8 @@ CREATE TABLE IF NOT EXISTS `prescription_items` (
   `quantity` int NOT NULL,
   `dispensed_quantity` int DEFAULT '0',
   `instructions` text COLLATE utf8mb4_unicode_ci,
+  `substitution_allowed` tinyint(1) NOT NULL DEFAULT '0',
+  `status` enum('pending','dispensed','partially_dispensed','cancelled','out_of_stock') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`item_id`),
   KEY `idx_prescription_id` (`prescription_id`),
@@ -1345,6 +1626,55 @@ CREATE TABLE IF NOT EXISTS `prescription_refills` (
   KEY `idx_prescription_id` (`prescription_id`),
   KEY `idx_patient_id` (`patient_id`),
   KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `purchase_orders`
+--
+
+DROP TABLE IF EXISTS `purchase_orders`;
+CREATE TABLE IF NOT EXISTS `purchase_orders` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `order_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `supplier_id` int NOT NULL,
+  `ordered_by` int NOT NULL,
+  `order_date` date NOT NULL,
+  `expected_delivery_date` date DEFAULT NULL,
+  `actual_delivery_date` date DEFAULT NULL,
+  `status` enum('draft','sent','received','partially_received','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',
+  `total_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_number` (`order_number`),
+  KEY `idx_po_supplier` (`supplier_id`),
+  KEY `idx_po_status` (`status`),
+  KEY `idx_po_date` (`order_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `purchase_order_items`
+--
+
+DROP TABLE IF EXISTS `purchase_order_items`;
+CREATE TABLE IF NOT EXISTS `purchase_order_items` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `order_id` int NOT NULL,
+  `medicine_id` int NOT NULL,
+  `ordered_quantity` int NOT NULL DEFAULT '0',
+  `received_quantity` int NOT NULL DEFAULT '0',
+  `unit_price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `total_price` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `status` enum('pending','received','partial','cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_poi_order` (`order_id`),
+  KEY `idx_poi_medicine` (`medicine_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1468,6 +1798,55 @@ CREATE TABLE IF NOT EXISTS `staff_directory` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `stock_alerts`
+--
+
+DROP TABLE IF EXISTS `stock_alerts`;
+CREATE TABLE IF NOT EXISTS `stock_alerts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `medicine_id` int NOT NULL,
+  `alert_type` enum('low_stock','out_of_stock','expiring_soon','expired') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `threshold_value` int DEFAULT '0',
+  `current_value` int DEFAULT '0',
+  `is_resolved` tinyint(1) NOT NULL DEFAULT '0',
+  `resolved_by` int DEFAULT NULL,
+  `resolved_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_alert_medicine` (`medicine_id`),
+  KEY `idx_alert_type` (`alert_type`),
+  KEY `idx_alert_resolved` (`is_resolved`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stock_transactions`
+--
+
+DROP TABLE IF EXISTS `stock_transactions`;
+CREATE TABLE IF NOT EXISTS `stock_transactions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `medicine_id` int NOT NULL,
+  `inventory_id` int DEFAULT NULL,
+  `transaction_type` enum('restock','dispensed','expired','adjusted','returned','damaged') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` int NOT NULL DEFAULT '0',
+  `previous_quantity` int NOT NULL DEFAULT '0',
+  `new_quantity` int NOT NULL DEFAULT '0',
+  `performed_by` int NOT NULL,
+  `transaction_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_stx_medicine` (`medicine_id`),
+  KEY `idx_stx_type` (`transaction_type`),
+  KEY `idx_stx_date` (`transaction_date`),
+  KEY `idx_stx_user` (`performed_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `system_config`
 --
 
@@ -1527,7 +1906,7 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
   UNIQUE KEY `setting_key` (`setting_key`),
   KEY `idx_setting_key` (`setting_key`),
   KEY `idx_is_public` (`is_public`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `system_settings`
@@ -1547,7 +1926,18 @@ INSERT INTO `system_settings` (`setting_id`, `setting_key`, `setting_value`, `se
 (11, 'password_expiry_days', '90', 'number', 'Password expiration in days', 0, NULL, '2026-02-08 02:23:55', '2026-02-08 02:23:55'),
 (12, 'enable_2fa', '0', 'boolean', 'Enable two-factor authentication', 0, NULL, '2026-02-08 02:23:55', '2026-02-08 02:23:55'),
 (13, 'email_notifications', '1', 'boolean', 'Enable email notifications', 0, NULL, '2026-02-08 02:23:55', '2026-02-08 02:23:55'),
-(14, 'sms_notifications', '0', 'boolean', 'Enable SMS notifications', 0, NULL, '2026-02-08 02:23:55', '2026-02-08 02:23:55');
+(14, 'sms_notifications', '0', 'boolean', 'Enable SMS notifications', 0, NULL, '2026-02-08 02:23:55', '2026-02-08 02:23:55'),
+(15, 'system_name', 'RMU Medical Sickbay', 'string', 'System display name', 1, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(16, 'timezone', 'Africa/Accra', 'string', 'Default timezone', 1, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(17, 'date_format', 'd M Y', 'string', 'Date display format', 1, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(18, 'currency', 'GHS', 'string', 'Currency code', 0, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(19, 'currency_symbol', 'GH?', 'string', 'Currency symbol', 1, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(20, 'default_reorder_level', '10', 'number', 'Default medicine reorder threshold', 0, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(21, 'expiry_warning_days', '30', 'number', 'Days before expiry to trigger warning', 0, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(22, 'stock_alert_threshold', '5', 'number', 'Units below which stock alert fires', 0, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(23, 'password_change_days', '90', 'number', 'Force password change interval (days)', 0, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(24, 'default_theme', 'light', 'string', 'Default UI theme', 1, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10'),
+(25, 'system_language', 'English', 'string', 'Default language', 1, NULL, '2026-03-03 04:10:10', '2026-03-03 04:10:10');
 
 -- --------------------------------------------------------
 

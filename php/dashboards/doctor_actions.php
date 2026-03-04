@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'doctor') {
     echo json_encode(['success'=>false,'message'=>'Unauthorized']); exit;
 }
 require_once '../db_conn.php';
+require_once __DIR__ . '/cross_notify.php';
 $user_id = (int)$_SESSION['user_id'];
 
 // Get doctor pk
@@ -241,6 +242,88 @@ case 'update_availability':
     $hours=$hfrom.'-'.$hto;
     mysqli_query($conn,"UPDATE doctors SET available_days='$days',available_hours='$hours',is_available=$avail,updated_at=NOW() WHERE user_id=$user_id");
     ok(['message'=>'Schedule updated']);
+
+// ── Assign Task to Nurse ──────────────────────────────────
+case 'assign_nurse_task':
+    $nurse_id=(int)($post['nurse_id']??0);
+    $pat_id=(int)($post['patient_id']??0);
+    $title=esc($conn,$post['task_title']??'');
+    $desc=esc($conn,$post['task_description']??'');
+    $priority=esc($conn,$post['priority']??'Medium');
+    $due=esc($conn,$post['due_time']??'');
+    if(!$nurse_id||!$title) fail('Nurse ID and task title required');
+    mysqli_query($conn,"INSERT INTO nurse_tasks (nurse_id,assigned_by,patient_id,task_title,task_description,priority,due_time,status,created_at)
+      VALUES($nurse_id,$doc_pk,".($pat_id?:"NULL").",'$title','$desc','$priority',".($due?"'$due'":'NULL').",'Pending',NOW())");
+    $tid=(int)mysqli_insert_id($conn);
+    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
+    $dn=$dr2['full_name']??'Doctor';
+    notifyNurse($conn, $nurse_id, 'task', 'New Task Assigned',
+      "Dr. $dn assigned you a new task: $title" . ($priority==='High'||$priority==='Urgent' ? " (Priority: $priority)" : ''), 'tasks', $tid,
+      $priority==='Urgent' ? 'urgent' : ($priority==='High' ? 'high' : 'normal'));
+    ok(['task_id'=>$tid, 'message'=>'Task assigned to nurse']);
+
+// ── Approve Bed Transfer ──────────────────────────────────
+case 'approve_bed_transfer':
+    $tid=(int)($post['transfer_id']??0);
+    $action_type=esc($conn,$post['approval']??'Approved');
+    if(!$tid) fail('Transfer ID required');
+    if(!in_array($action_type,['Approved','Rejected'])) fail('Invalid approval');
+    $tr=mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM bed_transfers WHERE id=$tid LIMIT 1"));
+    if(!$tr) fail('Transfer not found');
+    mysqli_query($conn,"UPDATE bed_transfers SET status='$action_type',approved_by=$doc_pk,approved_at=NOW() WHERE id=$tid");
+    if($action_type==='Approved'){
+      // Update bed assignments
+      $pid=(int)$tr['patient_id']; $newBed=esc($conn,$tr['to_bed_id']); $newWard=esc($conn,$tr['to_ward']);
+      mysqli_query($conn,"UPDATE bed_assignments SET status='Transferred',discharge_date=NOW() WHERE patient_id=$pid AND status='Active'");
+      mysqli_query($conn,"UPDATE bed_management SET status='Available' WHERE bed_id='{$tr['from_bed_id']}'");
+      mysqli_query($conn,"UPDATE bed_management SET status='Occupied' WHERE bed_id='$newBed'");
+    }
+    // Notify the requesting nurse
+    $reqNurse=(int)$tr['requested_by'];
+    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
+    $dn=$dr2['full_name']??'Doctor';
+    $pName=getPatientNameById($conn,(int)$tr['patient_id']);
+    notifyNurse($conn, $reqNurse, 'bed_transfer', "Bed Transfer $action_type",
+      "Dr. $dn has {$action_type} the bed transfer for $pName.", 'beds', $tid);
+    ok(['message'=>"Transfer $action_type"]);
+
+// ── Create Prescription + Nurse Med Schedule ──────────────
+case 'create_prescription_with_schedule':
+    $pat_id=(int)($post['patient_id']??0); $med=esc($conn,$post['medicine_name']??'');
+    $dos=esc($conn,$post['dosage']??''); $freq=esc($conn,$post['frequency']??'');
+    $dur=esc($conn,$post['duration']??''); $qty=(int)($post['quantity']??1);
+    $inst=esc($conn,$post['instructions']??''); $nurse_id=(int)($post['nurse_id']??0);
+    if(!$pat_id||!$med||!$dos||!$freq) fail('Missing required fields');
+    $rx_id='RX-'.strtoupper(substr(md5(uniqid()),0,8));
+    mysqli_query($conn,"INSERT INTO prescriptions (prescription_id,patient_id,doctor_id,prescription_date,medication_name,dosage,frequency,duration,instructions,quantity,status,created_at)
+      VALUES('$rx_id',$pat_id,$doc_pk,CURDATE(),'$med','$dos','$freq','$dur','$inst',$qty,'Active',NOW())");
+    $rxid=(int)mysqli_insert_id($conn);
+    if(!$rxid) fail('Could not create prescription');
+    // Create medication administration schedule entries for the nurse
+    $times=['08:00','12:00','18:00','22:00'];
+    $freq_map=['once daily'=>1,'od'=>1,'twice daily'=>2,'bd'=>2,'three times daily'=>3,'tds'=>3,'four times daily'=>4,'qds'=>4];
+    $freq_count=$freq_map[strtolower($freq)]??1;
+    for($i=0;$i<min($freq_count,4);$i++){
+      $sched_time=date('Y-m-d').' '.$times[$i].':00';
+      mysqli_query($conn,"INSERT INTO medication_administration (patient_id,nurse_id,prescription_id,medicine_name,dosage,route,scheduled_time,status,created_at)
+        VALUES($pat_id,".($nurse_id?:"NULL").",$rxid,'$med','$dos','Oral','$sched_time','Pending',NOW())");
+    }
+    // Notify patient
+    $pat_uid=getPatientUserId($conn,$pat_id);
+    if($pat_uid) notify($conn,$pat_uid,'patient','prescription','New Prescription','A new prescription has been issued: '.$med,'prescriptions',$rxid);
+    // Notify pharmacists
+    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
+    $drName=$dr2['full_name']??'Doctor';
+    $pharmUsers=mysqli_query($conn,"SELECT u.id FROM users u WHERE u.user_role='pharmacist' AND u.is_active=1");
+    while($pu=mysqli_fetch_assoc($pharmUsers)){
+      notify($conn,$pu['id'],'pharmacist','prescription','New Prescription',"Dr. $drName prescribed $med — pending dispensing.",'prescriptions',$rxid);
+    }
+    // Notify assigned nurse
+    if($nurse_id){
+      notifyNurse($conn, $nurse_id, 'medication', 'New Medication Schedule',
+        "Dr. $drName prescribed $med ($dos, $freq) for ".getPatientNameById($conn,$pat_id).". Added to your medication schedule.", 'medications', $rxid);
+    }
+    ok(['prescription_id'=>$rx_id]);
 
 default:
     fail('Unknown action: '.$action);
