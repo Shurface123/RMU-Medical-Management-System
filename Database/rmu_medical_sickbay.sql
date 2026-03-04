@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 03, 2026 at 03:22 PM
+-- Generation Time: Mar 04, 2026 at 06:36 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -269,9 +269,11 @@ CREATE TABLE IF NOT EXISTS `bed_assignments` (
   `assignment_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `patient_id` int NOT NULL,
   `bed_id` int NOT NULL,
+  `assigned_nurse_id` int DEFAULT NULL,
   `admission_date` datetime NOT NULL,
   `discharge_date` datetime DEFAULT NULL,
   `reason` text COLLATE utf8mb4_unicode_ci,
+  `attending_nurse_notes` text COLLATE utf8mb4_unicode_ci,
   `status` enum('Active','Discharged','Transferred') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -312,6 +314,33 @@ CREATE TABLE IF NOT EXISTS `bed_management` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `bed_transfers`
+--
+
+DROP TABLE IF EXISTS `bed_transfers`;
+CREATE TABLE IF NOT EXISTS `bed_transfers` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `from_bed_id` int DEFAULT NULL,
+  `to_bed_id` int DEFAULT NULL,
+  `from_ward` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `to_ward` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `transfer_reason` text COLLATE utf8mb4_unicode_ci,
+  `transfer_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `authorized_by` int DEFAULT NULL COMMENT 'doctor user_id',
+  `status` enum('Requested','Approved','Completed','Rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'Requested',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_bt_patient` (`patient_id`),
+  KEY `idx_bt_nurse` (`nurse_id`),
+  KEY `idx_bt_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `departments`
 --
 
@@ -346,6 +375,31 @@ INSERT INTO `departments` (`id`, `name`, `description`, `head_doctor_id`, `is_ac
 (11, 'Dental', 'Oral health and dental procedures', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
 (12, 'Pharmacy', 'Medication management', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24'),
 (13, 'Laboratory', 'Diagnostic lab services', NULL, 1, '2026-03-02 09:09:24', '2026-03-02 09:09:24');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `discharge_instructions`
+--
+
+DROP TABLE IF EXISTS `discharge_instructions`;
+CREATE TABLE IF NOT EXISTS `discharge_instructions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `instruction_content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `medication_instructions` text COLLATE utf8mb4_unicode_ci,
+  `follow_up_appointments` text COLLATE utf8mb4_unicode_ci,
+  `warning_signs` text COLLATE utf8mb4_unicode_ci COMMENT 'When to return to hospital',
+  `documents_uploaded` json DEFAULT NULL COMMENT '["discharge_summary.pdf"]',
+  `given_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `patient_acknowledged` tinyint(1) DEFAULT '0',
+  `acknowledged_at` datetime DEFAULT NULL,
+  `witness_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_di_patient` (`patient_id`),
+  KEY `idx_di_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -704,6 +758,34 @@ CREATE TABLE IF NOT EXISTS `email_queue` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `emergency_alerts`
+--
+
+DROP TABLE IF EXISTS `emergency_alerts`;
+CREATE TABLE IF NOT EXISTS `emergency_alerts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `patient_id` int DEFAULT NULL,
+  `alert_type` enum('Code Blue','Rapid Response','Fall','Fire','General Emergency','Security') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `severity` enum('Critical','High','Medium') COLLATE utf8mb4_unicode_ci DEFAULT 'High',
+  `location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Ward/Bed',
+  `message` text COLLATE utf8mb4_unicode_ci,
+  `notified_doctors` json DEFAULT NULL COMMENT '[1,5,12]',
+  `status` enum('Active','Responded','Resolved','False Alarm') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `triggered_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `responded_at` datetime DEFAULT NULL,
+  `resolved_at` datetime DEFAULT NULL,
+  `resolved_by` int DEFAULT NULL COMMENT 'user_id',
+  `resolution_notes` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `idx_ea_nurse` (`nurse_id`),
+  KEY `idx_ea_status` (`status`),
+  KEY `idx_ea_severity` (`severity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `emergency_contacts`
 --
 
@@ -721,6 +803,86 @@ CREATE TABLE IF NOT EXISTS `emergency_contacts` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_ec_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `fluid_balance`
+--
+
+DROP TABLE IF EXISTS `fluid_balance`;
+CREATE TABLE IF NOT EXISTS `fluid_balance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `record_date` date NOT NULL,
+  `total_intake_ml` int DEFAULT '0',
+  `total_output_ml` int DEFAULT '0',
+  `net_balance_ml` int DEFAULT '0' COMMENT 'intake - output',
+  `intake_sources` json DEFAULT NULL COMMENT '{"oral":500,"iv":1000,"blood":0}',
+  `output_sources` json DEFAULT NULL COMMENT '{"urine":800,"vomit":0,"drain":100}',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_fb_patient_date` (`patient_id`,`record_date`),
+  KEY `idx_fb_patient` (`patient_id`),
+  KEY `idx_fb_date` (`record_date`),
+  KEY `fk_fb_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `isolation_records`
+--
+
+DROP TABLE IF EXISTS `isolation_records`;
+CREATE TABLE IF NOT EXISTS `isolation_records` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `isolation_type` enum('Contact','Droplet','Airborne','Protective','Combined') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `precautions` json DEFAULT NULL COMMENT '["gown","gloves","N95","face_shield"]',
+  `doctor_ordered_by` int DEFAULT NULL COMMENT 'doctor user_id',
+  `status` enum('Active','Lifted','Modified') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_iso_patient` (`patient_id`),
+  KEY `idx_iso_status` (`status`),
+  KEY `fk_iso_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `iv_fluid_records`
+--
+
+DROP TABLE IF EXISTS `iv_fluid_records`;
+CREATE TABLE IF NOT EXISTS `iv_fluid_records` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `fluid_type` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Normal Saline, Ringers Lactate, D5W, etc.',
+  `additives` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'e.g. KCl 20mEq',
+  `volume_ordered_ml` int NOT NULL,
+  `volume_infused_ml` int DEFAULT '0',
+  `infusion_rate_ml_hr` decimal(6,1) DEFAULT NULL,
+  `start_time` datetime DEFAULT NULL,
+  `end_time` datetime DEFAULT NULL,
+  `status` enum('Running','Completed','Paused','Stopped','Pending') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `alert_sent` tinyint(1) DEFAULT '0',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_iv_patient` (`patient_id`),
+  KEY `idx_iv_nurse` (`nurse_id`),
+  KEY `idx_iv_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -890,6 +1052,61 @@ CREATE TABLE IF NOT EXISTS `medical_records` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `medication_administration`
+--
+
+DROP TABLE IF EXISTS `medication_administration`;
+CREATE TABLE IF NOT EXISTS `medication_administration` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `prescription_id` int DEFAULT NULL,
+  `prescription_item_id` int DEFAULT NULL,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `medicine_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dosage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `route` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'oral, IV, IM, SC, topical, etc.',
+  `scheduled_time` datetime DEFAULT NULL,
+  `administered_at` datetime DEFAULT NULL,
+  `status` enum('Pending','Administered','Missed','Refused','Held','Late') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `reason_not_given` text COLLATE utf8mb4_unicode_ci COMMENT 'For missed/refused/held',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `verified_by` enum('Barcode','Manual','Double-Check') COLLATE utf8mb4_unicode_ci DEFAULT 'Manual',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_medadmin_patient` (`patient_id`),
+  KEY `idx_medadmin_nurse` (`nurse_id`),
+  KEY `idx_medadmin_status` (`status`),
+  KEY `idx_medadmin_time` (`scheduled_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medication_schedules`
+--
+
+DROP TABLE IF EXISTS `medication_schedules`;
+CREATE TABLE IF NOT EXISTS `medication_schedules` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `prescription_item_id` int DEFAULT NULL,
+  `patient_id` int NOT NULL,
+  `nurse_id_assigned` int DEFAULT NULL,
+  `medicine_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `frequency` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'e.g. TDS, BD, OD, QID',
+  `scheduled_times` json DEFAULT NULL COMMENT '["08:00","14:00","20:00"]',
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` enum('Active','Completed','Cancelled','Paused') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_medsched_patient` (`patient_id`),
+  KEY `idx_medsched_nurse` (`nurse_id_assigned`),
+  KEY `idx_medsched_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `medicines`
 --
 
@@ -972,11 +1189,11 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `notification_id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `user_role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `type` enum('appointment','prescription','test_result','system','reminder','alert') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'system',
   `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_read` tinyint(1) DEFAULT '0',
-  `priority` enum('low','normal','high','urgent') COLLATE utf8mb4_unicode_ci DEFAULT 'normal',
+  `priority` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'normal',
   `action_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `related_module` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `related_id` int DEFAULT NULL,
@@ -987,7 +1204,409 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   KEY `idx_is_read` (`is_read`),
   KEY `idx_type` (`type`),
   KEY `idx_created_at` (`created_at`),
-  KEY `idx_notif_user_read` (`user_id`,`is_read`)
+  KEY `idx_notif_user_read` (`user_id`,`is_read`),
+  KEY `idx_notif_role_type` (`user_role`,`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurses`
+--
+
+DROP TABLE IF EXISTS `nurses`;
+CREATE TABLE IF NOT EXISTS `nurses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `nurse_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Display ID e.g. NRS-001',
+  `full_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` enum('Male','Female','Other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `secondary_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `personal_email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `street_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `region` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Ghana',
+  `postal_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_photo` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_issuing_body` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `license_expiry` date DEFAULT NULL,
+  `specialization` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT 'Nursing',
+  `designation` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'e.g. Head Nurse, Staff Nurse, Charge Nurse',
+  `years_of_experience` int DEFAULT '0',
+  `nursing_school` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `graduation_year` int DEFAULT NULL,
+  `postgrad_training` text COLLATE utf8mb4_unicode_ci,
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `shift_type` enum('Morning','Afternoon','Night') COLLATE utf8mb4_unicode_ci DEFAULT 'Morning',
+  `ward_assigned` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `availability_status` enum('Online','Offline','On Break','In Emergency') COLLATE utf8mb4_unicode_ci DEFAULT 'Offline',
+  `status` enum('Active','Inactive','On Leave','Suspended') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
+  `national_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `marital_status` enum('Single','Married','Divorced','Widowed') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `office_location` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_completion` int DEFAULT '0' COMMENT '0-100 percentage',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `religion` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `member_since` date DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL,
+  `two_fa_enabled` tinyint(1) DEFAULT '0',
+  `shift_preference_notes` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_nurse_user` (`user_id`),
+  UNIQUE KEY `uk_nurse_id` (`nurse_id`),
+  KEY `idx_nurse_status` (`status`),
+  KEY `idx_nurse_dept` (`department`),
+  KEY `idx_nurse_shift` (`shift_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `nurses`
+--
+
+INSERT INTO `nurses` (`id`, `user_id`, `nurse_id`, `full_name`, `date_of_birth`, `gender`, `nationality`, `phone`, `secondary_phone`, `email`, `personal_email`, `address`, `street_address`, `city`, `region`, `country`, `postal_code`, `profile_photo`, `license_number`, `license_issuing_body`, `license_expiry`, `specialization`, `department`, `designation`, `years_of_experience`, `nursing_school`, `graduation_year`, `postgrad_training`, `bio`, `shift_type`, `ward_assigned`, `availability_status`, `status`, `national_id`, `marital_status`, `office_location`, `profile_completion`, `created_at`, `updated_at`, `religion`, `member_since`, `last_login`, `two_fa_enabled`, `shift_preference_notes`) VALUES
+(1, 8, 'NRS-001', 'Test Nurse', NULL, NULL, NULL, '0201234567', NULL, 'nurse@rmu.edu.gh', NULL, NULL, NULL, NULL, NULL, 'Ghana', NULL, NULL, NULL, NULL, NULL, NULL, 'Nursing', 'Staff Nurse', 0, NULL, NULL, NULL, NULL, 'Morning', NULL, 'Offline', 'Active', NULL, NULL, NULL, 0, '2026-03-03 15:38:33', '2026-03-03 15:38:33', NULL, NULL, NULL, 0, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_activity_log`
+--
+
+DROP TABLE IF EXISTS `nurse_activity_log`;
+CREATE TABLE IF NOT EXISTS `nurse_activity_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `action_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'login, update, create, delete, etc.',
+  `action_description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_nal_nurse` (`nurse_id`),
+  KEY `idx_nal_time` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_certifications`
+--
+
+DROP TABLE IF EXISTS `nurse_certifications`;
+CREATE TABLE IF NOT EXISTS `nurse_certifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `cert_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `issuing_body` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `issue_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `cert_file_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `certificate_file` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_nc_nurse` (`nurse_id`),
+  KEY `idx_nc_expiry` (`expiry_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_doctor_messages`
+--
+
+DROP TABLE IF EXISTS `nurse_doctor_messages`;
+CREATE TABLE IF NOT EXISTS `nurse_doctor_messages` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `sender_id` int NOT NULL COMMENT 'user_id',
+  `sender_role` enum('Nurse','Doctor','Admin') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `receiver_id` int NOT NULL COMMENT 'user_id',
+  `receiver_role` enum('Nurse','Doctor','Admin') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `patient_id` int DEFAULT NULL COMMENT 'Optional context',
+  `subject` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `message_content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_read` tinyint(1) DEFAULT '0',
+  `is_urgent` tinyint(1) DEFAULT '0',
+  `sent_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `read_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_msg_sender` (`sender_id`),
+  KEY `idx_msg_receiver` (`receiver_id`),
+  KEY `idx_msg_read` (`is_read`),
+  KEY `idx_msg_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_documents`
+--
+
+DROP TABLE IF EXISTS `nurse_documents`;
+CREATE TABLE IF NOT EXISTS `nurse_documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `file_name` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_size` int DEFAULT NULL COMMENT 'bytes',
+  `description` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_nd_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_notifications`
+--
+
+DROP TABLE IF EXISTS `nurse_notifications`;
+CREATE TABLE IF NOT EXISTS `nurse_notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('Task','Vital Alert','Medication Reminder','Emergency','Doctor Message','Shift','System','Patient Update') COLLATE utf8mb4_unicode_ci DEFAULT 'System',
+  `is_read` tinyint(1) DEFAULT '0',
+  `related_module` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'vitals, tasks, medications, etc.',
+  `related_id` int DEFAULT NULL COMMENT 'ID in the related module',
+  `action_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_nn_nurse` (`nurse_id`),
+  KEY `idx_nn_read` (`is_read`),
+  KEY `idx_nn_type` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_professional_profile`
+--
+
+DROP TABLE IF EXISTS `nurse_professional_profile`;
+CREATE TABLE IF NOT EXISTS `nurse_professional_profile` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `specialization` varchar(100) DEFAULT NULL,
+  `sub_specialization` varchar(200) DEFAULT NULL,
+  `department_id` int DEFAULT NULL,
+  `designation` varchar(100) DEFAULT 'Staff Nurse',
+  `years_of_experience` int DEFAULT '0',
+  `license_number` varchar(100) DEFAULT NULL,
+  `license_issuing_body` varchar(200) DEFAULT NULL,
+  `license_expiry_date` date DEFAULT NULL,
+  `nursing_school` varchar(200) DEFAULT NULL,
+  `graduation_year` int DEFAULT NULL,
+  `postgraduate_details` text,
+  `languages_spoken` json DEFAULT NULL,
+  `bio` text,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_nurse_prof` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_profile_completeness`
+--
+
+DROP TABLE IF EXISTS `nurse_profile_completeness`;
+CREATE TABLE IF NOT EXISTS `nurse_profile_completeness` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `personal_info` tinyint(1) DEFAULT '0',
+  `professional_profile` tinyint(1) DEFAULT '0',
+  `qualifications` tinyint(1) DEFAULT '0',
+  `documents_uploaded` tinyint(1) DEFAULT '0',
+  `photo_uploaded` tinyint(1) DEFAULT '0',
+  `security_setup` tinyint(1) DEFAULT '0',
+  `overall_pct` int DEFAULT '0',
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_npc_nurse` (`nurse_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `nurse_profile_completeness`
+--
+
+INSERT INTO `nurse_profile_completeness` (`id`, `nurse_id`, `personal_info`, `professional_profile`, `qualifications`, `documents_uploaded`, `photo_uploaded`, `security_setup`, `overall_pct`, `last_updated`) VALUES
+(1, 1, 0, 0, 0, 0, 0, 0, 0, '2026-03-03 15:38:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_qualifications`
+--
+
+DROP TABLE IF EXISTS `nurse_qualifications`;
+CREATE TABLE IF NOT EXISTS `nurse_qualifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `degree_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `institution` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `year_awarded` int DEFAULT NULL,
+  `cert_file_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `certificate_file` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_nq_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_sessions`
+--
+
+DROP TABLE IF EXISTS `nurse_sessions`;
+CREATE TABLE IF NOT EXISTS `nurse_sessions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `device_info` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `browser` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `login_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `last_active` datetime DEFAULT CURRENT_TIMESTAMP,
+  `is_current` tinyint(1) DEFAULT '1',
+  `session_id` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_nsess_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_settings`
+--
+
+DROP TABLE IF EXISTS `nurse_settings`;
+CREATE TABLE IF NOT EXISTS `nurse_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `notification_preferences` json DEFAULT NULL COMMENT '{"tasks":true,"vitals":true,"meds":true,"emergency":true}',
+  `theme_preference` enum('light','dark') COLLATE utf8mb4_unicode_ci DEFAULT 'light',
+  `language` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'English',
+  `alert_sound_enabled` tinyint(1) DEFAULT '1',
+  `auto_refresh_interval` int DEFAULT '30' COMMENT 'seconds',
+  `preferred_channel` enum('dashboard','email','sms','all') COLLATE utf8mb4_unicode_ci DEFAULT 'dashboard',
+  `notif_new_task` tinyint(1) DEFAULT '1',
+  `notif_vital_alert` tinyint(1) DEFAULT '1',
+  `notif_medication` tinyint(1) DEFAULT '1',
+  `notif_emergency` tinyint(1) DEFAULT '1',
+  `notif_doctor_msg` tinyint(1) DEFAULT '1',
+  `notif_shift_change` tinyint(1) DEFAULT '1',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `notif_task_overdue` tinyint(1) DEFAULT '1',
+  `notif_med_reminder` tinyint(1) DEFAULT '1',
+  `notif_vital_due` tinyint(1) DEFAULT '1',
+  `notif_abnormal_vital` tinyint(1) DEFAULT '1',
+  `notif_shift_reminder` tinyint(1) DEFAULT '1',
+  `notif_handover` tinyint(1) DEFAULT '1',
+  `notif_cert_expiry` tinyint(1) DEFAULT '1',
+  `notif_system` tinyint(1) DEFAULT '1',
+  `preferred_notif_lang` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'en',
+  `critical_sound_enabled` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ns_nurse` (`nurse_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `nurse_settings`
+--
+
+INSERT INTO `nurse_settings` (`id`, `nurse_id`, `notification_preferences`, `theme_preference`, `language`, `alert_sound_enabled`, `auto_refresh_interval`, `preferred_channel`, `notif_new_task`, `notif_vital_alert`, `notif_medication`, `notif_emergency`, `notif_doctor_msg`, `notif_shift_change`, `updated_at`, `notif_task_overdue`, `notif_med_reminder`, `notif_vital_due`, `notif_abnormal_vital`, `notif_shift_reminder`, `notif_handover`, `notif_cert_expiry`, `notif_system`, `preferred_notif_lang`, `critical_sound_enabled`) VALUES
+(1, 1, NULL, 'light', 'English', 1, 30, 'dashboard', 1, 1, 1, 1, 1, 1, '2026-03-03 15:38:33', 1, 1, 1, 1, 1, 1, 1, 1, 'en', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_shifts`
+--
+
+DROP TABLE IF EXISTS `nurse_shifts`;
+CREATE TABLE IF NOT EXISTS `nurse_shifts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `shift_type` enum('Morning','Afternoon','Night') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `shift_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `ward_assigned` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Scheduled','Active','Completed','Missed','Swapped') COLLATE utf8mb4_unicode_ci DEFAULT 'Scheduled',
+  `handover_submitted` tinyint(1) DEFAULT '0',
+  `check_in_time` datetime DEFAULT NULL,
+  `check_out_time` datetime DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_shift_nurse` (`nurse_id`),
+  KEY `idx_shift_date` (`shift_date`),
+  KEY `idx_shift_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nurse_tasks`
+--
+
+DROP TABLE IF EXISTS `nurse_tasks`;
+CREATE TABLE IF NOT EXISTS `nurse_tasks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `assigned_by` int NOT NULL COMMENT 'user_id of doctor or admin',
+  `assigned_by_role` enum('Doctor','Admin','Nurse') COLLATE utf8mb4_unicode_ci DEFAULT 'Doctor',
+  `patient_id` int DEFAULT NULL,
+  `task_title` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `task_description` text COLLATE utf8mb4_unicode_ci,
+  `priority` enum('Low','Medium','High','Urgent') COLLATE utf8mb4_unicode_ci DEFAULT 'Medium',
+  `due_time` datetime DEFAULT NULL,
+  `status` enum('Pending','In Progress','Completed','Overdue','Cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
+  `completion_notes` text COLLATE utf8mb4_unicode_ci,
+  `completed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_task_nurse` (`nurse_id`),
+  KEY `idx_task_status` (`status`),
+  KEY `idx_task_priority` (`priority`),
+  KEY `idx_task_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `nursing_notes`
+--
+
+DROP TABLE IF EXISTS `nursing_notes`;
+CREATE TABLE IF NOT EXISTS `nursing_notes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nurse_id` int NOT NULL,
+  `patient_id` int NOT NULL,
+  `shift_id` int DEFAULT NULL,
+  `note_type` enum('General','Observation','Wound','Behavior','Incident','Handoff','Pain','Assessment') COLLATE utf8mb4_unicode_ci DEFAULT 'General',
+  `note_content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attachments` json DEFAULT NULL COMMENT '[{"file":"path","name":"filename"}]',
+  `is_locked` tinyint(1) DEFAULT '0' COMMENT 'Locked after shift ends',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `locked_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_note_nurse` (`nurse_id`),
+  KEY `idx_note_patient` (`patient_id`),
+  KEY `idx_note_shift` (`shift_id`),
+  KEY `idx_note_type` (`note_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1105,6 +1724,31 @@ CREATE TABLE IF NOT EXISTS `patient_documents` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `patient_education`
+--
+
+DROP TABLE IF EXISTS `patient_education`;
+CREATE TABLE IF NOT EXISTS `patient_education` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `education_topic` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Medication, Diet, Wound Care, Exercise, Disease Management',
+  `method` enum('Verbal','Written','Demonstration','Video','Combination') COLLATE utf8mb4_unicode_ci DEFAULT 'Verbal',
+  `materials_provided` json DEFAULT NULL COMMENT '["pamphlet.pdf","video_link"]',
+  `understanding_level` enum('Good','Fair','Poor') COLLATE utf8mb4_unicode_ci DEFAULT 'Good',
+  `requires_follow_up` tinyint(1) DEFAULT '0',
+  `follow_up_date` date DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `recorded_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_edu_patient` (`patient_id`),
+  KEY `idx_edu_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `patient_insurance`
 --
 
@@ -1216,6 +1860,41 @@ CREATE TABLE IF NOT EXISTS `patient_settings` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_ps_patient` (`patient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_vitals`
+--
+
+DROP TABLE IF EXISTS `patient_vitals`;
+CREATE TABLE IF NOT EXISTS `patient_vitals` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `recorded_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `bp_systolic` int DEFAULT NULL COMMENT 'mmHg',
+  `bp_diastolic` int DEFAULT NULL COMMENT 'mmHg',
+  `pulse_rate` int DEFAULT NULL COMMENT 'bpm',
+  `temperature` decimal(4,1) DEFAULT NULL COMMENT '??C',
+  `oxygen_saturation` int DEFAULT NULL COMMENT 'SpO2 %',
+  `respiratory_rate` int DEFAULT NULL COMMENT 'breaths/min',
+  `blood_glucose` decimal(5,1) DEFAULT NULL COMMENT 'mg/dL',
+  `weight` decimal(5,1) DEFAULT NULL COMMENT 'kg',
+  `height` decimal(5,1) DEFAULT NULL COMMENT 'cm',
+  `bmi` decimal(4,1) DEFAULT NULL COMMENT 'Auto-calculated: weight/(height/100)^2',
+  `pain_level` int DEFAULT NULL COMMENT '0-10 scale',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `is_flagged` tinyint(1) DEFAULT '0',
+  `flag_reason` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `doctor_notified` tinyint(1) DEFAULT '0',
+  `doctor_notified_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_vital_patient` (`patient_id`),
+  KEY `idx_vital_nurse` (`nurse_id`),
+  KEY `idx_vital_time` (`recorded_at`),
+  KEY `idx_vital_flagged` (`is_flagged`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1718,6 +2397,32 @@ INSERT INTO `services` (`id`, `service_id`, `service_name`, `description`, `cate
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `shift_handover`
+--
+
+DROP TABLE IF EXISTS `shift_handover`;
+CREATE TABLE IF NOT EXISTS `shift_handover` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `outgoing_nurse_id` int NOT NULL,
+  `incoming_nurse_id` int DEFAULT NULL,
+  `shift_id` int DEFAULT NULL,
+  `ward` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `patient_summaries` json DEFAULT NULL COMMENT '[{"patient_id":1,"name":"...","status":"...","notes":"..."}]',
+  `pending_tasks` json DEFAULT NULL COMMENT '[{"task":"...","priority":"High","patient":"..."}]',
+  `critical_patients_noted` text COLLATE utf8mb4_unicode_ci,
+  `handover_notes` text COLLATE utf8mb4_unicode_ci,
+  `submitted_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `acknowledged` tinyint(1) DEFAULT '0',
+  `acknowledged_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_ho_outgoing` (`outgoing_nurse_id`),
+  KEY `idx_ho_incoming` (`incoming_nurse_id`),
+  KEY `idx_ho_shift` (`shift_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sms_queue`
 --
 
@@ -2012,7 +2717,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `user_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_role` enum('admin','doctor','patient','staff','pharmacist') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'patient',
+  `user_role` enum('admin','doctor','patient','staff','pharmacist','nurse') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'patient',
   `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
@@ -2029,7 +2734,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `idx_username` (`user_name`),
   KEY `idx_email` (`email`),
   KEY `idx_role` (`user_role`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
@@ -2040,7 +2745,8 @@ INSERT INTO `users` (`id`, `user_name`, `email`, `password`, `user_role`, `name`
 (4, 'LJ', 'lovelace.baidoo@st.rmu.edu.gh', '$2y$10$o1PxWO6siYsmVuWdtLgpEOaijwF.wbWK4hmaNV3cGprmUNR7It5.O', 'patient', 'Lovelace John Kwaku Baidoo', '0257669095', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:01:51', '2026-02-27 03:16:10', '2026-02-27 03:16:10', NULL),
 (5, 'EC', '', '$2y$10$V/IRP.0WWfBfOOxCHPO2u.ahsW/jBO8OTSg3OOrvMMHboZzor47KG', 'doctor', 'EC', '', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:18:53', '2026-03-01 14:25:44', '2026-03-01 14:04:20', NULL),
 (6, 'Neils', 'nelly.nartey@st.rmu.edu.gh', '$2y$10$HnDpNL4Ct61jF96vrWCaDe0EdcM67C.jlWhZAtw66PY42a/.YLEs.', 'pharmacist', 'Nelly Nartey', '0501234567', NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:25:39', '2026-02-06 07:26:46', '2026-02-06 07:26:46', NULL),
-(7, 'Naa', 'es-anadjei@st.umat.edu.gh', '$2y$10$BiJxGbxJ/3VccsXMzCN2Fe.1Y8Wg/HLiJ.ci/RhXI7qbV7kqllAHa', 'pharmacist', 'Adjei Adelaide Naa Adjeley', '0507333138', NULL, 'default-avatar.png', 1, 0, '2026-02-15 09:36:42', '2026-02-27 03:52:28', '2026-02-27 03:52:28', NULL);
+(7, 'Naa', 'es-anadjei@st.umat.edu.gh', '$2y$10$BiJxGbxJ/3VccsXMzCN2Fe.1Y8Wg/HLiJ.ci/RhXI7qbV7kqllAHa', 'pharmacist', 'Adjei Adelaide Naa Adjeley', '0507333138', NULL, 'default-avatar.png', 1, 0, '2026-02-15 09:36:42', '2026-03-03 15:24:26', '2026-03-03 15:24:26', NULL),
+(8, 'nurse_test', 'nurse@rmu.edu.gh', '$2y$12$LJ3m5bHpXQ8e9Y1f8g5vGuQzW7RjE5cUvNjGfkeT8x5QfPAcjDSmK', 'nurse', 'Test Nurse', '0201234567', NULL, 'default-avatar.png', 1, 1, '2026-03-03 15:38:33', '2026-03-03 15:38:33', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2095,6 +2801,7 @@ INSERT INTO `user_sessions` (`session_id`, `user_id`, `user_role`, `login_time`,
 ('5e99d750ef74c9c6f94a30b1a376b67194793da9f370ff5e3e1de8a8cfa85943', 7, 'pharmacist', '2026-02-16 17:19:13', '2026-02-16 17:19:13', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-02-16 17:19:49'),
 ('6456cb7302273c1eb5a91b7a0d8d5833c3b17a315d38104d9b9831f18542f700', 1, 'admin', '2026-02-15 16:05:18', '2026-02-15 16:05:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 05:49:20'),
 ('772e55af4245051f3f2cd5f517ef06ba9c52591eb71103a6d6aafca4723a2a74', 5, 'doctor', '2026-03-01 14:04:20', '2026-03-01 14:04:20', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-01 14:27:26'),
+('8bea170e89c8aa735b73f6ccb1e94127c5ba8761b87755264e1047d9bc867ec0', 7, 'pharmacist', '2026-03-03 15:24:26', '2026-03-03 15:24:26', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-03 15:27:14'),
 ('8f0de9567c4e2a55ee9e488492c25dde14bb7c796013b5c68ff166ba7a66e960', 5, 'doctor', '2026-02-06 07:20:57', '2026-02-06 07:20:57', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-07 04:07:26'),
 ('91d61c73b07a82de220db4ac646e585e1b5d8c066fa30401ee9bb3f10f15eb30', 5, 'doctor', '2026-02-16 05:48:40', '2026-02-16 05:48:40', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 05:48:53'),
 ('971cb21a48dfc78e8c727f39756d6b89603f430978d66e1ee79cbb25c59625ac', 1, 'admin', '2026-02-14 03:15:40', '2026-02-14 03:15:40', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-14 03:24:15'),
@@ -2114,6 +2821,67 @@ INSERT INTO `user_sessions` (`session_id`, `user_id`, `user_role`, `login_time`,
 ('edc047d377517973c5c11c98c3c3d137db6d5d54855c4de5872091d557e60ccf', 7, 'pharmacist', '2026-02-15 09:37:23', '2026-02-15 09:48:17', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-15 09:49:36'),
 ('f77a890405ca0a2bae5b4385eb5520448db99b7eb92180dfeef54295efb3ace9', 4, 'patient', '2026-02-16 07:52:19', '2026-02-16 07:52:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 07:52:45'),
 ('fd4e7cbc858b9864d30d891344e2aebfba705f74358de131bfe52216649aa438', 7, 'pharmacist', '2026-02-19 12:52:01', '2026-02-19 12:52:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-02-19 12:55:24');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `vital_thresholds`
+--
+
+DROP TABLE IF EXISTS `vital_thresholds`;
+CREATE TABLE IF NOT EXISTS `vital_thresholds` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `vital_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'bp_systolic, bp_diastolic, pulse_rate, temperature, etc.',
+  `min_normal` decimal(6,1) NOT NULL,
+  `max_normal` decimal(6,1) NOT NULL,
+  `critical_low` decimal(6,1) DEFAULT NULL,
+  `critical_high` decimal(6,1) DEFAULT NULL,
+  `unit` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_by` int DEFAULT NULL COMMENT 'user_id of admin/doctor',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_vital_type` (`vital_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `vital_thresholds`
+--
+
+INSERT INTO `vital_thresholds` (`id`, `vital_type`, `min_normal`, `max_normal`, `critical_low`, `critical_high`, `unit`, `updated_by`, `updated_at`) VALUES
+(1, 'bp_systolic', 90.0, 140.0, 70.0, 180.0, 'mmHg', NULL, '2026-03-03 15:37:43'),
+(2, 'bp_diastolic', 60.0, 90.0, 40.0, 120.0, 'mmHg', NULL, '2026-03-03 15:37:43'),
+(3, 'pulse_rate', 60.0, 100.0, 40.0, 150.0, 'bpm', NULL, '2026-03-03 15:37:43'),
+(4, 'temperature', 36.1, 37.2, 35.0, 39.5, '°C', NULL, '2026-03-04 05:56:06'),
+(5, 'oxygen_saturation', 95.0, 100.0, 90.0, 100.0, '%', NULL, '2026-03-03 15:37:43'),
+(6, 'respiratory_rate', 12.0, 20.0, 8.0, 30.0, 'breaths/min', NULL, '2026-03-03 15:37:43'),
+(7, 'blood_glucose', 70.0, 140.0, 50.0, 400.0, 'mg/dL', NULL, '2026-03-03 15:37:43'),
+(8, 'pain_level', 0.0, 3.0, 0.0, 8.0, 'scale 0-10', NULL, '2026-03-03 15:37:43');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `wound_care_records`
+--
+
+DROP TABLE IF EXISTS `wound_care_records`;
+CREATE TABLE IF NOT EXISTS `wound_care_records` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `patient_id` int NOT NULL,
+  `nurse_id` int NOT NULL,
+  `wound_location` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `wound_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'surgical, pressure, laceration, burn, etc.',
+  `wound_description` text COLLATE utf8mb4_unicode_ci,
+  `wound_images` json DEFAULT NULL COMMENT '["path1.jpg","path2.jpg"]',
+  `wound_size_cm` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'LxWxD',
+  `care_provided` text COLLATE utf8mb4_unicode_ci,
+  `dressing_type` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `next_care_due` datetime DEFAULT NULL,
+  `healing_status` enum('Improving','Stable','Worsening','Healed') COLLATE utf8mb4_unicode_ci DEFAULT 'Stable',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_wound_patient` (`patient_id`),
+  KEY `idx_wound_nurse` (`nurse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2192,6 +2960,12 @@ ALTER TABLE `bed_assignments`
   ADD CONSTRAINT `bed_assignments_ibfk_2` FOREIGN KEY (`bed_id`) REFERENCES `beds` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `discharge_instructions`
+--
+ALTER TABLE `discharge_instructions`
+  ADD CONSTRAINT `fk_di_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `doctors`
 --
 ALTER TABLE `doctors`
@@ -2265,10 +3039,34 @@ ALTER TABLE `doctor_settings`
   ADD CONSTRAINT `fk_dst_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `emergency_alerts`
+--
+ALTER TABLE `emergency_alerts`
+  ADD CONSTRAINT `fk_ea_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `emergency_contacts`
 --
 ALTER TABLE `emergency_contacts`
   ADD CONSTRAINT `fk_ec_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `fluid_balance`
+--
+ALTER TABLE `fluid_balance`
+  ADD CONSTRAINT `fk_fb_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `isolation_records`
+--
+ALTER TABLE `isolation_records`
+  ADD CONSTRAINT `fk_iso_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `iv_fluid_records`
+--
+ALTER TABLE `iv_fluid_records`
+  ADD CONSTRAINT `fk_iv_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `lab_results`
@@ -2299,10 +3097,94 @@ ALTER TABLE `medical_records`
   ADD CONSTRAINT `medical_records_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `medication_administration`
+--
+ALTER TABLE `medication_administration`
+  ADD CONSTRAINT `fk_medadmin_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `notifications`
 --
 ALTER TABLE `notifications`
   ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurses`
+--
+ALTER TABLE `nurses`
+  ADD CONSTRAINT `fk_nurse_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_activity_log`
+--
+ALTER TABLE `nurse_activity_log`
+  ADD CONSTRAINT `fk_nal_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_certifications`
+--
+ALTER TABLE `nurse_certifications`
+  ADD CONSTRAINT `fk_nc_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_documents`
+--
+ALTER TABLE `nurse_documents`
+  ADD CONSTRAINT `fk_nd_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_notifications`
+--
+ALTER TABLE `nurse_notifications`
+  ADD CONSTRAINT `fk_nn_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_professional_profile`
+--
+ALTER TABLE `nurse_professional_profile`
+  ADD CONSTRAINT `nurse_professional_profile_ibfk_1` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_profile_completeness`
+--
+ALTER TABLE `nurse_profile_completeness`
+  ADD CONSTRAINT `fk_npc_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_qualifications`
+--
+ALTER TABLE `nurse_qualifications`
+  ADD CONSTRAINT `fk_nq_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_sessions`
+--
+ALTER TABLE `nurse_sessions`
+  ADD CONSTRAINT `fk_nsess_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_settings`
+--
+ALTER TABLE `nurse_settings`
+  ADD CONSTRAINT `fk_ns_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_shifts`
+--
+ALTER TABLE `nurse_shifts`
+  ADD CONSTRAINT `fk_shift_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nurse_tasks`
+--
+ALTER TABLE `nurse_tasks`
+  ADD CONSTRAINT `fk_task_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `nursing_notes`
+--
+ALTER TABLE `nursing_notes`
+  ADD CONSTRAINT `fk_note_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `password_history`
@@ -2327,6 +3209,12 @@ ALTER TABLE `patient_activity_log`
 --
 ALTER TABLE `patient_documents`
   ADD CONSTRAINT `patient_documents_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_education`
+--
+ALTER TABLE `patient_education`
+  ADD CONSTRAINT `fk_edu_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `patient_insurance`
@@ -2357,6 +3245,12 @@ ALTER TABLE `patient_sessions`
 --
 ALTER TABLE `patient_settings`
   ADD CONSTRAINT `fk_ps_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_vitals`
+--
+ALTER TABLE `patient_vitals`
+  ADD CONSTRAINT `fk_vital_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `payments`
@@ -2395,6 +3289,12 @@ ALTER TABLE `prescription_refills`
   ADD CONSTRAINT `fk_refills_prescription` FOREIGN KEY (`prescription_id`) REFERENCES `prescriptions` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `shift_handover`
+--
+ALTER TABLE `shift_handover`
+  ADD CONSTRAINT `fk_ho_outgoing` FOREIGN KEY (`outgoing_nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `staff`
 --
 ALTER TABLE `staff`
@@ -2417,6 +3317,12 @@ ALTER TABLE `two_factor_auth`
 --
 ALTER TABLE `user_sessions`
   ADD CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `wound_care_records`
+--
+ALTER TABLE `wound_care_records`
+  ADD CONSTRAINT `fk_wound_nurse` FOREIGN KEY (`nurse_id`) REFERENCES `nurses` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
