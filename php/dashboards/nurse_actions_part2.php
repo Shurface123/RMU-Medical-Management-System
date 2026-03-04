@@ -16,6 +16,10 @@ case 'start_iv':
   if(!$pid||!$type||!$vol){$response=['success'=>false,'message'=>'Patient, fluid type and volume required'];break;}
   dbInsert($conn,"INSERT INTO iv_fluid_records (patient_id,nurse_id,fluid_type,volume_ordered,volume_infused,infusion_rate,status,start_time,notes,created_at) VALUES (?,?,?,?,0,?,'Running',NOW(),?,NOW())","iisdds",[$pid,$nurse_pk,$type,$vol,$rate,$notes]);
   logNurseActivity($conn,$nurse_pk,'iv_started','Started '.$type.' IV for patient #'.$pid);
+  // ── Security: Rate limit IV starts ──
+  if(!rateLimitAction($conn, $nurse_pk, 'iv_started', 20)){
+    $response=['success'=>false,'message'=>'Rate limit exceeded for IV starts. Please wait.'];break;
+  }
   $response=['success'=>true,'message'=>'IV fluid started'];
   break;
 
@@ -203,24 +207,32 @@ case 'change_password':
   $new = $_POST['new_password']??'';
   $user = dbRow($conn,"SELECT password FROM users WHERE id=?","i",[$user_id]);
   if(!password_verify($cur,$user['password'])){$response=['success'=>false,'message'=>'Current password is incorrect'];break;}
+  // ── Security: Password strength enforcement ──
+  $pwErrors = enforcePasswordStrength($new);
+  if(!empty($pwErrors)){$response=['success'=>false,'message'=>'Password must contain: '.implode(', ',$pwErrors)];break;}
   $hash = password_hash($new,PASSWORD_DEFAULT);
   dbExecute($conn,"UPDATE users SET password=? WHERE id=?","si",[$hash,$user_id]);
   logNurseActivity($conn,$nurse_pk,'password_changed','Changed account password');
+  // ── Security: Notify admins of password change ──
+  $nName = getNurseName($conn, $nurse_pk);
+  notifyAllAdmins($conn, 'system', 'Nurse Password Changed', "Nurse $nName changed their account password.", 'security');
   $response=['success'=>true,'message'=>'Password changed successfully'];
   break;
 
 case 'upload_profile_photo':
   if(!isset($_FILES['photo'])){$response=['success'=>false,'message'=>'No file uploaded'];break;}
+  // ── Security: Use validateUpload for MIME verification + PHP injection scan ──
+  $upVal = validateUpload($_FILES['photo'], ['image/jpeg','image/png'], 5*1024*1024);
+  if(!$upVal['valid']){$response=['success'=>false,'message'=>$upVal['error']];break;}
   $file=$_FILES['photo'];
   $ext=strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
-  if(!in_array($ext,['jpg','jpeg','png'])){$response=['success'=>false,'message'=>'Only JPG/PNG allowed'];break;}
-  if($file['size']>5*1024*1024){$response=['success'=>false,'message'=>'File too large (max 5MB)'];break;}
   $fn='uploads/nurses/photo_'.$nurse_pk.'_'.time().'.'.$ext;
   $dest=$_SERVER['DOCUMENT_ROOT'].'/RMU-Medical-Management-System/'.$fn;
   @mkdir(dirname($dest),0755,true);
   if(move_uploaded_file($file['tmp_name'],$dest)){
     dbExecute($conn,"UPDATE nurses SET profile_photo=? WHERE id=?","si",[$fn,$nurse_pk]);
     dbExecute($conn,"UPDATE users SET profile_image=? WHERE id=?","si",[$fn,$user_id]);
+    logNurseActivity($conn,$nurse_pk,'photo_upload','Updated profile photo');
     $response=['success'=>true,'message'=>'Photo updated'];
   } else $response=['success'=>false,'message'=>'Upload failed'];
   break;
@@ -254,23 +266,33 @@ case 'delete_certification':
 
 case 'upload_document':
   if(!isset($_FILES['file'])){$response=['success'=>false,'message'=>'No file'];break;}
+  // ── Security: Use validateUpload for MIME verification + PHP injection scan ──
+  $allowedDoc = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/jpeg','image/png'];
+  $upVal2 = validateUpload($_FILES['file'], $allowedDoc, 10*1024*1024);
+  if(!$upVal2['valid']){$response=['success'=>false,'message'=>$upVal2['error']];break;}
   $file=$_FILES['file'];
   $ext=strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
-  if(!in_array($ext,['pdf','doc','docx','jpg','jpeg','png'])){$response=['success'=>false,'message'=>'Invalid file type'];break;}
   $fn='uploads/nurses/docs/'.$nurse_pk.'_'.time().'.'.$ext;
   $dest=$_SERVER['DOCUMENT_ROOT'].'/RMU-Medical-Management-System/'.$fn;
   @mkdir(dirname($dest),0755,true);
   if(move_uploaded_file($file['tmp_name'],$dest)){
     dbInsert($conn,"INSERT INTO nurse_documents (nurse_id,document_type,document_name,file_path,file_size,uploaded_at) VALUES (?,?,?,?,?,NOW())","isssi",[$nurse_pk,sanitize($_POST['document_type']??'Other'),sanitize($_POST['document_name']??$file['name']),$fn,$file['size']]);
+    logNurseActivity($conn,$nurse_pk,'doc_upload','Uploaded document: '.sanitize($_POST['document_name']??$file['name']));
     $response=['success'=>true,'message'=>'Document uploaded'];
   } else $response=['success'=>false,'message'=>'Upload failed'];
   break;
 
 case 'delete_document':
-  $doc=dbRow($conn,"SELECT file_path FROM nurse_documents WHERE id=? AND nurse_id=?","ii",[(int)$_POST['doc_id'],$nurse_pk]);
+  $docId = (int)$_POST['doc_id'];
+  // ── Security: Verify ownership before deletion ──
+  if(!validateNurseOwnership($conn, 'nurse_documents', $docId, $nurse_pk)){
+    $response=['success'=>false,'message'=>'Access denied'];break;
+  }
+  $doc=dbRow($conn,"SELECT file_path FROM nurse_documents WHERE id=? AND nurse_id=?","ii",[$docId,$nurse_pk]);
   if($doc){
     @unlink($_SERVER['DOCUMENT_ROOT'].'/RMU-Medical-Management-System/'.$doc['file_path']);
-    dbExecute($conn,"DELETE FROM nurse_documents WHERE id=? AND nurse_id=?","ii",[(int)$_POST['doc_id'],$nurse_pk]);
+    dbExecute($conn,"DELETE FROM nurse_documents WHERE id=? AND nurse_id=?","ii",[$docId,$nurse_pk]);
+    logNurseActivity($conn,$nurse_pk,'doc_delete','Deleted document #'.$docId);
   }
   $response=['success'=>true,'message'=>'Document deleted'];
   break;
@@ -339,6 +361,148 @@ case 'request_account_deletion':
   notifyAllAdmins($conn, 'system', 'Account Deletion Request',
     "Nurse $nName has requested account deletion. Please review.", 'staff');
   $response=['success'=>true,'message'=>'Account deletion request submitted to administrator'];
+  break;
+
+/* ═══════════════════════════════════════════════════════════
+   MODULE 15: ADVANCED NURSE PROFILE ACTIONS
+   ═══════════════════════════════════════════════════════════ */
+
+case 'update_personal_info':
+  $fields = ['full_name','date_of_birth','gender','nationality','marital_status','religion','national_id',
+    'phone','secondary_phone','email','personal_email','office_location',
+    'street_address','city','region','country','postal_code'];
+  $sets=[]; $vals=[]; $types='';
+  foreach($fields as $f){
+    if(isset($_POST[$f])){
+      $sets[]="$f=?"; $vals[]=sanitize($_POST[$f]); $types.='s';
+    }
+  }
+  if(!empty($sets)){
+    $vals[]=$nurse_pk; $types.='i';
+    dbExecute($conn,"UPDATE nurses SET ".implode(',',$sets)." WHERE id=?",$types,$vals);
+    logNurseActivity($conn,$nurse_pk,'profile_update','Updated personal information');
+    // Update completeness
+    $hasName = !empty($_POST['full_name']); $hasPhone = !empty($_POST['phone']); $hasEmail = !empty($_POST['email']);
+    if($hasName && $hasPhone && $hasEmail){
+      dbExecute($conn,"INSERT INTO nurse_profile_completeness (nurse_id,personal_info) VALUES (?,1) ON DUPLICATE KEY UPDATE personal_info=1","i",[$nurse_pk]);
+    }
+  }
+  $response=['success'=>true,'message'=>'Personal information updated'];
+  break;
+
+case 'update_professional_profile':
+  $flds = ['specialization','sub_specialization','department_id','designation','years_of_experience',
+    'license_number','license_issuing_body','license_expiry_date','nursing_school',
+    'graduation_year','postgraduate_details','bio'];
+  $data = [];
+  foreach($flds as $f) $data[$f] = sanitize($_POST[$f] ?? '');
+  // Handle languages as JSON
+  $langs = $_POST['languages_spoken'] ?? '';
+  if(is_array($langs)) $data['languages_spoken'] = json_encode($langs);
+  else $data['languages_spoken'] = json_encode(array_filter(array_map('trim',explode(',',$langs))));
+  $data['nurse_id'] = $nurse_pk;
+  // Upsert into nurse_professional_profile
+  $cols = array_keys($data); $placeholders = array_fill(0,count($data),'?');
+  $updates = array_map(fn($c)=>"$c=VALUES($c)", $cols);
+  $sql = "INSERT INTO nurse_professional_profile (".implode(',',$cols).") VALUES (".implode(',',$placeholders).") ON DUPLICATE KEY UPDATE ".implode(',',$updates);
+  $t = str_repeat('s',count($data)-1).'i'; // all strings except nurse_id
+  // Fix types for int fields
+  $t = ''; foreach($cols as $c){ $t .= in_array($c,['nurse_id','department_id','years_of_experience','graduation_year'])?'i':'s'; }
+  dbExecute($conn,$sql,$t,array_values($data));
+  // Also update nurses table for key fields
+  dbExecute($conn,"UPDATE nurses SET specialization=?,designation=?,years_of_experience=?,license_number=?,license_expiry=? WHERE id=?",
+    "ssissi",[$data['specialization'],$data['designation'],(int)$data['years_of_experience'],$data['license_number'],$data['license_expiry_date'],$nurse_pk]);
+  logNurseActivity($conn,$nurse_pk,'profile_update','Updated professional profile');
+  // License expiry warning
+  if($data['license_expiry_date']){
+    $days = (int)((strtotime($data['license_expiry_date'])-time())/86400);
+    if($days <= 60 && $days > 0){
+      $nName = getNurseName($conn,$nurse_pk);
+      notifyAllAdmins($conn,'system','License Expiring',"Nurse $nName's license expires in {$days} days.",'staff',null,'high');
+      nurseNotify($conn,$nurse_pk,"⚠️ Your nursing license expires in $days days. Please renew.",'Alert','profile');
+    }
+  }
+  // Update completeness
+  if(!empty($data['specialization']) && !empty($data['license_number'])){
+    dbExecute($conn,"INSERT INTO nurse_profile_completeness (nurse_id,professional_profile) VALUES (?,1) ON DUPLICATE KEY UPDATE professional_profile=1","i",[$nurse_pk]);
+  }
+  $response=['success'=>true,'message'=>'Professional profile updated'];
+  break;
+
+case 'update_availability':
+  $status = sanitize($_POST['status']??'Available');
+  $allowed = ['Available','Busy','On Break','Off Duty'];
+  if(!in_array($status,$allowed)){$response=['success'=>false,'message'=>'Invalid status'];break;}
+  dbExecute($conn,"UPDATE nurses SET availability_status=? WHERE id=?","si",[$status,$nurse_pk]);
+  logNurseActivity($conn,$nurse_pk,'availability_change','Changed status to '.$status);
+  // Cross-dashboard: notify all doctors of availability change
+  $nName = getNurseName($conn,$nurse_pk);
+  notifyAllDoctors($conn,'system','Nurse Availability',"$nName is now $status",'staff');
+  $response=['success'=>true,'message'=>'Status updated to '.$status];
+  break;
+
+case 'save_shift_pref_notes':
+  $notes = sanitize($_POST['notes']??'');
+  dbExecute($conn,"UPDATE nurses SET shift_preference_notes=? WHERE id=?","si",[$notes,$nurse_pk]);
+  logNurseActivity($conn,$nurse_pk,'profile_update','Updated shift preference notes');
+  $response=['success'=>true,'message'=>'Shift preferences saved'];
+  break;
+
+case 'toggle_2fa':
+  $enabled = (int)($_POST['enabled']??0);
+  dbExecute($conn,"UPDATE nurses SET two_fa_enabled=? WHERE id=?","ii",[$enabled,$nurse_pk]);
+  logNurseActivity($conn,$nurse_pk,'security_change','2FA '.($enabled?'enabled':'disabled'));
+  if($enabled){
+    dbExecute($conn,"INSERT INTO nurse_profile_completeness (nurse_id,security_setup) VALUES (?,1) ON DUPLICATE KEY UPDATE security_setup=1","i",[$nurse_pk]);
+  }
+  $response=['success'=>true,'message'=>'Two-factor authentication '.($enabled?'enabled':'disabled')];
+  break;
+
+case 'logout_session':
+  $sid = (int)($_POST['session_id']??0);
+  dbExecute($conn,"DELETE FROM nurse_sessions WHERE id=? AND nurse_id=?","ii",[$sid,$nurse_pk]);
+  logNurseActivity($conn,$nurse_pk,'security_change','Logged out session #'.$sid);
+  $response=['success'=>true,'message'=>'Session terminated'];
+  break;
+
+case 'logout_all_sessions':
+  $currentSessId = session_id();
+  dbExecute($conn,"DELETE FROM nurse_sessions WHERE nurse_id=? AND session_id!=?","is",[$nurse_pk,$currentSessId]);
+  logNurseActivity($conn,$nurse_pk,'security_change','Logged out all other sessions');
+  $response=['success'=>true,'message'=>'All other sessions terminated'];
+  break;
+
+case 'save_notification_toggles':
+  $toggles = ['notif_new_task','notif_task_overdue','notif_med_reminder','notif_vital_due','notif_abnormal_vital',
+    'notif_shift_reminder','notif_handover','notif_doctor_msg','notif_emergency','notif_cert_expiry','notif_system'];
+  $sets=[]; $vals=[]; $types='';
+  foreach($toggles as $t_key){
+    $sets[]="$t_key=?"; $vals[]=(int)($_POST[$t_key]??1); $types.='i';
+  }
+  $sets[]="preferred_channel=?"; $vals[]=sanitize($_POST['preferred_channel']??'dashboard'); $types.='s';
+  $sets[]="critical_sound_enabled=?"; $vals[]=(int)($_POST['critical_sound_enabled']??1); $types.='i';
+  $sets[]="preferred_notif_lang=?"; $vals[]=sanitize($_POST['preferred_notif_lang']??'en'); $types.='s';
+  $vals[]=$nurse_pk; $types.='i';
+  dbExecute($conn,"UPDATE nurse_settings SET ".implode(',',$sets)." WHERE nurse_id=?",$types,$vals);
+  logNurseActivity($conn,$nurse_pk,'settings_update','Updated notification preferences');
+  $response=['success'=>true,'message'=>'Notification preferences saved'];
+  break;
+
+case 'recalculate_completeness':
+  $n = dbRow($conn,"SELECT * FROM nurses WHERE id=?","i",[$nurse_pk]);
+  $p = dbRow($conn,"SELECT * FROM nurse_professional_profile WHERE nurse_id=?","i",[$nurse_pk]);
+  $pi = (!empty($n['full_name']) && !empty($n['phone']) && !empty($n['email'])) ? 1 : 0;
+  $pp = (!empty($p['specialization']) && !empty($p['license_number'])) ? 1 : 0;
+  $qu = (int)dbVal($conn,"SELECT COUNT(*) FROM nurse_qualifications WHERE nurse_id=?","i",[$nurse_pk]) > 0 ? 1 : 0;
+  $sp = (int)dbVal($conn,"SELECT COUNT(*) FROM nurse_shifts WHERE nurse_id=?","i",[$nurse_pk]) > 0 ? 1 : 0;
+  $ph = (!empty($n['profile_photo']) && $n['profile_photo']!=='default-avatar.png') ? 1 : 0;
+  $se = (int)($n['two_fa_enabled']??0);
+  $dc = (int)dbVal($conn,"SELECT COUNT(*) FROM nurse_documents WHERE nurse_id=?","i",[$nurse_pk]) > 0 ? 1 : 0;
+  $total = $pi+$pp+$qu+$sp+$ph+$se+$dc;
+  $pct = round(($total/7)*100);
+  dbExecute($conn,"INSERT INTO nurse_profile_completeness (nurse_id,personal_info,professional_profile,qualifications,shift_profile,profile_photo,security_setup,documents_uploaded,completeness_percentage) VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE personal_info=VALUES(personal_info),professional_profile=VALUES(professional_profile),qualifications=VALUES(qualifications),shift_profile=VALUES(shift_profile),profile_photo=VALUES(profile_photo),security_setup=VALUES(security_setup),documents_uploaded=VALUES(documents_uploaded),completeness_percentage=VALUES(completeness_percentage)",
+    "iiiiiiiii",[$nurse_pk,$pi,$pp,$qu,$sp,$ph,$se,$dc,$pct]);
+  $response=['success'=>true,'percentage'=>$pct];
   break;
 
 default:

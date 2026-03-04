@@ -226,6 +226,10 @@ function secureLog($conn, $nurseId, $desc, $type = 'general') {
         "issss", [$nurseId, $type, $desc, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']
     );
 }
+// Backward-compatible alias used in nurse_actions.php
+function logNurseActivity($conn, $nurseId, $type, $desc) {
+    secureLog($conn, $nurseId, $desc, $type);
+}
 
 // ── 9. Secure Notification ────────────────────────────────
 function secureNotify($conn, $userId, $msg, $type = 'system', $module = 'nurse') {
@@ -268,6 +272,117 @@ function verifyPassword($conn, $userId, $password) {
     $row = dbRow($conn, "SELECT password FROM users WHERE id=?", "i", [$userId]);
     if (!$row) return false;
     return password_verify($password, $row['password']);
+}
+
+// ── 13. Nursing Notes Immutability Enforcement ────────────
+/** Check if a nursing note is locked (shift ended). Returns true if note cannot be edited. */
+function isNoteLocked($conn, $noteId) {
+    $note = dbRow($conn, "SELECT nn.created_at, nn.is_locked, ns.end_time, ns.shift_date
+        FROM nursing_notes nn
+        LEFT JOIN nurse_shifts ns ON nn.shift_id = ns.id
+        WHERE nn.id = ?", "i", [$noteId]);
+    if (!$note) return true; // Can't find = locked
+    if ((int)($note['is_locked'] ?? 0)) return true;
+    // Lock if shift has ended
+    if ($note['end_time'] && $note['shift_date']) {
+        $shiftEnd = $note['shift_date'] . ' ' . $note['end_time'];
+        if (strtotime($shiftEnd) < time()) {
+            // Auto-lock the note at DB level
+            dbExecute($conn, "UPDATE nursing_notes SET is_locked=1 WHERE id=?", "i", [$noteId]);
+            return true;
+        }
+    }
+    // Also lock if note is older than 12 hours (fallback)
+    if (strtotime($note['created_at']) < strtotime('-12 hours')) {
+        dbExecute($conn, "UPDATE nursing_notes SET is_locked=1 WHERE id=?", "i", [$noteId]);
+        return true;
+    }
+    return false;
+}
+
+/** Enforce note immutability — call before any note edit */
+function enforceNoteImmutability($conn, $noteId) {
+    if (isNoteLocked($conn, $noteId)) {
+        if (defined('AJAX_REQUEST')) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'This note is locked and cannot be edited. Notes are locked after the shift ends.']);
+            exit;
+        }
+        die('Note is locked.');
+    }
+}
+
+// ── 14. Emergency Alert Cooldown ──────────────────────────
+/** Returns true if nurse can trigger emergency (no duplicate within 30 seconds) */
+function checkEmergencyCooldown($conn, $nurseId, $cooldownSeconds = 30) {
+    $cutoff = date('Y-m-d H:i:s', time() - $cooldownSeconds);
+    $recent = dbVal($conn,
+        "SELECT COUNT(*) FROM emergency_alerts WHERE triggered_by=? AND triggered_at > ?",
+        "is", [$nurseId, $cutoff]);
+    return (int)$recent === 0;
+}
+
+// ── 15. Secure File Download Handler ──────────────────────
+/** Serve a file for download without exposing the path in the URL */
+function serveSecureFile($conn, $nurseId, $fileId, $table = 'nurse_documents') {
+    $colMap = [
+        'nurse_documents' => ['file_path', 'document_name', 'nurse_id'],
+        'wound_care_records' => ['image_path', 'wound_location', 'nurse_id'],
+    ];
+    if (!isset($colMap[$table])) {
+        http_response_code(400); die('Invalid file source');
+    }
+    [$pathCol, $nameCol, $ownerCol] = $colMap[$table];
+    $file = dbRow($conn, "SELECT $pathCol, $nameCol FROM $table WHERE id=? AND $ownerCol=?", "ii", [(int)$fileId, $nurseId]);
+    if (!$file || empty($file[$pathCol])) {
+        http_response_code(404); die('File not found');
+    }
+    $fullPath = $_SERVER['DOCUMENT_ROOT'] . '/RMU-Medical-Management-System/' . $file[$pathCol];
+    if (!file_exists($fullPath)) {
+        http_response_code(404); die('File not found on disk');
+    }
+    // Prevent directory traversal
+    $realPath = realpath($fullPath);
+    $basePath = realpath($_SERVER['DOCUMENT_ROOT'] . '/RMU-Medical-Management-System/uploads/');
+    if (!$realPath || strpos($realPath, $basePath) !== 0) {
+        http_response_code(403); die('Access denied');
+    }
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($realPath);
+    $downloadName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $file[$nameCol] ?? 'download') . '.' . pathinfo($realPath, PATHINFO_EXTENSION);
+    header('Content-Type: ' . $mime);
+    header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+    header('Content-Length: ' . filesize($realPath));
+    header('Cache-Control: no-cache, must-revalidate');
+    header('X-Content-Type-Options: nosniff');
+    readfile($realPath);
+    exit;
+}
+
+// ── 16. Nurse Ownership Validation ────────────────────────
+/** Validate that a record belongs to the current nurse */
+function validateNurseOwnership($conn, $table, $recordId, $nurseId, $col = 'nurse_id') {
+    $safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+    return (bool)dbVal($conn, "SELECT COUNT(*) FROM $safe_table WHERE id=? AND $col=?", "ii", [(int)$recordId, (int)$nurseId]);
+}
+
+// ── 17. Rate Limiting for Sensitive Actions ────────────────
+function rateLimitAction($conn, $nurseId, $actionType, $maxPerHour = 30) {
+    $cutoff = date('Y-m-d H:i:s', strtotime('-1 hour'));
+    $count = dbVal($conn,
+        "SELECT COUNT(*) FROM nurse_activity_log WHERE nurse_id=? AND action_type=? AND created_at>?",
+        "iss", [$nurseId, $actionType, $cutoff]);
+    return (int)$count < $maxPerHour;
+}
+
+// ── 18. Password Strength Enforcement ─────────────────────
+function enforcePasswordStrength($password) {
+    $errors = [];
+    if (strlen($password) < 8) $errors[] = 'at least 8 characters';
+    if (!preg_match('/[A-Z]/', $password)) $errors[] = 'one uppercase letter';
+    if (!preg_match('/[a-z]/', $password)) $errors[] = 'one lowercase letter';
+    if (!preg_match('/[0-9]/', $password)) $errors[] = 'one digit';
+    return $errors;
 }
 
 // ── INIT: Called by nurse_dashboard.php & nurse_actions.php ─

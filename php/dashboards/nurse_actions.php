@@ -5,10 +5,17 @@
    ═══════════════════════════════════════════════════════════ */
 require_once __DIR__ . '/nurse_security.php';
 require_once __DIR__ . '/cross_notify.php';
+define('AJAX_REQUEST', true);
 header('Content-Type: application/json');
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 $response = ['success'=>false,'message'=>'Invalid action'];
+
+// ── CSRF enforcement on all POST requests ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action !== '') {
+    $token = $_POST['_csrf'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    verifyCsrfToken($token);
+}
 
 try {
   $user_id  = $_SESSION['user_id'];
@@ -268,6 +275,11 @@ try {
     $loc  = sanitize($_POST['location']??'');
     $msg  = sanitize($_POST['message']??'');
     $pid  = (int)($_POST['patient_id']??0);
+    // ── Security: Emergency cooldown — prevent double-triggering ──
+    if(!checkEmergencyCooldown($conn, $nurse_pk)){
+      $response=['success'=>false,'message'=>'Emergency alert already sent recently. Please wait 30 seconds before triggering again.'];
+      break;
+    }
     dbInsert($conn,"INSERT INTO emergency_alerts (alert_type,severity,location,message,patient_id,triggered_by,status,triggered_at) VALUES (?,?,?,?,?,?,'Active',NOW())","ssssiis",[$type,$sev,$loc,$msg,$pid?:null,$nurse_pk]);
     logNurseActivity($conn,$nurse_pk,'emergency','Triggered '.$type.' alert at '.$loc);
     // ── Cross-Dashboard: Broadcast to ALL doctors + ALL admins ──
@@ -288,6 +300,14 @@ try {
     break;
 
   default:
+    // Secure file download handler
+    if($action === 'secure_download'){
+      $fileId = (int)($_GET['file_id'] ?? $_POST['file_id'] ?? 0);
+      $source = sanitize($_GET['source'] ?? $_POST['source'] ?? 'nurse_documents');
+      if(!$fileId){$response=['success'=>false,'message'=>'File ID required'];break;}
+      serveSecureFile($conn, $nurse_pk, $fileId, $source);
+      break;
+    }
     // Part 2 actions handled in include
     $part2 = __DIR__ . '/nurse_actions_part2.php';
     if(file_exists($part2)){ include $part2; }
