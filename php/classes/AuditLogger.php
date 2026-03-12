@@ -239,6 +239,90 @@ class AuditLogger {
         fclose($output);
         exit;
     }
+    /**
+     * Alias: logAction($userId, $action, $tableName, $recordId, $details)
+     * Called by admin pages — delegates to log()
+     */
+    public function logAction($userId, $action, $tableName = null, $recordId = null, $details = null) {
+        $newValues = $details ? (is_array($details) ? $details : ['details' => $details]) : null;
+        return $this->log($userId, $action, $tableName, $recordId, null, $newValues);
+    }
+
+    /**
+     * Alias: getAuditLogs($filters, $limit, $offset)
+     * Called by audit_log_viewer.php — delegates to getLogs()
+     * Also fixes the SELECT to use correct column name (user_name, name)
+     */
+    public function getAuditLogs($filters = [], $limit = 50, $offset = 0) {
+        $query = "SELECT al.*, u.user_name, u.name, u.email
+                  FROM audit_log al
+                  LEFT JOIN users u ON al.user_id = u.id
+                  WHERE 1=1";
+
+        $params = [];
+        $types  = '';
+
+        if (!empty($filters['user_id'])) {
+            $query  .= " AND al.user_id = ?";
+            $params[] = $filters['user_id'];
+            $types  .= 'i';
+        }
+        if (!empty($filters['action'])) {
+            $query  .= " AND al.action = ?";
+            $params[] = $filters['action'];
+            $types  .= 's';
+        }
+        if (!empty($filters['date_from'])) {
+            $query  .= " AND al.created_at >= ?";
+            $params[] = $filters['date_from'] . ' 00:00:00';
+            $types  .= 's';
+        }
+        if (!empty($filters['date_to'])) {
+            $query  .= " AND al.created_at <= ?";
+            $params[] = $filters['date_to'] . ' 23:59:59';
+            $types  .= 's';
+        }
+
+        $query  .= " ORDER BY al.created_at DESC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        $types  .= 'ii';
+
+        $stmt = $this->conn->prepare($query);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $logs = [];
+        while ($row = $result->fetch_assoc()) {
+            $logs[] = $row;
+        }
+        return $logs;
+    }
+
+    /**
+     * Alias: getAuditStatistics()
+     * Returns the summary stats card values expected by audit_log_viewer.php
+     */
+    public function getAuditStatistics() {
+        $stats = [];
+
+        $r = $this->conn->query("SELECT COUNT(*) AS c FROM audit_log");
+        $stats['total_events'] = (int)($r ? $r->fetch_assoc()['c'] : 0);
+
+        $r = $this->conn->query("SELECT COUNT(*) AS c FROM audit_log WHERE DATE(created_at) = CURDATE()");
+        $stats['today_events'] = (int)($r ? $r->fetch_assoc()['c'] : 0);
+
+        $r = $this->conn->query("SELECT COUNT(*) AS c FROM audit_log WHERE action IN('LOGIN_FAILED','login_failed') AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+        $stats['failed_logins_24h'] = (int)($r ? $r->fetch_assoc()['c'] : 0);
+
+        $r = $this->conn->query("SELECT COUNT(DISTINCT user_id) AS c FROM audit_log WHERE created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+        $stats['unique_users_24h'] = (int)($r ? $r->fetch_assoc()['c'] : 0);
+
+        return $stats;
+    }
 }
 
 ?>

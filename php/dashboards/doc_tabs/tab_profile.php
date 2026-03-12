@@ -40,7 +40,7 @@ $completeness = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM doctor_prof
 $comp_pct = (int)($completeness['overall_pct'] ?? $prof['profile_completion_pct'] ?? 0);
 
 // Age calculation
-$age = $prof['date_of_birth'] ? (int)date_diff(date_create($prof['date_of_birth']),date_create('today'))->y : null;
+$age = !empty($prof['date_of_birth']) ? (int)date_diff(date_create($prof['date_of_birth']),date_create('today'))->y : null;
 
 // Availability status
 $avail_status = $prof['availability_status'] ?? 'Offline';

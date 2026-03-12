@@ -49,7 +49,7 @@ class SecurityManager {
     /**
      * Validate password strength
      */
-    public function validatePassword($password) {
+    public function validatePassword($password, $userId = null) {
         $errors = [];
         
         // Check length
@@ -329,6 +329,35 @@ class SecurityManager {
         }
         
         return $stats;
+    }
+
+    /**
+     * Update a user's password (admin reset or self-change)
+     * Hashes the new password with bcrypt, saves it, and records in history.
+     */
+    public function updatePassword($userId, $newPassword) {
+        $userId = (int)$userId;
+        $hash   = password_hash($newPassword, PASSWORD_BCRYPT);
+
+        $stmt = $this->conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'DB prepare error'];
+        }
+        $stmt->bind_param("si", $hash, $userId);
+
+        if ($stmt->execute()) {
+            // Record in password history (best-effort; table may not exist yet)
+            $h = $this->conn->prepare(
+                "INSERT IGNORE INTO password_history (user_id, password_hash) VALUES (?, ?)"
+            );
+            if ($h) {
+                $h->bind_param("is", $userId, $hash);
+                $h->execute();
+            }
+            return ['success' => true, 'message' => 'Password updated successfully'];
+        }
+
+        return ['success' => false, 'message' => 'Failed to update password: ' . $stmt->error];
     }
 }
 

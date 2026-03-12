@@ -7,9 +7,13 @@
 // Note: This uses TCPDF library. Install via: composer require tecnickcom/tcpdf
 // Or download from: https://tcpdf.org/
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use TCPDF;
+// Load TCPDF only if the Composer autoloader / manual include is available.
+// This prevents a fatal error when the library is not yet installed.
+$_tcpdf_autoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($_tcpdf_autoload)) {
+    require_once $_tcpdf_autoload;
+}
+unset($_tcpdf_autoload);
 
 class PDFGenerator {
     private $conn;
@@ -49,8 +53,12 @@ class PDFGenerator {
         
         $data = $result->fetch_assoc();
         
-        // Create PDF
-        $this->pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8');
+        // Create PDF — requires TCPDF library (composer require tecnickcom/tcpdf)
+        if (!class_exists('TCPDF')) {
+            return ['success' => false, 'message' => 'PDF library (TCPDF) not installed. Run: composer require tecnickcom/tcpdf'];
+        }
+        $tcpdfClass = '\\TCPDF';
+        $this->pdf = new $tcpdfClass('P', 'mm', 'A4', true, 'UTF-8');
         
         // Set document information
         $this->pdf->SetCreator('RMU Medical Sickbay');

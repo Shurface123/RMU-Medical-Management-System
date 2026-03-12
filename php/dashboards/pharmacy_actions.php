@@ -678,7 +678,7 @@ case 'add_qualification':
 case 'delete_qualification':
     $id = validateInt($input['id'] ?? 0, 1);
     if (!$id) { echo json_encode(['success'=>false,'message'=>'Invalid ID']); exit; }
-    if (!confirmAction('Delete this qualification?')) {}
+    // Proceed with delete — confirmation is handled client-side via JavaScript confirmAction()
     // Delete file if exists
     $row = dbRow($conn, "SELECT cert_file_path FROM pharmacist_qualifications WHERE id=? AND pharmacist_id=?", "ii", [$id, $pharm_pk]);
     if (!$row) { echo json_encode(['success'=>false,'message'=>'Not found']); exit; }

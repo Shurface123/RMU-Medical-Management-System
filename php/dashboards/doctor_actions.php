@@ -148,37 +148,66 @@ case 'create_lab_request':
     $tc=esc($conn,$post['test_category']??''); $urg=esc($conn,$post['urgency_level']??'Routine');
     $td=esc($conn,$post['test_date']??date('Y-m-d')); $notes=esc($conn,$post['request_notes']??'');
     if(!$pat_id||!$tn) fail('Missing fields');
+
+    // Doctor info for notification messages
+    $doc_info=mysqli_fetch_assoc(mysqli_query($conn,"SELECT u.name FROM doctors d JOIN users u ON d.user_id=u.id WHERE d.id=$doc_pk LIMIT 1"));
+    $doc_name=$doc_info['name']??'Doctor';
+
+    // 1. Insert into lab_tests (old table — backward compat with doctor/patient dashboards)
     $test_id='LAB-'.strtoupper(substr(md5(uniqid()),0,8));
     mysqli_query($conn,"INSERT INTO lab_tests (test_id,patient_id,doctor_id,test_name,test_category,test_date,urgency_level,request_notes,status,cost,created_at)
       VALUES('$test_id',$pat_id,$doc_pk,'$tn','$tc','$td','$urg','$notes','Pending',0.00,NOW())");
     $lid=(int)mysqli_insert_id($conn);
     if(!$lid) fail('Could not create lab request');
-    // Notify all lab technicians
-    $techs=mysqli_query($conn,"SELECT u.id FROM users u WHERE u.role='lab_technician' LIMIT 10");
-    if($techs) while($t=mysqli_fetch_assoc($techs)){
-        notify($conn,$t['id'],'lab_technician','system','New Lab Request',
-          "Dr. has requested a '$tn' test (Urgency: $urg). Please process.","lab",$lid);
-    }
-    $pat_uid=getPatientUserId($conn,$pat_id);
-    if($pat_uid) notify($conn,$pat_uid,'patient','system','Lab Test Requested','A lab test has been ordered for you: '.$tn,'lab',$lid);
-    ok(['test_id'=>$test_id]);
+
+    // 2. Bridge → also insert into lab_test_orders (new table — lab dashboard queue)
+    $order_id='ORD-'.strtoupper(substr(md5(uniqid().$lid),0,8));
+    $tc_id_row=mysqli_fetch_assoc(mysqli_query($conn,"SELECT id FROM lab_test_catalog WHERE test_name LIKE '%".mysqli_real_escape_string($conn,$tn)."' LIMIT 1"));
+    $tc_id=$tc_id_row?(int)$tc_id_row['id']:null;
+    mysqli_query($conn,"INSERT INTO lab_test_orders (order_id,request_id,patient_id,doctor_id,test_name,test_catalog_id,urgency,clinical_notes,order_status,created_at)
+      VALUES('$order_id',$lid,$pat_id,$doc_pk,'$tn',".($tc_id?$tc_id:'NULL').",'$urg','$notes','Pending',NOW())");
+    $lto_id=(int)mysqli_insert_id($conn);
+
+    // 3. Notify all lab technicians via dual-write (notifications + lab_notifications)
+    $priority=($urg==='Critical'||$urg==='STAT')?'high':'normal';
+    notifyAllLabTechs($conn, 'order', '🧪 New Lab Order: '.$tn,
+        "Dr. $doc_name has ordered a $urg $tn test. Patient ID: $pat_id. Please process order $order_id.",
+        'orders', $lto_id ?: $lid, $priority);
+
+    // 4. Notify patient that lab test was requested
+    notifyPatient($conn, $pat_id, 'lab', 'Lab Test Ordered',
+        "Dr. $doc_name has ordered a lab test for you: $tn (Urgency: $urg). The lab will contact you.",
+        'lab', $lid);
+
+    ok(['test_id'=>$test_id,'order_id'=>$order_id]);
 
 // ── Review Lab Result ─────────────────────────────────────
 case 'review_lab':
-    $id=(int)($post['id']??0); $notes=esc($conn,$post['notes']??'');
+    $id=(int)($post['id']??0); $notes_r=esc($conn,$post['notes']??'');
     $makeAccessible=(int)($post['patient_accessible']??1);
     if(!$id) fail('Invalid ID');
     mysqli_query($conn,"UPDATE lab_tests SET status='Reviewed',updated_at=NOW() WHERE id=$id AND doctor_id=$doc_pk");
-    if($notes) mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,doctor_notes='$notes',patient_accessible=$makeAccessible,patient_notified=$makeAccessible WHERE test_id=$id");
+    if($notes_r) mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,doctor_notes='$notes_r',patient_accessible=$makeAccessible,patient_notified=$makeAccessible WHERE test_id=$id");
     else mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,patient_accessible=$makeAccessible,patient_notified=$makeAccessible WHERE test_id=$id");
-    // Notify the patient that results are now accessible
-    if($makeAccessible){
-      $lt=mysqli_fetch_assoc(mysqli_query($conn,"SELECT lt.test_name,lt.patient_id FROM lab_tests lt WHERE lt.id=$id LIMIT 1"));
-      if($lt){
-        $pat_uid=getPatientUserId($conn,(int)$lt['patient_id']);
-        if($pat_uid) notify($conn,$pat_uid,'patient','lab','Lab Results Available',
-          'Your '.$lt['test_name'].' lab results have been reviewed and are now available for you to view.','lab',$id);
-      }
+    // Also update lab_test_orders status for consistency
+    mysqli_query($conn,"UPDATE lab_test_orders SET order_status='Completed',updated_at=NOW() WHERE request_id=$id AND doctor_id=$doc_pk");
+
+    $lt=mysqli_fetch_assoc(mysqli_query($conn,"SELECT lt.test_name,lt.patient_id FROM lab_tests lt WHERE lt.id=$id LIMIT 1"));
+    if($lt){
+        // Notify patient via crossNotify (proper dual-write awareness)
+        if($makeAccessible){
+            notifyPatient($conn,(int)$lt['patient_id'],'lab','✅ Lab Results Available',
+                'Your '.$lt['test_name'].' results have been reviewed by your doctor and are now available to view in your dashboard.',
+                'lab',$id,'high');
+        }
+        // Notify the lab technician that the doctor reviewed their result
+        $lto=mysqli_fetch_assoc(mysqli_query($conn,"SELECT lto.technician_id FROM lab_test_orders lto WHERE lto.request_id=$id LIMIT 1"));
+        if($lto&&$lto['technician_id']){
+            notifyLabTech($conn,(int)$lto['technician_id'],'result',
+                '✅ Result Reviewed by Doctor',
+                'Dr. has reviewed your lab result for '.$lt['test_name'].($makeAccessible?' and released it to the patient.':'.'),
+                'results',$id);
+        }
     }
     ok();
 

@@ -88,6 +88,53 @@ function notifyPatient($conn, $patientPk, $type, $title, $message, $module='', $
     if($r) crossNotify($conn, $r['user_id'], 'patient', $type, $title, $message, $module, $relId, $priority);
 }
 
+/** Notify ALL active lab technicians (writes to BOTH notifications + lab_notifications) */
+function notifyAllLabTechs($conn, $type, $title, $message, $module='', $relId=null, $priority='normal'){
+    $q = mysqli_prepare($conn, "SELECT u.id AS user_id, lt.id AS tech_pk FROM users u JOIN lab_technicians lt ON lt.user_id=u.id WHERE u.status='active' AND (u.user_role='lab_technician' OR u.role='lab_technician')");
+    if(!$q) return;
+    mysqli_stmt_execute($q);
+    $result = mysqli_stmt_get_result($q);
+    while($r = mysqli_fetch_assoc($result)){
+        crossNotify($conn, $r['user_id'], 'lab_technician', $type, $title, $message, $module, $relId, $priority);
+        mirrorToLabNotifications($conn, (int)$r['tech_pk'], $type, $title, $message, $module, $relId, $priority);
+    }
+    mysqli_stmt_close($q);
+}
+
+/** Notify a specific lab technician by lab_technicians.id (PK) — writes to BOTH tables */
+function notifyLabTech($conn, $techPk, $type, $title, $message, $module='', $relId=null, $priority='normal'){
+    $techPk = (int)$techPk;
+    $stmt = mysqli_prepare($conn, "SELECT user_id FROM lab_technicians WHERE id=? LIMIT 1");
+    if(!$stmt) return;
+    mysqli_stmt_bind_param($stmt, "i", $techPk);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $r = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+    if($r){
+        crossNotify($conn, $r['user_id'], 'lab_technician', $type, $title, $message, $module, $relId, $priority);
+        mirrorToLabNotifications($conn, $techPk, $type, $title, $message, $module, $relId, $priority);
+    }
+}
+
+/**
+ * Mirror a notification into the lab_notifications table.
+ * The lab dashboard reads from this table, so any cross-dashboard notification
+ * targeting a lab technician must be duplicated here.
+ */
+function mirrorToLabNotifications($conn, $techPk, $type, $title, $message, $module='', $relId=null, $priority='normal'){
+    $techPk  = (int)$techPk;
+    $title   = substr($title, 0, 200);
+    $message = substr($message, 0, 2000);
+    $stmt = mysqli_prepare($conn,
+        "INSERT INTO lab_notifications (recipient_id, type, title, message, is_read, module, related_id, priority, created_at)
+         VALUES (?, ?, ?, ?, 0, ?, ?, ?, NOW())");
+    if(!$stmt) return;
+    mysqli_stmt_bind_param($stmt, "issssss", $techPk, $type, $title, $message, $module, $relId, $priority);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+}
+
 /* ── Name lookup helpers (prepared statements) ─────────────── */
 
 function getNurseName($conn, $nursePk){

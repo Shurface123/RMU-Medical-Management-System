@@ -128,8 +128,8 @@ $new_id = mysqli_insert_id($conn);
 // ── Send Confirmation Email ───────────────────────────────────────────────
 $email_sent = false;
 try {
-    require_once __DIR__ . '/EmailService.php';
-    $email_service = new EmailService();
+    require_once __DIR__ . '/classes/EmailService.php';
+    $email_service = new EmailService($conn);
 
     $apt_date_fmt = date('l, d F Y', strtotime($apt_date));
     [$h, $m_]     = explode(':', $apt_time);

@@ -38,6 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $role = validate($_POST['role']);
         $identifier = $uname; // Use username as identifier
 
+        // Detect client IP (same logic as SecurityManager::getClientIP)
+        $clientIp = $_SERVER['HTTP_CLIENT_IP']
+                 ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+                 ?? $_SERVER['REMOTE_ADDR']
+                 ?? '0.0.0.0';
+
         // Validation
         if (empty($uname)) {
             $error = "Username is required";
@@ -48,9 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             
             // SECURITY CHECK 1: Check if account is locked
-            if ($securityManager->isAccountLocked($identifier)) {
+            if ($securityManager->isAccountLocked($identifier, $clientIp)) {
                 $error = "Account is locked due to too many failed attempts. Please try again in 15 minutes.";
-                $auditLogger->logLogin($uname, false, 'Account locked');
+                $auditLogger->logLogin($uname, false);
             } else {
                 
                 // SECURITY CHECK 2: Validate CAPTCHA if required
@@ -94,8 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $_SESSION['pending_2fa_role'] = $role;
                                 
                                 // Record successful password verification
-                                $securityManager->recordLoginAttempt($identifier, true);
-                                $auditLogger->logLogin($uname, true, 'Password verified, awaiting 2FA');
+                                $securityManager->recordLoginAttempt($identifier, true, $clientIp);
+                                $auditLogger->logLogin($uname, true);
                                 
                                 // Redirect to 2FA verification
                                 header("Location: verify_2fa.php");
@@ -104,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             
                             // No 2FA - proceed with normal login
                             // Record successful login
-                            $securityManager->recordLoginAttempt($identifier, true);
-                            $auditLogger->logLogin($uname, true, 'Login successful');
+                            $securityManager->recordLoginAttempt($identifier, true, $clientIp);
+                            $auditLogger->logLogin($uname, true);
                             
                             // Create session using SessionManager
                             $sessionManager = new SessionManager($conn);
@@ -138,8 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit();
                         } else {
                             // Invalid password or role
-                            $securityManager->recordLoginAttempt($identifier, false);
-                            $auditLogger->logLogin($uname, false, 'Invalid password or role');
+                            $securityManager->recordLoginAttempt($identifier, false, $clientIp);
+                            $auditLogger->logLogin($uname, false);
                             $error = "Incorrect username, password, or role";
                             
                             // Check if CAPTCHA should be shown
@@ -147,8 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     } else {
                         // User not found
-                        $securityManager->recordLoginAttempt($identifier, false);
-                        $auditLogger->logLogin($uname, false, 'User not found');
+                        $securityManager->recordLoginAttempt($identifier, false, $clientIp);
+                        $auditLogger->logLogin($uname, false);
                         $error = "Incorrect username, password, or role";
                         
                         // Check if CAPTCHA should be shown

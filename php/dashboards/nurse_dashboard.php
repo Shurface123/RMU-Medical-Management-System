@@ -405,7 +405,7 @@ $current_shift = dbRow($conn,
 
 <script>
 // ── CSRF Token ─────────────────────────────────────────────
-const CSRF_TOKEN = '<?=$csrf_token?>';
+const CSRF_TOKEN = '<?php echo htmlspecialchars((string)($csrf_token ?? ''), ENT_QUOTES); ?>';
 
 // ── AJAX Helper ────────────────────────────────────────────
 async function nurseAction(data) {
