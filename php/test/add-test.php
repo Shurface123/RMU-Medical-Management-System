@@ -1,49 +1,64 @@
 <?php
 require_once '../includes/auth_middleware.php';
 enforceSingleDashboard('admin');
-include 'db_conn.php';
+require_once 'db_conn.php';
 
 $active_page = 'tests';
 $page_title  = 'Add Test';
-include '../includes/_sidebar.php';
+
+// Generate CSRF token if not set
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $test_name   = mysqli_real_escape_string($conn, trim($_POST['test_name'] ?? ''));
-    $category    = mysqli_real_escape_string($conn, trim($_POST['category'] ?? ''));
-    $description = mysqli_real_escape_string($conn, trim($_POST['description'] ?? ''));
+    // CSRF verification
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF token validation failed.");
+    }
+
+    $test_name   = trim($_POST['test_name'] ?? '');
+    $category    = trim($_POST['category'] ?? '');
+    $description = trim($_POST['description'] ?? '');
     $cost        = (float)($_POST['cost'] ?? 0);
     $duration    = (int)($_POST['duration_minutes'] ?? 30);
     $is_active   = isset($_POST['is_active']) ? 1 : 0;
 
-    if (!$test_name) {
-        $error = 'Test name is required.';
+    if (!$test_name || !$category) {
+        $error = 'Test name and category are required.';
     } else {
         // Generate test_id
         $last_t = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM tests"))[0] ?? 0;
         $test_id = 'TST-' . str_pad($last_t + 1, 4, '0', STR_PAD_LEFT);
 
-        $desc_val = $description ? "'$description'" : "NULL";
-        $sql = "INSERT INTO tests (test_id, test_name, category, description, cost, duration_minutes, is_active)
-                VALUES ('$test_id','$test_name','$category',$desc_val,$cost,$duration,$is_active)";
-        if (mysqli_query($conn, $sql)) {
-            header('Location: /RMU-Medical-Management-System/php/test/test.php?success=Test+added+successfully');
+        empty($description) ? $description = null : null;
+
+        $stmt = mysqli_prepare($conn, "INSERT INTO tests (test_id, test_name, category, description, cost, duration_minutes, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "ssssdii", $test_id, $test_name, $category, $description, $cost, $duration, $is_active);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            header('Location: /RMU-Medical-Management-System/php/test/test.php?success=' . urlencode('Test added successfully'));
             exit();
         } else {
-            $error = 'Database error: ' . mysqli_error($conn);
+            $error = 'Database error adding testing record.';
         }
+        mysqli_stmt_close($stmt);
     }
 }
 
 $categories = ['Haematology', 'Biochemistry', 'Microbiology', 'Immunology', 'Radiology',
                 'Urinalysis', 'Parasitology', 'Serology', 'Histopathology', 'Other'];
+
+include '../includes/_sidebar.php';
 ?>
 
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
             <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-            <span class="adm-page-title"><i class="fas fa-flask" style="color:var(--primary);margin-right:.8rem;"></i>Add Diagnostic Test</span>
+            <span class="adm-page-title"><i class="fas fa-flask"></i> Add Diagnostic Test</span>
         </div>
         <div class="adm-topbar-right">
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
@@ -54,8 +69,8 @@ $categories = ['Haematology', 'Biochemistry', 'Microbiology', 'Immunology', 'Rad
     <div class="adm-content">
         <div class="adm-page-header">
             <div class="adm-page-header-left">
-                <h1><i class="fas fa-plus-circle" style="color:var(--primary);margin-right:.6rem;"></i>Add New Diagnostic Test</h1>
-                <p>Register a new lab or diagnostic test to the system catalogue.</p>
+                <h1>Add New Diagnostic Test</h1>
+                <p>Dashboard &rarr; Lab Management &rarr; Add Test</p>
             </div>
             <a href="/RMU-Medical-Management-System/php/test/test.php" class="adm-btn adm-btn-ghost">
                 <i class="fas fa-arrow-left"></i> Back to Tests
@@ -69,76 +84,87 @@ $categories = ['Haematology', 'Biochemistry', 'Microbiology', 'Immunology', 'Rad
         </div>
         <?php endif; ?>
 
-        <form method="POST" action="" novalidate>
-            <div style="display:grid;grid-template-columns:2fr 1fr;gap:2rem;" class="adm-form-layout">
-                <div>
-                    <div class="adm-card">
-                        <div class="adm-card-header"><h3><i class="fas fa-flask"></i> Test Information</h3></div>
+        <form method="POST" action="" novalidate onsubmit="return handleFormSubmit(this);">
+            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+            
+            <div style="display:flex;flex-wrap:wrap;gap:2rem;">
+                <!-- Left Column -->
+                <div style="flex:2;min-width:300px;">
+                    <div class="adm-card" style="margin-bottom:2rem;">
+                        <div class="adm-card-header" style="background:var(--primary);">
+                            <h3 style="color:#fff;"><i class="fas fa-flask" style="color:#fff;"></i> Test Information</h3>
+                        </div>
                         <div class="adm-card-body">
-                            <div class="adm-form-grid">
-                                <div class="adm-form-group adm-span-2">
-                                    <label class="adm-label">Test Name <span class="req">*</span></label>
-                                    <input type="text" name="test_name" class="adm-input" required
+                            <div style="display:flex;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+                                <div class="adm-form-group" style="flex:1;min-width:250px;">
+                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Test Name <span style="color:var(--danger);">*</span></label>
+                                    <input type="text" name="test_name" class="adm-search-input" required
                                            placeholder="e.g. Full Blood Count (FBC)"
                                            value="<?php echo htmlspecialchars($_POST['test_name'] ?? ''); ?>">
                                 </div>
-                                <div class="adm-form-group">
-                                    <label class="adm-label">Category <span class="req">*</span></label>
-                                    <select name="category" class="adm-input" required>
+                                <div class="adm-form-group" style="flex:1;min-width:250px;">
+                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Category <span style="color:var(--danger);">*</span></label>
+                                    <select name="category" class="adm-search-input" required>
                                         <option value="">— Select Category —</option>
                                         <?php foreach ($categories as $cat): ?>
-                                        <option value="<?php echo $cat; ?>" <?php echo (($_POST['category'] ?? '') === $cat) ? 'selected' : ''; ?>><?php echo $cat; ?></option>
+                                        <option value="<?php echo htmlspecialchars($cat); ?>" <?php echo (($_POST['category'] ?? '') === $cat) ? 'selected' : ''; ?>><?php echo htmlspecialchars($cat); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="adm-form-group">
-                                    <label class="adm-label">Estimated Duration (minutes)</label>
-                                    <input type="number" name="duration_minutes" class="adm-input" min="5" max="480"
-                                           placeholder="30" value="<?php echo htmlspecialchars($_POST['duration_minutes'] ?? '30'); ?>">
-                                </div>
-                                <div class="adm-form-group">
-                                    <label class="adm-label">Cost (GH₵) <span class="req">*</span></label>
-                                    <input type="number" name="cost" class="adm-input" min="0" step="0.01" required
+                            </div>
+
+                            <div style="display:flex;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+                                <div class="adm-form-group" style="flex:1;min-width:250px;">
+                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Cost (GH₵) <span style="color:var(--danger);">*</span></label>
+                                    <input type="number" name="cost" class="adm-search-input" min="0" step="0.01" required
                                            placeholder="0.00" value="<?php echo htmlspecialchars($_POST['cost'] ?? ''); ?>">
                                 </div>
-                                <div class="adm-form-group adm-span-2">
-                                    <label class="adm-label">Description / Instructions</label>
-                                    <textarea name="description" class="adm-input" rows="4"
-                                              placeholder="Patient preparation, procedure description, expected results range..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                                <div class="adm-form-group" style="flex:1;min-width:250px;">
+                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Estimated Duration (min)</label>
+                                    <input type="number" name="duration_minutes" class="adm-search-input" min="5" max="480"
+                                           placeholder="30" value="<?php echo htmlspecialchars($_POST['duration_minutes'] ?? '30'); ?>">
                                 </div>
+                            </div>
+                            
+                            <div class="adm-form-group" style="margin-bottom:1.5rem;">
+                                <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Description / Instructions</label>
+                                <textarea name="description" class="adm-search-input" rows="4" style="resize:vertical;"
+                                          placeholder="Patient preparation, procedure description, expected results range..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div>
+                <!-- Right Column -->
+                <div style="flex:1;min-width:250px;">
                     <div class="adm-card" style="margin-bottom:2rem;">
-                        <div class="adm-card-header"><h3><i class="fas fa-toggle-on"></i> Status</h3></div>
-                        <div class="adm-card-body" style="text-align:center;padding:2rem;">
-                            <label class="adm-switch-wrap">
-                                <input type="checkbox" name="is_active" id="activeSwitch" <?php echo (!isset($_POST['test_name']) || isset($_POST['is_active'])) ? 'checked' : ''; ?>>
-                                <div class="adm-switch"></div>
-                                <span class="adm-switch-label">Test is Active</span>
+                        <div class="adm-card-header" style="background:var(--primary);">
+                            <h3 style="color:#fff;"><i class="fas fa-toggle-on" style="color:#fff;"></i> Status</h3>
+                        </div>
+                        <div class="adm-card-body">
+                            <label style="display:flex;align-items:center;gap:1rem;cursor:pointer;margin-bottom:2rem;">
+                                <input type="checkbox" name="is_active" <?php echo (!isset($_POST['test_name']) || isset($_POST['is_active'])) ? 'checked' : ''; ?> style="width:20px;height:20px;accent-color:var(--primary);">
+                                <span style="font-size:1.4rem;font-weight:600;color:var(--text-primary);">Test is Active</span>
                             </label>
-                            <p style="font-size:1.2rem;color:var(--text-muted);margin-top:1rem;">Only active tests will be available for ordering.</p>
+                            <p style="font-size:1.2rem;color:var(--text-muted);margin-top:1rem;line-height:1.6;">Only active tests will be available for ordering and scheduling.</p>
                         </div>
                     </div>
 
                     <div class="adm-card" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
                         <div class="adm-card-body" style="text-align:center;padding:2rem;">
-                            <div style="width:64px;height:64px;background:linear-gradient(135deg,#9B59B6,#8E44AD);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                            <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                                 <i class="fas fa-microscope" style="color:#fff;font-size:2rem;"></i>
                             </div>
-                            <p style="font-size:1.2rem;color:var(--text-secondary);">A unique Test ID will be auto-generated (e.g. TST-0001).</p>
+                            <p style="font-size:1.2rem;color:var(--text-secondary);line-height:1.6;">A unique Test ID will be auto-generated (e.g. <code style="background:var(--surface);padding:.2rem .6rem;border-radius:6px;color:var(--text-primary);">TST-0001</code>).</p>
                         </div>
                     </div>
 
-                    <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;">
+                    <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;margin-bottom:1rem;">
                         <i class="fas fa-save"></i> Add Test
                     </button>
                     <a href="/RMU-Medical-Management-System/php/test/test.php"
-                       class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;margin-top:1rem;">
-                        <i class="fas fa-times"></i> Cancel
+                       class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;">
+                        Cancel
                     </a>
                 </div>
             </div>
@@ -146,36 +172,27 @@ $categories = ['Haematology', 'Biochemistry', 'Microbiology', 'Immunology', 'Rad
     </div>
 </main>
 
-<style>
-.adm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.8rem;}
-.adm-span-2{grid-column:span 2;}
-.adm-form-group{display:flex;flex-direction:column;gap:.6rem;}
-.adm-label{font-size:1.3rem;font-weight:600;color:var(--text-secondary);}
-.adm-label .req{color:var(--danger);}
-.adm-input{padding:1.1rem 1.4rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Poppins',sans-serif;font-size:1.4rem;color:var(--text-primary);background:var(--surface);outline:none;transition:var(--transition);width:100%;}
-.adm-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,128,237,.1);}
-textarea.adm-input{resize:vertical;}
-.adm-switch-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem;cursor:pointer;}
-.adm-switch{position:relative;width:52px;height:28px;background:var(--border);border-radius:50px;transition:var(--transition);}
-.adm-switch::after{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:var(--transition);}
-input[type=checkbox]:checked ~ .adm-switch{background:var(--primary);}
-input[type=checkbox]:checked ~ .adm-switch::after{left:27px;}
-.adm-switch-wrap input{display:none;}
-.adm-switch-label{font-size:1.3rem;font-weight:600;color:var(--text-primary);}
-@media(max-width:900px){.adm-form-layout{grid-template-columns:1fr!important;}.adm-form-grid{grid-template-columns:1fr!important;}.adm-span-2{grid-column:span 1;}}
-</style>
-
 <script>
-const sidebar=document.getElementById('admSidebar');
-const overlay=document.getElementById('admOverlay');
-document.getElementById('menuToggle')?.addEventListener('click',()=>{sidebar.classList.toggle('active');overlay.classList.toggle('active');});
-overlay?.addEventListener('click',()=>{sidebar.classList.remove('active');overlay.classList.remove('active');});
-const themeToggle=document.getElementById('themeToggle');
-const themeIcon=document.getElementById('themeIcon');
-const html=document.documentElement;
-function applyTheme(t){html.setAttribute('data-theme',t);localStorage.setItem('rmu_theme',t);themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon';}
-applyTheme(localStorage.getItem('rmu_theme')||'light');
-themeToggle?.addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+const sidebar = document.getElementById('admSidebar');
+const overlay = document.getElementById('admOverlay');
+document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
+overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+const themeIcon = document.getElementById('themeIcon');
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    const t = html.getAttribute('data-theme')==='dark'?'light':'dark';
+    html.setAttribute('data-theme', t);
+    localStorage.setItem('rmu_theme', t);
+    themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+});
+
+function handleFormSubmit(form) {
+    if(!form.checkValidity()) return true;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    btn.style.pointerEvents = 'none';
+    return true;
+}
 </script>
 </body>
 </html>

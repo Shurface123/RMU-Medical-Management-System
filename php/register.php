@@ -456,9 +456,16 @@
                     <select id="role" name="role" class="form-control" required>
                         <option value="">Select Role</option>
                         <option value="patient">Patient</option>
-                        <option value="doctor">Doctor</option>
+                        <option value="doctor">Doctor (requires admin approval)</option>
                         <option value="pharmacist">Pharmacist</option>
-                        <option value="staff">Hospital Staff</option>
+                        <optgroup label="─── Support Staff (requires admin approval) ───">
+                            <option value="ambulance_driver">Ambulance Driver</option>
+                            <option value="cleaner">Cleaner</option>
+                            <option value="laundry_staff">Laundry Staff</option>
+                            <option value="maintenance">Maintenance Staff</option>
+                            <option value="security">Security Officer</option>
+                            <option value="kitchen_staff">Kitchen Staff</option>
+                        </optgroup>
                     </select>
                     <i class="fas fa-user-tag"></i>
                 </div>

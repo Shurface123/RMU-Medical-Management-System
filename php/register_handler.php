@@ -47,11 +47,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Validate role
-    $valid_roles = ['patient', 'doctor', 'pharmacist', 'staff'];
+    $valid_roles = [
+        'patient', 'doctor', 'pharmacist',
+        // All staff sub-roles (registered directly — no generic 'staff' login)
+        'ambulance_driver', 'cleaner', 'laundry_staff', 'maintenance', 'security', 'kitchen_staff'
+    ];
     if (!in_array($role, $valid_roles)) {
         header("Location: register.php?error=Invalid role selected");
         exit();
     }
+    // Normalise: any staff sub-role maps to the 'staff' group
+    $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
+    $is_staff_role   = in_array($role, $STAFF_SUB_ROLES);
 
     // Check if username already exists
     $sql = "SELECT id FROM users WHERE user_name = ? LIMIT 1";
@@ -105,18 +112,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($doctor_stmt, "isss", $user_id, $fullname, $email, $phone);
             mysqli_stmt_execute($doctor_stmt);
             mysqli_stmt_close($doctor_stmt);
-        } elseif ($role === 'staff') {
+        } elseif ($is_staff_role) {
             // Generate unique employee ID
             $emp_id = 'STF-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            $staff_sql = "INSERT INTO staff (user_id, full_name, email, phone, employee_id, role, created_at) VALUES (?, ?, ?, ?, ?, 'cleaner', NOW())";
+            // Insert staff record with exact sub-role and approval_status = pending
+            $staff_sql = "INSERT INTO staff (user_id, full_name, email, phone, employee_id, role, approval_status, created_at)
+                          VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())";
             $staff_stmt = mysqli_prepare($conn, $staff_sql);
-            mysqli_stmt_bind_param($staff_stmt, "issss", $user_id, $fullname, $email, $phone, $emp_id);
+            mysqli_stmt_bind_param($staff_stmt, "isssss", $user_id, $fullname, $email, $phone, $emp_id, $role);
             mysqli_stmt_execute($staff_stmt);
             mysqli_stmt_close($staff_stmt);
         }
         
         mysqli_stmt_close($stmt);
-        header("Location: index.php?success=Registration successful! Please login");
+
+        // Redirect with appropriate message
+        if ($is_staff_role) {
+            header("Location: index.php?info=" . urlencode("Registration successful! Your account is pending admin approval. You will be notified once approved."));
+        } else {
+            header("Location: index.php?success=Registration successful! Please login");
+        }
         exit();
     } else {
         mysqli_stmt_close($stmt);

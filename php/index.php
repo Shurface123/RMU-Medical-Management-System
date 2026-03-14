@@ -310,9 +310,21 @@
         </div>
 
         <!-- Error Message -->
-        <div class="error-message" id="errorMessage">
+        <div class="error-message" id="errorMessage" style="background:#fee;color:#e74c3c;padding:1.2rem 1.5rem;border-radius:12px;margin-bottom:2rem;font-size:1.4rem;border-left:4px solid #e74c3c;display:none;">
             <i class="fas fa-exclamation-circle"></i>
             <span id="errorText"></span>
+        </div>
+
+        <!-- Success Message (registration complete) -->
+        <div id="successMessage" style="background:#edfaf1;color:#27ae60;padding:1.2rem 1.5rem;border-radius:12px;margin-bottom:2rem;font-size:1.4rem;border-left:4px solid #27ae60;display:none;">
+            <i class="fas fa-check-circle"></i>
+            <span id="successText"></span>
+        </div>
+
+        <!-- Info Message (pending approval) -->
+        <div id="infoMessage" style="background:#fff8e1;color:#E67E22;padding:1.2rem 1.5rem;border-radius:12px;margin-bottom:2rem;font-size:1.4rem;border-left:4px solid #F39C12;display:none;">
+            <i class="fas fa-clock"></i>
+            <span id="infoText"></span>
         </div>
 
         <!-- Login Form -->
@@ -350,8 +362,18 @@
                         <option value="">Select Role</option>
                         <option value="admin">Administrator</option>
                         <option value="doctor">Doctor</option>
-                        <option value="patient">Patient</option>
+                        <option value="nurse">Nurse</option>
                         <option value="pharmacist">Pharmacist</option>
+                        <option value="lab_technician">Lab Technician</option>
+                        <option value="patient">Patient</option>
+                        <optgroup label="─── Support Staff ───">
+                            <option value="ambulance_driver">Ambulance Driver</option>
+                            <option value="cleaner">Cleaner</option>
+                            <option value="laundry_staff">Laundry Staff</option>
+                            <option value="maintenance">Maintenance Staff</option>
+                            <option value="security">Security Officer</option>
+                            <option value="kitchen_staff">Kitchen Staff</option>
+                        </optgroup>
                     </select>
                     <i class="fas fa-user-tag"></i>
                 </div>
@@ -369,15 +391,26 @@
     </div>
 
     <script>
-        // Display error message from URL parameter
+        // Display messages from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const error = urlParams.get('error');
-        
+        const error   = urlParams.get('error');
+        const success = urlParams.get('success');
+        const info    = urlParams.get('info');
+
         if (error) {
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            errorText.textContent = error;
-            errorMessage.classList.add('show');
+            const el = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = error;
+            el.style.display = 'block';
+        }
+        if (success) {
+            const el = document.getElementById('successMessage');
+            document.getElementById('successText').textContent = success;
+            el.style.display = 'block';
+        }
+        if (info) {
+            const el = document.getElementById('infoMessage');
+            document.getElementById('infoText').textContent = info;
+            el.style.display = 'block';
         }
 
         // Form validation

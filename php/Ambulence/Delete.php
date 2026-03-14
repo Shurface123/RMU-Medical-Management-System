@@ -1,10 +1,20 @@
 <?php
 include_once 'db_conn.php';
-$sql = "DELETE FROM ambulence WHERE Amb_ID='" . $_GET["Amb_ID"] . "'";
+
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($id <= 0) {
+    header('Location: ambulence.php?error=Invalid+ambulance+ID');
+    exit;
+}
+
+$sql = "DELETE FROM ambulances WHERE id='$id'";
 if (mysqli_query($conn, $sql)) {
-    include 'ambulence.php';
-} else {
-    echo "Error deleting record: " . mysqli_error($conn);
+    header('Location: ambulence.php?success=Ambulance+deleted+successfully');
+}
+else {
+    header('Location: ambulence.php?error=Failed+to+delete+ambulance');
 }
 mysqli_close($conn);
+exit;
 ?>

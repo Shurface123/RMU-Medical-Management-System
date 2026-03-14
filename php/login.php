@@ -91,12 +91,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($tp) logLabActivity($conn, (int)$tp, 'login_success', 'security', null);
                 }
 
+                // ── Staff sub-role approval gate ───────────────────────
+                $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
+                if (in_array($role, $STAFF_SUB_ROLES)) {
+                    // Load staff_security helpers (dbVal etc.) if not already loaded
+                    if (!function_exists('dbVal')) require_once __DIR__ . '/dashboards/staff_security.php';
+
+                    $approval = dbVal($conn,
+                        "SELECT approval_status FROM staff WHERE user_id = ? LIMIT 1",
+                        "i", [(int)$row['id']]
+                    );
+
+                    if ($approval === null || $approval === 'pending') {
+                        // Log attempt in audit trail
+                        $deniedName = trim($row['name'] . ' (' . $row['user_name'] . ')');
+                        @mysqli_query($conn, "INSERT INTO staff_audit_trail (user_id,action_type,module,description,created_at)
+                            VALUES ({$row['id']},'login_blocked','security','Account pending admin approval',NOW())");
+                        header("Location: index.php?error=" . urlencode("Your account is pending admin approval. You will be notified once approved."));
+                        exit();
+                    }
+
+                    if ($approval === 'rejected') {
+                        $reason = dbVal($conn,
+                            "SELECT COALESCE(rejection_reason,'Contact administration for details.') FROM staff WHERE user_id = ? LIMIT 1",
+                            "i", [(int)$row['id']]
+                        );
+                        header("Location: index.php?error=" . urlencode("Account rejected: $reason"));
+                        exit();
+                    }
+                    // $approval === 'approved' → fall through to routing
+                }
+
                 // Route by role
                 switch ($role) {
                     case 'admin':          header("Location: home.php"); break;
                     case 'doctor':         header("Location: dashboards/doctor_dashboard.php"); break;
                     case 'patient':        header("Location: dashboards/patient_dashboard.php"); break;
                     case 'pharmacist':     header("Location: dashboards/pharmacy_dashboard.php"); break;
+                    case 'nurse':          header("Location: dashboards/nurse_dashboard.php"); break;
                     case 'lab_technician': header("Location: dashboards/lab_dashboard.php"); break;
                     case 'ambulance_driver':
                     case 'cleaner':
@@ -107,6 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     default:               header("Location: index.php?error=Invalid role"); break;
                 }
                 exit();
+
 
             } else {
                 // Failed login — log for lab_technician, then re-check lockout

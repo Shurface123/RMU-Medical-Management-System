@@ -64,10 +64,29 @@ $active_page = $active_page ?? '';
             <span>Doctors</span>
         </a>
 
+        <!-- ── NEW: Staff Management Hub ── -->
         <a href="/RMU-Medical-Management-System/php/staff/staff.php"
            class="adm-nav-item <?php echo $active_page === 'staff' ? 'active' : ''; ?>">
-            <i class="fas fa-user-nurse"></i>
-            <span>Staff</span>
+            <i class="fas fa-users-cog"></i>
+            <span>All Staff</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/staff_approvals.php"
+           class="adm-nav-item <?php echo $active_page === 'staff_approvals' ? 'active' : ''; ?>">
+            <i class="fas fa-clipboard-check"></i>
+            <span>Pending Approvals</span>
+        </a>
+        
+        <a href="/RMU-Medical-Management-System/php/admin/staff_performance.php"
+           class="adm-nav-item <?php echo $active_page === 'staff_performance' ? 'active' : ''; ?>">
+            <i class="fas fa-chart-line"></i>
+            <span>Performance & KPIs</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/staff_audit_logs.php"
+           class="adm-nav-item <?php echo $active_page === 'staff_audit_logs' ? 'active' : ''; ?>">
+            <i class="fas fa-history"></i>
+            <span>Audit Logs</span>
         </a>
 
         <a href="/RMU-Medical-Management-System/php/patient/patient.php"
@@ -114,6 +133,54 @@ $active_page = $active_page ?? '';
             <span>Payments</span>
         </a>
 
+        <!-- ── NEW: Operations & Logistics ── -->
+        <span class="adm-nav-section-label">Operations</span>
+
+        <a href="/RMU-Medical-Management-System/php/admin/manage_tasks.php"
+           class="adm-nav-item <?php echo $active_page === 'manage_tasks' ? 'active' : ''; ?>">
+            <i class="fas fa-tasks"></i>
+            <span>Task Assignments</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/manage_shifts.php"
+           class="adm-nav-item <?php echo $active_page === 'manage_shifts' ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Shift Scheduling</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/manage_leaves.php"
+           class="adm-nav-item <?php echo $active_page === 'manage_leaves' ? 'active' : ''; ?>">
+            <i class="fas fa-umbrella-beach"></i>
+            <span>Leave Requests</span>
+        </a>
+
+        <!-- ── NEW: Facility & Services ── -->
+        <span class="adm-nav-section-label">Services</span>
+        
+        <a href="/RMU-Medical-Management-System/php/admin/facility_ambulance.php"
+           class="adm-nav-item <?php echo $active_page === 'ambulance' ? 'active' : ''; ?>">
+            <i class="fas fa-ambulance"></i>
+            <span>Ambulance Dispatch</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/facility_maintenance.php"
+           class="adm-nav-item <?php echo $active_page === 'maintenance' ? 'active' : ''; ?>">
+            <i class="fas fa-tools"></i>
+            <span>Maintenance</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/facility_kitchen.php"
+           class="adm-nav-item <?php echo $active_page === 'kitchen' ? 'active' : ''; ?>">
+            <i class="fas fa-utensils"></i>
+            <span>Dietary & Kitchen</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/facility_cleaning.php"
+           class="adm-nav-item <?php echo $active_page === 'cleaning' ? 'active' : ''; ?>">
+            <i class="fas fa-broom"></i>
+            <span>Cleaning & Hygiene</span>
+        </a>
+
         <span class="adm-nav-section-label">System</span>
 
         <a href="/RMU-Medical-Management-System/php/booking.php"
@@ -132,6 +199,12 @@ $active_page = $active_page ?? '';
            class="adm-nav-item <?php echo $active_page === 'settings' ? 'active' : ''; ?>">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/settings_health_messages.php"
+           class="adm-nav-item <?php echo $active_page === 'health_messages' ? 'active' : ''; ?>">
+            <i class="fas fa-bullhorn"></i>
+            <span>Broadcasts</span>
         </a>
     </nav>
 

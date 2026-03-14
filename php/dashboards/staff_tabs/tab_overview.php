@@ -1,159 +1,220 @@
 <?php
 /**
- * tab_overview.php
- * The landing page for the Staff Dashboard.
- * Gives a summary of pending tasks, active shifts, and notifications.
+ * tab_overview.php — Dashboard Overview (Role-Adaptive)
+ * Module 1: Role-specific KPI cards, quick actions, and activity feed.
  */
+
+// ── Role-Specific Stats ───────────────────────────────────────
+$overview_stats = [];
+$quick_actions  = [];
+$activity_items = [];
+
+switch ($staffRole) {
+    case 'ambulance_driver':
+        $overview_stats = [
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM ambulance_requests WHERE status='pending'"),       'label'=>'Pending Requests',   'icon'=>'fa-siren-on','color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM ambulance_trips WHERE driver_id=? AND DATE(created_at)=?","is",[$staff_id,$today]), 'label'=>'Trips Today','icon'=>'fa-ambulance','color'=>'var(--primary)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM ambulance_trips WHERE driver_id=? AND trip_status='completed' AND DATE(completed_at)=?","is",[$staff_id,$today]), 'label'=>'Completed Today','icon'=>'fa-check-circle','color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM vehicles WHERE assigned_driver_id=? AND status='active'","i",[$staff_id]) ?: '—', 'label'=>'My Vehicle','icon'=>'fa-truck','color'=>'var(--info)'],
+        ];
+        $quick_actions = [
+            ['label'=>'View Requests',  'icon'=>'fa-siren-on', 'tab'=>'ambulance'],
+            ['label'=>'My Active Trip', 'icon'=>'fa-route',    'tab'=>'ambulance'],
+            ['label'=>'Fuel Log',       'icon'=>'fa-gas-pump', 'tab'=>'ambulance'],
+        ];
+        break;
+    case 'cleaner':
+        $overview_stats = [
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_schedules WHERE assigned_to=? AND shift_date=? AND status='scheduled'","is",[$staff_id,$today]), 'label'=>'Pending Tasks',  'icon'=>'fa-broom',    'color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_logs WHERE staff_id=? AND DATE(created_at)=? AND completed_at IS NOT NULL","is",[$staff_id,$today]), 'label'=>'Completed Today','icon'=>'fa-check',    'color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM contamination_reports WHERE staff_id=? AND status='reported'","i",[$staff_id]), 'label'=>'Open Reports', 'icon'=>'fa-biohazard', 'color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_schedules WHERE assigned_to=? AND status='urgent'","i",[$staff_id]) ?: 0, 'label'=>'Urgent','icon'=>'fa-exclamation-triangle','color'=>'#E67E22'],
+        ];
+        $quick_actions = [
+            ['label'=>'My Schedule',         'icon'=>'fa-calendar',  'tab'=>'cleaning'],
+            ['label'=>'Report Contamination','icon'=>'fa-biohazard', 'tab'=>'cleaning','modal'=>'contamReportModal'],
+            ['label'=>'Sanitation Board',    'icon'=>'fa-clipboard', 'tab'=>'cleaning'],
+        ];
+        break;
+    case 'laundry_staff':
+        $overview_stats = [
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE staff_id=? AND status NOT IN ('delivered','cancelled')","i",[$staff_id]), 'label'=>'Active Batches',  'icon'=>'fa-tshirt',  'color'=>'var(--primary)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE staff_id=? AND status='collected'","i",[$staff_id]),  'label'=>'Pending Pickup','icon'=>'fa-box-open', 'color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE staff_id=? AND DATE(delivered_at)=?","is",[$staff_id,$today]), 'label'=>'Delivered Today','icon'=>'fa-check-circle','color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_inventory WHERE quantity <= reorder_level"), 'label'=>'Low Stock Alerts','icon'=>'fa-box','color'=>'var(--danger)'],
+        ];
+        $quick_actions = [
+            ['label'=>'Register Batch','icon'=>'fa-plus','tab'=>'laundry','modal'=>'newBatchModal'],
+            ['label'=>'Update Batch',  'icon'=>'fa-sync','tab'=>'laundry'],
+            ['label'=>'Report Damage', 'icon'=>'fa-exclamation','tab'=>'laundry'],
+        ];
+        break;
+    case 'maintenance':
+        $overview_stats = [
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE status='open' AND (assigned_to IS NULL OR assigned_to=0)"), 'label'=>'Open Requests',  'icon'=>'fa-wrench',  'color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE assigned_to=? AND status='in progress'","i",[$staff_id]),  'label'=>'In Progress',    'icon'=>'fa-tools',   'color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE assigned_to=? AND status='completed' AND DATE(completed_at)=?","is",[$staff_id,$today]), 'label'=>'Completed Today','icon'=>'fa-check','color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE assigned_to=? AND status='on hold'","i",[$staff_id]), 'label'=>'On Hold','icon'=>'fa-pause-circle','color'=>'var(--info)'],
+        ];
+        $quick_actions = [
+            ['label'=>'View Requests','icon'=>'fa-list','tab'=>'maintenance'],
+            ['label'=>'My Active Jobs','icon'=>'fa-tools','tab'=>'maintenance'],
+        ];
+        break;
+    case 'security':
+        $overview_stats = [
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_incidents WHERE staff_id=? AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Incidents Today','icon'=>'fa-shield-alt','color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=? AND exit_time IS NULL","is",[$staff_id,$today]), 'label'=>'Active Visitors','icon'=>'fa-users','color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=?","is",[$staff_id,$today]), 'label'=>'Visitors Today','icon'=>'fa-user-check','color'=>'var(--primary)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_logs WHERE staff_id=? AND DATE(logged_at)=? AND log_type='patrol_checkin'","is",[$staff_id,$today]), 'label'=>'Patrol Check-ins','icon'=>'fa-map-marker-alt','color'=>'var(--success)'],
+        ];
+        $quick_actions = [
+            ['label'=>'Log Incident',   'icon'=>'fa-exclamation','tab'=>'security','modal'=>'incidentModal'],
+            ['label'=>'Log Visitor',    'icon'=>'fa-user-plus',  'tab'=>'visitors','modal'=>'addVisitorModal'],
+            ['label'=>'Patrol Check-in','icon'=>'fa-map-pin',    'modal'=>'patrolModal'],
+        ];
+        break;
+    case 'kitchen_staff':
+        $overview_stats = [
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND DATE(scheduled_time)=? AND status='pending'","is",[$staff_id,$today]), 'label'=>'Pending Meals',   'icon'=>'fa-utensils','color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND status='delivered' AND DATE(delivered_at)=?","is",[$staff_id,$today]), 'label'=>'Delivered Today',  'icon'=>'fa-check',  'color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_dietary_flags WHERE status='flagged' AND DATE(flagged_at)=?","s",[$today]), 'label'=>'Dietary Alerts','icon'=>'fa-allergies','color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND status='in preparation'","i",[$staff_id]), 'label'=>'In Prep','icon'=>'fa-fire','color'=>'var(--info)'],
+        ];
+        $quick_actions = [
+            ['label'=>'My Meal Tasks','icon'=>'fa-list','tab'=>'kitchen'],
+            ['label'=>'Flag Dietary Issue','icon'=>'fa-allergies','tab'=>'kitchen','modal'=>'dietaryModal'],
+        ];
+        break;
+    default: // General staff
+        $overview_stats = [
+            ['val'=>$pending_tasks, 'label'=>'Pending Tasks','icon'=>'fa-clipboard-list','color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM staff_tasks WHERE assigned_to=? AND status='completed' AND DATE(completed_at)=?","is",[$staff_id,$today]) ?? 0, 'label'=>'Completed Today','icon'=>'fa-check','color'=>'var(--success)'],
+            ['val'=>$unread_notifs,'label'=>'New Alerts','icon'=>'fa-bell','color'=>'var(--danger)'],
+            ['val'=>$unread_msgs,  'label'=>'Unread Messages','icon'=>'fa-envelope','color'=>'var(--primary)'],
+        ];
+        $quick_actions = [['label'=>'View Tasks','icon'=>'fa-tasks','tab'=>'tasks'],['label'=>'My Profile','icon'=>'fa-user','tab'=>'profile']];
+}
+
+// ── Recent Activity ──────────────────────────────────────────
+$activity_raw = dbSelect($conn,"SELECT message, created_at, type FROM staff_notifications WHERE staff_id=? ORDER BY id DESC LIMIT 8","i",[$staff_id]);
+// ── Current Shift ────────────────────────────────────────────
+$current_shift = dbRow($conn,"SELECT * FROM staff_shifts WHERE staff_id=? AND shift_date=? ORDER BY id DESC LIMIT 1","is",[$staff_id,$today]);
 ?>
-<div id="sec-overview" class="dash-section <?=($active_tab==='overview')?'active':''?>">
-    
-    <!-- Welcome Banner -->
-    <div class="adm-welcome" style="margin-bottom:2rem;background:var(--surface);padding:2rem;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);">
-        <h2>Welcome, <?=e(explode(' ',$displayName)[0])?> 👋</h2>
-        <p style="color:var(--text-secondary);font-size:1.4rem;margin-top:.5rem;">
-            <?=date('l, d F Y')?> &bull; <strong style="color:var(--text-primary);"><?=e($displayRole)?></strong>
-        </p>
+<div id="sec-overview" class="dash-section">
+
+    <!-- Hero Banner -->
+    <div class="staff-hero" style="margin-bottom:2.5rem;">
+        <div class="staff-hero-avatar">
+            <?php if (!empty($staff['profile_photo'])): ?>
+                <img src="/RMU-Medical-Management-System/<?= e($staff['profile_photo']) ?>" alt="avatar">
+            <?php else: echo strtoupper(substr($displayName,0,1)); endif; ?>
+        </div>
+        <div class="staff-hero-info" style="flex:1;">
+            <h2>Welcome back, <?= e(explode(' ',$displayName)[0]) ?> 👋</h2>
+            <p><i class="fas fa-calendar-day"></i> <?= date('l, d F Y') ?></p>
+            <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.8rem;">
+                <span class="hero-badge"><i class="fas <?= e($roleIcon) ?>"></i> <?= e($displayRole) ?></span>
+                <span class="hero-badge"><i class="fas fa-id-badge"></i> <?= e($staff['employee_id'] ?? 'Pending') ?></span>
+                <?php if ($current_shift): ?>
+                <span class="hero-badge"><i class="fas fa-clock"></i> <?= e(ucfirst($current_shift['shift_type'])) ?> Shift
+                    (<?= date('H:i',strtotime($current_shift['start_time'])) ?> – <?= date('H:i',strtotime($current_shift['end_time'])) ?>)
+                </span>
+                <?php else: ?>
+                <span class="hero-badge" style="background:rgba(255,255,255,.1);"><i class="fas fa-moon"></i> No Shift Today</span>
+                <?php endif; ?>
+                <?php $stat = $staff['status'] ?? 'active'; ?>
+                <span class="hero-badge" style="background:<?= $stat==='Active'?'rgba(39,174,96,.3)':'rgba(231,76,60,.3)' ?>">
+                    <i class="fas fa-circle" style="font-size:.8rem;"></i> <?= e($stat) ?>
+                </span>
+            </div>
+        </div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="adm-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;margin-bottom:2.5rem;">
-        
-        <a class="adm-stat-card" style="display:block;background:var(--surface);padding:2rem;border-radius:var(--radius-md);border:1px solid var(--border);position:relative;overflow:hidden;text-decoration:none;transition:var(--transition);" onclick="showTab('tasks',document.querySelector('[onclick*=tasks]'))">
-            <div class="adm-stat-icon staff" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;margin-bottom:1.5rem;">
-                <i class="fas fa-clipboard-list"></i>
+    <!-- KPI Cards -->
+    <div class="stat-grid">
+        <?php foreach ($overview_stats as $stat): ?>
+        <div class="stat-mini" onclick="showTab('tasks',null)" style="cursor:pointer;">
+            <div style="width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,<?= $stat['color'] ?> 15%,#fff 85%);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                <i class="fas <?= e($stat['icon']) ?>" style="font-size:1.8rem;color:<?= $stat['color'] ?>;"></i>
             </div>
-            <span class="adm-stat-label" style="display:block;font-size:1.3rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Pending Tasks</span>
-            <div class="adm-stat-value" style="font-size:3.2rem;font-weight:700;color:var(--text-primary);"><?=$stats['pending_tasks']?></div>
-            <div class="adm-stat-footer" style="margin-top:1.5rem;font-size:1.2rem;color:var(--text-muted);display:flex;align-items:center;gap:.6rem;border-top:1px solid var(--border);padding-top:1rem;">
-                <i class="fas fa-arrow-right"></i> View my checklist
-            </div>
-            <!-- Decorative circle -->
-            <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(79,70,229,.05);z-index:0;"></div>
-        </a>
-
-        <a class="adm-stat-card" style="display:block;background:var(--surface);padding:2rem;border-radius:var(--radius-md);border:1px solid var(--border);position:relative;overflow:hidden;text-decoration:none;transition:var(--transition);" onclick="showTab('schedule',document.querySelector('[onclick*=schedule]'))">
-            <div class="adm-stat-icon" style="background:linear-gradient(135deg, #F39C12, #F7CF68);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;margin-bottom:1.5rem;">
-                <i class="fas fa-clock"></i>
-            </div>
-            <span class="adm-stat-label" style="display:block;font-size:1.3rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Current Shift</span>
-            <div class="adm-stat-value" style="font-size:2.4rem;font-weight:700;color:var(--text-primary);margin-top:1rem;">
-                <?php
-                // Get active shift for today
-                $today = date('Y-m-d');
-                $sql = "SELECT shift_type, start_time, end_time FROM staff_shifts WHERE staff_id=? AND shift_date=? ORDER BY id DESC LIMIT 1";
-                $shiftRow = dbRow($conn, $sql, "is", [$staff_id, $today]);
-                if($shiftRow) {
-                    echo e(ucfirst($shiftRow['shift_type'])) . ' <span style="font-size:1.4rem;color:var(--text-muted);font-weight:500;">('.date('H:i', strtotime($shiftRow['start_time'])).' - '.date('H:i', strtotime($shiftRow['end_time'])).')</span>';
-                } else {
-                    echo 'Off Duty';
-                }
-                ?>
-            </div>
-        </a>
-
-        <?php if($staffRole === 'cleaner'):
-            $logs = dbVal($conn, "SELECT COUNT(*) FROM cleaning_logs WHERE staff_id=? AND DATE(created_at)=?", "is", [$staff_id, $today]);
-        ?>
-        <a class="adm-stat-card" style="display:block;background:var(--surface);padding:2rem;border-radius:var(--radius-md);border:1px solid var(--border);position:relative;overflow:hidden;text-decoration:none;transition:var(--transition);" onclick="showTab('cleaning',document.querySelector('[onclick*=cleaning]'))">
-            <div class="adm-stat-icon" style="background:linear-gradient(135deg, #1ABC9C, #48C9B0);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;margin-bottom:1.5rem;">
-                <i class="fas fa-broom"></i>
-            </div>
-            <span class="adm-stat-label" style="display:block;font-size:1.3rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Wards Cleaned</span>
-            <div class="adm-stat-value" style="font-size:3.2rem;font-weight:700;color:var(--text-primary);"><?=$logs?></div>
-            <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(26,188,156,.05);z-index:0;"></div>
-        </a>
-        <?php endif; ?>
-
-        <?php if($staffRole === 'maintenance'):
-            $m_tasks = dbVal($conn, "SELECT COUNT(*) FROM maintenance_requests WHERE assigned_to=? AND status='assigned'", "i", [$staff_id]);
-        ?>
-        <a class="adm-stat-card" style="display:block;background:var(--surface);padding:2rem;border-radius:var(--radius-md);border:1px solid var(--border);position:relative;overflow:hidden;text-decoration:none;transition:var(--transition);" onclick="showTab('maintenance',document.querySelector('[onclick*=maintenance]'))">
-            <div class="adm-stat-icon" style="background:linear-gradient(135deg, #E74C3C, #EC7063);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;margin-bottom:1.5rem;">
-                <i class="fas fa-wrench"></i>
-            </div>
-            <span class="adm-stat-label" style="display:block;font-size:1.3rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Open Work Orders</span>
-            <div class="adm-stat-value" style="font-size:3.2rem;font-weight:700;color:var(--text-primary);"><?=$m_tasks?></div>
-            <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(231,76,60,.05);z-index:0;"></div>
-        </a>
-        <?php endif; ?>
-
-        <?php if($staffRole === 'ambulance_driver'):
-            $trips = dbVal($conn, "SELECT COUNT(*) FROM ambulance_trips WHERE driver_id=? AND DATE(created_at)=?", "is", [$staff_id, $today]);
-        ?>
-        <a class="adm-stat-card" style="display:block;background:var(--surface);padding:2rem;border-radius:var(--radius-md);border:1px solid var(--border);position:relative;overflow:hidden;text-decoration:none;transition:var(--transition);" onclick="showTab('ambulance',document.querySelector('[onclick*=ambulance]'))">
-            <div class="adm-stat-icon" style="background:linear-gradient(135deg, #2980B9, #5DADE2);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;margin-bottom:1.5rem;">
-                <i class="fas fa-truck-medical"></i>
-            </div>
-            <span class="adm-stat-label" style="display:block;font-size:1.3rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Trips Today</span>
-            <div class="adm-stat-value" style="font-size:3.2rem;font-weight:700;color:var(--text-primary);"><?=$trips?></div>
-            <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(41,128,185,.05);z-index:0;"></div>
-        </a>
-        <?php endif; ?>
-
+            <div class="stat-mini-val" style="color:<?= $stat['color'] ?>;"><?= $stat['val'] ?? 0 ?></div>
+            <div class="stat-mini-lbl"><?= e($stat['label']) ?></div>
+        </div>
+        <?php endforeach; ?>
     </div>
 
-    <!-- Quick Actions & Tasks Grid -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
-        
-        <!-- My Schedule Snapshot -->
-        <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:2rem;">
-            <h3 style="font-size:1.6rem;font-weight:700;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;color:var(--text-primary);">
-                <i class="fas fa-calendar-check" style="color:var(--role-accent);"></i> Upcoming Schedule
-            </h3>
-            <?php
-            // Fetch next 3 shifts
-            $sql = "SELECT * FROM staff_shifts WHERE staff_id=? AND shift_date >= ? ORDER BY shift_date ASC LIMIT 3";
-            $shifts = dbSelect($conn, $sql, "is", [$staff_id, $today]);
-            if(empty($shifts)): ?>
-                <p style="color:var(--text-muted);text-align:center;padding:2rem;">No upcoming shifts scheduled.</p>
-            <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:1rem;">
-                <?php foreach($shifts as $sf): ?>
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.2rem;background:var(--surface-2);border-radius:8px;border-left:4px solid var(--role-accent);">
-                        <div>
-                            <strong style="display:block;font-size:1.3rem;"><?=date('D, d M', strtotime($sf['shift_date']))?></strong>
-                            <span style="color:var(--text-secondary);font-size:1.2rem;"><?=e(ucfirst($sf['shift_type']))?> Shift</span>
-                        </div>
-                        <div style="text-align:right;">
-                            <span style="font-weight:600;color:var(--text-primary);"><?=date('H:i', strtotime($sf['start_time']))?> - <?=date('H:i', strtotime($sf['end_time']))?></span><br>
-                            <span style="font-size:1.1rem;color:var(--text-muted);"><i class="fas fa-map-marker-alt"></i> <?=e($sf['location_ward_assigned'])?></span>
-                        </div>
-                    </div>
+    <!-- Quick Actions + Activity Feed (2-col) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2rem;">
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header"><h3><i class="fas fa-bolt"></i> Quick Actions</h3></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:1rem;">
+                <?php foreach ($quick_actions as $qa): ?>
+                <button class="btn btn-outline" style="justify-content:flex-start;width:100%;"
+                    onclick="<?= !empty($qa['modal']) ? "openModal('{$qa['modal']}')" : "showTab('{$qa['tab']}',null)" ?>">
+                    <i class="fas <?= e($qa['icon']) ?>" style="width:20px;"></i> <?= e($qa['label']) ?>
+                </button>
                 <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            </div>
         </div>
 
-        <!-- Recent Notifications Snapshot -->
-        <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:2rem;">
-            <h3 style="font-size:1.6rem;font-weight:700;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;color:var(--text-primary);">
-                <i class="fas fa-bell" style="color:var(--warning);"></i> Recent Alerts
-            </h3>
-            <?php
-            $notifs = dbSelect($conn, "SELECT message, created_at, is_read, type FROM staff_notifications WHERE staff_id=? ORDER BY id DESC LIMIT 4", "i", [$staff_id]);
-            if(empty($notifs)): ?>
-                <p style="color:var(--text-muted);text-align:center;padding:2rem;">All caught up! No recent alerts.</p>
-            <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:1.2rem;">
-                <?php foreach($notifs as $n): 
-                    $bg = ((int)$n['is_read'] === 0) ? 'rgba(79,70,229,.1)' : 'transparent';
-                    $border = ((int)$n['is_read'] === 0) ? '1px solid rgba(79,70,229,.2)' : '1px solid transparent';
-                    $iconMap = ['task'=>'fa-check-circle','alert'=>'fa-exclamation-circle','shift'=>'fa-calendar','message'=>'fa-envelope'];
-                    $icon = $iconMap[$n['type']] ?? 'fa-info-circle';
-                ?>
-                    <div style="display:flex;align-items:flex-start;gap:1.5rem;padding:1.2rem;background:<?=$bg?>;border:<?=$border?>;border-radius:8px;">
-                        <i class="fas <?=$icon?>" style="color:var(--role-accent);font-size:1.6rem;margin-top:.4rem;"></i>
-                        <div style="flex:1;">
-                            <p style="margin:0;font-size:1.3rem;font-weight:500;color:var(--text-primary);line-height:1.4;"><?=e($n['message'])?></p>
-                            <span style="font-size:1.1rem;color:var(--text-muted);margin-top:.4rem;display:block;">
-                                <?=date('d M h:i A', strtotime($n['created_at']))?>
-                            </span>
-                        </div>
+        <!-- Recent Alerts -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-bell"></i> Recent Alerts</h3>
+                <button class="btn btn-outline btn-sm" onclick="showTab('notifications',null)">See All</button>
+            </div>
+            <div class="card-body" style="padding:1.5rem;">
+                <?php if (empty($activity_raw)): ?>
+                    <p style="color:var(--text-muted);text-align:center;padding:2rem 0;">All caught up! No recent alerts.</p>
+                <?php else: foreach ($activity_raw as $a):
+                    $ico_map = ['task'=>'fa-check-circle','alert'=>'fa-exclamation-triangle','shift'=>'fa-calendar-alt','emergency'=>'fa-ambulance','system'=>'fa-cog','message'=>'fa-envelope'];
+                    $ico = $ico_map[$a['type']] ?? 'fa-info-circle';
+                ?><div class="activity-item">
+                    <div class="activity-dot" style="background:var(--role-accent-light);color:var(--role-accent);">
+                        <i class="fas <?= e($ico) ?>"></i>
                     </div>
-                <?php endforeach; ?>
+                    <div style="flex:1;min-width:0;">
+                        <p style="margin:0;font-size:1.3rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= e($a['message']) ?></p>
+                        <span style="font-size:1.1rem;color:var(--text-muted);"><?= date('d M, h:i A',strtotime($a['created_at'])) ?></span>
+                    </div>
                 </div>
-            <?php endif; ?>
+                <?php endforeach; endif; ?>
+            </div>
         </div>
-
     </div>
+
+    <!-- Shift Preview -->
+    <?php
+    $upcoming_shifts = dbSelect($conn,"SELECT * FROM staff_shifts WHERE staff_id=? AND shift_date >= ? ORDER BY shift_date ASC LIMIT 5","is",[$staff_id,$today]);
+    if (!empty($upcoming_shifts)): ?>
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-calendar-week"></i> Upcoming Shifts</h3>
+            <button class="btn btn-outline btn-sm" onclick="showTab('schedule',null)">Full Schedule</button>
+        </div>
+        <div class="card-body-flush">
+            <table class="stf-table">
+                <thead><tr><th>Date</th><th>Shift</th><th>Time</th><th>Location</th><th>Status</th></tr></thead>
+                <tbody>
+                <?php foreach ($upcoming_shifts as $s):
+                    $is_today = $s['shift_date'] === $today;
+                    $st = $s['status'] ?? 'scheduled';
+                    $st_color = ['active'=>'var(--success)','completed'=>'var(--text-muted)','missed'=>'var(--danger)','scheduled'=>'var(--info)','swapped'=>'var(--warning)'][$st] ?? 'var(--info)';
+                ?>
+                <tr style="<?= $is_today ? 'background:var(--role-accent-light);' : '' ?>">
+                    <td><strong><?= date('D, d M',strtotime($s['shift_date'])) ?></strong><?= $is_today ? ' <span class="badge" style="background:var(--role-accent);color:#fff;font-size:1rem;">TODAY</span>' : '' ?></td>
+                    <td><?= e(ucfirst($s['shift_type']??'—')) ?></td>
+                    <td><?= date('H:i',strtotime($s['start_time']??'00:00')) ?> – <?= date('H:i',strtotime($s['end_time']??'00:00')) ?></td>
+                    <td><?= e($s['location_ward_assigned']??'—') ?></td>
+                    <td><span class="badge" style="background:color-mix(in srgb,<?=$st_color?> 15%,#fff 85%);color:<?=$st_color?>;"><?= ucfirst($st) ?></span></td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>

@@ -71,7 +71,11 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
             <div style="min-width:150px;">
                 <select name="role" class="adm-search-input">
                     <option value="">All Roles</option>
-                    <?php foreach (['nurse','pharmacist','receptionist','lab_technician','cleaner','security'] as $r): ?>
+                    <?php 
+                    $roles_list = ['nurse','pharmacist','receptionist','lab_technician',
+                                   'ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff','staff'];
+                    foreach ($roles_list as $r): 
+                    ?>
                     <option value="<?php echo $r; ?>" <?php echo ($role_f===$r)?'selected':''; ?>><?php echo ucfirst(str_replace('_',' ',$r)); ?></option>
                     <?php endforeach; ?>
                 </select>
@@ -104,7 +108,8 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                     </thead>
                     <tbody>
                         <?php
-                        $sql = "SELECT s.id, s.staff_id, s.department, s.position,
+                        // Adjusted SQL to get approval status and profile completeness
+                        $sql = "SELECT s.id, s.staff_id, s.department, s.position, s.approval_status, s.profile_completeness,
                                        u.name, u.email, u.phone, u.user_role, u.is_active, u.created_at
                                 FROM staff s
                                 JOIN users u ON s.user_id = u.id
@@ -117,7 +122,16 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                             $n = 1;
                             while ($st = mysqli_fetch_assoc($sq)):
                                 $role_label = ucfirst(str_replace('_', ' ', $st['user_role']));
-                                $role_cls = ($st['user_role']==='nurse') ? 'info' : (($st['user_role']==='pharmacist') ? 'warning' : 'primary');
+                                
+                                // Role coloring matching Staff Dashboard
+                                $role_colors = [
+                                    'ambulance_driver' => 'primary', 'cleaner' => 'info', 'laundry_staff' => 'warning',
+                                    'maintenance' => 'success', 'security' => 'danger', 'kitchen_staff' => 'warning',
+                                    'nurse' => 'info', 'pharmacist' => 'warning', 'lab_technician' => 'primary'
+                                ];
+                                $role_cls = $role_colors[$st['user_role']] ?? 'secondary';
+                                
+                                $comp = (int)($st['profile_completeness'] ?? 0);
                         ?>
                         <tr>
                             <td><?php echo $n++; ?></td>
@@ -139,11 +153,24 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                             <td><?php echo htmlspecialchars($st['phone'] ?? '—'); ?></td>
                             <td><?php echo $st['created_at'] ? date('d M Y', strtotime($st['created_at'])) : '—'; ?></td>
                             <td>
-                                <?php if ($st['is_active']): ?>
+                                <!-- Approval / Active Status -->
+                                <?php if (isset($st['approval_status']) && $st['approval_status'] === 'pending'): ?>
+                                    <span class="adm-badge" style="background:#fff8e1;color:#F39C12;border:1px solid #F39C12;">Pending Approval</span>
+                                <?php elseif (isset($st['approval_status']) && $st['approval_status'] === 'rejected'): ?>
+                                    <span class="adm-badge adm-badge-danger">Rejected</span>
+                                <?php elseif ($st['is_active']): ?>
                                     <span class="adm-badge adm-badge-success">Active</span>
                                 <?php else: ?>
                                     <span class="adm-badge adm-badge-danger">Inactive</span>
                                 <?php endif; ?>
+                                
+                                <!-- Profile Completeness bar -->
+                                <div style="margin-top:8px;font-size:0.7rem;color:var(--text-muted);">
+                                    <?php echo $comp; ?>% Profile
+                                    <div style="width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:2px;">
+                                        <div style="width:<?php echo $comp; ?>%;height:100%;background:<?php echo $comp>=80?'var(--success)':($comp>=50?'var(--warning)':'var(--danger)'); ?>;border-radius:2px;"></div>
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 <div class="adm-table-actions">
