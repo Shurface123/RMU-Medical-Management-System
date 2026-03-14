@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Validate role
-    $valid_roles = ['patient', 'doctor', 'pharmacist'];
+    $valid_roles = ['patient', 'doctor', 'pharmacist', 'staff'];
     if (!in_array($role, $valid_roles)) {
         header("Location: register.php?error=Invalid role selected");
         exit();
@@ -105,6 +105,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($doctor_stmt, "isss", $user_id, $fullname, $email, $phone);
             mysqli_stmt_execute($doctor_stmt);
             mysqli_stmt_close($doctor_stmt);
+        } elseif ($role === 'staff') {
+            // Generate unique employee ID
+            $emp_id = 'STF-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $staff_sql = "INSERT INTO staff (user_id, full_name, email, phone, employee_id, role, created_at) VALUES (?, ?, ?, ?, ?, 'cleaner', NOW())";
+            $staff_stmt = mysqli_prepare($conn, $staff_sql);
+            mysqli_stmt_bind_param($staff_stmt, "issss", $user_id, $fullname, $email, $phone, $emp_id);
+            mysqli_stmt_execute($staff_stmt);
+            mysqli_stmt_close($staff_stmt);
         }
         
         mysqli_stmt_close($stmt);

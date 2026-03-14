@@ -98,6 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     case 'patient':        header("Location: dashboards/patient_dashboard.php"); break;
                     case 'pharmacist':     header("Location: dashboards/pharmacy_dashboard.php"); break;
                     case 'lab_technician': header("Location: dashboards/lab_dashboard.php"); break;
+                    case 'ambulance_driver':
+                    case 'cleaner':
+                    case 'laundry_staff':
+                    case 'maintenance':
+                    case 'security':
+                    case 'kitchen_staff':  header("Location: dashboards/staff_dashboard.php"); break;
                     default:               header("Location: index.php?error=Invalid role"); break;
                 }
                 exit();

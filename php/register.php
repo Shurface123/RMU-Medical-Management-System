@@ -458,6 +458,7 @@
                         <option value="patient">Patient</option>
                         <option value="doctor">Doctor</option>
                         <option value="pharmacist">Pharmacist</option>
+                        <option value="staff">Hospital Staff</option>
                     </select>
                     <i class="fas fa-user-tag"></i>
                 </div>
