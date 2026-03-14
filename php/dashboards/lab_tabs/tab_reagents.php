@@ -26,20 +26,32 @@
   <div class="adm-card-body" style="padding:0;">
     <div class="adm-table-wrap">
       <table class="adm-table" id="rgTable">
-        <thead><tr><th>Name</th><th>Cat#</th><th>Stock</th><th>Reorder</th><th>Expiry</th><th>Supplier</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Name</th><th>Cat#</th><th>Stock</th><th>Reorder</th><th>Expiry</th><th>Supplier</th><th>Est. Days</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
         <?php if(empty($reagents)):?>
-          <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--text-muted);"><i class="fas fa-prescription-bottle" style="font-size:2.5rem;display:block;margin-bottom:1rem;"></i>No reagents registered</td></tr>
+          <tr><td colspan="9" style="text-align:center;padding:3rem;color:var(--text-muted);"><i class="fas fa-prescription-bottle" style="font-size:2.5rem;display:block;margin-bottom:1rem;"></i>No reagents registered</td></tr>
         <?php else: foreach($reagents as $rg):
           $st_cls=['In Stock'=>'success','Low Stock'=>'warning','Out of Stock'=>'danger','Expired'=>'danger','Expiring Soon'=>'warning'][$rg['status']]??'info';
+          $is_running_out = ($rg['est_days_remaining'] !== null && $rg['est_days_remaining'] <= 7 && $rg['quantity_in_stock'] > 0);
         ?>
-        <tr class="<?=in_array($rg['status'],['Out of Stock','Expired'])?'row-danger':($rg['status']==='Low Stock'?'row-warning':'')?>" data-status="<?=e($rg['status'])?>">
+        <tr class="<?=in_array($rg['status'],['Out of Stock','Expired'])?'row-danger':($rg['status']==='Low Stock'||$is_running_out?'row-warning':'')?>" data-status="<?=e($rg['status'])?>">
           <td><strong><?=e($rg['name'])?></strong><?php if($rg['batch_number']):?><br><span style="font-family:monospace;color:var(--text-muted);font-size:1rem;">Batch: <?=e($rg['batch_number'])?></span><?php endif;?></td>
           <td style="font-family:monospace;"><?=e($rg['catalog_number']??'—')?></td>
           <td style="font-weight:700;font-size:1.4rem;color:<?=$rg['quantity_in_stock']<=($rg['reorder_level']??0)?'var(--danger)':'var(--text-primary)'?>;"><?=$rg['quantity_in_stock']?> <span style="color:var(--text-muted);font-size:1rem;"><?=e($rg['unit'])?></span></td>
           <td><?=$rg['reorder_level']?></td>
           <td style="<?=$rg['expiry_date']&&$rg['expiry_date']<$today?'color:var(--danger);font-weight:700;':''?>"><?=$rg['expiry_date']?date('d M Y',strtotime($rg['expiry_date'])):'—'?></td>
           <td><?=e($rg['supplier']??'—')?></td>
+          
+          <!-- Phase 6: Consumption Forecasting -->
+          <td style="<?=$is_running_out?'color:var(--danger);font-weight:700;':''?>">
+              <?php if($rg['est_days_remaining'] === null): ?>
+                 <span style="color:var(--text-muted);">—</span>
+              <?php else: ?>
+                 <?=$rg['est_days_remaining']?> days
+                 <?php if($is_running_out):?><br><span style="font-size:1rem;color:var(--danger);"><i class="fas fa-bolt"></i> Order Soon</span><?php endif;?>
+              <?php endif; ?>
+          </td>
+          
           <td><span class="adm-badge adm-badge-<?=$st_cls?>"><?=e($rg['status'])?></span></td>
           <td class="adm-table-actions">
             <button class="adm-btn adm-btn-sm adm-btn-ghost" onclick='editReagent(<?=json_encode($rg)?>)' title="Edit"><i class="fas fa-edit"></i></button>

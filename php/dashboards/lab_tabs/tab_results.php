@@ -243,16 +243,43 @@ async function saveResult(){
     const fd=new FormData();fd.append('action','save_result');fd.append('order_id',orderId);fd.append('test_name',document.getElementById('res_test').value);
     fd.append('result_values',resultStr);fd.append('unit','');fd.append('ref_min','');fd.append('ref_max','');
     fd.append('interpretation',overallInterp);fd.append('comments',document.getElementById('res_comments').value);
+    fd.append('param_data', JSON.stringify(allVals));
     if(document.getElementById('res_file').files[0]) fd.append('report_file',document.getElementById('res_file').files[0]);
     const r=await labAction(fd);
+    if(!r.success && r.is_anomaly) {
+        if(confirmAction(r.message + '\\n\\nDo you want to proceed and save this result anyway?')) {
+            fd.append('ignore_anomaly', '1');
+            const r2 = await labAction(fd);
+            showToast(r2.message, r2.success?'success':'error');
+            if(r2.success){closeModal('addResultModal');setTimeout(()=>location.reload(),800);}
+        }
+        return;
+    }
     showToast(r.message,r.success?'success':'error');if(r.success){closeModal('addResultModal');setTimeout(()=>location.reload(),800);}
   }else{
     const fd=new FormData();fd.append('action','save_result');fd.append('order_id',orderId);fd.append('test_name',document.getElementById('res_test').value);
     fd.append('result_values',document.getElementById('res_value').value);fd.append('unit',document.getElementById('res_unit').value);
     fd.append('ref_min',document.getElementById('res_ref_min').value);fd.append('ref_max',document.getElementById('res_ref_max').value);
     fd.append('interpretation',document.getElementById('res_interp').value);fd.append('comments',document.getElementById('res_comments').value);
+    fd.append('param_data', JSON.stringify([{
+        param: document.getElementById('res_test').value,
+        value: document.getElementById('res_value').value,
+        unit: document.getElementById('res_unit').value,
+        interp: document.getElementById('res_interp').value,
+        ref_min: document.getElementById('res_ref_min').value,
+        ref_max: document.getElementById('res_ref_max').value
+    }]));
     if(document.getElementById('res_file').files[0]) fd.append('report_file',document.getElementById('res_file').files[0]);
     const r=await labAction(fd);
+    if(!r.success && r.is_anomaly) {
+        if(confirmAction(r.message + '\\n\\nDo you want to proceed and save this result anyway?')) {
+            fd.append('ignore_anomaly', '1');
+            const r2 = await labAction(fd);
+            showToast(r2.message, r2.success?'success':'error');
+            if(r2.success){closeModal('addResultModal');setTimeout(()=>location.reload(),800);}
+        }
+        return;
+    }
     showToast(r.message,r.success?'success':'error');if(r.success){closeModal('addResultModal');setTimeout(()=>location.reload(),800);}
   }
 }

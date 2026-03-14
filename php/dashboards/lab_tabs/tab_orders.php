@@ -64,20 +64,53 @@
         <?php else: foreach($all_orders as $o):
           $urg_cls=['STAT'=>'urgency-stat stat-val','Critical'=>'urgency-critical','Urgent'=>'urgency-urgent','Routine'=>'urgency-routine'][$o['urgency']]??'adm-badge adm-badge-info';
           $st_cls=['Pending'=>'warning','Accepted'=>'info','Sample Collected'=>'primary','Processing'=>'info','Completed'=>'success','Rejected'=>'danger'][$o['order_status']]??'info';
-          // Check delayed processing
-          $is_delayed=false;
-          if($o['order_status']==='Processing' && $o['updated_at']){
-            $processing_hours=(time()-strtotime($o['updated_at']))/3600;
-            if($processing_hours>24) $is_delayed=true;
+          
+          // Phase 6: Turnaround Time (TAT) Monitoring
+          $is_overdue = false;
+          $tat_pct = 0;
+          $tat_text = '--';
+          $tat_color = 'var(--text-muted)';
+          
+          if ($o['order_status'] !== 'Completed' && $o['order_status'] !== 'Rejected') {
+              $ordered_ts = strtotime($o['created_at']);
+              $now_ts = time();
+              $elapsed_hrs = ($now_ts - $ordered_ts) / 3600;
+              $allowed_hrs = (float)($o['normal_turnaround_hours'] ?? 24.0); // Default 24h if null
+              
+              if ($allowed_hrs > 0) {
+                  $tat_pct = min(100, ($elapsed_hrs / $allowed_hrs) * 100);
+                  $remaining_hrs = $allowed_hrs - $elapsed_hrs;
+                  
+                  if ($remaining_hrs < 0) {
+                      $is_overdue = true;
+                      $tat_text = abs(round($remaining_hrs, 1)) . 'h overdue';
+                      $tat_color = 'var(--danger)';
+                  } else {
+                      $tat_text = round($remaining_hrs, 1) . 'h left';
+                      if ($tat_pct > 80) $tat_color = 'var(--warning)';
+                      else $tat_color = 'var(--success)';
+                  }
+              }
           }
         ?>
-          <tr class="<?=$is_delayed?'row-danger':''?>" data-status="<?=e($o['order_status'])?>" data-urgency="<?=e($o['urgency'])?>" data-date="<?=date('Y-m-d',strtotime($o['created_at']))?>">
-            <td><span style="font-family:monospace;font-weight:700;color:var(--role-accent);"><?=e($o['order_id'])?></span><?php if($is_delayed):?><br><span class="adm-badge adm-badge-danger" style="font-size:.9rem;animation:pulse-emergency 2s infinite;">⏰ DELAYED</span><?php endif;?></td>
+          <tr class="<?=$is_overdue?'row-danger':''?>" data-status="<?=e($o['order_status'])?>" data-urgency="<?=e($o['urgency'])?>" data-date="<?=date('Y-m-d',strtotime($o['created_at']))?>">
+            <td>
+              <span style="font-family:monospace;font-weight:700;color:var(--role-accent);"><?=e($o['order_id'])?></span>
+              <?php if($is_overdue):?><br><span class="adm-badge adm-badge-danger" style="font-size:1rem;margin-top:.4rem;animation:pulse-emergency 1.5s infinite;"><i class="fas fa-exclamation-triangle"></i> OVERDUE</span><?php endif;?>
+            </td>
             <td><?=e($o['patient_name']??'—')?></td>
             <td><?=e($o['doctor_name']??'—')?></td>
             <td><strong><?=e($o['test_name']??'—')?></strong></td>
             <td><span class="<?=$urg_cls?>"><?=e($o['urgency'])?></span></td>
-            <td style="white-space:nowrap;font-size:1.2rem;"><?=date('d M, h:i A',strtotime($o['created_at']))?></td>
+            <td style="white-space:nowrap;font-size:1.2rem;">
+              <?=date('d M, h:i A',strtotime($o['created_at']))?>
+              <?php if($o['order_status'] !== 'Completed' && $o['order_status'] !== 'Rejected'): ?>
+                <div style="margin-top:.5rem;width:100px;background:#eee;height:6px;border-radius:3px;overflow:hidden;" title="Turnaround Time (<?=$allowed_hrs??24?>h)">
+                  <div style="width:<?=$tat_pct?>%;height:100%;background:<?=$tat_color?>;"></div>
+                </div>
+                <div style="font-size:1rem;color:<?=$tat_color?>;margin-top:.2rem;"><strong><?=$tat_text?></strong></div>
+              <?php endif; ?>
+            </td>
             <td style="white-space:nowrap;font-size:1.2rem;"><?=$o['required_by_date']?date('d M Y',strtotime($o['required_by_date'])):'—'?></td>
             <td><span class="adm-badge adm-badge-<?=$st_cls?>"><?=e($o['order_status'])?></span></td>
             <td class="adm-table-actions">
@@ -95,12 +128,38 @@
               <?php if(in_array($o['order_status'],['Accepted','Sample Collected'])):?>
                 <button class="adm-btn adm-btn-sm adm-btn-warning" onclick="startProcessing(<?=$o['id']?>)" title="Start Processing"><i class="fas fa-cog"></i></button>
               <?php endif;?>
+              <!-- Phase 6: Reassign Workload -->
+              <?php if(in_array($o['order_status'],['Pending','Accepted','Sample Collected','Processing'])):?>
+                <button class="adm-btn adm-btn-sm adm-btn-ghost" onclick="openReassignModal(<?=$o['id']?>)" title="Reassign Order"><i class="fas fa-exchange-alt"></i></button>
+              <?php endif;?>
             </td>
           </tr>
         <?php endforeach; endif;?>
         </tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- Reassign Order Modal (Phase 6) -->
+<div class="modal-bg" id="reassignOrderModal">
+  <div class="modal-box">
+    <div class="modal-header"><h3><i class="fas fa-exchange-alt" style="color:var(--role-accent);"></i> Reassign Order</h3><button class="modal-close" onclick="closeModal('reassignOrderModal')">&times;</button></div>
+    <input type="hidden" id="reassign_order_id">
+    <div class="form-group">
+      <label>Select New Technician *</label>
+      <select id="reassign_tech_id" class="form-control">
+        <option value="">-- Choose Technician --</option>
+        <?php 
+          // Re-query active techs for the dropdown
+          $techs = mysqli_query($conn,"SELECT id, full_name, specialization FROM lab_technicians WHERE status='Active' ORDER BY full_name ASC");
+          if($techs) while($t = mysqli_fetch_assoc($techs)):
+        ?>
+        <option value="<?=$t['id']?>"><?=e($t['full_name'])?> (<?=e($t['specialization']??'General')?>)</option>
+        <?php endwhile; ?>
+      </select>
+    </div>
+    <button class="adm-btn adm-btn-primary" style="width:100%;" onclick="confirmReassign()"><i class="fas fa-save"></i> Save Reassignment</button>
   </div>
 </div>
 
@@ -196,6 +255,22 @@ async function acceptOrder(id){
   const r=await labAction({action:'accept_order',order_id:id});
   showToast(r.message,r.success?'success':'error');if(r.success)setTimeout(()=>location.reload(),800);
 }
+
+// Phase 6: Order Reassignment
+function openReassignModal(id){
+  document.getElementById('reassign_order_id').value=id;
+  document.getElementById('reassign_tech_id').value='';
+  openModal('reassignOrderModal');
+}
+async function confirmReassign(){
+  const oid = document.getElementById('reassign_order_id').value;
+  const tid = document.getElementById('reassign_tech_id').value;
+  if(!tid){ showToast('Please select a technician required','error'); return; }
+  const r=await labAction({action:'reassign_order',order_id:oid,new_tech_id:tid});
+  showToast(r.message,r.success?'success':'error');
+  if(r.success){ closeModal('reassignOrderModal'); setTimeout(()=>location.reload(),800); }
+}
+
 function openRejectModal(id){document.getElementById('reject_order_id').value=id;document.getElementById('reject_reason').value='';openModal('rejectOrderModal');}
 async function confirmReject(){
   const id=document.getElementById('reject_order_id').value;const reason=document.getElementById('reject_reason').value;

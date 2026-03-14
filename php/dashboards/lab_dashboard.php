@@ -55,11 +55,35 @@ $stats = [
     'unread_messages'   => qv($conn,"SELECT COUNT(*) FROM lab_internal_messages WHERE recipient_id=$tech_pk AND is_read=0"),
 ];
 
+// ── Turnaround Time (TAT) Background Monitoring ─────────────
+// Checks for pending/processing orders that have exceeded their expected TAT
+$tat_q = mysqli_query($conn, "SELECT lto.id, lto.order_id, lto.test_name, lto.created_at, tc.normal_turnaround_hours 
+    FROM lab_test_orders lto 
+    LEFT JOIN lab_test_catalog tc ON lto.test_catalog_id = tc.id 
+    WHERE lto.order_status IN ('Pending', 'Accepted', 'Sample Collected', 'Processing')");
+if($tat_q) {
+    while($tat_o = mysqli_fetch_assoc($tat_q)) {
+        $hrs_allowed = (float)($tat_o['normal_turnaround_hours'] ?? 24.0);
+        if($hrs_allowed > 0) {
+            $elapsed = (time() - strtotime($tat_o['created_at'])) / 3600;
+            if($elapsed > $hrs_allowed) {
+                // Check if we already notified about this order being overdue today
+                $ck = mysqli_query($conn, "SELECT 1 FROM lab_notifications WHERE related_record_id={$tat_o['id']} AND type='System' AND title LIKE '%Overdue%' AND DATE(created_at)='$today' LIMIT 1");
+                if(!mysqli_fetch_row($ck)) {
+                    $msg = "Order {$tat_o['order_id']} ({$tat_o['test_name']}) has exceeded its target TAT of {$hrs_allowed}h.";
+                    mysqli_query($conn,"INSERT INTO lab_notifications (recipient_id, message, type, title, related_module, related_record_id, priority) VALUES ($tech_pk, '$msg', 'System', 'TAT Alert: Overdue', 'orders', {$tat_o['id']}, 'high')");
+                }
+            }
+        }
+    }
+}
+
 // ── All Orders ────────────────────────────────────────────
 $all_orders = [];
 $q = mysqli_query($conn,"SELECT lto.*, u_p.name AS patient_name, u_d.name AS doctor_name, p.patient_id AS p_ref,
-  lt_tech.full_name AS tech_name, p.id AS pat_pk
+  lt_tech.full_name AS tech_name, p.id AS pat_pk, tc.normal_turnaround_hours
   FROM lab_test_orders lto
+  LEFT JOIN lab_test_catalog tc ON lto.test_catalog_id=tc.id
   LEFT JOIN patients p ON lto.patient_id=p.id LEFT JOIN users u_p ON p.user_id=u_p.id
   LEFT JOIN doctors d ON lto.doctor_id=d.id LEFT JOIN users u_d ON d.user_id=u_d.id
   LEFT JOIN lab_technicians lt_tech ON lto.technician_id=lt_tech.id
@@ -85,10 +109,32 @@ $equipment = [];
 $q = mysqli_query($conn,"SELECT le.*, lt.full_name AS tech_name FROM lab_equipment le LEFT JOIN lab_technicians lt ON le.assigned_technician_id=lt.id ORDER BY FIELD(le.status,'Out of Service','Calibration Due','Maintenance','Operational','Decommissioned'), le.name");
 if($q) while($r=mysqli_fetch_assoc($q)) $equipment[]=$r;
 
-// ── Reagents ──────────────────────────────────────────────
+// ── Reagents (Phase 6: Consumption Forecasting) ─────────────
 $reagents = [];
-$q = mysqli_query($conn,"SELECT * FROM reagent_inventory ORDER BY FIELD(status,'Out of Stock','Expired','Low Stock','Expiring Soon','In Stock'), name LIMIT 200");
-if($q) while($r=mysqli_fetch_assoc($q)) $reagents[]=$r;
+$q = mysqli_query($conn,"
+  SELECT r.*, 
+    COALESCE(
+      (SELECT SUM(quantity_changed) * -1 
+       FROM reagent_transactions rt 
+       WHERE rt.reagent_id = r.id 
+         AND rt.transaction_type IN ('Used', 'Expired', 'Lost/Damaged') 
+         AND rt.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+      ) / 30.0, 
+    0) AS avg_daily_usage
+  FROM reagent_inventory r 
+  ORDER BY FIELD(status,'Out of Stock','Expired','Low Stock','Expiring Soon','In Stock'), name LIMIT 200
+");
+if($q) {
+  while($r = mysqli_fetch_assoc($q)) {
+      $r['avg_daily_usage'] = (float)$r['avg_daily_usage'];
+      // Estimate days remaining based on stock and usage
+      $r['est_days_remaining'] = null;
+      if($r['avg_daily_usage'] > 0) {
+          $r['est_days_remaining'] = round($r['quantity_in_stock'] / $r['avg_daily_usage']);
+      }
+      $reagents[] = $r;
+  }
+}
 
 // ── Results ───────────────────────────────────────────────
 $results = [];
@@ -203,6 +249,15 @@ if($q) while($r=mysqli_fetch_assoc($q)) $cat_break[]=$r;
 $top3_tests = [];
 $q=mysqli_query($conn,"SELECT test_name, COUNT(*) AS cnt FROM lab_test_orders WHERE DATE(created_at)='$today' GROUP BY test_name ORDER BY cnt DESC LIMIT 3");
 if($q) while($r=mysqli_fetch_assoc($q)) $top3_tests[]=$r;
+
+// Phase 6: Workload Balancing Distribution
+$workload_dist = [];
+$q=mysqli_query($conn,"SELECT lt.id, lt.full_name, COUNT(lto.id) AS active_orders 
+    FROM lab_technicians lt 
+    LEFT JOIN lab_test_orders lto ON lt.id=lto.technician_id AND lto.order_status IN ('Accepted', 'Sample Collected', 'Processing')
+    WHERE lt.status='Active'
+    GROUP BY lt.id ORDER BY active_orders DESC");
+if($q) while($r=mysqli_fetch_assoc($q)) $workload_dist[]=$r;
 
 // Status breakdown
 $status_break = [];
@@ -528,6 +583,37 @@ textarea.form-control{resize:vertical;min-height:60px;}
         </div>
       </div>
     </div>
+
+    <!-- Phase 6: Workload Balancing Distribution -->
+    <div class="adm-card" style="margin-bottom:2rem;">
+      <div class="adm-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3><i class="fas fa-balance-scale" style="color:var(--role-accent);"></i> Workload Distribution (Active Orders)</h3>
+        <span class="adm-badge adm-badge-info"><?=count($workload_dist)?> Active Technicians</span>
+      </div>
+      <div class="adm-card-body">
+        <?php if(empty($workload_dist)):?>
+          <p style="color:var(--text-muted);text-align:center;">No active orders currently assigned.</p>
+        <?php else:
+            $max_load = max(array_column($workload_dist, 'active_orders'));
+            if($max_load == 0) $max_load = 1; // Prevent division by zero
+            foreach($workload_dist as $wd):
+            $pct = ($wd['active_orders'] / $max_load) * 100;
+            $bar_color = 'var(--success)';
+            if($wd['active_orders'] > 15) $bar_color = 'var(--warning)';
+            if($wd['active_orders'] > 30) $bar_color = 'var(--danger)';
+        ?>
+        <div style="margin-bottom:1.2rem;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:1.2rem;font-weight:600;">
+            <span><i class="fas fa-user-circle" style="color:var(--text-muted);margin-right:.5rem;"></i> <?=e($wd['full_name'])?></span>
+            <span><?=$wd['active_orders']?> orders</span>
+          </div>
+          <div style="width:100%;background:var(--surface-2);height:10px;border-radius:5px;overflow:hidden;">
+            <div style="height:100%;width:<?=$pct?>%;background:<?=$bar_color?>;border-radius:5px;transition:width 0.5s ease;"></div>
+          </div>
+        </div>
+        <?php endforeach; endif;?>
+      </div>
+    </div>
   </div><!-- end overview -->
 
   <!-- ═══════════════ TAB INCLUDES ═══════════════ -->
@@ -629,15 +715,44 @@ function filterTable(tableId,status,el){
   document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{r.style.display=(status==='all'||r.dataset.status===status)?'':'none';});
 }
 
-// Auto-refresh every 60s
-setInterval(function(){
-  fetch(ACTIONS,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({action:'get_stats',_csrf:CSRF})}).then(r=>r.json()).then(d=>{
-    if(d.success&&d.stats){
-      // Update sidebar badges silently
-      console.log('Dashboard refreshed',d.stats);
+// Phase 6: Real-Time Dashboard Refresh (Smart Polling)
+let currentStats = {
+  pending_orders: <?=(int)$stats['pending_orders']?>,
+  equipment_alerts: <?=(int)$stats['equipment_alerts']?>
+};
+
+setInterval(async function(){
+  try {
+    const r = await fetch(ACTIONS, {
+      method: 'POST',
+      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({action:'get_stats', _csrf:CSRF})
+    });
+    const d = await r.json();
+    if(d.success && d.stats) {
+      let notify = false;
+      let msg = [];
+      
+      if(d.stats.pending_orders > currentStats.pending_orders) {
+          notify = true;
+          msg.push((d.stats.pending_orders - currentStats.pending_orders) + " new order(s)");
+          currentStats.pending_orders = d.stats.pending_orders;
+      }
+      if(d.stats.equipment_alerts > currentStats.equipment_alerts) {
+          notify = true;
+          msg.push("New equipment alert");
+          currentStats.equipment_alerts = d.stats.equipment_alerts;
+      }
+      
+      // Update sidebar badges silently if elements exist
+      // e.g. document.querySelector('.adm-badge-warning').textContent = d.stats.pending_orders
+      
+      if(notify) {
+          showToast(msg.join(', ') + ". Refresh to view.", "info");
+      }
     }
-  }).catch(()=>{});
-},60000);
+  } catch(e) {}
+}, 30000);
 
 // Overview Charts
 document.addEventListener('DOMContentLoaded',function(){

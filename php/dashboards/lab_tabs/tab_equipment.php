@@ -43,11 +43,12 @@
             <td><?=$eq['last_calibration_date']?date('d M Y',strtotime($eq['last_calibration_date'])):'Never'?></td>
             <td style="<?=$overdue?'color:var(--danger);font-weight:700;':''?>"><?=$eq['next_calibration_date']?date('d M Y',strtotime($eq['next_calibration_date'])):'—'?></td>
             <td><?=e($eq['location']??'—')?></td>
-            <td class="adm-table-actions">
               <button class="adm-btn adm-btn-sm adm-btn-ghost" onclick='viewEquipDetail(<?=json_encode($eq)?>)' title="Details"><i class="fas fa-eye"></i></button>
               <button class="adm-btn adm-btn-sm adm-btn-ghost" onclick='editEquip(<?=json_encode($eq)?>)' title="Edit"><i class="fas fa-edit"></i></button>
               <button class="adm-btn adm-btn-sm adm-btn-primary" onclick="openMaintenanceModal(<?=$eq['id']?>,'<?=e($eq['name'])?>')" title="Log Maintenance"><i class="fas fa-wrench"></i></button>
               <button class="adm-btn adm-btn-sm adm-btn-success" onclick="logCalibration(<?=$eq['id']?>)" title="Log Calibration"><i class="fas fa-bullseye"></i></button>
+              <!-- Phase 6: QC Trends -->
+              <button class="adm-btn adm-btn-sm adm-btn-ghost" onclick="viewQCTrends(<?=$eq['id']?>,'<?=e($eq['name'])?>')" title="View QC Trends (Levey-Jennings)"><i class="fas fa-chart-line" style="color:var(--role-accent);"></i></button>
             </td>
           </tr>
         <?php endforeach; endif;?>
@@ -81,7 +82,109 @@
   <button class="adm-btn adm-btn-primary" style="width:100%;" onclick="saveMaintenance()"><i class="fas fa-save"></i> Save</button>
 </div></div>
 
+<!-- QC Trends Chart Modal (Phase 6) -->
+<div class="modal-bg" id="qcTrendsModal">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <h3><i class="fas fa-chart-line" style="color:var(--role-accent);"></i> <span id="qcChartTitle">QC Trends</span></h3>
+      <button class="modal-close" onclick="closeModal('qcTrendsModal')">&times;</button>
+    </div>
+    <div style="position:relative;height:350px;width:100%;">
+      <canvas id="qcLeveyJenningsChart"></canvas>
+    </div>
+    <p style="text-align:center;color:var(--text-muted);margin-top:1rem;font-size:1.1rem;">Levey-Jennings Chart: Tracks daily QC results against +/- 2SD action limits to identify systematic errors.</p>
+  </div>
+</div>
+
 <script>
+let qcJChart = null; // Global instance for the Chart.js object
+
+async function viewQCTrends(eqId, eqName) {
+    document.getElementById('qcChartTitle').textContent = 'QC Trends: ' + eqName;
+    openModal('qcTrendsModal');
+    
+    try {
+        const r = await fetch(BASE + '/php/api/endpoints/qc_trends.php?equipment_id=' + eqId);
+        const res = await r.json();
+        
+        if (!res.success) {
+            showToast(res.message, 'error');
+            return;
+        }
+        
+        const data = res.data;
+        if(data.dates.length === 0) {
+            showToast('No recent QC data available for this equipment.', 'warning');
+            return;
+        }
+
+        const ctx = document.getElementById('qcLeveyJenningsChart').getContext('2d');
+        if(qcJChart) qcJChart.destroy();
+        
+        qcJChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [
+                    {
+                        label: 'Result Value',
+                        data: data.results,
+                        borderColor: '#2980B9', // Blue
+                        backgroundColor: '#2980B9',
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        fill: false,
+                        tension: 0
+                    },
+                    {
+                        label: 'Mean',
+                        data: data.mean,
+                        borderColor: '#27AE60', // Green
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0
+                    },
+                    {
+                        label: '+2 SD',
+                        data: data.sd_plus_2,
+                        borderColor: '#F39C12', // Orange
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0
+                    },
+                    {
+                        label: '-2 SD',
+                        data: data.sd_minus_2,
+                        borderColor: '#F39C12', // Orange
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'QC Result Value' }
+                    }
+                }
+            }
+        });
+        
+    } catch(e) {
+        showToast('Failed to load QC data', 'error');
+        console.error(e);
+    }
+}
+
 function filterEquip(st,el){el.parentNode.querySelectorAll('.ftab').forEach(f=>f.classList.remove('active'));el.classList.add('active');document.querySelectorAll('#equipTable tbody tr').forEach(r=>{r.style.display=(st==='all'||r.dataset.status===st)?'':'none';});}
 function editEquip(e){document.getElementById('equipModalTitle').innerHTML='<i class="fas fa-tools"></i> Edit Equipment';document.getElementById('eq_id').value=e.id;document.getElementById('eq_name').value=e.name;document.getElementById('eq_model').value=e.model||'';document.getElementById('eq_serial').value=e.serial_number||'';document.getElementById('eq_mfr').value=e.manufacturer||'';document.getElementById('eq_cat').value=e.category||'Other';document.getElementById('eq_loc').value=e.location||'';document.getElementById('eq_pdate').value=e.purchase_date||'';document.getElementById('eq_warranty').value=e.warranty_expiry||'';document.getElementById('eq_status').value=e.status;document.getElementById('eq_nextcal').value=e.next_calibration_date||'';document.getElementById('eq_notes').value=e.notes||'';openModal('addEquipModal');}
 function viewEquipDetail(e){

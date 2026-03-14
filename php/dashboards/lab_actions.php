@@ -43,6 +43,38 @@ case 'accept_order':
     }
     ok();
 
+// Phase 6: Reassign Workload
+case 'reassign_order':
+    $oid=(int)($post['order_id']??0);
+    $new_tech=(int)($post['new_tech_id']??0);
+    if(!$oid || !$new_tech) fail('Order ID and New Technician ID required');
+    // Verify target technician exists
+    $tech_exists = dbRow($conn,"SELECT user_id, full_name FROM lab_technicians WHERE id=? AND status='Active'","i",[$new_tech]);
+    if(!$tech_exists) fail('Technician not found or inactive');
+    // Ensure order is not already completed
+    $order_state = dbRow($conn,"SELECT order_status, order_id, technician_id FROM lab_test_orders WHERE id=?","i",[$oid]);
+    if(!$order_state) fail('Order not found');
+    if($order_state['order_status'] === 'Completed' || $order_state['order_status'] === 'Rejected') fail('Cannot reassign completed/rejected orders');
+    
+    // Perform reassignment
+    dbExecute($conn,"UPDATE lab_test_orders SET technician_id=?, updated_at=NOW() WHERE id=?","ii",[$new_tech,$oid]);
+    // Log Activity (transferring workload)
+    logLabActivity($conn,$tech_pk,'reassign_order','orders',$oid);
+    // Notify the unassigned tech
+    if($order_state['technician_id'] && $order_state['technician_id'] != $tech_pk) {
+        // Find their uid to notify
+        $old_tech = dbRow($conn,"SELECT user_id FROM lab_technicians WHERE id=?","i",[(int)$order_state['technician_id']]);
+        if($old_tech && $old_tech['user_id']) {
+            dbExecute($conn,"INSERT INTO lab_notifications (recipient_id, message, type, title, related_module, related_record_id, priority) VALUES (?, 'Order {$order_state['order_id']} was reassigned away from you.', 'System', 'Workload Reassigned', 'orders', ?, 'normal')", "ii", [(int)$order_state['technician_id'], $oid]);
+        }
+    }
+    // Notify the *new* assigned tech
+    if($new_tech != $tech_pk) {
+        dbExecute($conn,"INSERT INTO lab_notifications (recipient_id, message, type, title, related_module, related_record_id, priority) VALUES (?, 'Order {$order_state['order_id']} has been reassigned to you parameters.', 'System', 'New Order Assigned', 'orders', ?, 'high')", "ii", [$new_tech, $oid]);
+    }
+    
+    ok();
+
 case 'reject_order':
     $oid=(int)($post['order_id']??0); $reason=sanitize($post['reason']??'');
     if(!$oid||!$reason) fail('Order ID and reason required');
@@ -135,7 +167,74 @@ case 'save_result':
     $sample=dbRow($conn,"SELECT id FROM lab_samples WHERE order_id=? LIMIT 1","i",[$oid]);
     $sample_id=$sample?$sample['id']:null;
 
+    // Anomaly Detection Protocol (Phase 6)
+    $ignore_anomaly = (int)($post['ignore_anomaly']??0);
+    $param_data = json_decode($post['param_data']??'[]', true);
+    
+    // Process parameter anomaly detection
+    $anomalies_detected = [];
+    if(is_array($param_data) && !$ignore_anomaly){
+        foreach($param_data as $p) {
+            $val = (float)($p['value']??0);
+            if($val == 0 && !is_numeric($p['value'])) continue; // Skip non-numeric qualitative results
+            // Query patient's historical baseline for this specific parameter
+            $hist_q = $conn->prepare("SELECT value FROM lab_result_parameters lrp JOIN lab_results_v2 lr2 ON lrp.result_id=lr2.id WHERE lr2.patient_id=? AND lrp.parameter_name=? AND lr2.result_status IN('Validated','Released') ORDER BY lr2.created_at DESC LIMIT 5");
+            $hist_q->bind_param("is", $order['patient_id'], $p['param']);
+            $hist_q->execute();
+            $hist_res = $hist_q->get_result();
+            $hist_vals = [];
+            while($r = $hist_res->fetch_assoc()){
+                $hval = (float)$r['value'];
+                if(is_numeric($r['value'])) $hist_vals[] = $hval;
+            }
+            // If we have at least 2 historical points, calculate baseline
+            if(count($hist_vals) >= 2) {
+                $avg = array_sum($hist_vals) / count($hist_vals);
+                if($avg > 0) {
+                    $variance_pct = abs($val - $avg) / $avg * 100;
+                    if($variance_pct > 30.0) { // 30% deviation threshold
+                        $anomalies_detected[] = $p['param'] . " (" . number_format($variance_pct,1) . "% deviation from historical average of " . number_format($avg,2) . ")";
+                    }
+                }
+            }
+        }
+        
+        if(!empty($anomalies_detected)) {
+            $msg = "Statistical Anomaly Detected: The following parameters deviate significantly from the patient's historical baseline:\\n\\n• " . implode("\\n• ", $anomalies_detected);
+            echo json_encode(['success'=>false, 'message'=>$msg, 'is_anomaly'=>true]);
+            exit;
+        }
+    }
+
     dbExecute($conn,"INSERT INTO lab_results_v2 (result_id,order_id,sample_id,patient_id,doctor_id,technician_id,test_name,result_values,unit_of_measurement,reference_range_min,reference_range_max,result_interpretation,result_status,report_file_path,technician_comments) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'Draft',?,?)","siiiissssddssss",[$result_id,$oid,$sample_id,(int)$order['patient_id'],(int)$order['doctor_id'],$tech_pk,$test_name,$vals,$unit,$ref_min,$ref_max,$interp,$file_path,$comments]);
+    $result_pk = mysqli_insert_id($conn);
+
+    // Insert individual parameters for charting and future anomaly detection
+    if(is_array($param_data)) {
+        foreach($param_data as $p) {
+            $p_name = esc($conn,$p['param']??'');
+            $p_val = esc($conn,$p['value']??'');
+            $p_unit = esc($conn,$p['unit']??'');
+            $p_rmin = ($p['ref_min']!=='')?(float)$p['ref_min']:null;
+            $p_rmax = ($p['ref_max']!=='')?(float)$p['ref_max']:null;
+            $p_interp = esc($conn,$p['interp']??'Normal');
+            // If this was an anomaly but ignored, update the flag
+            if($ignore_anomaly && $p_interp === 'Normal') {
+                $hist_q2 = $conn->prepare("SELECT value FROM lab_result_parameters lrp JOIN lab_results_v2 lr2 ON lrp.result_id=lr2.id WHERE lr2.patient_id=? AND lrp.parameter_name=? ORDER BY lr2.created_at DESC LIMIT 5");
+                $hist_q2->bind_param("is", $order['patient_id'], $p_name);
+                $hist_q2->execute();
+                $hres = $hist_q2->get_result();
+                $hvals=[]; while($r=$hres->fetch_assoc()) if(is_numeric($r['value'])) $hvals[]=(float)$r['value'];
+                if(count($hvals)>=2) {
+                    $avg = array_sum($hvals)/count($hvals);
+                    if($avg>0 && abs((float)$p_val - $avg)/$avg * 100 > 30.0) {
+                        $p_interp = ((float)$p_val > $avg) ? 'High' : 'Low'; // Tag anomaly direction
+                    }
+                }
+            }
+            dbExecute($conn,"INSERT INTO lab_result_parameters (result_id,parameter_name,value,unit,reference_range_min,reference_range_max,flag) VALUES(?,?,?,?,?,?,?)","isssdds",[$result_pk,$p_name,$p_val,$p_unit,$p_rmin,$p_rmax,$p_interp]);
+        }
+    }
 
     // Also update the old lab_results table for backward compat with doctor/patient dashboards
     $old_exists=dbVal($conn,"SELECT COUNT(*) FROM lab_results WHERE test_id=?","s",[$order['test_id']??$order['order_id']]);
@@ -574,36 +673,65 @@ case 'upload_profile_photo':
     ok();
 
 case 'update_personal_info':
-    $map=['name'=>'full_name','email'=>'email','phone'=>'phone','dob'=>'date_of_birth','gender'=>'gender','nationality'=>'nationality','address'=>'street_address'];
+    $map=['name'=>'full_name','email'=>'email','phone'=>'phone','dob'=>'date_of_birth','gender'=>'gender',
+        'nationality'=>'nationality','address'=>'street_address','marital_status'=>'marital_status',
+        'religion'=>'religion','national_id'=>'national_id','postal_code'=>'postal_code',
+        'secondary_phone'=>'secondary_phone','personal_email'=>'personal_email',
+        'street_address'=>'street_address','city'=>'city','region'=>'region','country'=>'country'];
     $sets=[]; $types=''; $params=[];
     foreach($map as $fk=>$col){
         if(isset($post[$fk])){$sets[]="`$col`=?";$types.='s';$params[]=sanitize($post[$fk]);}
+        elseif(isset($_POST[$fk])){$sets[]="`$col`=?";$types.='s';$params[]=sanitize($_POST[$fk]);}
     }
     if(empty($sets)) fail('No data');
     $params[]=$tech_pk; $types.='i';
     dbExecute($conn,"UPDATE lab_technicians SET ".implode(',',$sets).",updated_at=NOW() WHERE id=?",$types,$params);
-    // Also update users table name/email/phone
-    if(isset($post['name'])) dbExecute($conn,"UPDATE users SET name=? WHERE id=?","si",[sanitize($post['name']),$user_id]);
+    if(isset($post['name'])||isset($_POST['name']))
+        dbExecute($conn,"UPDATE users SET name=? WHERE id=?","si",[sanitize($post['name']??$_POST['name']??''),$user_id]);
+    if(isset($_POST['email'])&&$_POST['email'])
+        dbExecute($conn,"UPDATE users SET email=? WHERE id=?","si",[$_POST['email'],$user_id]);
+    updateProfileCompleteness($conn,$tech_pk);
     logLabActivity($conn,$tech_pk,'update_personal','profile',null);
-    ok();
+    ok(['message'=>'Personal information updated successfully']);
 
 case 'update_professional_info':
-    $fields=['specialization','designation','license_number','license_expiry','years_of_experience'];
+    $fields=['specialization','designation','license_number','license_expiry','years_of_experience',
+        'sub_specialization','license_issuing_body','institution_attended','graduation_year',
+        'postgraduate_details','bio'];
     $sets=[]; $types=''; $params=[];
     foreach($fields as $f){
-        if(isset($post[$f])){$sets[]="`$f`=?";$types.='s';$params[]=sanitize($post[$f]);}
+        $val=$post[$f]??$_POST[$f]??null;
+        if($val!==null){$sets[]="`$f`=?";$types.='s';$params[]=sanitize($val);}
+    }
+    // languages_spoken stored as JSON
+    $langs_raw=$post['languages_spoken']??$_POST['languages_spoken']??null;
+    if($langs_raw!==null){
+        $langs=array_filter(array_map('trim',explode(',',$langs_raw)));
+        $sets[]='`languages_spoken`=?';$types.='s';$params[]=json_encode(array_values($langs));
     }
     if(empty($sets)) fail('No data');
+    // Check license expiry → notify if within 60 days
+    $lic_exp=$post['license_expiry']??$_POST['license_expiry']??null;
+    if($lic_exp){
+        $days_left=ceil((strtotime($lic_exp)-time())/86400);
+        if($days_left>0&&$days_left<=60){
+            $msg="⚠️ Your lab technician license expires in $days_left day".($days_left==1?'':'s').". Please renew it.";
+            dbExecute($conn,"INSERT IGNORE INTO lab_notifications (recipient_id,message,type) VALUES(?,?,'System')","is",[$tech_pk,$msg]);
+        }
+    }
     $params[]=$tech_pk; $types.='i';
     dbExecute($conn,"UPDATE lab_technicians SET ".implode(',',$sets).",updated_at=NOW() WHERE id=?",$types,$params);
+    updateProfileCompleteness($conn,$tech_pk);
     logLabActivity($conn,$tech_pk,'update_professional','profile',null);
-    ok();
+    ok(['message'=>'Professional profile updated successfully']);
 
 case 'update_availability':
-    $status=esc($conn,$post['status']??'Available');
+    $status=esc($conn,$post['status']??$_POST['status']??'Available');
+    $allowed_avail=['Available','Busy','On Break','Off Duty'];
+    if(!in_array($status,$allowed_avail)) fail('Invalid status');
     dbExecute($conn,"UPDATE lab_technicians SET availability_status=? WHERE id=?","si",[$status,$tech_pk]);
     logLabActivity($conn,$tech_pk,'update_availability','profile',null);
-    ok();
+    ok(['message'=>'Availability set to '.$status]);
 
 case 'add_qualification':
     $deg=sanitize($post['degree']??'');$inst=sanitize($post['institution']??'');$year=(int)($post['year']??0);
@@ -660,10 +788,16 @@ case 'upload_document':
     ok();
 
 case 'delete_document':
-    $id=(int)($post['id']??0);
+    $id=(int)($post['id']??$_POST['id']??0);
+    $doc_row=dbRow($conn,"SELECT file_path FROM lab_technician_documents WHERE id=? AND technician_id=?","ii",[$id,$tech_pk]);
+    if($doc_row&&$doc_row['file_path']){
+        $abs=$_SERVER['DOCUMENT_ROOT'].'/RMU-Medical-Management-System/'.$doc_row['file_path'];
+        if(file_exists($abs)) @unlink($abs);
+    }
     dbExecute($conn,"DELETE FROM lab_technician_documents WHERE id=? AND technician_id=?","ii",[$id,$tech_pk]);
+    updateProfileCompleteness($conn,$tech_pk);
     logLabActivity($conn,$tech_pk,'delete_document','profile',$id);
-    ok();
+    ok(['message'=>'Document deleted']);
 
 // ═══════════════════════════════════════════
 // SETTINGS
@@ -694,6 +828,75 @@ case 'save_notification_toggles':
     foreach($toggles as $t){if(isset($post[$t])){$sets[]="`$t`=?";$types.='i';$params[]=(int)$post[$t];}}
     if(!empty($sets)){$params[]=$tech_pk;$types.='i';dbExecute($conn,"UPDATE lab_technician_settings SET ".implode(',',$sets)." WHERE technician_id=?",$types,$params);}
     ok();
+
+case 'update_shift_notes':
+    $notes=trim($post['notes']??$_POST['notes']??'');
+    dbExecute($conn,"UPDATE lab_technicians SET shift_preference_notes=?,updated_at=NOW() WHERE id=?","si",[$notes,$tech_pk]);
+    updateProfileCompleteness($conn,$tech_pk);
+    ok(['message'=>'Shift preferences saved']);
+
+case 'save_qualification':
+    $deg=sanitize($post['degree_name']??$_POST['degree_name']??'');
+    $inst=sanitize($post['institution']??$_POST['institution']??'');
+    $year=(int)($post['year_awarded']??$_POST['year_awarded']??0);
+    if(!$deg||!$inst) fail('Degree name and institution are required');
+    $file_path='';
+    if(isset($_FILES['file'])&&$_FILES['file']['error']===UPLOAD_ERR_OK){
+        $v=validateUpload($_FILES['file'],['application/pdf','image/jpeg','image/png'],5242880);
+        if(!$v['valid']) fail($v['error']);
+        $ext=pathinfo($_FILES['file']['name'],PATHINFO_EXTENSION);
+        $fname='lab_qual_'.$tech_pk.'_'.time().'.'.$ext;
+        $dir=$_SERVER['DOCUMENT_ROOT'].'/RMU-Medical-Management-System/uploads/lab_docs/';
+        if(!is_dir($dir)) mkdir($dir,0755,true);
+        move_uploaded_file($_FILES['file']['tmp_name'],$dir.$fname);
+        $file_path='uploads/lab_docs/'.$fname;
+    }
+    dbExecute($conn,"INSERT INTO lab_technician_qualifications (technician_id,degree_name,institution,year_awarded,certificate_file) VALUES(?,?,?,?,?)",
+        "issss",[$tech_pk,$deg,$inst,$year?:null,$file_path]);
+    updateProfileCompleteness($conn,$tech_pk);
+    logLabActivity($conn,$tech_pk,'add_qualification','profile',null);
+    ok(['message'=>'Qualification added successfully']);
+
+case 'save_certification':
+    $cert_name=sanitize($post['certification_name']??$_POST['certification_name']??'');
+    if(!$cert_name) fail('Certification name is required');
+    $body=sanitize($post['issuing_body']??$_POST['issuing_body']??'');
+    $issue=esc($conn,$post['issue_date']??$_POST['issue_date']??'');
+    $exp=esc($conn,$post['expiry_date']??$_POST['expiry_date']??'');
+    $file_path='';
+    if(isset($_FILES['file'])&&$_FILES['file']['error']===UPLOAD_ERR_OK){
+        $v=validateUpload($_FILES['file'],['application/pdf','image/jpeg','image/png'],5242880);
+        if(!$v['valid']) fail($v['error']);
+        $ext=pathinfo($_FILES['file']['name'],PATHINFO_EXTENSION);
+        $fname='lab_cert_'.$tech_pk.'_'.time().'.'.$ext;
+        $dir=$_SERVER['DOCUMENT_ROOT'].'/RMU-Medical-Management-System/uploads/lab_docs/';
+        if(!is_dir($dir)) mkdir($dir,0755,true);
+        move_uploaded_file($_FILES['file']['tmp_name'],$dir.$fname);
+        $file_path='uploads/lab_docs/'.$fname;
+    }
+    dbExecute($conn,"INSERT INTO lab_technician_certifications (technician_id,certification_name,issuing_body,issue_date,expiry_date,certificate_file) VALUES(?,?,?,?,?,?)",
+        "isssss",[$tech_pk,$cert_name,$body,$issue?:null,$exp?:null,$file_path]);
+    if($exp){
+        $dl=ceil((strtotime($exp)-time())/86400);
+        if($dl>0&&$dl<=60){
+            $msg="⚠️ Your certification '$cert_name' expires in $dl days.";
+            dbExecute($conn,"INSERT IGNORE INTO lab_notifications (recipient_id,message,type) VALUES(?,?,'System')","is",[$tech_pk,$msg]);
+        }
+    }
+    updateProfileCompleteness($conn,$tech_pk);
+    logLabActivity($conn,$tech_pk,'add_certification','profile',null);
+    ok(['message'=>'Certification added successfully']);
+
+case 'logout_session':
+    $sid=(int)($post['session_id']??$_POST['session_id']??0);
+    if(!$sid) fail('Invalid session ID');
+    dbExecute($conn,"DELETE FROM lab_technician_sessions WHERE id=? AND technician_id=? AND is_current=0","ii",[$sid,$tech_pk]);
+    ok(['message'=>'Session terminated']);
+
+case 'logout_all_sessions':
+    dbExecute($conn,"DELETE FROM lab_technician_sessions WHERE technician_id=? AND is_current=0","i",[$tech_pk]);
+    logLabActivity($conn,$tech_pk,'logout_all_sessions','security',null);
+    ok(['message'=>'All other sessions have been logged out']);
 
 case 'change_password':
     $old=($post['current_password']??$post['old_password']??'');$new=($post['new_password']??'');
@@ -751,3 +954,36 @@ case 'get_stats':
 default:
     fail('Unknown action: '.$action);
 }
+
+// ─── Helper: updateProfileCompleteness ───────────────────────────────────────
+if(!function_exists('updateProfileCompleteness')){
+function updateProfileCompleteness($conn,$tech_pk){
+    $tr=dbRow($conn,"SELECT date_of_birth,phone,nationality,specialization,designation,license_number,profile_photo,shift_preference_notes,two_fa_enabled FROM lab_technicians WHERE id=?","i",[$tech_pk]);
+    if(!$tr)return;
+    $personal =(int)(!empty($tr['date_of_birth'])&&!empty($tr['phone'])&&!empty($tr['nationality']));
+    $prof     =(int)(!empty($tr['specialization'])&&!empty($tr['designation'])&&!empty($tr['license_number']));
+    $quals    =(int)(dbVal($conn,"SELECT COUNT(*) FROM lab_technician_qualifications WHERE technician_id=?","i",[$tech_pk])>0);
+    $equip    =(int)(dbVal($conn,"SELECT COUNT(*) FROM lab_equipment WHERE assigned_technician_id=?","i",[$tech_pk])>0);
+    $shift    =(int)(!empty($tr['shift_preference_notes']));
+    $photo    =(int)(!empty($tr['profile_photo']));
+    $secure   =(int)(!empty($tr['two_fa_enabled']));
+    $docs     =(int)(dbVal($conn,"SELECT COUNT(*) FROM lab_technician_documents WHERE technician_id=?","i",[$tech_pk])>0);
+    $pct      =round(($personal+$prof+$quals+$equip+$shift+$photo+$secure+$docs)/8*100);
+    dbExecute($conn,"INSERT INTO lab_technician_profile_completeness (technician_id,personal_info,professional_profile,qualifications,equipment_assigned,shift_profile,photo_uploaded,security_setup,documents_uploaded,completeness_percentage) VALUES(?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE personal_info=VALUES(personal_info),professional_profile=VALUES(professional_profile),qualifications=VALUES(qualifications),equipment_assigned=VALUES(equipment_assigned),shift_profile=VALUES(shift_profile),photo_uploaded=VALUES(photo_uploaded),security_setup=VALUES(security_setup),documents_uploaded=VALUES(documents_uploaded),completeness_percentage=VALUES(completeness_percentage)","iiiiiiiiis",
+        [$tech_pk,$personal,$prof,$quals,$equip,$shift,$photo,$secure,$docs,(string)$pct]);
+}
+}
+
+if(!function_exists('handleFileUpload')){
+function handleFileUpload($file,$subfolder,$allowed_exts,$max_mb){
+    $ext=strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
+    if(!in_array($ext,$allowed_exts)) throw new Exception('Invalid file type: '.$ext);
+    if($file['size']>$max_mb*1024*1024) throw new Exception('File too large. Max '.$max_mb.'MB');
+    $upload_dir="../../uploads/lab_technician/$subfolder/";
+    if(!is_dir($upload_dir)) mkdir($upload_dir,0755,true);
+    $fname=uniqid().'_'.time().'.'.$ext;
+    if(!move_uploaded_file($file['tmp_name'],$upload_dir.$fname)) throw new Exception('Upload failed');
+    return "uploads/lab_technician/$subfolder/$fname";
+}
+}
+
