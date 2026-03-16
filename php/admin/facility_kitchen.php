@@ -4,20 +4,22 @@ enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 
 $active_page = 'kitchen';
-$page_title  = 'Dietary & Kitchen';
+$page_title = 'Dietary & Kitchen';
 include '../includes/_sidebar.php';
 
 // Quick form handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_diet') {
-    $patient  = trim($_POST['patient_name']);
-    $ward     = trim($_POST['ward']);
-    $type     = trim($_POST['diet_type']);
-    $notes    = trim($_POST['notes']);
-    $meal     = trim($_POST['meal_time']);
-    
-    $sql = "INSERT INTO kitchen_tasks (task_type, meal_time, dietary_notes, target_ward, patient_name, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())";
+    $ward = trim($_POST['ward']);
+    $type = trim($_POST['diet_type']);
+    $notes = trim($_POST['notes']);
+    $meal = trim($_POST['meal_time']);
+    $qty = max(1, (int)($_POST['quantity'] ?? 1));
+    $assigned = 0; // default, no specific staff assigned from admin side
+
+    $sql = "INSERT INTO kitchen_tasks (assigned_to, meal_type, ward_department, dietary_requirements, quantity, notes, preparation_status, delivery_status) VALUES (?, ?, ?, ?, ?, ?, 'pending', 'pending')";
     $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "sssss", $type, $meal, $notes, $ward, $patient);
+    $diet_json = json_encode(['type' => $type]);
+    mysqli_stmt_bind_param($stmt, "isssis", $assigned, $meal, $ward, $diet_json, $qty, $notes);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
     header("Location: facility_kitchen.php?success=1");
@@ -25,8 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 $orders = [];
-$q = mysqli_query($conn, "SELECT * FROM kitchen_tasks ORDER BY FIELD(status,'pending','preparing','delivered'), created_at DESC LIMIT 50");
-if ($q) while ($r = mysqli_fetch_assoc($q)) $orders[] = $r;
+$q = mysqli_query($conn, "SELECT * FROM kitchen_tasks ORDER BY FIELD(preparation_status,'pending','in preparation','ready','delivered'), created_at DESC LIMIT 50");
+if ($q)
+    while ($r = mysqli_fetch_assoc($q))
+        $orders[] = $r;
 ?>
 
 <main class="adm-main">
@@ -54,7 +58,8 @@ if ($q) while ($r = mysqli_fetch_assoc($q)) $orders[] = $r;
 
         <?php if (isset($_GET['success'])): ?>
             <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Dietary order dispatched to kitchen.</div>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <div class="adm-card">
             <div class="adm-card-header">
@@ -65,23 +70,37 @@ if ($q) while ($r = mysqli_fetch_assoc($q)) $orders[] = $r;
                     <thead><tr><th>Time Created</th><th>Patient / Location</th><th>Meal Time</th><th>Dietary Type</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if (empty($orders)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No active kitchen orders.</td></tr>
-                        <?php else: foreach ($orders as $o): 
-                            $sc = $o['status']==='delivered'?'success':($o['status']==='preparing'?'warning':'info');
-                        ?>
+                        <?php
+else:
+    foreach ($orders as $o):
+        $sc = $o['preparation_status'] === 'delivered' || $o['preparation_status'] === 'ready' ? 'success' : ($o['preparation_status'] === 'in preparation' ? 'warning' : 'info');
+?>
                         <tr>
                             <td style="white-space:nowrap;"><?php echo date('d M Y, g:i A', strtotime($o['created_at'])); ?></td>
                             <td>
-                                <strong><?php echo htmlspecialchars($o['patient_name']?:'Bulk Order'); ?></strong>
-                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-bed"></i> <?php echo htmlspecialchars($o['target_ward']); ?></div>
+                                <strong>Qty: <?php echo htmlspecialchars($o['quantity']); ?></strong>
+                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-bed"></i> <?php echo htmlspecialchars($o['ward_department']); ?></div>
                             </td>
-                            <td><span class="adm-badge adm-badge-secondary"><?php echo strtoupper($o['meal_time']); ?></span></td>
+                            <td><span class="adm-badge adm-badge-secondary"><?php echo strtoupper($o['meal_type']); ?></span></td>
                             <td>
-                                <strong><?php echo ucfirst($o['task_type']); ?></strong>
-                                <?php if($o['dietary_notes']) echo '<div style="font-size:.75rem;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> ' . htmlspecialchars($o['dietary_notes']) . '</div>'; ?>
+                                <?php
+        $diet = json_decode($o['dietary_requirements'], true);
+        echo '<strong>' . ucfirst($diet['type'] ?? 'Standard') . '</strong>';
+        if ($o['notes'])
+            echo '<div style="font-size:.75rem;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> ' . htmlspecialchars($o['notes']) . '</div>';
+?>
                             </td>
-                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($o['status']); ?></span></td>
+                            <td>
+                                <span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($o['preparation_status']); ?></span>
+                                <?php if ($o['delivery_status'] === 'delivered'): ?>
+                                    <span class="adm-badge adm-badge-success" style="margin-top:2px;">Delivered</span>
+                                <?php
+        endif; ?>
+                            </td>
                         </tr>
-                        <?php endforeach; endif; ?>
+                        <?php
+    endforeach;
+endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -100,12 +119,12 @@ if ($q) while ($r = mysqli_fetch_assoc($q)) $orders[] = $r;
                 <input type="hidden" name="action" value="add_diet">
                 <div style="display:flex;gap:1rem;">
                     <div class="adm-form-group" style="flex:1;">
-                        <label>Patient Name (Optional if Bulk)</label>
-                        <input type="text" name="patient_name" class="adm-search-input" placeholder="e.g. John Doe">
-                    </div>
-                    <div class="adm-form-group" style="flex:1;">
                         <label>Ward / Room Number</label>
                         <input type="text" name="ward" class="adm-search-input" required placeholder="Ward 2">
+                    </div>
+                    <div class="adm-form-group" style="flex:1;">
+                        <label>Quantity (Portions)</label>
+                        <input type="number" name="quantity" class="adm-search-input" min="1" value="1" required>
                     </div>
                 </div>
                 <div style="display:flex;gap:1rem;">

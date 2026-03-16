@@ -4,20 +4,20 @@ enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 
 $active_page = 'maintenance';
-$page_title  = 'Facility Maintenance';
+$page_title = 'Facility Maintenance';
 include '../includes/_sidebar.php';
 
 // Handle quick form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_maintenance') {
-    $title     = trim($_POST['title']);
-    $priority  = trim($_POST['priority']);
-    $location  = trim($_POST['location']);
-    $desc      = trim($_POST['description']);
-    $reported  = $_SESSION['user_id'];
-    
-    $sql = "INSERT INTO maintenance_requests (reported_by, title, description, location, priority, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())";
+    $title = trim($_POST['title']);
+    $priority = trim($_POST['priority']);
+    $location = trim($_POST['location']);
+    $desc = trim($_POST['description']);
+    $reported = $_SESSION['user_name'] ?? 'Admin';
+
+    $sql = "INSERT INTO maintenance_requests (reported_by, equipment_or_area, issue_description, location, priority, status, issue_category) VALUES (?, ?, ?, ?, ?, 'reported', 'other')";
     $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "issss", $reported, $title, $desc, $location, $priority);
+    mysqli_stmt_bind_param($stmt, "sssss", $reported, $title, $desc, $location, $priority);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
     header("Location: facility_maintenance.php?success=1");
@@ -26,12 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 $requests = [];
 $q = mysqli_query($conn, "
-    SELECT m.*, u.name as reporter_name 
+    SELECT m.*
     FROM maintenance_requests m 
-    LEFT JOIN users u ON m.reported_by = u.id 
-    ORDER BY FIELD(m.status, 'pending', 'in_progress', 'completed'), m.created_at DESC LIMIT 50
+    ORDER BY FIELD(m.status, 'reported', 'assigned', 'in progress', 'on hold', 'completed', 'cancelled'), m.reported_at DESC LIMIT 50
 ");
-if ($q) while ($r = mysqli_fetch_assoc($q)) $requests[] = $r;
+if ($q)
+    while ($r = mysqli_fetch_assoc($q))
+        $requests[] = $r;
 ?>
 
 <main class="adm-main">
@@ -59,7 +60,8 @@ if ($q) while ($r = mysqli_fetch_assoc($q)) $requests[] = $r;
 
         <?php if (isset($_GET['success'])): ?>
             <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Maintenance request logged successfully. Sent to maintenance staff dashboard.</div>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <div class="adm-card">
             <div class="adm-card-header">
@@ -70,21 +72,26 @@ if ($q) while ($r = mysqli_fetch_assoc($q)) $requests[] = $r;
                     <thead><tr><th>Date</th><th>Issue / Location</th><th>Priority</th><th>Reported By</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if (empty($requests)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No maintenance requests found.</td></tr>
-                        <?php else: foreach ($requests as $req): 
-                            $pc = $req['priority']==='high'?'danger':($req['priority']==='medium'?'warning':'success');
-                            $sc = $req['status']==='completed'?'success':($req['status']==='in_progress'?'info':'warning');
-                        ?>
+                        <?php
+else:
+    foreach ($requests as $req):
+        $pc = $req['priority'] === 'high' || $req['priority'] === 'urgent' ? 'danger' : ($req['priority'] === 'medium' ? 'warning' : 'success');
+        $sc = $req['status'] === 'completed' ? 'success' : ($req['status'] === 'in progress' || $req['status'] === 'assigned' ? 'info' : 'warning');
+?>
                         <tr>
-                            <td style="white-space:nowrap;"><?php echo date('d M Y, g:i A', strtotime($req['created_at'])); ?></td>
+                            <td style="white-space:nowrap;"><?php echo date('d M Y, g:i A', strtotime($req['reported_at'])); ?></td>
                             <td>
-                                <strong><?php echo htmlspecialchars($req['title']); ?></strong>
+                                <strong><?php echo htmlspecialchars($req['equipment_or_area']); ?></strong>
                                 <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($req['location']); ?></div>
+                                <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;"><?php echo htmlspecialchars(substr($req['issue_description'], 0, 80)); ?>...</div>
                             </td>
                             <td><span class="adm-badge adm-badge-<?php echo $pc; ?>"><?php echo strtoupper($req['priority']); ?></span></td>
-                            <td><?php echo htmlspecialchars($req['reporter_name'] ?? 'Admin'); ?></td>
-                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst(str_replace('_',' ',$req['status'])); ?></span></td>
+                            <td><?php echo htmlspecialchars($req['reported_by'] ?? 'Admin'); ?></td>
+                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($req['status']); ?></span></td>
                         </tr>
-                        <?php endforeach; endif; ?>
+                        <?php
+    endforeach;
+endif; ?>
                     </tbody>
                 </table>
             </div>

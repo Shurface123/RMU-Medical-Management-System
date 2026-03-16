@@ -34,30 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_num_rows($result) === 1) {
             $row = mysqli_fetch_assoc($result);
 
-            // ── Lab-technician brute-force lockout (before password check) ───
-            if ($role === 'lab_technician') {
-                require_once __DIR__ . '/dashboards/lab_security.php';
-
-                // Reject if account already locked
-                if (isset($row['is_active']) && !$row['is_active']) {
-                    header("Location: index.php?error=" . urlencode('Account locked. Contact administration.'));
-                    exit();
-                }
-
-                // Count recent failed attempts
-                $tech_uid    = (int)$row['id'];
-                $recent_fails = (int)(dbVal($conn,
-                    "SELECT COUNT(*) FROM lab_audit_trail
-                     WHERE technician_id = (SELECT id FROM lab_technicians WHERE user_id=? LIMIT 1)
-                       AND action_type = 'login_failed'
-                       AND created_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)",
-                    "i", [$tech_uid]) ?? 0);
-
-                if ($recent_fails >= 5) {
-                    enforceBruteForceLockout($conn, $tech_uid, 5, 15);
-                    header("Location: index.php?error=" . urlencode('Account locked after too many failed attempts. Administration has been notified.'));
-                    exit();
-                }
+            // ── Global Brute-Force & Lockout Check ───
+            if (isset($row['is_active']) && !$row['is_active']) {
+                header("Location: index.php?error=" . urlencode('Account disabled. Contact administration.'));
+                exit();
+            }
+            if (!empty($row['locked_until']) && strtotime($row['locked_until']) > time()) {
+                $rem = ceil((strtotime($row['locked_until']) - time()) / 60);
+                header("Location: index.php?error=" . urlencode("Account locked due to multiple failed attempts. Try again in $rem minutes."));
+                exit();
             }
 
             // ── Password verification (bcrypt first, fall back to MD5 legacy) ──
@@ -74,6 +59,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($password_valid && $row['user_role'] === $role) {
+                // Clear any previous locks and log success globally
+                $upd_lock = mysqli_prepare($conn, "UPDATE users SET locked_until=NULL WHERE id=?");
+                mysqli_stmt_bind_param($upd_lock, "i", $row['id']);
+                mysqli_stmt_execute($upd_lock);
+                
+                $log_suc = mysqli_prepare($conn, "INSERT INTO global_login_attempts (user_id, action_type, ip_address) VALUES (?, 'login_success', ?)");
+                $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+                mysqli_stmt_bind_param($log_suc, "is", $row['id'], $ip);
+                mysqli_stmt_execute($log_suc);
+
                 // Start session
                 $sessionManager = new SessionManager($conn);
                 $sessionManager->startSession($row['id'], $role);
@@ -87,24 +82,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Log successful login for lab technicians
                 if ($role === 'lab_technician') {
                     if (!function_exists('logLabActivity')) require_once __DIR__ . '/dashboards/lab_security.php';
-                    $tp = dbVal($conn, "SELECT id FROM lab_technicians WHERE user_id=? LIMIT 1", "i", [(int)$row['id']]);
-                    if ($tp) logLabActivity($conn, (int)$tp, 'login_success', 'security', null);
+                    // We only load dbVal securely if we actually found lab_security.php
+                    if (function_exists('dbVal')) {
+                        $tp = dbVal($conn, "SELECT id FROM lab_technicians WHERE user_id=? LIMIT 1", "i", [(int)$row['id']]);
+                        if ($tp) logLabActivity($conn, (int)$tp, 'login_success', 'security', null);
+                    }
                 }
 
                 // ── Staff sub-role approval gate ───────────────────────
                 $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
                 if (in_array($role, $STAFF_SUB_ROLES)) {
-                    // Load staff_security helpers (dbVal etc.) if not already loaded
-                    if (!function_exists('dbVal')) require_once __DIR__ . '/dashboards/staff_security.php';
+                    // Quick check directly instead of requiring external helper
+                    $app_q = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM staff WHERE user_id=? LIMIT 1");
+                    mysqli_stmt_bind_param($app_q, "i", $row['id']);
+                    mysqli_stmt_execute($app_q);
+                    $app_res = mysqli_stmt_get_result($app_q);
+                    $staff_row = mysqli_fetch_assoc($app_res);
+                    $approval = $staff_row['approval_status'] ?? 'pending';
+                    $reason   = $staff_row['rejection_reason'] ?? 'Contact administration for details.';
 
-                    $approval = dbVal($conn,
-                        "SELECT approval_status FROM staff WHERE user_id = ? LIMIT 1",
-                        "i", [(int)$row['id']]
-                    );
-
-                    if ($approval === null || $approval === 'pending') {
+                    if ($approval === 'pending') {
                         // Log attempt in audit trail
-                        $deniedName = trim($row['name'] . ' (' . $row['user_name'] . ')');
                         @mysqli_query($conn, "INSERT INTO staff_audit_trail (user_id,action_type,module,description,created_at)
                             VALUES ({$row['id']},'login_blocked','security','Account pending admin approval',NOW())");
                         header("Location: index.php?error=" . urlencode("Your account is pending admin approval. You will be notified once approved."));
@@ -112,10 +110,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     if ($approval === 'rejected') {
-                        $reason = dbVal($conn,
-                            "SELECT COALESCE(rejection_reason,'Contact administration for details.') FROM staff WHERE user_id = ? LIMIT 1",
-                            "i", [(int)$row['id']]
-                        );
                         header("Location: index.php?error=" . urlencode("Account rejected: $reason"));
                         exit();
                     }
@@ -142,13 +136,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
             } else {
-                // Failed login — log for lab_technician, then re-check lockout
-                if ($role === 'lab_technician' && isset($row['id'])) {
-                    if (!function_exists('logLabActivity')) require_once __DIR__ . '/dashboards/lab_security.php';
-                    $tp = dbVal($conn, "SELECT id FROM lab_technicians WHERE user_id=? LIMIT 1", "i", [(int)$row['id']]);
-                    if ($tp) {
-                        logLabActivity($conn, (int)$tp, 'login_failed', 'security', null);
-                        enforceBruteForceLockout($conn, (int)$row['id'], 5, 15);
+                // Failed login — log globally
+                if (isset($row['id'])) {
+                    $log_fail = mysqli_prepare($conn, "INSERT INTO global_login_attempts (user_id, action_type, ip_address) VALUES (?, 'login_failed', ?)");
+                    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+                    mysqli_stmt_bind_param($log_fail, "is", $row['id'], $ip);
+                    mysqli_stmt_execute($log_fail);
+
+                    // Check if should lock
+                    $check_fails = mysqli_prepare($conn, "SELECT COUNT(*) as fails FROM global_login_attempts WHERE user_id=? AND action_type='login_failed' AND created_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+                    mysqli_stmt_bind_param($check_fails, "i", $row['id']);
+                    mysqli_stmt_execute($check_fails);
+                    $c_res = mysqli_stmt_get_result($check_fails);
+                    $fails = mysqli_fetch_assoc($c_res)['fails'] ?? 0;
+
+                    if ($fails >= 5) {
+                        $lock_upd = mysqli_prepare($conn, "UPDATE users SET locked_until=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?");
+                        mysqli_stmt_bind_param($lock_upd, "i", $row['id']);
+                        mysqli_stmt_execute($lock_upd);
+                        header("Location: index.php?error=" . urlencode('Account locked due to multiple failed attempts. Try again in 15 minutes.'));
+                        exit();
                     }
                 }
                 header("Location: index.php?error=Incorrect username, password, or role");

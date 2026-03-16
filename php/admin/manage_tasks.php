@@ -4,7 +4,7 @@ enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 
 $active_page = 'manage_tasks';
-$page_title  = 'Task Assignments';
+$page_title = 'Task Assignments';
 include '../includes/_sidebar.php';
 
 // Prepare lists for modals
@@ -18,8 +18,9 @@ $q_staff = mysqli_query($conn, "
 ");
 if ($q_staff) {
     while ($row = mysqli_fetch_assoc($q_staff)) {
-        $r = ucfirst(str_replace('_',' ',$row['user_role']));
-        if (!isset($dept_staff[$r])) $dept_staff[$r] = [];
+        $r = ucfirst(str_replace('_', ' ', $row['user_role']));
+        if (!isset($dept_staff[$r]))
+            $dept_staff[$r] = [];
         $dept_staff[$r][] = $row;
     }
 }
@@ -27,7 +28,7 @@ if ($q_staff) {
 // Fetch all tasks view (Active & Completed separately)
 $tasks = [];
 $q_tasks = mysqli_query($conn, "
-    SELECT t.id, t.title, t.priority, t.due_date, t.status, t.created_at,
+    SELECT t.task_id AS id, t.task_title AS title, t.priority, t.due_date, t.status, t.created_at,
            u1.name as assignee_name, u1.user_role as assignee_role,
            u2.name as assigner_name
     FROM staff_tasks t
@@ -36,9 +37,11 @@ $q_tasks = mysqli_query($conn, "
     LEFT JOIN users u2 ON t.assigned_by = u2.id
     ORDER BY t.created_at DESC LIMIT 100
 ");
-if ($q_tasks) while ($row = mysqli_fetch_assoc($q_tasks)) $tasks[] = $row;
+if ($q_tasks)
+    while ($row = mysqli_fetch_assoc($q_tasks))
+        $tasks[] = $row;
 
-$active_tasks = array_filter($tasks, fn($t) => in_array($t['status'], ['pending','in_progress']));
+$active_tasks = array_filter($tasks, fn($t) => in_array($t['status'], ['pending', 'in progress']));
 $completed_tasks = array_filter($tasks, fn($t) => $t['status'] === 'completed');
 ?>
 
@@ -74,35 +77,38 @@ $completed_tasks = array_filter($tasks, fn($t) => $t['status'] === 'completed');
                 <div class="adm-card-body" style="padding:0;">
                     <?php if (empty($active_tasks)): ?>
                         <div style="padding:3rem;text-align:center;color:var(--text-muted);"><i class="fas fa-check-double" style="font-size:2rem;color:var(--success);margin-bottom:1rem;display:block;"></i>No active tasks.</div>
-                    <?php else: ?>
+                    <?php
+else: ?>
                     <table class="adm-table">
                         <thead><tr><th>Task Info & Due Date</th><th>Assignee</th><th>Status</th></tr></thead>
                         <tbody>
-                            <?php foreach ($active_tasks as $t): 
-                                $pc = $t['priority'] === 'high' ? 'danger' : ($t['priority'] === 'medium' ? 'warning' : 'success');
-                            ?>
+                            <?php foreach ($active_tasks as $t):
+        $pc = $t['priority'] === 'high' ? 'danger' : ($t['priority'] === 'medium' ? 'warning' : 'success');
+?>
                             <tr>
                                 <td>
                                     <strong><?php echo htmlspecialchars($t['title']); ?></strong>
                                     <div style="margin-top:.3rem;font-size:.8rem;color:var(--text-muted);">
-                                        <i class="far fa-calendar-alt"></i> Due: <?php echo date('M d, g:i A', strtotime($t['due_date'])); ?>
+                                        <i class="far fa-calendar-alt"></i> Due: <?php echo date('M d', strtotime($t['due_date'])); ?>
                                     </div>
                                     <div style="margin-top:.2rem;"><span class="adm-badge adm-badge-<?php echo $pc; ?>" style="font-size:0.65rem;padding:2px 6px;">Priority: <?php echo strtoupper($t['priority']); ?></span></div>
                                 </td>
                                 <td>
                                     <strong style="color:var(--primary);"><?php echo htmlspecialchars($t['assignee_name']); ?></strong>
-                                    <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;"><?php echo str_replace('_',' ',$t['assignee_role']); ?></div>
+                                    <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;"><?php echo str_replace('_', ' ', $t['assignee_role']); ?></div>
                                 </td>
                                 <td>
                                     <span class="adm-badge" style="background:#e0f2fe;color:#0284c7;border:1px solid #0284c7;">
-                                        <?php echo ucfirst(str_replace('_',' ',$t['status'])); ?>
+                                        <?php echo ucfirst($t['status']); ?>
                                     </span>
                                 </td>
                             </tr>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </tbody>
                     </table>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                 </div>
             </div>
 
@@ -114,26 +120,29 @@ $completed_tasks = array_filter($tasks, fn($t) => $t['status'] === 'completed');
                 <div class="adm-card-body" style="padding:0;">
                     <?php if (empty($completed_tasks)): ?>
                         <div style="padding:3rem;text-align:center;color:var(--text-muted);">No completed tasks yet.</div>
-                    <?php else: ?>
+                    <?php
+else: ?>
                     <table class="adm-table">
                         <thead><tr><th>Task Info</th><th>Assignee</th><th>Status</th></tr></thead>
                         <tbody>
-                            <?php foreach (array_slice($completed_tasks,0,10) as $t): ?>
+                            <?php foreach (array_slice($completed_tasks, 0, 10) as $t): ?>
                             <tr style="opacity:0.8;">
                                 <td>
                                     <strike style="color:var(--text-muted);"><strong><?php echo htmlspecialchars($t['title']); ?></strong></strike>
-                                    <div style="margin-top:.3rem;font-size:.8rem;color:var(--text-muted);">Assigned By: Admin <?php echo htmlspecialchars($t['assigner_name']??''); ?></div>
+                                    <div style="margin-top:.3rem;font-size:.8rem;color:var(--text-muted);">Assigned By: Admin <?php echo htmlspecialchars($t['assigner_name'] ?? ''); ?></div>
                                 </td>
                                 <td>
                                     <strong><?php echo htmlspecialchars($t['assignee_name']); ?></strong><br>
-                                    <small><?php echo str_replace('_',' ',$t['assignee_role']); ?></small>
+                                    <small><?php echo str_replace('_', ' ', $t['assignee_role']); ?></small>
                                 </td>
                                 <td><span class="adm-badge adm-badge-success">Completed</span></td>
                             </tr>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </tbody>
                     </table>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                 </div>
             </div>
         </div>
@@ -157,9 +166,11 @@ $completed_tasks = array_filter($tasks, fn($t) => $t['status'] === 'completed');
                             <optgroup label="── <?php echo $dept; ?> ──">
                             <?php foreach ($ppl as $p): ?>
                                 <option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['name']); ?></option>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                             </optgroup>
-                        <?php endforeach; ?>
+                        <?php
+endforeach; ?>
                     </select>
                 </div>
                 <div class="adm-form-group">

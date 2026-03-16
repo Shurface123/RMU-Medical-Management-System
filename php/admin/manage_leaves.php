@@ -4,7 +4,7 @@ enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 
 $active_page = 'manage_leaves';
-$page_title  = 'Leave Requests';
+$page_title = 'Leave Requests';
 include '../includes/_sidebar.php';
 
 // Fetch leaves
@@ -14,9 +14,11 @@ $q_leaves = mysqli_query($conn, "
     FROM staff_leave_requests lr
     JOIN staff s ON lr.staff_id = s.id
     JOIN users u ON s.user_id = u.id
-    ORDER BY lr.created_at DESC LIMIT 100
+    ORDER BY lr.applied_at DESC LIMIT 100
 ");
-if ($q_leaves) while ($r = mysqli_fetch_assoc($q_leaves)) $leaves[] = $r;
+if ($q_leaves)
+    while ($r = mysqli_fetch_assoc($q_leaves))
+        $leaves[] = $r;
 
 $pending = array_filter($leaves, fn($l) => $l['status'] === 'pending');
 $actioned = array_filter($leaves, fn($l) => $l['status'] !== 'pending');
@@ -54,16 +56,18 @@ $actioned = array_filter($leaves, fn($l) => $l['status'] !== 'pending');
                     <tbody>
                         <?php if (empty($pending)): ?>
                             <tr><td colspan="5" style="padding:2.5rem;text-align:center;color:var(--text-muted);">No pending leave requests.</td></tr>
-                        <?php else: foreach ($pending as $l): ?>
+                        <?php
+else:
+    foreach ($pending as $l): ?>
                         <tr>
                             <td>
                                 <strong><?php echo htmlspecialchars($l['name']); ?></strong><br>
-                                <small style="color:var(--text-muted);text-transform:uppercase;"><?php echo str_replace('_',' ',$l['role']); ?></small>
+                                <small style="color:var(--text-muted);text-transform:uppercase;"><?php echo str_replace('_', ' ', $l['role']); ?></small>
                             </td>
-                            <td><span class="adm-badge adm-badge-primary"><?php echo ucfirst(str_replace('_',' ',$l['leave_type'])); ?></span></td>
+                            <td><span class="adm-badge adm-badge-primary"><?php echo ucfirst(str_replace('_', ' ', $l['leave_type'])); ?></span></td>
                             <td>
                                 <div><i class="far fa-calendar-alt"></i> <?php echo date('M d', strtotime($l['start_date'])) . ' - ' . date('M d, Y', strtotime($l['end_date'])); ?></div>
-                                <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">Requested: <?php echo date('d M Y', strtotime($l['created_at'])); ?></div>
+                                <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">Requested: <?php echo date('d M Y', strtotime($l['applied_at'])); ?></div>
                             </td>
                             <td style="max-width:250px;">
                                 <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="<?php echo htmlspecialchars($l['reason']); ?>">
@@ -72,12 +76,14 @@ $actioned = array_filter($leaves, fn($l) => $l['status'] !== 'pending');
                             </td>
                             <td>
                                 <div style="display:inline-flex;gap:.5rem;">
-                                    <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveLeave(<?php echo $l['id']; ?>)" title="Approve"><i class="fas fa-check"></i></button>
-                                    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectLeave(<?php echo $l['id']; ?>)" title="Reject"><i class="fas fa-times"></i></button>
+                                    <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveLeave(<?php echo $l['leave_id']; ?>)" title="Approve"><i class="fas fa-check"></i></button>
+                                    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectLeave(<?php echo $l['leave_id']; ?>)" title="Reject"><i class="fas fa-times"></i></button>
                                 </div>
                             </td>
                         </tr>
-                        <?php endforeach; endif; ?>
+                        <?php
+    endforeach;
+endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -91,20 +97,26 @@ $actioned = array_filter($leaves, fn($l) => $l['status'] !== 'pending');
                     <tbody>
                         <?php if (empty($actioned)): ?>
                             <tr><td colspan="4" style="padding:2.5rem;text-align:center;color:var(--text-muted);">No history.</td></tr>
-                        <?php else: foreach (array_slice($actioned,0,15) as $l): ?>
+                        <?php
+else:
+    foreach (array_slice($actioned, 0, 15) as $l): ?>
                         <tr>
                             <td><strong><?php echo htmlspecialchars($l['name']); ?></strong></td>
-                            <td><?php echo ucfirst(str_replace('_',' ',$l['leave_type'])); ?></td>
+                            <td><?php echo ucfirst(str_replace('_', ' ', $l['leave_type'])); ?></td>
                             <td><?php echo date('d M', strtotime($l['start_date'])) . ' - ' . date('d M Y', strtotime($l['end_date'])); ?></td>
                             <td>
-                                <?php if($l['status']==='approved'): ?>
+                                <?php if ($l['status'] === 'approved'): ?>
                                     <span class="adm-badge adm-badge-success">Approved</span>
-                                <?php else: ?>
-                                    <span class="adm-badge adm-badge-danger" title="<?php echo htmlspecialchars($l['rejection_reason']??''); ?>">Rejected</span>
-                                <?php endif; ?>
+                                <?php
+        else: ?>
+                                    <span class="adm-badge adm-badge-danger" title="<?php echo htmlspecialchars($l['admin_notes'] ?? ''); ?>">Rejected</span>
+                                <?php
+        endif; ?>
                             </td>
                         </tr>
-                        <?php endforeach; endif; ?>
+                        <?php
+    endforeach;
+endif; ?>
                     </tbody>
                 </table>
             </div>

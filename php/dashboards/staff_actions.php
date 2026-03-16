@@ -4,6 +4,7 @@
  * Central AJAX handler for the complete Staff Dashboard.
  * All 15 modules handled here. POST only.
  */
+define('AJAX_REQUEST', true);
 require_once 'staff_security.php';
 
 header('Content-Type: application/json');
@@ -13,6 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_err('Method Not Allowed', 405);
 $action   = sanitize($_POST['action'] ?? '');
 $user_id  = (int)$_SESSION['user_id'];
 $staffRole = $_SESSION['user_role'] ?? 'staff';
+
+$token = $_POST['csrf_token'] ?? '';
+if (!verifyCsrf($token)) {
+    json_err('Invalid Security Token (CSRF). Refresh page and try again.', 403);
+}
 
 // Get staff record (required for most actions)
 $staff = dbRow($conn, "SELECT s.*, r.role_display_name, r.icon_class FROM staff s LEFT JOIN staff_roles r ON s.role=r.role_slug WHERE s.user_id=? LIMIT 1", "i", [$user_id]);

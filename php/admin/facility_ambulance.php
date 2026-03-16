@@ -4,26 +4,26 @@ enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 
 $active_page = 'ambulance';
-$page_title  = 'Ambulance Dispatch Control';
+$page_title = 'Ambulance Dispatch Control';
 include '../includes/_sidebar.php';
 
 // Quick DB Insertion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'dispatch') {
     $driver_id = (int)$_POST['driver_id'];
-    $amb_id    = (int)$_POST['ambulance_id'];
-    $pickup    = trim($_POST['pickup']);
-    $dropoff   = trim($_POST['dropoff']);
-    $reason    = trim($_POST['reason']);
-    
+    $amb_id = (int)$_POST['ambulance_id'];
+    $pickup = trim($_POST['pickup']);
+    $dropoff = trim($_POST['dropoff']);
+    $reason = trim($_POST['reason']);
+
     // Add to ambulance_trips
-    $sql = "INSERT INTO ambulance_trips (driver_id, ambulance_id, trip_start_location, trip_end_location, purpose, status, start_time, created_at) VALUES (?, ?, ?, ?, ?, 'en_route', NOW(), NOW())";
+    $sql = "INSERT INTO ambulance_trips (driver_id, vehicle_id, pickup_location, destination, trip_notes, trip_status, created_at) VALUES (?, ?, ?, ?, ?, 'en route', NOW())";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "iisss", $driver_id, $amb_id, $pickup, $dropoff, $reason);
     mysqli_stmt_execute($stmt);
-    
+
     // Update ambulance status
     mysqli_query($conn, "UPDATE ambulances SET status = 'On Duty' WHERE id = $amb_id");
-    
+
     mysqli_stmt_close($stmt);
     header("Location: facility_ambulance.php?success=1");
     exit();
@@ -32,12 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Fetch available drivers
 $drivers = [];
 $qd = mysqli_query($conn, "SELECT s.id, u.name FROM staff s JOIN users u ON s.user_id = u.id WHERE u.is_active = 1 AND u.user_role = 'ambulance_driver'");
-if ($qd) while ($r = mysqli_fetch_assoc($qd)) $drivers[] = $r;
+if ($qd)
+    while ($r = mysqli_fetch_assoc($qd))
+        $drivers[] = $r;
 
 // Fetch active ambulances
 $ambulances = [];
 $qa = mysqli_query($conn, "SELECT id, vehicle_number, ambulance_id, status FROM ambulances WHERE status = 'Available'");
-if ($qa) while ($r = mysqli_fetch_assoc($qa)) $ambulances[] = $r;
+if ($qa)
+    while ($r = mysqli_fetch_assoc($qa))
+        $ambulances[] = $r;
 
 // Fetch recent trips
 $trips = [];
@@ -46,10 +50,12 @@ $qt = mysqli_query($conn, "
     FROM ambulance_trips t 
     LEFT JOIN staff s ON t.driver_id = s.id 
     LEFT JOIN users u ON s.user_id = u.id 
-    LEFT JOIN ambulances a ON t.ambulance_id = a.id 
+    LEFT JOIN ambulances a ON t.vehicle_id = a.id 
     ORDER BY t.created_at DESC LIMIT 50
 ");
-if ($qt) while ($r = mysqli_fetch_assoc($qt)) $trips[] = $r;
+if ($qt)
+    while ($r = mysqli_fetch_assoc($qt))
+        $trips[] = $r;
 ?>
 
 <main class="adm-main">
@@ -80,7 +86,8 @@ if ($qt) while ($r = mysqli_fetch_assoc($qt)) $trips[] = $r;
 
         <?php if (isset($_GET['success'])): ?>
             <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Ambulance dispatched successfully. Sent to driver's dashboard.</div>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <div class="adm-card">
             <div class="adm-card-header">
@@ -91,9 +98,11 @@ if ($qt) while ($r = mysqli_fetch_assoc($qt)) $trips[] = $r;
                     <thead><tr><th>Dispatched</th><th>Driver & Vehicle</th><th>Route (Pickup ➔ Dropoff)</th><th>Purpose</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if (empty($trips)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No trips logged.</td></tr>
-                        <?php else: foreach ($trips as $t): 
-                            $sc = $t['status']==='completed'?'success':($t['status']==='en_route'?'info':'warning');
-                        ?>
+                        <?php
+else:
+    foreach ($trips as $t):
+        $sc = $t['trip_status'] === 'completed' ? 'success' : ($t['trip_status'] === 'en route' ? 'info' : 'warning');
+?>
                         <tr>
                             <td style="white-space:nowrap;"><?php echo date('d M Y, g:i A', strtotime($t['created_at'])); ?></td>
                             <td>
@@ -101,13 +110,15 @@ if ($qt) while ($r = mysqli_fetch_assoc($qt)) $trips[] = $r;
                                 <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-truck-medical"></i> <?php echo htmlspecialchars($t['vehicle_number']); ?></div>
                             </td>
                             <td>
-                                <div><span style="color:var(--success);"><i class="fas fa-map-marker-alt"></i></span> <?php echo htmlspecialchars($t['trip_start_location']); ?></div>
-                                <div><span style="color:var(--danger);"><i class="fas fa-map-pin"></i></span> <?php echo htmlspecialchars($t['trip_end_location']?:'Hospital'); ?></div>
+                                <div><span style="color:var(--success);"><i class="fas fa-map-marker-alt"></i></span> <?php echo htmlspecialchars($t['pickup_location']); ?></div>
+                                <div><span style="color:var(--danger);"><i class="fas fa-map-pin"></i></span> <?php echo htmlspecialchars($t['destination'] ?: 'Hospital'); ?></div>
                             </td>
-                            <td><?php echo htmlspecialchars($t['purpose']); ?></td>
-                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst(str_replace('_',' ',$t['status'])); ?></span></td>
+                            <td><?php echo htmlspecialchars($t['trip_notes']); ?></td>
+                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($t['trip_status']); ?></span></td>
                         </tr>
-                        <?php endforeach; endif; ?>
+                        <?php
+    endforeach;
+endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -131,7 +142,8 @@ if ($qt) while ($r = mysqli_fetch_assoc($qt)) $trips[] = $r;
                             <option value="">-- Choose Driver --</option>
                             <?php foreach ($drivers as $d): ?>
                                 <option value="<?php echo $d['id']; ?>"><?php echo htmlspecialchars($d['name']); ?></option>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </select>
                     </div>
                     <div class="adm-form-group" style="flex:1;">
@@ -140,7 +152,8 @@ if ($qt) while ($r = mysqli_fetch_assoc($qt)) $trips[] = $r;
                             <option value="">-- Choose Ambulance --</option>
                             <?php foreach ($ambulances as $a): ?>
                                 <option value="<?php echo $a['id']; ?>"><?php echo htmlspecialchars($a['vehicle_number']) . ' (' . htmlspecialchars($a['ambulance_id']) . ')'; ?></option>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </select>
                     </div>
                 </div>

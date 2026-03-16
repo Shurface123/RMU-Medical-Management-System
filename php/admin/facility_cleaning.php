@@ -4,19 +4,19 @@ enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 
 $active_page = 'cleaning';
-$page_title  = 'Cleaning & Hygiene';
+$page_title = 'Cleaning & Hygiene';
 include '../includes/_sidebar.php';
 
 // Quick dispatch action
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_cleaning') {
-    $title     = trim($_POST['title']);
-    $type      = trim($_POST['type']); // rutine, biohazard, deep_clean
-    $location  = trim($_POST['location']);
-    $desc      = trim($_POST['notes']);
-    $staff_id  = (int)$_POST['staff_id']; 
-    
+    $title = trim($_POST['title']);
+    $type = trim($_POST['type']); // rutine, biohazard, deep_clean
+    $location = trim($_POST['location']);
+    $desc = trim($_POST['notes']);
+    $staff_id = (int)$_POST['staff_id'];
+
     // We insert straight into cleaning_logs as an assigned task
-    $sql = "INSERT INTO cleaning_logs (cleaner_id, location, task_type, start_time, status, notes, created_at) VALUES (?, ?, ?, NOW(), 'pending', ?, NOW())";
+    $sql = "INSERT INTO cleaning_logs (staff_id, ward_room_area, cleaning_type, started_at, sanitation_status, notes) VALUES (?, ?, ?, NOW(), 'pending inspection', ?)";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "isss", $staff_id, $location, $type, $desc);
     mysqli_stmt_execute($stmt);
@@ -28,18 +28,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Fetch cleaners list
 $cleaners = [];
 $qc = mysqli_query($conn, "SELECT s.id, u.name FROM staff s JOIN users u ON s.user_id = u.id WHERE u.is_active = 1 AND u.user_role = 'cleaner'");
-if ($qc) while ($r = mysqli_fetch_assoc($qc)) $cleaners[] = $r;
+if ($qc)
+    while ($r = mysqli_fetch_assoc($qc))
+        $cleaners[] = $r;
 
 // Fetch logs
 $logs = [];
 $q = mysqli_query($conn, "
     SELECT cl.*, u.name as cleaner_name
     FROM cleaning_logs cl
-    LEFT JOIN staff s ON cl.cleaner_id = s.id
+    LEFT JOIN staff s ON cl.staff_id = s.id
     LEFT JOIN users u ON s.user_id = u.id
-    ORDER BY FIELD(cl.status, 'pending','in_progress', 'completed'), cl.created_at DESC LIMIT 50
+    ORDER BY FIELD(cl.sanitation_status, 'pending inspection', 'contaminated', 'clean'), cl.created_at DESC LIMIT 50
 ");
-if ($q) while ($r = mysqli_fetch_assoc($q)) $logs[] = $r;
+if ($q)
+    while ($r = mysqli_fetch_assoc($q))
+        $logs[] = $r;
 
 // Contamination Alerts (from other staff)
 $alerts = [];
@@ -48,9 +52,11 @@ $qa = mysqli_query($conn, "
     FROM contamination_reports cr
     LEFT JOIN users u ON cr.reported_by = u.id
     WHERE cr.status != 'resolved'
-    ORDER BY cr.created_at DESC
+    ORDER BY cr.reported_at DESC
 ");
-if ($qa) while ($r = mysqli_fetch_assoc($qa)) $alerts[] = $r;
+if ($qa)
+    while ($r = mysqli_fetch_assoc($qa))
+        $alerts[] = $r;
 ?>
 
 <main class="adm-main">
@@ -85,23 +91,26 @@ if ($qa) while ($r = mysqli_fetch_assoc($qa)) $alerts[] = $r;
                 <?php foreach ($alerts as $al): ?>
                 <div style="background:#fff;padding:1rem;border-radius:8px;border-left:4px solid var(--danger);margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                     <div>
-                        <strong style="color:var(--danger);font-size:1.1rem;"><?php echo htmlspecialchars($al['location']); ?>: <?php echo htmlspecialchars($al['hazard_type']); ?></strong>
+                        <strong style="color:var(--danger);font-size:1.1rem;"><?php echo htmlspecialchars($al['location']); ?>: <?php echo ucfirst($al['contamination_type']); ?></strong>
                         <div style="font-size:.85rem;color:var(--text-muted);margin-top:.3rem;"><?php echo htmlspecialchars($al['description']); ?></div>
-                        <div style="font-size:.75rem;margin-top:.5rem;">Reported by <?php echo htmlspecialchars($al['reporter_name']); ?> at <?php echo date('g:i A', strtotime($al['created_at'])); ?></div>
+                        <div style="font-size:.75rem;margin-top:.5rem;">Reported by <?php echo htmlspecialchars($al['reporter_name']); ?> at <?php echo date('g:i A', strtotime($al['reported_at'])); ?></div>
                     </div>
                     <div>
-                        <span class="adm-badge adm-badge-danger" style="animation:pulse 2s infinite;"><i class="fas fa-exclamation-triangle"></i> <?php echo strtoupper($al['level']); ?> SEVERITY</span>
+                        <span class="adm-badge adm-badge-danger" style="animation:pulse 2s infinite;"><i class="fas fa-exclamation-triangle"></i> <?php echo strtoupper($al['severity']); ?> SEVERITY</span>
                         <!-- Quick assign drop-down in a real scenario would go here -->
                     </div>
                 </div>
-                <?php endforeach; ?>
+                <?php
+    endforeach; ?>
             </div>
         </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <?php if (isset($_GET['success'])): ?>
             <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Cleaning task dispatched successfully.</div>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <div class="adm-card">
             <div class="adm-card-header">
@@ -112,21 +121,26 @@ if ($qa) while ($r = mysqli_fetch_assoc($qa)) $alerts[] = $r;
                     <thead><tr><th>Task Started</th><th>Location / Ward</th><th>Type</th><th>Assigned Cleaner</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if (empty($logs)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No logs.</td></tr>
-                        <?php else: foreach ($logs as $cl): 
-                            $sc = $cl['status']==='completed'?'success':($cl['status']==='in_progress'?'info':'warning');
-                            $tc = $cl['task_type']==='biohazard'?'danger':($cl['task_type']==='deep_clean'?'primary':'secondary');
-                        ?>
+                        <?php
+else:
+    foreach ($logs as $cl):
+        $sc = $cl['sanitation_status'] === 'clean' ? 'success' : ($cl['sanitation_status'] === 'contaminated' ? 'danger' : 'warning');
+        $tc = $cl['cleaning_type'] === 'biohazard' ? 'danger' : ($cl['cleaning_type'] === 'deep_clean' ? 'primary' : 'secondary');
+?>
                         <tr>
                             <td style="white-space:nowrap;"><?php echo date('d M Y, g:i A', strtotime($cl['created_at'])); ?></td>
                             <td>
-                                <strong><?php echo htmlspecialchars($cl['location']); ?></strong>
-                                <?php if($cl['notes']) echo '<div style="font-size:.75rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'.htmlspecialchars($cl['notes']).'">' . htmlspecialchars($cl['notes']) . '</div>'; ?>
+                                <strong><?php echo htmlspecialchars($cl['ward_room_area']); ?></strong>
+                                <?php if ($cl['notes'])
+            echo '<div style="font-size:.75rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' . htmlspecialchars($cl['notes']) . '">' . htmlspecialchars($cl['notes']) . '</div>'; ?>
                             </td>
-                            <td><span class="adm-badge adm-badge-<?php echo $tc; ?>"><?php echo ucfirst(str_replace('_',' ',$cl['task_type'])); ?></span></td>
+                            <td><span class="adm-badge adm-badge-<?php echo $tc; ?>"><?php echo ucfirst(str_replace('_', ' ', $cl['cleaning_type'])); ?></span></td>
                             <td><?php echo htmlspecialchars($cl['cleaner_name'] ?? 'Unassigned'); ?></td>
-                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst(str_replace('_',' ',$cl['status'])); ?></span></td>
+                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($cl['sanitation_status']); ?></span></td>
                         </tr>
-                        <?php endforeach; endif; ?>
+                        <?php
+    endforeach;
+endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -165,9 +179,10 @@ if ($qa) while ($r = mysqli_fetch_assoc($qa)) $alerts[] = $r;
                     <label>Assign to Cleaner</label>
                     <select name="staff_id" class="adm-search-input" required>
                         <option value="">-- Choose Staff --</option>
-                        <?php foreach($cleaners as $c): ?>
+                        <?php foreach ($cleaners as $c): ?>
                             <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['name']); ?></option>
-                        <?php endforeach; ?>
+                        <?php
+endforeach; ?>
                     </select>
                 </div>
                 <div class="adm-form-group">

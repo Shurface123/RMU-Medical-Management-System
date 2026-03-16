@@ -4,9 +4,40 @@
  * Provides role-based access control and session validation
  */
 
-// Start session if not already started
+// Configure secure session parameters before starting
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,              // Until browser closes
+        'path' => '/',
+        'domain' => '',               // Current domain
+        'secure' => true,             // Requires HTTPS (assuming production is HTTPS)
+        'httponly' => true,           // Prevents JavaScript access to session cookie (XSS mitigation)
+        'samesite' => 'Strict'        // Prevents CSRF by not sending cookie in cross-site requests
+    ]);
     session_start();
+}
+
+/**
+ * Generate a CSRF token and store it in the session
+ * @return string The generated token
+ */
+function generate_csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Verify a CSRF token against the session
+ * @param string $token The token to verify
+ * @return bool True if valid, false otherwise
+ */
+function verify_csrf_token($token) {
+    if (empty($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
 }
 
 /**

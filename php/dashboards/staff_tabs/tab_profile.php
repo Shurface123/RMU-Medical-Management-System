@@ -14,7 +14,7 @@ $sessions = dbSelect($conn,"SELECT * FROM staff_sessions WHERE staff_id=? ORDER 
 // Settings
 $settings = dbRow($conn,"SELECT * FROM staff_settings WHERE staff_id=? LIMIT 1","i",[$staff_id]);
 // Completeness
-$compl_pct = $completeness;
+$compl_pct = $completeness ?? 0;
 
 // Calculate age
 $dob = $staff['date_of_birth'] ?? '';

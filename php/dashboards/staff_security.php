@@ -13,10 +13,22 @@ date_default_timezone_set('Africa/Accra');
 $STAFF_ROLES = ['staff','ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
 
 if (!isset($_SESSION['user_id'], $_SESSION['user_role'])) {
+    if (defined('AJAX_REQUEST')) {
+        header('Content-Type: application/json');
+        http_response_code(401);
+        echo json_encode(['success'=>false,'message'=>'Please login to access this resource']);
+        exit;
+    }
     $redirect = '../index.php?error=' . urlencode('Please login to access the Staff Dashboard');
     header("Location: $redirect"); exit();
 }
 if (!in_array($_SESSION['user_role'], $STAFF_ROLES)) {
+    if (defined('AJAX_REQUEST')) {
+        header('Content-Type: application/json');
+        http_response_code(403);
+        echo json_encode(['success'=>false,'message'=>'Access Denied']);
+        exit;
+    }
     header("Location: ../index.php?error=" . urlencode('Access Denied')); exit();
 }
 
@@ -37,11 +49,23 @@ if (in_array($_SESSION['user_role'], $STAFF_SUB_ROLES)) {
         $rejectionReason = $approvalRow['rejection_reason'] ?? 'Please contact administration.';
 
         if ($approvalStatus === 'pending') {
+            if (defined('AJAX_REQUEST')) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['success'=>false,'message'=>'Account pending admin approval']);
+                exit;
+            }
             session_write_close(); // don't destroy — let them retry after approval
             include __DIR__ . '/staff_pending_approval.php';
             exit();
         }
         if ($approvalStatus === 'rejected') {
+            if (defined('AJAX_REQUEST')) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['success'=>false,'message'=>'Account rejected: ' . $rejectionReason]);
+                exit;
+            }
             $_SESSION['_rejection_reason'] = $rejectionReason;
             session_write_close();
             include __DIR__ . '/staff_pending_approval.php';

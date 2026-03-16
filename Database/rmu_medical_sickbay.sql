@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 14, 2026 at 04:51 AM
+-- Generation Time: Mar 16, 2026 at 11:37 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -129,6 +129,36 @@ CREATE TABLE IF NOT EXISTS `ambulance_requests` (
   KEY `idx_request_id` (`request_id`),
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ambulance_trips`
+--
+
+DROP TABLE IF EXISTS `ambulance_trips`;
+CREATE TABLE IF NOT EXISTS `ambulance_trips` (
+  `trip_id` int NOT NULL AUTO_INCREMENT,
+  `driver_id` int NOT NULL COMMENT 'staff ID',
+  `patient_id` int DEFAULT NULL COMMENT 'nullable — may not be registered patient',
+  `pickup_location` varchar(255) NOT NULL,
+  `destination` varchar(255) NOT NULL,
+  `request_type` enum('emergency','scheduled') DEFAULT 'emergency',
+  `request_source` enum('admin','doctor','nurse','walk-in') DEFAULT 'walk-in',
+  `trip_status` enum('requested','accepted','rejected','en route','patient onboard','arrived','completed','cancelled') DEFAULT 'requested',
+  `accepted_at` datetime DEFAULT NULL,
+  `departed_at` datetime DEFAULT NULL,
+  `patient_onboard_at` datetime DEFAULT NULL,
+  `arrived_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `distance_km` decimal(8,2) DEFAULT NULL,
+  `fuel_used_litres` decimal(8,2) DEFAULT NULL,
+  `vehicle_id` int DEFAULT NULL,
+  `trip_notes` text,
+  `rejection_reason` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`trip_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -337,6 +367,73 @@ CREATE TABLE IF NOT EXISTS `bed_transfers` (
   KEY `idx_bt_nurse` (`nurse_id`),
   KEY `idx_bt_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cleaning_logs`
+--
+
+DROP TABLE IF EXISTS `cleaning_logs`;
+CREATE TABLE IF NOT EXISTS `cleaning_logs` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `schedule_id` int DEFAULT NULL,
+  `staff_id` int NOT NULL,
+  `ward_room_area` varchar(255) NOT NULL,
+  `cleaning_type` varchar(50) NOT NULL,
+  `started_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `checklist_completed` tinyint(1) DEFAULT '0',
+  `sanitation_status` enum('clean','contaminated','pending inspection') DEFAULT 'clean',
+  `notes` text,
+  `photo_proof_path` varchar(255) DEFAULT NULL,
+  `issues_reported` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cleaning_schedules`
+--
+
+DROP TABLE IF EXISTS `cleaning_schedules`;
+CREATE TABLE IF NOT EXISTS `cleaning_schedules` (
+  `schedule_id` int NOT NULL AUTO_INCREMENT,
+  `assigned_to` int NOT NULL COMMENT 'staff ID',
+  `ward_room_area` varchar(255) NOT NULL,
+  `schedule_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `cleaning_type` enum('routine','deep clean','biohazard','post-discharge') DEFAULT 'routine',
+  `status` enum('scheduled','in progress','completed','missed') DEFAULT 'scheduled',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`schedule_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `contamination_reports`
+--
+
+DROP TABLE IF EXISTS `contamination_reports`;
+CREATE TABLE IF NOT EXISTS `contamination_reports` (
+  `report_id` int NOT NULL AUTO_INCREMENT,
+  `reported_by` int NOT NULL COMMENT 'staff ID',
+  `location` varchar(255) NOT NULL,
+  `contamination_type` enum('biohazard','chemical','biological','general') NOT NULL,
+  `severity` enum('low','medium','high','critical') DEFAULT 'medium',
+  `description` text NOT NULL,
+  `photo_path` varchar(255) DEFAULT NULL,
+  `reported_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('reported','acknowledged','in progress','resolved') DEFAULT 'reported',
+  `resolved_by` varchar(150) DEFAULT NULL,
+  `resolved_at` datetime DEFAULT NULL,
+  `admin_notified` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -857,6 +954,23 @@ CREATE TABLE IF NOT EXISTS `fluid_balance` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `global_login_attempts`
+--
+
+DROP TABLE IF EXISTS `global_login_attempts`;
+CREATE TABLE IF NOT EXISTS `global_login_attempts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `action_type` enum('login_failed','login_success') NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `isolation_records`
 --
 
@@ -907,6 +1021,30 @@ CREATE TABLE IF NOT EXISTS `iv_fluid_records` (
   KEY `idx_iv_nurse` (`nurse_id`),
   KEY `idx_iv_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `kitchen_tasks`
+--
+
+DROP TABLE IF EXISTS `kitchen_tasks`;
+CREATE TABLE IF NOT EXISTS `kitchen_tasks` (
+  `task_id` int NOT NULL AUTO_INCREMENT,
+  `assigned_to` int NOT NULL COMMENT 'staff ID',
+  `meal_type` enum('breakfast','lunch','dinner','snack') NOT NULL,
+  `ward_department` varchar(150) NOT NULL,
+  `dietary_requirements` json DEFAULT NULL,
+  `quantity` int NOT NULL DEFAULT '1',
+  `preparation_status` enum('pending','in preparation','ready','delivered') DEFAULT 'pending',
+  `delivery_status` enum('pending','delivered') DEFAULT 'pending',
+  `scheduled_time` time DEFAULT NULL,
+  `prepared_at` datetime DEFAULT NULL,
+  `delivered_at` datetime DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`task_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1600,6 +1738,80 @@ CREATE TABLE IF NOT EXISTS `lab_workload_log` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `laundry_batches`
+--
+
+DROP TABLE IF EXISTS `laundry_batches`;
+CREATE TABLE IF NOT EXISTS `laundry_batches` (
+  `batch_id` int NOT NULL AUTO_INCREMENT,
+  `batch_code` varchar(50) NOT NULL,
+  `assigned_to` int NOT NULL COMMENT 'staff ID',
+  `requested_by` varchar(150) NOT NULL COMMENT 'ward/department',
+  `batch_type` enum('bed linen','patient gown','staff uniform','theatre','other') NOT NULL,
+  `item_count` int DEFAULT '0',
+  `weight_kg` decimal(6,2) DEFAULT NULL,
+  `collection_status` enum('pending','collected') DEFAULT 'pending',
+  `washing_status` enum('pending','in progress','completed') DEFAULT 'pending',
+  `ironing_status` enum('pending','in progress','completed') DEFAULT 'pending',
+  `delivery_status` enum('pending','delivered') DEFAULT 'pending',
+  `damaged_items_count` int DEFAULT '0',
+  `contaminated_items_count` int DEFAULT '0',
+  `collected_at` datetime DEFAULT NULL,
+  `washing_started_at` datetime DEFAULT NULL,
+  `washing_completed_at` datetime DEFAULT NULL,
+  `ironing_completed_at` datetime DEFAULT NULL,
+  `delivered_at` datetime DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`batch_id`),
+  UNIQUE KEY `uk_batch_code` (`batch_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `laundry_damage_reports`
+--
+
+DROP TABLE IF EXISTS `laundry_damage_reports`;
+CREATE TABLE IF NOT EXISTS `laundry_damage_reports` (
+  `report_id` int NOT NULL AUTO_INCREMENT,
+  `batch_id` int DEFAULT NULL,
+  `staff_id` int NOT NULL,
+  `item_type` varchar(100) NOT NULL,
+  `quantity_damaged` int NOT NULL,
+  `damage_description` text,
+  `photo_path` varchar(255) DEFAULT NULL,
+  `reported_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('reported','acknowledged','written off') DEFAULT 'reported',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `laundry_inventory`
+--
+
+DROP TABLE IF EXISTS `laundry_inventory`;
+CREATE TABLE IF NOT EXISTS `laundry_inventory` (
+  `inventory_id` int NOT NULL AUTO_INCREMENT,
+  `item_type` varchar(150) NOT NULL,
+  `total_quantity` int DEFAULT '0',
+  `available_quantity` int DEFAULT '0',
+  `in_wash_quantity` int DEFAULT '0',
+  `damaged_quantity` int DEFAULT '0',
+  `condemned_quantity` int DEFAULT '0',
+  `reorder_level` int DEFAULT '50',
+  `last_updated_by` int DEFAULT NULL COMMENT 'staff ID',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`inventory_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `login_attempts`
 --
 
@@ -1633,6 +1845,54 @@ CREATE TABLE IF NOT EXISTS `low_stock_medicines` (
 ,`total_stock` decimal(32,0)
 ,`reorder_level` int
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `maintenance_logs`
+--
+
+DROP TABLE IF EXISTS `maintenance_logs`;
+CREATE TABLE IF NOT EXISTS `maintenance_logs` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `request_id` int DEFAULT NULL,
+  `staff_id` int NOT NULL,
+  `action_taken` text NOT NULL,
+  `time_spent_hours` decimal(5,2) DEFAULT '0.00',
+  `parts_used` json DEFAULT NULL,
+  `cost` decimal(10,2) DEFAULT '0.00',
+  `logged_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `notes` text,
+  PRIMARY KEY (`log_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `maintenance_requests`
+--
+
+DROP TABLE IF EXISTS `maintenance_requests`;
+CREATE TABLE IF NOT EXISTS `maintenance_requests` (
+  `request_id` int NOT NULL AUTO_INCREMENT,
+  `reported_by` varchar(150) NOT NULL COMMENT 'user ID and role',
+  `assigned_to` int DEFAULT NULL COMMENT 'staff ID nullable',
+  `location` varchar(255) NOT NULL,
+  `equipment_or_area` varchar(255) NOT NULL,
+  `issue_description` text NOT NULL,
+  `issue_category` enum('electrical','plumbing','structural','equipment','furniture','other') NOT NULL,
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `status` enum('reported','assigned','in progress','on hold','completed','cancelled') DEFAULT 'reported',
+  `images_path` json DEFAULT NULL,
+  `reported_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `assigned_at` datetime DEFAULT NULL,
+  `started_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `completion_notes` text,
+  `completion_images_path` json DEFAULT NULL,
+  `admin_verified` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`request_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -3066,6 +3326,26 @@ CREATE TABLE IF NOT EXISTS `reagent_transactions` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `security_logs`
+--
+
+DROP TABLE IF EXISTS `security_logs`;
+CREATE TABLE IF NOT EXISTS `security_logs` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `incident_type` enum('visitor check','access control','incident report','patrol log','other') NOT NULL,
+  `location` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `reported_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('logged','escalated','resolved') DEFAULT 'logged',
+  `escalated_to` int DEFAULT NULL COMMENT 'admin ID nullable',
+  `notes` text,
+  PRIMARY KEY (`log_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `services`
 --
 
@@ -3168,12 +3448,130 @@ CREATE TABLE IF NOT EXISTS `staff` (
   `shift` enum('Morning','Afternoon','Night','Rotating') COLLATE utf8mb4_unicode_ci DEFAULT 'Morning',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `full_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` enum('Male','Female','Other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nationality` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `profile_photo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `role` enum('ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department_id` int DEFAULT NULL,
+  `designation` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `employee_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `employment_type` enum('full-time','part-time','contract') COLLATE utf8mb4_unicode_ci DEFAULT 'full-time',
+  `shift_type` enum('morning','afternoon','night','rotating') COLLATE utf8mb4_unicode_ci DEFAULT 'morning',
+  `status` enum('active','inactive','on leave','suspended') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `approval_status` enum('pending','approved','rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `approved_by` int UNSIGNED DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `rejection_reason` text COLLATE utf8mb4_unicode_ci,
+  `date_joined` date DEFAULT NULL,
+  `emergency_contact_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emergency_contact_phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_completeness` tinyint UNSIGNED DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `staff_id` (`staff_id`),
+  UNIQUE KEY `uk_employee_id` (`employee_id`),
   KEY `user_id` (`user_id`),
   KEY `idx_staff_id` (`staff_id`),
-  KEY `idx_department` (`department`)
+  KEY `idx_department` (`department`),
+  KEY `idx_staff_approval` (`approval_status`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_activity_log`
+--
+
+DROP TABLE IF EXISTS `staff_activity_log`;
+CREATE TABLE IF NOT EXISTS `staff_activity_log` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `action` varchar(255) NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `device` varchar(255) DEFAULT NULL,
+  `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_approval_log`
+--
+
+DROP TABLE IF EXISTS `staff_approval_log`;
+CREATE TABLE IF NOT EXISTS `staff_approval_log` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `staff_id` int UNSIGNED NOT NULL,
+  `admin_user_id` int UNSIGNED NOT NULL,
+  `action` enum('approved','rejected','revoked') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reason` text COLLATE utf8mb4_unicode_ci,
+  `actioned_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sal_staff` (`staff_id`),
+  KEY `idx_sal_admin` (`admin_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_attendance`
+--
+
+DROP TABLE IF EXISTS `staff_attendance`;
+CREATE TABLE IF NOT EXISTS `staff_attendance` (
+  `attendance_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `shift_id` int DEFAULT NULL,
+  `check_in_time` datetime DEFAULT NULL,
+  `check_out_time` datetime DEFAULT NULL,
+  `check_in_method` enum('manual','system') DEFAULT 'system',
+  `status` enum('present','absent','late','early departure','on leave') DEFAULT 'present',
+  `notes` text,
+  `recorded_by` varchar(50) DEFAULT 'system' COMMENT 'admin ID or system',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`attendance_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_audit_trail`
+--
+
+DROP TABLE IF EXISTS `staff_audit_trail`;
+CREATE TABLE IF NOT EXISTS `staff_audit_trail` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `action_type` varchar(100) DEFAULT NULL,
+  `module` varchar(100) DEFAULT NULL,
+  `description` text,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_audit_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_departments`
+--
+
+DROP TABLE IF EXISTS `staff_departments`;
+CREATE TABLE IF NOT EXISTS `staff_departments` (
+  `department_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(150) NOT NULL,
+  `description` text,
+  `head_of_department` int DEFAULT NULL COMMENT 'staff ID nullable',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`department_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -3206,6 +3604,291 @@ CREATE TABLE IF NOT EXISTS `staff_directory` (
   KEY `idx_department` (`department`),
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_documents`
+--
+
+DROP TABLE IF EXISTS `staff_documents`;
+CREATE TABLE IF NOT EXISTS `staff_documents` (
+  `document_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_type` varchar(50) DEFAULT NULL,
+  `file_size` int DEFAULT NULL,
+  `description` text,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`document_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_leave_requests`
+--
+
+DROP TABLE IF EXISTS `staff_leave_requests`;
+CREATE TABLE IF NOT EXISTS `staff_leave_requests` (
+  `leave_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `leave_type` enum('annual','sick','emergency','unpaid') NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `reason` text NOT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `applied_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_by` int DEFAULT NULL COMMENT 'admin ID',
+  `reviewed_at` datetime DEFAULT NULL,
+  `admin_notes` text,
+  PRIMARY KEY (`leave_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_messages`
+--
+
+DROP TABLE IF EXISTS `staff_messages`;
+CREATE TABLE IF NOT EXISTS `staff_messages` (
+  `message_id` int NOT NULL AUTO_INCREMENT,
+  `sender_id` int NOT NULL,
+  `sender_role` varchar(50) NOT NULL,
+  `receiver_id` int NOT NULL COMMENT 'staff ID',
+  `subject` varchar(255) DEFAULT NULL,
+  `message_content` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT '0',
+  `priority` enum('normal','urgent') DEFAULT 'normal',
+  `sent_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`message_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_notifications`
+--
+
+DROP TABLE IF EXISTS `staff_notifications`;
+CREATE TABLE IF NOT EXISTS `staff_notifications` (
+  `notification_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `message` text NOT NULL,
+  `type` enum('task','alert','shift','emergency','system','message','maintenance') NOT NULL,
+  `is_read` tinyint(1) DEFAULT '0',
+  `related_module` varchar(100) DEFAULT NULL,
+  `related_record_id` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`notification_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_performance`
+--
+
+DROP TABLE IF EXISTS `staff_performance`;
+CREATE TABLE IF NOT EXISTS `staff_performance` (
+  `performance_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `period` enum('daily','weekly','monthly') NOT NULL,
+  `period_date` date NOT NULL,
+  `tasks_assigned` int DEFAULT '0',
+  `tasks_completed` int DEFAULT '0',
+  `tasks_overdue` int DEFAULT '0',
+  `attendance_score` decimal(5,2) DEFAULT NULL,
+  `punctuality_score` decimal(5,2) DEFAULT NULL,
+  `quality_score` decimal(5,2) DEFAULT NULL COMMENT 'admin rated',
+  `overall_rating` decimal(5,2) DEFAULT NULL,
+  `notes` text,
+  `rated_by` int DEFAULT NULL COMMENT 'admin ID',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `rating` decimal(3,1) DEFAULT NULL,
+  `reviewed_by` int DEFAULT NULL,
+  `review_notes` text,
+  `review_date` date DEFAULT NULL,
+  `kpi_score` decimal(5,2) DEFAULT NULL,
+  PRIMARY KEY (`performance_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_profile_completeness`
+--
+
+DROP TABLE IF EXISTS `staff_profile_completeness`;
+CREATE TABLE IF NOT EXISTS `staff_profile_completeness` (
+  `record_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `personal_info_complete` tinyint(1) DEFAULT '0',
+  `documents_uploaded` tinyint(1) DEFAULT '0',
+  `photo_uploaded` tinyint(1) DEFAULT '0',
+  `security_setup_complete` tinyint(1) DEFAULT '0',
+  `overall_percentage` decimal(5,2) DEFAULT '0.00',
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`record_id`),
+  UNIQUE KEY `uk_staff_comp` (`staff_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_qualifications`
+--
+
+DROP TABLE IF EXISTS `staff_qualifications`;
+CREATE TABLE IF NOT EXISTS `staff_qualifications` (
+  `qualification_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `certificate_name` varchar(255) NOT NULL,
+  `institution` varchar(255) NOT NULL,
+  `year_awarded` int NOT NULL,
+  `file_path` varchar(500) DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`qualification_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_roles`
+--
+
+DROP TABLE IF EXISTS `staff_roles`;
+CREATE TABLE IF NOT EXISTS `staff_roles` (
+  `role_id` int NOT NULL AUTO_INCREMENT,
+  `role_slug` enum('ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff') NOT NULL,
+  `role_display_name` varchar(100) NOT NULL,
+  `role_description` text,
+  `icon_class` varchar(100) DEFAULT 'fas fa-user-tie',
+  `dashboard_file_path` varchar(255) NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`role_id`),
+  UNIQUE KEY `uk_role_slug` (`role_slug`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `staff_roles`
+--
+
+INSERT INTO `staff_roles` (`role_id`, `role_slug`, `role_display_name`, `role_description`, `icon_class`, `dashboard_file_path`, `is_active`, `created_at`) VALUES
+(1, 'ambulance_driver', 'Ambulance Driver', 'Manages trips, vehicles, and emergency transport', 'fas fa-ambulance', 'dashboards/staff_dashboard.php', 1, '2026-03-14 05:42:53'),
+(2, 'cleaner', 'Hospital Cleaner', 'Manages ward cleaning schedules and sanitation logs', 'fas fa-broom', 'dashboards/staff_dashboard.php', 1, '2026-03-14 05:42:53'),
+(3, 'laundry_staff', 'Laundry Staff', 'Manages hospital linen, washing batches, and inventory', 'fas fa-tshirt', 'dashboards/staff_dashboard.php', 1, '2026-03-14 05:42:53'),
+(4, 'maintenance', 'Maintenance Technician', 'Handles facility repairs, equipment, and work orders', 'fas fa-tools', 'dashboards/staff_dashboard.php', 1, '2026-03-14 05:42:53'),
+(5, 'security', 'Security Personnel', 'Manages access logs, ward patrols, and incident reports', 'fas fa-shield-alt', 'dashboards/staff_dashboard.php', 1, '2026-03-14 05:42:53'),
+(6, 'kitchen_staff', 'Kitchen & Catering', 'Manages patient dietary meals and food delivery', 'fas fa-utensils', 'dashboards/staff_dashboard.php', 1, '2026-03-14 05:42:53');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_sessions`
+--
+
+DROP TABLE IF EXISTS `staff_sessions`;
+CREATE TABLE IF NOT EXISTS `staff_sessions` (
+  `session_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `device_info` text,
+  `browser` varchar(150) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `login_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_active` datetime DEFAULT NULL,
+  `is_current` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`session_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_settings`
+--
+
+DROP TABLE IF EXISTS `staff_settings`;
+CREATE TABLE IF NOT EXISTS `staff_settings` (
+  `settings_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `theme_preference` enum('light','dark') DEFAULT 'light',
+  `language` varchar(50) DEFAULT 'en',
+  `notification_preferences` json DEFAULT NULL,
+  `alert_sound_enabled` tinyint(1) DEFAULT '1',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`settings_id`),
+  UNIQUE KEY `uk_staff_settings` (`staff_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_shifts`
+--
+
+DROP TABLE IF EXISTS `staff_shifts`;
+CREATE TABLE IF NOT EXISTS `staff_shifts` (
+  `shift_id` int NOT NULL AUTO_INCREMENT,
+  `staff_id` int NOT NULL,
+  `shift_type` varchar(50) NOT NULL,
+  `shift_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `location_ward_assigned` varchar(255) DEFAULT NULL,
+  `status` enum('scheduled','active','completed','missed','swapped') DEFAULT 'scheduled',
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`shift_id`),
+  KEY `idx_staff_shift` (`staff_id`,`shift_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_tasks`
+--
+
+DROP TABLE IF EXISTS `staff_tasks`;
+CREATE TABLE IF NOT EXISTS `staff_tasks` (
+  `task_id` int NOT NULL AUTO_INCREMENT,
+  `assigned_to` int NOT NULL COMMENT 'staff ID',
+  `assigned_by` int DEFAULT NULL COMMENT 'admin ID or system',
+  `task_title` varchar(255) NOT NULL,
+  `task_description` text,
+  `task_category` enum('cleaning','laundry','maintenance','transport','security','kitchen','general') NOT NULL,
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `location` varchar(255) DEFAULT NULL COMMENT 'ward/room/area',
+  `due_date` date DEFAULT NULL,
+  `due_time` time DEFAULT NULL,
+  `status` enum('pending','in progress','completed','overdue','cancelled') DEFAULT 'pending',
+  `completion_notes` text,
+  `completion_photo_path` varchar(255) DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`task_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_task_checklists`
+--
+
+DROP TABLE IF EXISTS `staff_task_checklists`;
+CREATE TABLE IF NOT EXISTS `staff_task_checklists` (
+  `checklist_id` int NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `checklist_item` varchar(255) NOT NULL,
+  `is_completed` tinyint(1) DEFAULT '0',
+  `completed_by` int DEFAULT NULL COMMENT 'staff ID',
+  `completed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`checklist_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -3424,7 +4107,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `user_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_role` enum('admin','doctor','patient','staff','pharmacist','nurse') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'patient',
+  `user_role` enum('admin','doctor','patient','staff','pharmacist','nurse','lab_technician','ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'patient',
   `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `gender` enum('Male','Female','Other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -3437,25 +4120,27 @@ CREATE TABLE IF NOT EXISTS `users` (
   `last_login` timestamp NULL DEFAULT NULL,
   `last_active_at` datetime DEFAULT NULL,
   `last_login_at` timestamp NULL DEFAULT NULL,
+  `locked_until` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_name` (`user_name`),
   UNIQUE KEY `email` (`email`),
   KEY `idx_username` (`user_name`),
   KEY `idx_email` (`email`),
   KEY `idx_role` (`user_role`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `user_name`, `email`, `password`, `user_role`, `name`, `phone`, `gender`, `date_of_birth`, `profile_image`, `is_active`, `is_verified`, `created_at`, `updated_at`, `last_login`, `last_active_at`, `last_login_at`) VALUES
-(1, 'admin', 'admin@rmu.edu.gh', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System Administrator', '0502371207', NULL, NULL, 'default-avatar.png', 1, 1, '2026-02-06 05:09:21', '2026-03-14 04:38:47', '2026-03-14 04:38:47', NULL, NULL),
-(4, 'LJ', 'lovelace.baidoo@st.rmu.edu.gh', '$2y$10$o1PxWO6siYsmVuWdtLgpEOaijwF.wbWK4hmaNV3cGprmUNR7It5.O', 'patient', 'Lovelace John Kwaku Baidoo', '0257669095', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:01:51', '2026-02-27 03:16:10', '2026-02-27 03:16:10', NULL, NULL),
-(5, 'EC', '', '$2y$10$V/IRP.0WWfBfOOxCHPO2u.ahsW/jBO8OTSg3OOrvMMHboZzor47KG', 'doctor', 'EC', '', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:18:53', '2026-03-12 13:36:51', '2026-03-12 13:36:51', NULL, NULL),
-(6, 'Neils', 'nelly.nartey@st.rmu.edu.gh', '$2y$10$HnDpNL4Ct61jF96vrWCaDe0EdcM67C.jlWhZAtw66PY42a/.YLEs.', 'pharmacist', 'Nelly Nartey', '0501234567', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:25:39', '2026-02-06 07:26:46', '2026-02-06 07:26:46', NULL, NULL),
-(7, 'Naa', 'es-anadjei@st.umat.edu.gh', '$2y$10$BiJxGbxJ/3VccsXMzCN2Fe.1Y8Wg/HLiJ.ci/RhXI7qbV7kqllAHa', 'pharmacist', 'Adjei Adelaide Naa Adjeley', '0507333138', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-15 09:36:42', '2026-03-12 13:39:03', '2026-03-12 13:39:03', NULL, NULL),
-(8, 'nurse_test', 'nurse@rmu.edu.gh', '$2y$12$LJ3m5bHpXQ8e9Y1f8g5vGuQzW7RjE5cUvNjGfkeT8x5QfPAcjDSmK', 'nurse', 'Test Nurse', '0201234567', NULL, NULL, 'default-avatar.png', 1, 1, '2026-03-03 15:38:33', '2026-03-03 15:38:33', NULL, NULL, NULL);
+INSERT INTO `users` (`id`, `user_name`, `email`, `password`, `user_role`, `name`, `phone`, `gender`, `date_of_birth`, `profile_image`, `is_active`, `is_verified`, `created_at`, `updated_at`, `last_login`, `last_active_at`, `last_login_at`, `locked_until`) VALUES
+(1, 'admin', 'admin@rmu.edu.gh', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System Administrator', '0502371207', NULL, NULL, 'default-avatar.png', 1, 1, '2026-02-06 05:09:21', '2026-03-15 22:31:31', '2026-03-14 17:41:18', NULL, NULL, NULL),
+(4, 'LJ', 'lovelace.baidoo@st.rmu.edu.gh', '$2y$10$o1PxWO6siYsmVuWdtLgpEOaijwF.wbWK4hmaNV3cGprmUNR7It5.O', 'patient', 'Lovelace John Kwaku Baidoo', '0257669095', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:01:51', '2026-02-27 03:16:10', '2026-02-27 03:16:10', NULL, NULL, NULL),
+(5, 'EC', '', '$2y$10$V/IRP.0WWfBfOOxCHPO2u.ahsW/jBO8OTSg3OOrvMMHboZzor47KG', 'doctor', 'EC', '', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:18:53', '2026-03-12 13:36:51', '2026-03-12 13:36:51', NULL, NULL, NULL),
+(6, 'Neils', 'nelly.nartey@st.rmu.edu.gh', '$2y$10$HnDpNL4Ct61jF96vrWCaDe0EdcM67C.jlWhZAtw66PY42a/.YLEs.', 'pharmacist', 'Nelly Nartey', '0501234567', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-06 07:25:39', '2026-02-06 07:26:46', '2026-02-06 07:26:46', NULL, NULL, NULL),
+(7, 'Naa', 'es-anadjei@st.umat.edu.gh', '$2y$10$BiJxGbxJ/3VccsXMzCN2Fe.1Y8Wg/HLiJ.ci/RhXI7qbV7kqllAHa', 'pharmacist', 'Adjei Adelaide Naa Adjeley', '0507333138', NULL, NULL, 'default-avatar.png', 1, 0, '2026-02-15 09:36:42', '2026-03-12 13:39:03', '2026-03-12 13:39:03', NULL, NULL, NULL),
+(8, 'nurse_test', 'nurse@rmu.edu.gh', '$2y$12$LJ3m5bHpXQ8e9Y1f8g5vGuQzW7RjE5cUvNjGfkeT8x5QfPAcjDSmK', 'nurse', 'Test Nurse', '0201234567', NULL, NULL, 'default-avatar.png', 1, 1, '2026-03-03 15:38:33', '2026-03-03 15:38:33', NULL, NULL, NULL, NULL),
+(10, 'cleaner1', 'cleaner@rmu.edu', '$2y$10$J9o0KKdRTKRfiFmDSrTtFOpreCNVF6uO4Y9C.AiWrbgIVaL4elarG', 'cleaner', 'Test Cleaner', NULL, NULL, NULL, 'default-avatar.png', 1, 0, '2026-03-14 05:19:48', '2026-03-14 05:19:48', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -3467,7 +4152,7 @@ DROP TABLE IF EXISTS `user_sessions`;
 CREATE TABLE IF NOT EXISTS `user_sessions` (
   `session_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_id` int NOT NULL,
-  `user_role` enum('admin','doctor','patient','staff','pharmacist') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `login_time` datetime NOT NULL,
   `last_activity` datetime NOT NULL,
   `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -3492,6 +4177,7 @@ INSERT INTO `user_sessions` (`session_id`, `user_id`, `user_role`, `login_time`,
 ('0f7726a6599b2fef0852c2e9452fed0119378aff2934dbc6a068a04f7c4a833a', 4, 'patient', '2026-02-16 13:13:45', '2026-02-16 13:13:45', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-02-16 13:16:31'),
 ('11a0489b3dbe14901283fab67aa63888aab19c76d9dd042b9c6c5de4b886943a', 1, 'admin', '2026-03-12 13:16:58', '2026-03-12 13:16:58', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-12 13:20:31'),
 ('160f7a2398d270ce69bebadccaea0503a14b8f67a62aa6d0409d74cd2992802a', 7, 'pharmacist', '2026-03-12 13:39:03', '2026-03-12 13:39:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-12 13:42:19'),
+('19f578c5bd46f88defdec87fbcbba7d23cf26796d108ca042fc88c41e6d13477', 1, 'admin', '2026-03-14 17:41:18', '2026-03-14 17:41:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 1, NULL),
 ('1ef70e0b804e976ef4991f5b611f0b7254c5fee96b0dda3f4baa34cca11e5aa4', 5, 'doctor', '2026-02-16 12:38:47', '2026-02-16 12:38:47', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 12:40:59'),
 ('212e8ec73220ce4c67d0a55db3b2a35941a74befb997e383a39afa6110f245b2', 1, 'admin', '2026-02-16 07:51:52', '2026-02-16 07:51:52', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-20 18:34:22'),
 ('28f8e4946066b3a84065a0a4dfe2555fde921039919c7ee26888ae1839aad8d5', 7, 'pharmacist', '2026-02-16 05:44:03', '2026-02-16 05:44:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 05:48:15'),
@@ -3515,6 +4201,7 @@ INSERT INTO `user_sessions` (`session_id`, `user_id`, `user_role`, `login_time`,
 ('6456cb7302273c1eb5a91b7a0d8d5833c3b17a315d38104d9b9831f18542f700', 1, 'admin', '2026-02-15 16:05:18', '2026-02-15 16:05:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 05:49:20'),
 ('72648eeb9a3053f0e7cd9164a9305b86a81d3dde6fa815fb2ad3316d6431ac4c', 5, 'doctor', '2026-03-12 07:18:48', '2026-03-12 07:18:48', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-12 13:09:23'),
 ('772e55af4245051f3f2cd5f517ef06ba9c52591eb71103a6d6aafca4723a2a74', 5, 'doctor', '2026-03-01 14:04:20', '2026-03-01 14:04:20', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-01 14:27:26'),
+('877f57bd64d7d04a35a551b1823d2ab6536a52233ade49565db8bafc2b6d4f05', 1, 'admin', '2026-03-14 07:01:12', '2026-03-14 07:01:12', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-14 17:41:18'),
 ('8bea170e89c8aa735b73f6ccb1e94127c5ba8761b87755264e1047d9bc867ec0', 7, 'pharmacist', '2026-03-03 15:24:26', '2026-03-03 15:24:26', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-03 15:27:14'),
 ('8f0de9567c4e2a55ee9e488492c25dde14bb7c796013b5c68ff166ba7a66e960', 5, 'doctor', '2026-02-06 07:20:57', '2026-02-06 07:20:57', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-07 04:07:26'),
 ('91d61c73b07a82de220db4ac646e585e1b5d8c066fa30401ee9bb3f10f15eb30', 5, 'doctor', '2026-02-16 05:48:40', '2026-02-16 05:48:40', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 05:48:53'),
@@ -3536,6 +4223,56 @@ INSERT INTO `user_sessions` (`session_id`, `user_id`, `user_role`, `login_time`,
 ('f77a890405ca0a2bae5b4385eb5520448db99b7eb92180dfeef54295efb3ace9', 4, 'patient', '2026-02-16 07:52:19', '2026-02-16 07:52:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0', 0, '2026-02-16 07:52:45'),
 ('fba5416e23165874d8333b83ec1ba1c4240d0ae8126492c8a7b1590b5729d906', 5, 'doctor', '2026-03-12 13:36:51', '2026-03-12 13:36:51', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-03-12 13:37:22'),
 ('fd4e7cbc858b9864d30d891344e2aebfba705f74358de131bfe52216649aa438', 7, 'pharmacist', '2026-02-19 12:52:01', '2026-02-19 12:52:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 0, '2026-02-19 12:55:24');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `vehicles`
+--
+
+DROP TABLE IF EXISTS `vehicles`;
+CREATE TABLE IF NOT EXISTS `vehicles` (
+  `vehicle_id` int NOT NULL AUTO_INCREMENT,
+  `registration_number` varchar(50) NOT NULL,
+  `make` varchar(100) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `year` int DEFAULT NULL,
+  `type` enum('ambulance','utility','other') DEFAULT 'ambulance',
+  `fuel_type` varchar(50) DEFAULT NULL,
+  `current_mileage` int DEFAULT '0',
+  `status` enum('available','in use','maintenance','out of service') DEFAULT 'available',
+  `assigned_driver_id` int DEFAULT NULL,
+  `last_service_date` date DEFAULT NULL,
+  `next_service_date` date DEFAULT NULL,
+  `insurance_expiry` date DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`vehicle_id`),
+  UNIQUE KEY `uk_reg_no` (`registration_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `vehicle_maintenance_logs`
+--
+
+DROP TABLE IF EXISTS `vehicle_maintenance_logs`;
+CREATE TABLE IF NOT EXISTS `vehicle_maintenance_logs` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `vehicle_id` int NOT NULL,
+  `reported_by` int NOT NULL COMMENT 'staff ID',
+  `issue_description` text NOT NULL,
+  `maintenance_type` enum('repair','service','inspection','fuel') NOT NULL,
+  `cost` decimal(10,2) DEFAULT '0.00',
+  `performed_by` varchar(150) DEFAULT NULL,
+  `performed_at` datetime DEFAULT NULL,
+  `next_due_date` date DEFAULT NULL,
+  `status` enum('reported','in progress','resolved') DEFAULT 'reported',
+  `images_path` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
