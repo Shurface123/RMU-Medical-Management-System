@@ -7,7 +7,7 @@
 define('AJAX_REQUEST', true);
 require_once 'staff_security.php';
 
-// Export requests arrive via GET (browser download link)
+// ── Export requests arrive via GET (browser download link) ──
 $is_export = (
     $_SERVER['REQUEST_METHOD'] === 'GET' &&
     isset($_GET['action']) &&
@@ -15,20 +15,24 @@ $is_export = (
 );
 
 if ($is_export) {
+    // Export mode — read params from GET, skip CSRF (download link)
     $action    = 'export_report';
     $user_id   = (int)$_SESSION['user_id'];
     $staffRole = $_SESSION['user_role'] ?? 'staff';
+    // skip JSON header — will be overridden by download headers
 } else {
     header('Content-Type: application/json');
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_err('Method Not Allowed', 405);
+
     $action   = sanitize($_POST['action'] ?? '');
     $user_id  = (int)$_SESSION['user_id'];
     $staffRole = $_SESSION['user_role'] ?? 'staff';
+
     $token = $_POST['csrf_token'] ?? '';
     if (!verifyCsrf($token)) {
         json_err('Invalid Security Token (CSRF). Refresh page and try again.', 403);
     }
-} // end non-export block
+} // end else (non-export POST block)
 
 // Get staff record (required for most actions)
 $staff = dbRow($conn, "SELECT s.*, r.role_display_name, r.icon_class FROM staff s LEFT JOIN staff_roles r ON s.role=r.role_slug WHERE s.user_id=? LIMIT 1", "i", [$user_id]);
@@ -148,7 +152,7 @@ case 'save_settings':
     $notif_sound = (int)($_POST['notif_sound'] ?? 1);
     $lang = sanitize($_POST['language'] ?? 'en');
     // Upsert into staff_settings
-    $existing = dbRow($conn,"SELECT id FROM staff_settings WHERE staff_id=? LIMIT 1","i",[$staff_id]);
+    $existing = dbRow($conn,"SELECT settings_id FROM staff_settings WHERE staff_id=? LIMIT 1","i",[$staff_id]);
     if ($existing) {
         dbExecute($conn,"UPDATE staff_settings SET theme=?,notif_sound=?,language=?,updated_at=NOW() WHERE staff_id=?","sisi",[$theme,$notif_sound,$lang,$staff_id]);
     } else {
@@ -496,13 +500,13 @@ case 'compute_completeness':
     if ($qual_count > 0) $score++;
     $doc_count = (int)dbVal($conn,"SELECT COUNT(*) FROM staff_documents WHERE staff_id=?","i",[$staff_id]);
     if ($doc_count > 0) $score++;
-    $settings = dbRow($conn,"SELECT id FROM staff_settings WHERE staff_id=? LIMIT 1","i",[$staff_id]);
+    $settings = dbRow($conn,"SELECT settings_id FROM staff_settings WHERE staff_id=? LIMIT 1","i",[$staff_id]);
     if ($settings) $score++;
     $pct = round(($score/$max)*100);
     // Upsert completeness
-    $ex = dbRow($conn,"SELECT id FROM staff_profile_completeness WHERE staff_id=? LIMIT 1","i",[$staff_id]);
-    if ($ex) dbExecute($conn,"UPDATE staff_profile_completeness SET completeness_score=?,last_computed=NOW() WHERE staff_id=?","ii",[$pct,$staff_id]);
-    else dbInsert($conn,"INSERT INTO staff_profile_completeness (staff_id,completeness_score,last_computed) VALUES (?,?,NOW())","ii",[$staff_id,$pct]);
+    $ex = dbRow($conn,"SELECT record_id FROM staff_profile_completeness WHERE staff_id=? LIMIT 1","i",[$staff_id]);
+    if ($ex) dbExecute($conn,"UPDATE staff_profile_completeness SET overall_percentage=?,last_updated=NOW() WHERE staff_id=?","ii",[$pct,$staff_id]);
+    else dbInsert($conn,"INSERT INTO staff_profile_completeness (staff_id,overall_percentage,last_updated) VALUES (?,?,NOW())","ii",[$staff_id,$pct]);
     json_ok('Completeness computed.',['percent'=>$pct,'score'=>$score,'max'=>$max]);
 
 
@@ -515,10 +519,12 @@ case 'export_report':
     $to         = sanitize($_GET['to']         ?? date('Y-m-d'));
     $fmt        = strtolower(sanitize($_GET['format'] ?? 'csv'));
 
-    if (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $from)) $from = date('Y-m-01');
-    if (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $to))   $to   = date('Y-m-d');
+    // Validate dates
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) $from = date('Y-m-01');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $to))   $to   = date('Y-m-d');
     if (!$staff_id) { header('Content-Type: application/json'); json_err('Staff profile not found.', 403); }
 
+    // ── Report definitions ──────────────────────────────────
     $report_map = [
         'tasks_completed' => [
             'title'  => 'Tasks Completed',
@@ -546,13 +552,13 @@ case 'export_report':
         ],
         'repairs_completed' => [
             'title'  => 'Repairs Completed',
-            'sql'    => 'SELECT issue_description AS "Issue", location AS "Location", issue_category AS "Category", priority AS "Priority", status AS "Status", reported_at AS "Reported" FROM maintenance_requests WHERE assigned_to=? AND status="completed" AND DATE(reported_at) BETWEEN ? AND ? ORDER BY reported_at DESC',
+            'sql'    => 'SELECT equipment_or_area AS "Issue", location AS "Location", priority AS "Priority", status AS "Status", reported_at AS "Reported", created_at AS "Updated" FROM maintenance_requests WHERE assigned_to=? AND status="completed" AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
             'types'  => 'iss',
             'params' => [$staff_id, $from, $to],
         ],
         'cleaning_logs' => [
             'title'  => 'Cleaning Logs',
-            'sql'    => 'SELECT cleaning_type AS "Type", sanitation_status AS "Status", started_at AS "Started", completed_at AS "Completed", notes AS "Notes" FROM cleaning_logs WHERE staff_id=? AND DATE(started_at) BETWEEN ? AND ? ORDER BY started_at DESC',
+            'sql'    => 'SELECT c.cleaning_type AS "Type", c.sanitation_status AS "Status", c.started_at AS "Started", c.completed_at AS "Completed", c.notes AS "Notes" FROM cleaning_logs c WHERE c.staff_id=? AND DATE(c.started_at) BETWEEN ? AND ? ORDER BY c.started_at DESC',
             'types'  => 'iss',
             'params' => [$staff_id, $from, $to],
         ],
@@ -578,13 +584,13 @@ case 'export_report':
 
     if (!isset($report_map[$report_key])) {
         header('Content-Type: application/json');
-        json_err('Unknown report key: ' . e($report_key), 400);
+        json_err('Unknown report key: ' . $report_key, 400);
     }
 
-    $rpt   = $report_map[$report_key];
-    $rows  = dbSelect($conn, $rpt['sql'], $rpt['types'], $rpt['params']);
-    $title = $rpt['title'];
-    $fname = 'RMU_' . str_replace(' ', '_', $title) . '_' . $from . '_to_' . $to;
+    $rpt    = $report_map[$report_key];
+    $rows   = dbSelect($conn, $rpt['sql'], $rpt['types'], $rpt['params']);
+    $title  = $rpt['title'];
+    $fname  = 'RMU_' . str_replace(' ', '_', $title) . '_' . $from . '_to_' . $to;
 
     if ($fmt === 'csv') {
         header('Content-Type: text/csv; charset=UTF-8');
@@ -592,7 +598,9 @@ case 'export_report':
         header('Pragma: no-cache');
         header('Expires: 0');
         $out = fopen('php://output', 'w');
-        fputs($out, "ï»¿"); // UTF-8 BOM for Excel
+        // BOM for Excel UTF-8
+        fputs($out, "ï»¿");
+        // Report header rows
         fputcsv($out, ['RMU Medical Management System']);
         fputcsv($out, ['Report: ' . $title]);
         fputcsv($out, ['Period: ' . $from . ' to ' . $to]);
@@ -608,8 +616,9 @@ case 'export_report':
         exit;
     }
 
+    // Fallback for unsupported formats
     header('Content-Type: application/json');
-    json_err('Unsupported format: ' . e($fmt) . '. Use csv.', 400);
+    json_err('Unsupported format: ' . $fmt . '. Use csv.', 400);
 
 // ════════════════════════════════════════════════════════════
 // DEFAULT

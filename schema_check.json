@@ -1,0 +1,53 @@
+{
+    "staff_messages": [
+        "message_id (int)",
+        "sender_id (int)",
+        "sender_role (varchar(50))",
+        "receiver_id (int)",
+        "subject (varchar(255))",
+        "message_content (text)",
+        "is_read (tinyint(1))",
+        "priority (enum('normal','urgent'))",
+        "sent_at (timestamp)",
+        "read_at (datetime)",
+        "is_broadcast (tinyint(1))",
+        "created_at (timestamp)"
+    ],
+    "notifications": [
+        "notification_id (int)",
+        "user_id (int)",
+        "user_role (varchar(50))",
+        "type (varchar(50))",
+        "title (varchar(200))",
+        "message (text)",
+        "is_read (tinyint(1))",
+        "priority (varchar(20))",
+        "action_url (varchar(500))",
+        "related_module (varchar(100))",
+        "related_id (int)",
+        "created_at (timestamp)",
+        "read_at (timestamp)"
+    ],
+    "users": [
+        "id (int)",
+        "user_name (varchar(100))",
+        "email (varchar(150))",
+        "password (varchar(255))",
+        "user_role (enum('admin','doctor','patient','staff','pharmacist','nurse','lab_technician','ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'))",
+        "name (varchar(200))",
+        "phone (varchar(20))",
+        "gender (enum('Male','Female','Other'))",
+        "date_of_birth (date)",
+        "profile_image (varchar(255))",
+        "is_active (tinyint(1))",
+        "is_verified (tinyint(1))",
+        "created_at (timestamp)",
+        "updated_at (timestamp)",
+        "last_login (timestamp)",
+        "last_active_at (datetime)",
+        "last_login_at (timestamp)",
+        "locked_until (datetime)"
+    ],
+    "broadcasts": false,
+    "health_messages": false
+}
