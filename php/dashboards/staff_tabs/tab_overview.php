@@ -97,9 +97,9 @@ switch ($staffRole) {
 }
 
 // ── Recent Activity ──────────────────────────────────────────
-$activity_raw = dbSelect($conn,"SELECT message, created_at, type FROM staff_notifications WHERE staff_id=? ORDER BY id DESC LIMIT 8","i",[$staff_id]);
+$activity_raw = dbSelect($conn,"SELECT message, created_at, type FROM staff_notifications WHERE staff_id=? ORDER BY notification_id DESC LIMIT 8","i",[$staff_id]);
 // ── Current Shift ────────────────────────────────────────────
-$current_shift = dbRow($conn,"SELECT * FROM staff_shifts WHERE staff_id=? AND shift_date=? ORDER BY id DESC LIMIT 1","is",[$staff_id,$today]);
+$current_shift = dbRow($conn,"SELECT * FROM staff_shifts WHERE staff_id=? AND shift_date=? ORDER BY shift_id DESC LIMIT 1","is",[$staff_id,$today]);
 ?>
 <div id="sec-overview" class="dash-section">
 

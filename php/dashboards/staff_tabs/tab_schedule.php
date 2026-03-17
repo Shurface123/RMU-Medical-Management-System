@@ -3,7 +3,7 @@
  * tab_schedule.php — Module 9: My Shift Schedule + Leave Requests
  */
 $leaves = dbSelect($conn,"SELECT * FROM staff_leaves WHERE staff_id=? ORDER BY created_at DESC LIMIT 10","i",[$staff_id]);
-$all_shifts = dbSelect($conn,"SELECT * FROM staff_shifts WHERE staff_id=? ORDER BY shift_date ASC LIMIT 21","is",[$staff_id]);
+$all_shifts = dbSelect($conn,"SELECT * FROM staff_shifts WHERE staff_id=? ORDER BY shift_date ASC LIMIT 21","i",[$staff_id]);
 ?>
 <div id="sec-schedule" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">

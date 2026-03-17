@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div style="display:grid;grid-template-columns:2fr 1fr;gap:2rem;" class="adm-form-layout">
                 <div>
                     <!-- Vehicle Details -->
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header"><h3><i class="fas fa-car"></i> Vehicle Information</h3></div>
                         <div class="adm-card-body">
                             <div class="adm-form-grid">
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <!-- Driver Details -->
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header"><h3><i class="fas fa-id-badge"></i> Driver Information</h3></div>
                         <div class="adm-card-body">
                             <div class="adm-form-grid">
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <!-- Service Dates -->
-                    <div class="adm-card">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;">
                         <div class="adm-card-header"><h3><i class="fas fa-tools"></i> Service Schedule</h3></div>
                         <div class="adm-card-body">
                             <div class="adm-form-grid">
@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div>
                     <!-- Status -->
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header"><h3><i class="fas fa-traffic-light"></i> Initial Status</h3></div>
                         <div class="adm-card-body">
                             <div style="display:flex;flex-direction:column;gap:1rem;">
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <div class="adm-card" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
                         <div class="adm-card-body" style="text-align:center;padding:2rem;">
                             <div style="width:64px;height:64px;background:linear-gradient(135deg,#E74C3C,#C0392B);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                                 <i class="fas fa-ambulance" style="color:#fff;font-size:2rem;"></i>

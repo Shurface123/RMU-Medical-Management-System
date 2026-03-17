@@ -2,7 +2,7 @@
 /**
  * tab_notifications.php — Module 10: Notifications
  */
-$all_notifs = dbSelect($conn,"SELECT * FROM staff_notifications WHERE staff_id=? ORDER BY id DESC LIMIT 60","i",[$staff_id]);
+$all_notifs = dbSelect($conn,"SELECT * FROM staff_notifications WHERE staff_id=? ORDER BY notification_id DESC LIMIT 60","i",[$staff_id]);
 $unread_count = count(array_filter($all_notifs, fn($n) => !$n['is_read']));
 ?>
 <div id="sec-notifications" class="dash-section">
@@ -28,7 +28,7 @@ $unread_count = count(array_filter($all_notifs, fn($n) => !$n['is_read']));
                 $ico=$icon_map[$n['type']??'']??'fa-info-circle';
                 $ic_color=($n['type']==='emergency'||$n['type']==='alert')?'var(--danger)':'var(--role-accent)';
             ?>
-            <div class="notif-row" data-id="<?=$n['id']?>" style="display:flex;align-items:flex-start;gap:1.5rem;padding:1.6rem 2rem;border-bottom:1px solid var(--border);cursor:pointer;<?=$is_unread?'background:var(--role-accent-light);':''?>" onclick="markRead(<?=$n['id']?>, this)">
+            <div class="notif-row" data-id="<?=$n['notification_id']?>" style="display:flex;align-items:flex-start;gap:1.5rem;padding:1.6rem 2rem;border-bottom:1px solid var(--border);cursor:pointer;<?=$is_unread?'background:var(--role-accent-light);':''?>" onclick="markRead(<?=$n['notification_id']?>, this)">
                 <div style="width:42px;height:42px;border-radius:50%;background:color-mix(in srgb,<?=$ic_color?> 15%,#fff 85%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <i class="fas <?=$ico?>" style="font-size:1.6rem;color:<?=$ic_color?>;"></i>
                 </div>

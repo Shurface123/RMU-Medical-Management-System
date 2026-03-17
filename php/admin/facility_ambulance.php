@@ -7,34 +7,20 @@ $active_page = 'ambulance';
 $page_title = 'Ambulance Dispatch Control';
 include '../includes/_sidebar.php';
 
-// Quick DB Insertion
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'dispatch') {
-    $driver_id = (int)$_POST['driver_id'];
-    $amb_id = (int)$_POST['ambulance_id'];
-    $pickup = trim($_POST['pickup']);
-    $dropoff = trim($_POST['dropoff']);
-    $reason = trim($_POST['reason']);
+// Removed old POST dispatcher, now handled via AJAX API in admin_ambulance_actions.php
 
-    // Add to ambulance_trips
-    $sql = "INSERT INTO ambulance_trips (driver_id, vehicle_id, pickup_location, destination, trip_notes, trip_status, created_at) VALUES (?, ?, ?, ?, ?, 'en route', NOW())";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "iisss", $driver_id, $amb_id, $pickup, $dropoff, $reason);
-    mysqli_stmt_execute($stmt);
-
-    // Update ambulance status
-    mysqli_query($conn, "UPDATE ambulances SET status = 'On Duty' WHERE id = $amb_id");
-
-    mysqli_stmt_close($stmt);
-    header("Location: facility_ambulance.php?success=1");
-    exit();
-}
-
-// Fetch available drivers
+// Fetch available drivers (status not 'On Trip')
 $drivers = [];
-$qd = mysqli_query($conn, "SELECT s.id, u.name FROM staff s JOIN users u ON s.user_id = u.id WHERE u.is_active = 1 AND u.user_role = 'ambulance_driver'");
+$qd = mysqli_query($conn, "SELECT s.id, u.name FROM staff s JOIN users u ON s.user_id = u.id WHERE u.is_active = 1 AND u.user_role = 'ambulance_driver' AND s.status != 'On Trip'");
 if ($qd)
     while ($r = mysqli_fetch_assoc($qd))
         $drivers[] = $r;
+
+// Fetch registered patients for dropdown
+$patients = [];
+$qp = mysqli_query($conn, "SELECT p.id, u.name FROM patients p JOIN users u ON p.user_id = u.id WHERE u.is_active = 1 ORDER BY u.name");
+if ($qp) 
+    while ($r = mysqli_fetch_assoc($qp)) $patients[] = $r;
 
 // Fetch active ambulances
 $ambulances = [];
@@ -93,8 +79,8 @@ endif; ?>
             <div class="adm-card-header">
                 <h3><i class="fas fa-route"></i> Live Dispatch & Trip Logs</h3>
             </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table">
+            <div class="adm-table-wrap" style="overflow-x: auto; width: 100%;">
+                <table class="adm-table" style="width: 100%; min-width: 800px;">
                     <thead><tr><th>Dispatched</th><th>Driver & Vehicle</th><th>Route (Pickup ➔ Dropoff)</th><th>Purpose</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if (empty($trips)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No trips logged.</td></tr>
@@ -127,27 +113,83 @@ endif; ?>
 </main>
 
 <div class="adm-modal" id="dispModal">
-    <div class="adm-modal-content">
-        <div class="adm-modal-header">
-            <h3><i class="fas fa-ambulance"></i> Assign Trip to Driver</h3>
-            <button class="adm-modal-close" onclick="document.getElementById('dispModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+    <div class="adm-modal-content" style="max-height:90vh;overflow-y:auto;">
+        <div class="adm-modal-header" style="background:#dc2626;color:#fff;">
+            <h3 style="color:#fff;"><i class="fas fa-siren-on"></i> Emergency Ambulance Dispatch</h3>
+            <button class="adm-modal-close" style="color:#fff;" onclick="document.getElementById('dispModal').classList.remove('active')"><i class="fas fa-times"></i></button>
         </div>
         <div class="adm-modal-body">
-            <form method="post" action="facility_ambulance.php">
-                <input type="hidden" name="action" value="dispatch">
-                <div style="display:flex;gap:1rem;">
-                    <div class="adm-form-group" style="flex:1;">
-                        <label>Select Driver</label>
+            <form id="dispatchForm">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                
+                <h4 style="margin-top:0;margin-bottom:1rem;color:var(--text-main);font-size:1rem;border-bottom:1px solid #e5e7eb;padding-bottom:0.5rem;"><i class="fas fa-user-injured" style="color:#dc2626;"></i> 1. Patient & Request Info</h4>
+                
+                <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Patient (Optional if Walk-in/Unknown)</label>
+                        <select name="patient_id" class="adm-search-input" id="patSelect">
+                            <option value="">-- Select Registered Patient --</option>
+                            <?php foreach($patients as $p): ?>
+                                <option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Request Source *</label>
+                        <select name="request_source" class="adm-search-input" required>
+                            <option value="admin">Admin Dispatch (Manual)</option>
+                            <option value="doctor">Doctor Request</option>
+                            <option value="nurse">Nurse Request</option>
+                            <option value="walk-in">Walk-in / Emergency Call</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Urgency Level *</label>
+                        <select name="request_type" class="adm-search-input" required style="font-weight:bold;">
+                            <option value="emergency" style="color:#dc2626;">🚨 Emergency (Red)</option>
+                            <option value="scheduled" style="color:#ca8a04;">⚠️ Urgent / Scheduled (Orange)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom:1rem;color:var(--text-main);font-size:1rem;border-bottom:1px solid #e5e7eb;padding-bottom:0.5rem;"><i class="fas fa-map-marked-alt" style="color:var(--primary);"></i> 2. Logistics & Route</h4>
+                
+                <div class="adm-form-group">
+                    <label>Pickup Location *</label>
+                    <input type="text" name="pickup_location" class="adm-search-input" required placeholder="Full exact address or internal Ward name">
+                </div>
+                
+                <div class="adm-form-group">
+                    <label>Destination / Dropoff *</label>
+                    <input type="text" name="destination" class="adm-search-input" required value="RMU Medical Sickbay">
+                </div>
+
+                <div class="adm-form-group">
+                    <label>Chief Complaint / Medical Reason *</label>
+                    <textarea name="trip_notes" class="adm-search-input" rows="2" required placeholder="Brief description of emergency..."></textarea>
+                </div>
+
+                <h4 style="margin-bottom:1rem;color:var(--text-main);font-size:1rem;border-bottom:1px solid #e5e7eb;padding-bottom:0.5rem;"><i class="fas fa-truck-fast" style="color:#eab308;"></i> 3. Fleet & Crew Assignment</h4>
+                
+                <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Available Driver *</label>
                         <select name="driver_id" class="adm-search-input" required>
                             <option value="">-- Choose Driver --</option>
                             <?php foreach ($drivers as $d): ?>
-                                <option value="<?php echo $d['id']; ?>"><?php echo htmlspecialchars($d['name']); ?></option>
+                                <option value="<?php echo $d['id']; ?>"><?php echo htmlspecialchars($d['name']); ?> (Online)</option>
                             <?php
 endforeach; ?>
                         </select>
+                        <?php if(empty($drivers)): ?><span style="color:#dc2626;font-size:0.75rem;"><i class="fas fa-exclamation-triangle"></i> No drivers available!</span><?php endif; ?>
                     </div>
-                    <div class="adm-form-group" style="flex:1;">
-                        <label>Select Vehicle (Available)</label>
+
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Available Vehicle *</label>
                         <select name="ambulance_id" class="adm-search-input" required>
                             <option value="">-- Choose Ambulance --</option>
                             <?php foreach ($ambulances as $a): ?>
@@ -155,25 +197,49 @@ endforeach; ?>
                             <?php
 endforeach; ?>
                         </select>
+                        <?php if(empty($ambulances)): ?><span style="color:#dc2626;font-size:0.75rem;"><i class="fas fa-exclamation-triangle"></i> No vehicles available!</span><?php endif; ?>
                     </div>
                 </div>
-                <div class="adm-form-group">
-                    <label>Pickup Location</label>
-                    <input type="text" name="pickup" class="adm-search-input" required placeholder="e.g. 123 Main St, Accident Site">
+
+                <div class="adm-form-group" style="margin-bottom:1.5rem;">
+                    <label>Dispatch Timing</label>
+                    <div style="display:flex;gap:1.5rem;align-items:center;background:var(--bg-lite);padding:1rem;border-radius:6px;border:1px solid #e5e7eb;">
+                        <label style="margin:0;display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="dispatch_type" value="immediate" checked onchange="document.getElementById('schedGroup').style.display='none'"> 
+                            <span style="font-weight:600;color:#dc2626;">Immediate Dispatch (Now)</span>
+                        </label>
+                        <label style="margin:0;display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                            <input type="radio" name="dispatch_type" value="scheduled" onchange="document.getElementById('schedGroup').style.display='flex'"> 
+                            <span>Scheduled Future Dispatch</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="adm-form-group">
-                    <label>Dropoff Location (Leave blank if Hospital)</label>
-                    <input type="text" name="dropoff" class="adm-search-input" placeholder="e.g. City General (Transfer)">
+                
+                <div id="schedGroup" style="display:none;gap:1.5rem;background:var(--bg-lite);padding:1rem;border-radius:6px;border:1px solid #e5e7eb;margin-bottom:1.5rem;">
+                    <div class="adm-form-group" style="flex:1;margin:0;">
+                        <label>Target Date</label>
+                        <input type="date" name="sched_date" class="adm-search-input" min="<?php echo date('Y-m-d'); ?>">
+                    </div>
+                    <div class="adm-form-group" style="flex:1;margin:0;">
+                        <label>Target Time</label>
+                        <input type="time" name="sched_time" class="adm-search-input">
+                    </div>
                 </div>
-                <div class="adm-form-group">
-                    <label>Emergency Type / Purpose</label>
-                    <input type="text" name="reason" class="adm-search-input" required placeholder="e.g. Cardiac Arrest Patient Pickup">
+
+                <div style="display:flex;gap:1rem;">
+                    <button type="submit" class="adm-btn adm-btn-danger" style="flex:1;font-size:1.1rem;padding:0.75rem;" <?php if(empty($drivers)||empty($ambulances)) echo 'disabled'; ?>>
+                        <i class="fas fa-siren-on" style="margin-right:8px;"></i> EXECUTE DISPATCH
+                    </button>
+                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('dispModal').classList.remove('active')">Cancel</button>
                 </div>
-                <button type="submit" class="adm-btn adm-btn-danger" style="width:100%;"><i class="fas fa-siren-on"></i> Dispatch Now</button>
             </form>
         </div>
     </div>
 </div>
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
 <script>
 const sidebar  = document.getElementById('admSidebar');
 const overlay  = document.getElementById('admOverlay');
@@ -187,6 +253,47 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
     localStorage.setItem('rmu_theme', t);
     themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
 });
+
+// Toast system
+function showToast(msg, isSuccess=true) {
+    const t = document.createElement('div');
+    t.style.cssText = `background:${isSuccess?'var(--success)':'var(--danger)'};color:#fff;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);margin-top:10px;display:flex;align-items:center;gap:10px;animation:slideIn 0.3s ease-out forwards;`;
+    t.innerHTML = `<i class="fas ${isSuccess?'fa-check-circle':'fa-exclamation-triangle'}"></i> ${msg}`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 4000);
+}
+
+document.getElementById('dispatchForm').addEventListener('submit', async(e)=>{
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    btn.disabled = true;
+    
+    const fd = new FormData(e.target);
+    
+    try {
+        const res = await fetch('admin_ambulance_actions.php', { method: 'POST', body: fd });
+        const data = await res.json();
+        
+        if (data.success) {
+            showToast(data.message, true);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast(data.message, false);
+            btn.innerHTML = origHTML;
+            btn.disabled = false;
+        }
+    } catch(err) { 
+        showToast('Network error verifying dispatch constraints.', false); 
+        console.error(err);
+        btn.innerHTML = origHTML;
+        btn.disabled = false;
+    }
+});
 </script>
+<style>
+@keyframes slideIn { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+</style>
 </body>
 </html>

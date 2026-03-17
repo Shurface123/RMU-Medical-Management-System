@@ -90,7 +90,7 @@ include '../includes/_sidebar.php';
             <div style="display:flex;flex-wrap:wrap;gap:2rem;">
                 <!-- Left Column -->
                 <div style="flex:2;min-width:300px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-flask" style="color:#fff;"></i> Test Information</h3>
                         </div>
@@ -137,7 +137,7 @@ include '../includes/_sidebar.php';
 
                 <!-- Right Column -->
                 <div style="flex:1;min-width:250px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-toggle-on" style="color:#fff;"></i> Status</h3>
                         </div>
@@ -150,7 +150,7 @@ include '../includes/_sidebar.php';
                         </div>
                     </div>
 
-                    <div class="adm-card" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
                         <div class="adm-card-body" style="text-align:center;padding:2rem;">
                             <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                                 <i class="fas fa-microscope" style="color:#fff;font-size:2rem;"></i>

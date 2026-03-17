@@ -90,8 +90,8 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
             <div class="adm-card-header">
                 <h3><i class="fas fa-users"></i> Staff Register</h3>
             </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table">
+            <div class="adm-table-wrap table-container">
+                <table class="adm-table" style="width: 100%; min-width: 900px;">
                     <thead>
                         <tr>
                             <th>#</th>

@@ -39,6 +39,9 @@ for ($i = 13; $i >= 0; $i--) {
     $found = array_filter($trend, fn($t) => $t['d'] === $d);
     $trend_values[] = $found ? (int)array_values($found)[0]['cnt'] : 0;
 }
+// Profile completeness percentage — sourced from staff_dashboard.php $completeness variable
+// which reads sc.overall_percentage from staff_profile_completeness table
+$compl_pct = isset($completeness) ? (int)$completeness : 0;
 ?>
 <div id="sec-analytics" class="dash-section">
     <h2 style="font-size:2.2rem;font-weight:700;margin-bottom:2.5rem;"><i class="fas fa-chart-bar" style="color:var(--role-accent);"></i> My Performance</h2>

@@ -133,7 +133,7 @@ include '../includes/_sidebar.php';
             <div style="display:flex;flex-wrap:wrap;gap:2rem;">
                 <div style="flex:2;min-width:300px;">
                     <!-- Personal Info -->
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-id-card" style="color:#fff;"></i> Personal Information</h3>
                         </div>
@@ -174,7 +174,7 @@ include '../includes/_sidebar.php';
                     </div>
 
                     <!-- Professional Info -->
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-stethoscope" style="color:#fff;"></i> Professional Details</h3>
                         </div>
@@ -225,7 +225,7 @@ include '../includes/_sidebar.php';
 
                 <!-- Right Column -->
                 <div style="flex:1;min-width:250px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-toggle-on" style="color:#fff;"></i> Settings & Save</h3>
                         </div>

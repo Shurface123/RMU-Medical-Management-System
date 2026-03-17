@@ -9,6 +9,7 @@
         <div style="height:100%;width:<?=$comp_pct?>%;background:linear-gradient(90deg,<?=$comp_pct>=80?'var(--success)':($comp_pct>=50?'var(--warning)':'var(--danger)')?>,var(--role-accent));border-radius:5px;transition:width .6s;"></div>
       </div>
       <?php
+      $comp = is_array($completeness) ? $completeness : [];
       $sections=[
         ['personal_info','Personal Information','fa-user','personal','Complete your name, DOB, gender, phone, and email.'],
         ['professional_profile','Professional Profile','fa-stethoscope','professional','Add specialization, license number, and experience.'],
@@ -19,7 +20,7 @@
         ['documents_uploaded','Documents Uploaded','fa-file-upload','documents','Upload your medical license or at least one document.'],
       ];
       foreach($sections as [$key,$label,$icon,$navTarget,$hint]):
-        $done=!empty($completeness[$key]);
+        $done=!empty($comp[$key]);
       ?>
       <div style="display:flex;align-items:center;gap:1.2rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border);">
         <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;

@@ -6,11 +6,11 @@
  */
 
 // Fetch qualifications
-$quals = dbSelect($conn,"SELECT * FROM staff_qualifications WHERE staff_id=? ORDER BY id DESC","i",[$staff_id]);
+$quals = dbSelect($conn,"SELECT * FROM staff_qualifications WHERE staff_id=? ORDER BY qualification_id DESC","i",[$staff_id]);
 // Fetch documents
-$docs  = dbSelect($conn,"SELECT * FROM staff_documents WHERE staff_id=? ORDER BY id DESC","i",[$staff_id]);
+$docs  = dbSelect($conn,"SELECT * FROM staff_documents WHERE staff_id=? ORDER BY document_id DESC","i",[$staff_id]);
 // Fetch active sessions
-$sessions = dbSelect($conn,"SELECT * FROM staff_sessions WHERE staff_id=? ORDER BY created_at DESC LIMIT 5","i",[$staff_id]);
+$sessions = dbSelect($conn,"SELECT * FROM staff_sessions WHERE staff_id=? ORDER BY session_id DESC LIMIT 5","i",[$staff_id]);
 // Settings
 $settings = dbRow($conn,"SELECT * FROM staff_settings WHERE staff_id=? LIMIT 1","i",[$staff_id]);
 // Completeness
@@ -232,12 +232,12 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
                     <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--border);">
                         <div>
                             <p style="font-weight:600;font-size:1.3rem;margin:0;"><?=e(substr($s['device_info']??'Unknown Device',0,40))?></p>
-                            <p style="font-size:1.1rem;color:var(--text-muted);margin:.2rem 0 0;"><?=e($s['ip_address']??'—')?> | <?=$s['created_at']?date('d M, H:i',strtotime($s['created_at'])):'—'?></p>
+                            <p style="font-size:1.1rem;color:var(--text-muted);margin:.2rem 0 0;"><?=e($s['ip_address']??'—')?> | <?php $sess_time=$s['login_time']??$s['last_active']??$s['created_at']??null; echo $sess_time?date('d M, H:i',strtotime($sess_time)):'—'; ?></p>
                         </div>
                         <?php if($is_cur): ?>
                         <span class="badge badge-done">Current</span>
                         <?php else: ?>
-                        <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="logoutSession(<?=$s['session_id']??$s['id']?>)"><i class="fas fa-times"></i></button>
+                        <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="logoutSession(<?=$s['session_id']?>)"><i class="fas fa-times"></i></button>
                         <?php endif; ?>
                     </div>
                     <?php endforeach; endif; ?>

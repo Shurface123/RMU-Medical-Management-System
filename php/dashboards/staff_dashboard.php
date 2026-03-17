@@ -10,15 +10,28 @@ $staffRole = $_SESSION['user_role'] ?? 'staff';
 $today     = date('Y-m-d');
 
 // ── Fetch Staff Row ──────────────────────────────────────────
+// NOTE: sc.completeness_score does not exist — real column is sc.overall_percentage
+//       ST.theme does not exist           — real column is ST.theme_preference
+// Both are aliased so downstream code reading completeness_score / theme still works.
 $staff = dbRow($conn,
-    "SELECT s.*, r.role_display_name, r.icon_class, d.name AS dept_name,
-            sc.completeness_score,
-            ST.theme
+    "SELECT
+            s.*,
+            r.role_display_name,
+            r.icon_class,
+            d.name                        AS dept_name,
+            COALESCE(sc.overall_percentage, 0)        AS completeness_score,
+            sc.personal_info_complete,
+            sc.documents_uploaded,
+            sc.photo_uploaded,
+            sc.security_setup_complete,
+            COALESCE(ST.theme_preference, 'light')    AS theme,
+            COALESCE(ST.language, 'en')               AS language,
+            COALESCE(ST.alert_sound_enabled, 1)       AS alert_sound_enabled
      FROM staff s
-     LEFT JOIN staff_roles r     ON s.role = r.role_slug
-     LEFT JOIN staff_departments d ON s.department_id = d.department_id
-     LEFT JOIN staff_profile_completeness sc ON sc.staff_id = s.id
-     LEFT JOIN staff_settings ST           ON ST.staff_id  = s.id
+     LEFT JOIN staff_roles r                ON r.role_slug    = s.role
+     LEFT JOIN staff_departments d          ON d.department_id = s.department_id
+     LEFT JOIN staff_profile_completeness sc ON sc.staff_id   = s.id
+     LEFT JOIN staff_settings ST            ON ST.staff_id    = s.id
      WHERE s.user_id = ? LIMIT 1", "i", [$user_id]);
 
 // Graceful fallback if no staff record yet

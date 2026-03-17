@@ -74,7 +74,7 @@ include '../includes/_sidebar.php';
             <div class="adm-alert adm-alert-danger"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
 
-        <div class="adm-card">
+        <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;">
             <div class="adm-card-header" style="background:var(--primary);color:#fff;">
                 <h3 style="color:#fff;"><i class="fas fa-edit" style="color:#fff;"></i> Edit Ambulance Details</h3>
             </div>

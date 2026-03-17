@@ -83,8 +83,8 @@ $exp_meds   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM medicin
                     <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm">Search</button>
                 </form>
             </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table">
+            <div class="adm-table-wrap table-container">
+                <table class="adm-table" style="width: 100%; min-width: 900px;">
                     <thead>
                         <tr>
                             <th>#</th>

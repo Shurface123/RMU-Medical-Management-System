@@ -67,8 +67,8 @@ $pending_lt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM lab_tes
                 <div class="adm-card-header">
                     <h3><i class="fas fa-clipboard-list"></i> Test Orders</h3>
                 </div>
-                <div class="adm-table-wrap">
-                    <table class="adm-table">
+                <div class="adm-table-wrap table-container">
+                    <table class="adm-table" style="width: 100%; min-width: 900px;">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -126,8 +126,8 @@ $pending_lt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM lab_tes
                 <div class="adm-card-header">
                     <h3><i class="fas fa-list"></i> Service Catalogue</h3>
                 </div>
-                <div class="adm-table-wrap">
-                    <table class="adm-table">
+                <div class="adm-table-wrap table-container">
+                    <table class="adm-table" style="width: 100%; min-width: 900px;">
                         <thead>
                             <tr>
                                 <th>#</th>

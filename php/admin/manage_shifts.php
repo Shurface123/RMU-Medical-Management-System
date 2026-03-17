@@ -12,6 +12,10 @@ $staff_list = [];
 $q_staff = mysqli_query($conn, "SELECT s.id, u.name, u.user_role FROM staff s JOIN users u ON s.user_id = u.id WHERE u.is_active = 1 AND u.user_role NOT IN ('admin','patient') ORDER BY u.name");
 if ($q_staff) while ($r = mysqli_fetch_assoc($q_staff)) $staff_list[] = $r;
 
+$depts = [];
+$qd = mysqli_query($conn, "SELECT department_id, name FROM staff_departments WHERE is_active=1 ORDER BY name ASC");
+if ($qd) while($d = mysqli_fetch_assoc($qd)) $depts[] = $d;
+
 // Next 7 days
 $shifts = [];
 $q_shifts = mysqli_query($conn, "
@@ -53,8 +57,8 @@ if ($q_shifts) while ($r = mysqli_fetch_assoc($q_shifts)) $shifts[] = $r;
             <div class="adm-card-header">
                 <h3><i class="fas fa-clock"></i> Upcoming Shifts Roster</h3>
             </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table">
+            <div class="adm-table-wrap" style="overflow-x: auto; width: 100%;">
+                <table class="adm-table" style="width: 100%; min-width: 800px;">
                     <thead><tr><th>Date</th><th>Shift Details</th><th>Staff Member</th><th>Role</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if (empty($shifts)): ?>
@@ -86,8 +90,9 @@ if ($q_shifts) while ($r = mysqli_fetch_assoc($q_shifts)) $shifts[] = $r;
         </div>
         <div class="adm-modal-body">
             <form id="addShiftForm">
+                <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
                 <div class="adm-form-group">
-                    <label>Staff Member</label>
+                    <label>Staff Member *</label>
                     <select name="staff_id" class="adm-search-input" required>
                         <option value="">-- Select Staff --</option>
                         <?php foreach($staff_list as $st): ?>
@@ -95,32 +100,83 @@ if ($q_shifts) while ($r = mysqli_fetch_assoc($q_shifts)) $shifts[] = $r;
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="adm-form-group">
-                    <label>Shift Date</label>
-                    <input type="date" name="shift_date" class="adm-search-input" min="<?php echo date('Y-m-d'); ?>" required>
-                </div>
+                
                 <div style="display:flex;gap:1rem;">
                     <div class="adm-form-group" style="flex:1;">
-                        <label>Start Time</label>
+                        <label>Shift Date *</label>
+                        <input type="date" name="shift_date" class="adm-search-input" min="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                    <div class="adm-form-group" style="flex:1;">
+                        <label>Shift Type *</label>
+                        <select name="shift_type" class="adm-search-input" required>
+                            <option value="morning">Morning Shift</option>
+                            <option value="afternoon">Afternoon Shift</option>
+                            <option value="night">Night Shift</option>
+                            <option value="rotating">Rotating</option>
+                            <option value="regular">Regular</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1rem;">
+                    <div class="adm-form-group" style="flex:1;">
+                        <label>Start Time *</label>
                         <input type="time" name="start_time" class="adm-search-input" required>
                     </div>
                     <div class="adm-form-group" style="flex:1;">
-                        <label>End Time</label>
+                        <label>End Time *</label>
                         <input type="time" name="end_time" class="adm-search-input" required>
                     </div>
                 </div>
-                <div class="adm-form-group">
-                    <label>Shift Type</label>
-                    <select name="shift_type" class="adm-search-input" required>
-                        <option value="regular">Regular</option>
-                        <option value="morning">Morning Shift</option>
-                        <option value="afternoon">Afternoon Shift</option>
-                        <option value="night">Night Shift</option>
-                        <option value="overtime">Overtime</option>
-                        <option value="on_call">On Call (Standby)</option>
-                    </select>
+
+                <div style="display:flex;gap:1rem;">
+                    <div class="adm-form-group" style="flex:1;">
+                        <label>Ward / Department *</label>
+                        <select name="location_ward_assigned" class="adm-search-input" required>
+                            <option value="">-- Select Location --</option>
+                            <?php foreach($depts as $d): ?>
+                                <option value="<?php echo htmlspecialchars($d['name']); ?>"><?php echo htmlspecialchars($d['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="adm-form-group" style="flex:1;">
+                        <label>Shift Status *</label>
+                        <select name="status" class="adm-search-input" required>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
                 </div>
-                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Assign Shift</button>
+
+                <div class="adm-form-group">
+                    <label>Notes / Special Instructions</label>
+                    <textarea name="notes" class="adm-search-input" rows="2" placeholder="Optional notes..."></textarea>
+                </div>
+
+                <div class="adm-form-group" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem;">
+                    <input type="checkbox" id="is_recurring" name="is_recurring" value="1" onchange="document.getElementById('recurrenceSettings').style.display = this.checked ? 'block' : 'none';">
+                    <label for="is_recurring" style="margin:0;cursor:pointer;">Enable Recurring Shift (Advanced)</label>
+                </div>
+                
+                <div id="recurrenceSettings" style="display:none; padding:1rem; background:var(--bg-lite); border-radius:8px; margin-bottom:1.5rem; border:1px solid #e2e8f0;">
+                    <p style="margin-top:0;font-size:0.85rem;color:var(--text-muted);"><i class="fas fa-info-circle"></i> This generates multiple shift records automatically.</p>
+                    <div style="display:flex;gap:1rem;">
+                        <div class="adm-form-group" style="flex:1;margin:0;">
+                            <label>Recurrence Pattern *</label>
+                            <select name="recurrence_pattern" class="adm-search-input">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="adm-form-group" style="flex:1;margin:0;">
+                            <label>Repeat Until Date *</label>
+                            <input type="date" name="recurrence_end_date" class="adm-search-input" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;"><i class="fas fa-check"></i> Assign Shift</button>
             </form>
         </div>
     </div>
@@ -142,14 +198,45 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 
 document.getElementById('addShiftForm').addEventListener('submit', async(e)=>{
     e.preventDefault();
-    const fd = new FormData(e.target);
-    fd.append('action', 'add_shift');
+    const form = e.target;
+    const start = form.start_time.value;
+    const end = form.end_time.value;
+    
+    // Basic time validation
+    if(start && end && start >= end) {
+        alert('End time cannot be before or exactly at the start time.');
+        return;
+    }
+
+    const fd = new FormData(form);
+
+    // 1. Conflict Check Pre-flight
+    fd.append('action', 'check_shift_conflict');
     try {
+        const cRes = await fetch('admin_staff_actions.php', { method: 'POST', body: fd });
+        const cData = await cRes.json();
+        
+        if (cData.has_conflict) {
+            const proceed = confirm(`Warning: This staff member already has a shift assigned on ${form.shift_date.value} that overlaps with the selected time. Please review before proceeding.\n\nOverride and save anyway?`);
+            if (!proceed) return; // Halt submission
+        }
+        
+        // 2. Proceed with Actual Save
+        fd.set('action', 'add_shift');
+        fd.append('conflict_override', '1'); // let server know we explicitly bypass
+        
         const res = await fetch('admin_staff_actions.php', { method: 'POST', body: fd });
         const data = await res.json();
-        if (data.success) { alert('Shift assigned!'); window.location.reload(); }
-        else alert(data.message || 'Error occurred');
-    } catch(err) { alert('Network error'); console.error(err); }
+        if (data.success) { 
+            alert('Shift assigned successfully!'); 
+            window.location.reload(); 
+        } else {
+            alert(data.message || 'Error occurred');
+        }
+    } catch(err) { 
+        alert('Network error communicating with server.'); 
+        console.error(err); 
+    }
 });
 </script>
 </body>

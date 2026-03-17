@@ -55,12 +55,13 @@
         <div style="font-size:1.1rem;color:var(--text-muted);margin-top:.5rem;">
           <?php
           $missing=[];
-          if(empty($completeness['personal_info'])) $missing[]='Personal Info';
-          if(empty($completeness['professional_profile'])) $missing[]='Professional Profile';
-          if(empty($completeness['qualifications'])) $missing[]='Qualifications';
-          if(empty($completeness['availability_set'])) $missing[]='Availability';
-          if(empty($completeness['photo_uploaded'])) $missing[]='Profile Photo';
-          if(empty($completeness['documents_uploaded'])) $missing[]='Documents';
+          $comp = is_array($completeness) ? $completeness : [];
+          if(empty($comp['personal_info'])) $missing[]='Personal Info';
+          if(empty($comp['professional_profile'])) $missing[]='Professional Profile';
+          if(empty($comp['qualifications'])) $missing[]='Qualifications';
+          if(empty($comp['availability_set'])) $missing[]='Availability';
+          if(empty($comp['photo_uploaded'])) $missing[]='Profile Photo';
+          if(empty($comp['documents_uploaded'])) $missing[]='Documents';
           if(!empty($missing)):?>Complete your <?=implode(', ',$missing)?> to reach 100%.<?php endif;?>
         </div>
         <?php endif;?>

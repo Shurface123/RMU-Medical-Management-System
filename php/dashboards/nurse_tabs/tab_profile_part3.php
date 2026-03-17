@@ -70,14 +70,15 @@ $notif_toggles = [
 
 <!-- ═══ SECTION J: PROFILE AUDIT & COMPLETENESS ENGINE ═══ -->
 <?php
+$comp = is_array($completeness) ? $completeness : [];
 $checks = [
-  ['key'=>'personal_info','label'=>'Personal Information','done'=>(int)($completeness['personal_info']??0),'section'=>'section-personal'],
-  ['key'=>'professional_profile','label'=>'Professional Profile','done'=>(int)($completeness['professional_profile']??0),'section'=>'section-professional'],
-  ['key'=>'qualifications','label'=>'Qualifications & Certifications','done'=>(int)($completeness['qualifications']??0),'section'=>'section-qualifications'],
-  ['key'=>'shift_profile','label'=>'Shift & Availability Profile','done'=>(int)($completeness['shift_profile']??0),'section'=>'section-shift'],
-  ['key'=>'profile_photo','label'=>'Profile Photo','done'=>(int)($completeness['profile_photo']??0),'section'=>'sec-profile'],
-  ['key'=>'security_setup','label'=>'Security Setup (2FA)','done'=>(int)($completeness['security_setup']??0),'section'=>'section-security'],
-  ['key'=>'documents_uploaded','label'=>'Documents (License + Certification)','done'=>(int)($completeness['documents_uploaded']??0),'section'=>'section-documents'],
+  ['key'=>'personal_info','label'=>'Personal Information','done'=>(int)($comp['personal_info']??0),'section'=>'section-personal'],
+  ['key'=>'professional_profile','label'=>'Professional Profile','done'=>(int)($comp['professional_profile']??0),'section'=>'section-professional'],
+  ['key'=>'qualifications','label'=>'Qualifications & Certifications','done'=>(int)($comp['qualifications']??0),'section'=>'section-qualifications'],
+  ['key'=>'shift_profile','label'=>'Shift & Availability Profile','done'=>(int)($comp['shift_profile']??0),'section'=>'section-shift'],
+  ['key'=>'profile_photo','label'=>'Profile Photo','done'=>(int)($comp['profile_photo']??0),'section'=>'sec-profile'],
+  ['key'=>'security_setup','label'=>'Security Setup (2FA)','done'=>(int)($comp['security_setup']??0),'section'=>'section-security'],
+  ['key'=>'documents_uploaded','label'=>'Documents (License + Certification)','done'=>(int)($comp['documents_uploaded']??0),'section'=>'section-documents'],
 ];
 ?>
 <div class="profile-section" id="section-completeness">

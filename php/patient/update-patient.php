@@ -148,7 +148,7 @@ include '../includes/_sidebar.php';
             <div style="display:flex;flex-wrap:wrap;gap:2rem;">
                 <div style="flex:2;min-width:300px;">
                     <!-- Personal Info -->
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-id-card" style="color:#fff;"></i> Personal Information</h3>
                         </div>
@@ -214,7 +214,7 @@ include '../includes/_sidebar.php';
                         </div>
                     </div>
 
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-phone-alt" style="color:#fff;"></i> Emergency Contact</h3>
                         </div>
@@ -237,7 +237,7 @@ include '../includes/_sidebar.php';
 
                 <!-- Right Column -->
                 <div style="flex:1;min-width:250px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-hospital-alt" style="color:#fff;"></i> Admission Details</h3>
                         </div>
@@ -258,7 +258,7 @@ include '../includes/_sidebar.php';
                         </div>
                     </div>
 
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-check-circle" style="color:#fff;"></i> Save Changes</h3>
                         </div>

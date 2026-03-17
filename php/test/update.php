@@ -152,7 +152,7 @@ include '../includes/_sidebar.php';
             <div style="display:flex;flex-wrap:wrap;gap:2rem;">
                 <!-- Left Column -->
                 <div style="flex:2;min-width:300px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-flask" style="color:#fff;"></i> Test Information</h3>
                         </div>
@@ -205,7 +205,7 @@ include '../includes/_sidebar.php';
 
                 <!-- Right Column -->
                 <div style="flex:1;min-width:250px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-toggle-on" style="color:#fff;"></i> Status</h3>
                         </div>
@@ -217,7 +217,7 @@ include '../includes/_sidebar.php';
                         </div>
                     </div>
 
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-check-circle" style="color:#fff;"></i> Save Changes</h3>
                         </div>

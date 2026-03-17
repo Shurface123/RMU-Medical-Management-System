@@ -76,7 +76,7 @@ include '../includes/_sidebar.php';
         <form method="POST" action="" novalidate onsubmit="return handleFormSubmit(this);">
             <div style="display:flex;flex-wrap:wrap;gap:2rem;">
                 <div style="flex:2;min-width:300px;">
-                    <div class="adm-card">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-bed" style="color:#fff;"></i> Bed Details</h3>
                         </div>
@@ -146,7 +146,7 @@ include '../includes/_sidebar.php';
                 </div>
 
                 <div style="flex:1;min-width:250px;">
-                    <div class="adm-card" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
                         <div class="adm-card-body" style="text-align:center;padding:2rem;">
                             <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                                 <i class="fas fa-bed" style="color:#fff;font-size:2rem;"></i>

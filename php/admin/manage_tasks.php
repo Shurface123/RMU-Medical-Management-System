@@ -79,8 +79,9 @@ $completed_tasks = array_filter($tasks, fn($t) => $t['status'] === 'completed');
                         <div style="padding:3rem;text-align:center;color:var(--text-muted);"><i class="fas fa-check-double" style="font-size:2rem;color:var(--success);margin-bottom:1rem;display:block;"></i>No active tasks.</div>
                     <?php
 else: ?>
-                    <table class="adm-table">
-                        <thead><tr><th>Task Info & Due Date</th><th>Assignee</th><th>Status</th></tr></thead>
+                    <div style="overflow-x: auto; width: 100%;">
+                        <table class="adm-table" style="width: 100%; min-width: 800px;">
+                            <thead><tr><th>Task Info & Due Date</th><th>Assignee</th><th>Status</th></tr></thead>
                         <tbody>
                             <?php foreach ($active_tasks as $t):
         $pc = $t['priority'] === 'high' ? 'danger' : ($t['priority'] === 'medium' ? 'warning' : 'success');
@@ -103,10 +104,10 @@ else: ?>
                                     </span>
                                 </td>
                             </tr>
-                            <?php
-    endforeach; ?>
+                            <?php endforeach; ?>
                         </tbody>
-                    </table>
+                        </table>
+                    </div>
                     <?php
 endif; ?>
                 </div>
@@ -122,8 +123,9 @@ endif; ?>
                         <div style="padding:3rem;text-align:center;color:var(--text-muted);">No completed tasks yet.</div>
                     <?php
 else: ?>
-                    <table class="adm-table">
-                        <thead><tr><th>Task Info</th><th>Assignee</th><th>Status</th></tr></thead>
+                    <div style="overflow-x: auto; width: 100%;">
+                        <table class="adm-table" style="width: 100%; min-width: 800px;">
+                            <thead><tr><th>Task Info</th><th>Assignee</th><th>Status</th></tr></thead>
                         <tbody>
                             <?php foreach (array_slice($completed_tasks, 0, 10) as $t): ?>
                             <tr style="opacity:0.8;">
@@ -137,10 +139,10 @@ else: ?>
                                 </td>
                                 <td><span class="adm-badge adm-badge-success">Completed</span></td>
                             </tr>
-                            <?php
-    endforeach; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
+                    </div>
                     <?php
 endif; ?>
                 </div>
@@ -158,6 +160,7 @@ endif; ?>
         </div>
         <div class="adm-modal-body">
             <form id="assignTaskForm">
+                <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
                 <div class="adm-form-group">
                     <label>Select Staff Member</label>
                     <select name="staff_id" class="adm-search-input" required>
@@ -177,6 +180,19 @@ endforeach; ?>
                     <label>Task Title</label>
                     <input type="text" name="title" class="adm-search-input" placeholder="e.g. Conduct deep cleaning of Ward B" required>
                 </div>
+                <div class="adm-form-group" style="margin-top:1rem;">
+                    <label>Task Category *</label>
+                    <select name="category" class="adm-search-input" required>
+                        <option value="">-- Select Category --</option>
+                        <option value="cleaning">Cleaning</option>
+                        <option value="laundry">Laundry</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="transport">Transport</option>
+                        <option value="security">Security</option>
+                        <option value="kitchen">Kitchen</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
                 <div class="adm-form-group">
                     <label>Description & Instructions</label>
                     <textarea name="description" class="adm-search-input" rows="3" placeholder="Additional details..." required></textarea>
@@ -191,8 +207,12 @@ endforeach; ?>
                         </select>
                     </div>
                     <div class="adm-form-group" style="flex:1;">
-                        <label>Due Date & Time</label>
-                        <input type="datetime-local" name="deadline" class="adm-search-input" required>
+                        <label>Due Date *</label>
+                        <input type="date" name="due_date" class="adm-search-input" required min="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="adm-form-group" style="flex:1;">
+                        <label>Due Time *</label>
+                        <input type="time" name="due_time" class="adm-search-input" required>
                     </div>
                 </div>
                 <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;"><i class="fas fa-paper-plane"></i> Dispatch Task</button>

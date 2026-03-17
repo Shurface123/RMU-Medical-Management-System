@@ -98,7 +98,7 @@ include '../includes/_sidebar.php';
             <div style="display:flex;flex-wrap:wrap;gap:2rem;">
                 <!-- Left Column — Main Info -->
                 <div style="flex:2;min-width:300px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-info-circle" style="color:#fff;"></i> Medicine Details</h3>
                         </div>
@@ -139,7 +139,7 @@ include '../includes/_sidebar.php';
                     </div>
 
                     <!-- Stock Info -->
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-boxes" style="color:#fff;"></i> Stock Information</h3>
                         </div>
@@ -176,7 +176,7 @@ include '../includes/_sidebar.php';
 
                 <!-- Right Column — Type & Submit -->
                 <div style="flex:1;min-width:250px;">
-                    <div class="adm-card" style="margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="margin-bottom:2rem;">
                         <div class="adm-card-header" style="background:var(--primary);">
                             <h3 style="color:#fff;"><i class="fas fa-tag" style="color:#fff;"></i> Classification</h3>
                         </div>
@@ -189,7 +189,7 @@ include '../includes/_sidebar.php';
                     </div>
 
                     <!-- Summary Card -->
-                    <div class="adm-card" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
+                    <div class="adm-card" style="width: 100%; max-width: 100%; box-sizing: border-box;" style="background:var(--primary-light);border:1.5px solid var(--primary);margin-bottom:2rem;">
                         <div class="adm-card-body">
                             <div style="text-align:center;padding:1rem 0;">
                                 <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;">

@@ -7,18 +7,28 @@
 define('AJAX_REQUEST', true);
 require_once 'staff_security.php';
 
-header('Content-Type: application/json');
+// Export requests arrive via GET (browser download link)
+$is_export = (
+    $_SERVER['REQUEST_METHOD'] === 'GET' &&
+    isset($_GET['action']) &&
+    $_GET['action'] === 'export_report'
+);
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_err('Method Not Allowed', 405);
-
-$action   = sanitize($_POST['action'] ?? '');
-$user_id  = (int)$_SESSION['user_id'];
-$staffRole = $_SESSION['user_role'] ?? 'staff';
-
-$token = $_POST['csrf_token'] ?? '';
-if (!verifyCsrf($token)) {
-    json_err('Invalid Security Token (CSRF). Refresh page and try again.', 403);
-}
+if ($is_export) {
+    $action    = 'export_report';
+    $user_id   = (int)$_SESSION['user_id'];
+    $staffRole = $_SESSION['user_role'] ?? 'staff';
+} else {
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_err('Method Not Allowed', 405);
+    $action   = sanitize($_POST['action'] ?? '');
+    $user_id  = (int)$_SESSION['user_id'];
+    $staffRole = $_SESSION['user_role'] ?? 'staff';
+    $token = $_POST['csrf_token'] ?? '';
+    if (!verifyCsrf($token)) {
+        json_err('Invalid Security Token (CSRF). Refresh page and try again.', 403);
+    }
+} // end non-export block
 
 // Get staff record (required for most actions)
 $staff = dbRow($conn, "SELECT s.*, r.role_display_name, r.icon_class FROM staff s LEFT JOIN staff_roles r ON s.role=r.role_slug WHERE s.user_id=? LIMIT 1", "i", [$user_id]);
@@ -494,6 +504,112 @@ case 'compute_completeness':
     if ($ex) dbExecute($conn,"UPDATE staff_profile_completeness SET completeness_score=?,last_computed=NOW() WHERE staff_id=?","ii",[$pct,$staff_id]);
     else dbInsert($conn,"INSERT INTO staff_profile_completeness (staff_id,completeness_score,last_computed) VALUES (?,?,NOW())","ii",[$staff_id,$pct]);
     json_ok('Completeness computed.',['percent'=>$pct,'score'=>$score,'max'=>$max]);
+
+
+// ════════════════════════════════════════════════════════════
+// MODULE: REPORTS — Export (GET request, file download)
+// ════════════════════════════════════════════════════════════
+case 'export_report':
+    $report_key = sanitize($_GET['report_key'] ?? '');
+    $from       = sanitize($_GET['from']       ?? date('Y-m-01'));
+    $to         = sanitize($_GET['to']         ?? date('Y-m-d'));
+    $fmt        = strtolower(sanitize($_GET['format'] ?? 'csv'));
+
+    if (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $from)) $from = date('Y-m-01');
+    if (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $to))   $to   = date('Y-m-d');
+    if (!$staff_id) { header('Content-Type: application/json'); json_err('Staff profile not found.', 403); }
+
+    $report_map = [
+        'tasks_completed' => [
+            'title'  => 'Tasks Completed',
+            'sql'    => 'SELECT task_title AS "Task", priority AS "Priority", due_date AS "Due Date", completed_at AS "Completed At", completion_notes AS "Notes" FROM staff_tasks WHERE assigned_to=? AND status="completed" AND completed_at BETWEEN ? AND ? ORDER BY completed_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to . ' 23:59:59'],
+        ],
+        'tasks_all' => [
+            'title'  => 'All Tasks',
+            'sql'    => 'SELECT task_title AS "Task", priority AS "Priority", status AS "Status", due_date AS "Due Date", created_at AS "Created" FROM staff_tasks WHERE assigned_to=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'shifts' => [
+            'title'  => 'Shift Schedule',
+            'sql'    => 'SELECT shift_date AS "Date", shift_type AS "Shift", start_time AS "Start", end_time AS "End", location_ward_assigned AS "Ward", status AS "Status" FROM staff_shifts WHERE staff_id=? AND shift_date BETWEEN ? AND ? ORDER BY shift_date DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'leave_requests' => [
+            'title'  => 'Leave Requests',
+            'sql'    => 'SELECT leave_type AS "Type", start_date AS "From", end_date AS "To", total_days AS "Days", status AS "Status", reason AS "Reason" FROM staff_leaves WHERE staff_id=? AND start_date BETWEEN ? AND ? ORDER BY start_date DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'repairs_completed' => [
+            'title'  => 'Repairs Completed',
+            'sql'    => 'SELECT issue_description AS "Issue", location AS "Location", issue_category AS "Category", priority AS "Priority", status AS "Status", reported_at AS "Reported" FROM maintenance_requests WHERE assigned_to=? AND status="completed" AND DATE(reported_at) BETWEEN ? AND ? ORDER BY reported_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'cleaning_logs' => [
+            'title'  => 'Cleaning Logs',
+            'sql'    => 'SELECT cleaning_type AS "Type", sanitation_status AS "Status", started_at AS "Started", completed_at AS "Completed", notes AS "Notes" FROM cleaning_logs WHERE staff_id=? AND DATE(started_at) BETWEEN ? AND ? ORDER BY started_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'laundry_batches' => [
+            'title'  => 'Laundry Batches',
+            'sql'    => 'SELECT batch_code AS "Batch", batch_type AS "Type", item_count AS "Items", delivery_status AS "Status", collected_at AS "Collected", delivered_at AS "Delivered" FROM laundry_batches WHERE assigned_to=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'incidents' => [
+            'title'  => 'Security Incidents',
+            'sql'    => 'SELECT incident_type AS "Type", location AS "Location", severity AS "Severity", status AS "Status", reported_at AS "Reported" FROM security_incidents WHERE staff_id=? AND DATE(reported_at) BETWEEN ? AND ? ORDER BY reported_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'meal_deliveries' => [
+            'title'  => 'Meal Deliveries',
+            'sql'    => 'SELECT meal_type AS "Meal", ward_department AS "Ward", quantity AS "Qty", preparation_status AS "Prep Status", delivery_status AS "Delivery", scheduled_time AS "Scheduled" FROM kitchen_tasks WHERE assigned_to=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+    ];
+
+    if (!isset($report_map[$report_key])) {
+        header('Content-Type: application/json');
+        json_err('Unknown report key: ' . e($report_key), 400);
+    }
+
+    $rpt   = $report_map[$report_key];
+    $rows  = dbSelect($conn, $rpt['sql'], $rpt['types'], $rpt['params']);
+    $title = $rpt['title'];
+    $fname = 'RMU_' . str_replace(' ', '_', $title) . '_' . $from . '_to_' . $to;
+
+    if ($fmt === 'csv') {
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $fname . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        $out = fopen('php://output', 'w');
+        fputs($out, "ï»¿"); // UTF-8 BOM for Excel
+        fputcsv($out, ['RMU Medical Management System']);
+        fputcsv($out, ['Report: ' . $title]);
+        fputcsv($out, ['Period: ' . $from . ' to ' . $to]);
+        fputcsv($out, ['Generated: ' . date('d M Y H:i')]);
+        fputcsv($out, []);
+        if (!empty($rows)) {
+            fputcsv($out, array_keys($rows[0]));
+            foreach ($rows as $row) fputcsv($out, array_values($row));
+        } else {
+            fputcsv($out, ['No data found for the selected period.']);
+        }
+        fclose($out);
+        exit;
+    }
+
+    header('Content-Type: application/json');
+    json_err('Unsupported format: ' . e($fmt) . '. Use csv.', 400);
 
 // ════════════════════════════════════════════════════════════
 // DEFAULT

@@ -7,22 +7,17 @@ $active_page = 'maintenance';
 $page_title = 'Facility Maintenance';
 include '../includes/_sidebar.php';
 
-// Handle quick form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_maintenance') {
-    $title = trim($_POST['title']);
-    $priority = trim($_POST['priority']);
-    $location = trim($_POST['location']);
-    $desc = trim($_POST['description']);
-    $reported = $_SESSION['user_name'] ?? 'Admin';
+// POST handler removed. Now handled via admin_maintenance_actions.php
 
-    $sql = "INSERT INTO maintenance_requests (reported_by, equipment_or_area, issue_description, location, priority, status, issue_category) VALUES (?, ?, ?, ?, ?, 'reported', 'other')";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "sssss", $reported, $title, $desc, $location, $priority);
-    mysqli_stmt_execute($stmt);
-    mysqli_stmt_close($stmt);
-    header("Location: facility_maintenance.php?success=1");
-    exit();
-}
+// Fetch available Maintenance Staff
+$maint_staff = [];
+$qs = mysqli_query($conn, "SELECT s.id, u.name, s.status FROM staff s JOIN users u ON s.user_id = u.id WHERE u.is_active = 1 AND u.user_role = 'maintenance' ORDER BY u.name");
+if ($qs) while($r = mysqli_fetch_assoc($qs)) $maint_staff[] = $r;
+
+// Fetch Locations/Departments
+$locations = [];
+$ql = mysqli_query($conn, "SELECT name FROM staff_departments WHERE is_active = 1 ORDER BY name");
+if ($ql) while($r = mysqli_fetch_assoc($ql)) $locations[] = $r['name'];
 
 $requests = [];
 $q = mysqli_query($conn, "
@@ -67,8 +62,8 @@ endif; ?>
             <div class="adm-card-header">
                 <h3><i class="fas fa-clipboard-list"></i> Active Work Orders</h3>
             </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table">
+            <div class="adm-table-wrap" style="overflow-x: auto; width: 100%;">
+                <table class="adm-table" style="width: 100%; min-width: 800px;">
                     <thead><tr><th>Date</th><th>Issue / Location</th><th>Priority</th><th>Reported By</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if (empty($requests)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No maintenance requests found.</td></tr>
@@ -100,41 +95,107 @@ endif; ?>
 </main>
 
 <div class="adm-modal" id="maintModal">
-    <div class="adm-modal-content">
-        <div class="adm-modal-header">
-            <h3><i class="fas fa-wrench"></i> Report Maintenance Issue</h3>
-            <button class="adm-modal-close" onclick="document.getElementById('maintModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+    <div class="adm-modal-content" style="max-height:90vh;overflow-y:auto;max-width:800px;">
+        <div class="adm-modal-header" style="background:var(--primary);color:#fff;">
+            <h3 style="color:#fff;"><i class="fas fa-wrench"></i> Report Maintenance Issue</h3>
+            <button class="adm-modal-close" style="color:#fff;" onclick="document.getElementById('maintModal').classList.remove('active')"><i class="fas fa-times"></i></button>
         </div>
         <div class="adm-modal-body">
-            <form method="post" action="facility_maintenance.php">
-                <input type="hidden" name="action" value="add_maintenance">
-                <div class="adm-form-group">
-                    <label>Issue Title</label>
-                    <input type="text" name="title" class="adm-search-input" required placeholder="e.g. Broken AC in Ward 4">
-                </div>
-                <div style="display:flex;gap:1rem;">
-                    <div class="adm-form-group" style="flex:1;">
-                        <label>Location / Ward</label>
-                        <input type="text" name="location" class="adm-search-input" required placeholder="Ward 4, Room 12">
+            <form id="maintForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                
+                <h4 style="margin-top:0;margin-bottom:1rem;color:var(--text-main);font-size:1rem;border-bottom:1px solid #e5e7eb;padding-bottom:0.5rem;"><i class="fas fa-map-marker-alt"></i> 1. Location & Identification</h4>
+                
+                <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Location / Area *</label>
+                        <select name="location_select" class="adm-search-input" onchange="const trg=document.getElementById('locOverride'); if(this.value==='other'){trg.style.display='block';trg.required=true;}else{trg.style.display='none';trg.required=false;trg.value='';}" required>
+                            <option value="">-- Select Location --</option>
+                            <?php foreach($locations as $l): ?>
+                                <option value="<?php echo htmlspecialchars($l); ?>"><?php echo htmlspecialchars($l); ?></option>
+                            <?php endforeach; ?>
+                            <option value="other">Other (Type Below)...</option>
+                        </select>
+                        <input type="text" id="locOverride" name="location_override" class="adm-search-input" style="display:none;margin-top:10px;" placeholder="Specify exact location...">
                     </div>
-                    <div class="adm-form-group" style="flex:1;">
-                        <label>Priority</label>
-                        <select name="priority" class="adm-search-input">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Specific Room or Equipment *</label>
+                        <input type="text" name="equipment_or_area" class="adm-search-input" required placeholder="e.g. Bed 4, Main Sink, Backup Generator">
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom:1rem;color:var(--text-main);font-size:1rem;border-bottom:1px solid #e5e7eb;padding-bottom:0.5rem;"><i class="fas fa-info-circle"></i> 2. Issue Details</h4>
+                
+                <div class="adm-form-group">
+                    <label>Issue Title *</label>
+                    <input type="text" name="title" class="adm-search-input" required placeholder="Brief summary of the problem">
+                </div>
+
+                <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Issue Category *</label>
+                        <select name="issue_category" class="adm-search-input" required>
+                            <option value="electrical">Electrical</option>
+                            <option value="plumbing">Plumbing</option>
+                            <option value="structural">Structural</option>
+                            <option value="equipment">Equipment Failure</option>
+                            <option value="furniture">Furniture</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Severity / Priority *</label>
+                        <select name="priority" class="adm-search-input" id="prioritySelect" required>
+                            <option value="low" style="color:var(--success);">Low</option>
+                            <option value="medium" style="color:#ca8a04;" selected>Medium</option>
+                            <option value="high" style="color:#ea580c;">High</option>
+                            <option value="urgent" style="color:var(--danger);font-weight:bold;">Urgent (Critical)</option>
                         </select>
                     </div>
                 </div>
+
                 <div class="adm-form-group">
-                    <label>Details / Description</label>
-                    <textarea name="description" class="adm-search-input" rows="3" required></textarea>
+                    <label>Detailed Description *</label>
+                    <textarea name="description" class="adm-search-input" rows="3" required placeholder="Describe the problem, when it started, and current impact..."></textarea>
                 </div>
-                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Submit Request</button>
+                
+                <div class="adm-form-group">
+                    <label>Photo Evidence / Documents (Optional, JPG/PNG/PDF)</label>
+                    <input type="file" name="evidence[]" class="adm-search-input" accept="image/jpeg,image/png,application/pdf" multiple style="padding:10px;background:var(--bg-lite);border:2px dashed #cbd5e1;cursor:pointer;">
+                </div>
+
+                <h4 style="margin-bottom:1rem;color:var(--text-main);font-size:1rem;border-bottom:1px solid #e5e7eb;padding-bottom:0.5rem;"><i class="fas fa-user-hard-hat"></i> 3. Assignment</h4>
+                
+                <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+                    <div class="adm-form-group" style="flex:1;min-width:200px;margin:0;">
+                        <label>Assign To (Optional)</label>
+                        <select name="assigned_to" class="adm-search-input">
+                            <option value="">-- Unassigned (General Queue) --</option>
+                            <?php foreach($maint_staff as $s): ?>
+                                <option value="<?php echo $s['id']; ?>"><?php echo htmlspecialchars($s['name']); ?> [<?php echo htmlspecialchars($s['status']); ?>]</option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if(empty($maint_staff)): ?><span style="color:#dc2626;font-size:0.75rem;"><i class="fas fa-exclamation-triangle"></i> No maintenance staff found.</span><?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="adm-form-group" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem;">
+                    <input type="checkbox" id="is_emergency" name="is_emergency" value="1" onchange="const p = document.getElementById('prioritySelect'); if(this.checked){p.value='urgent';p.style.pointerEvents='none';}else{p.style.pointerEvents='auto';p.value='medium';}">
+                    <label for="is_emergency" style="margin:0;cursor:pointer;color:var(--danger);font-weight:bold;">Mark as Emergency — notifies all staff immediately</label>
+                </div>
+
+                <div style="display:flex;gap:1rem;">
+                    <button type="submit" class="adm-btn adm-btn-primary" style="flex:1;font-size:1.1rem;padding:0.75rem;"><i class="fas fa-paper-plane"></i> Submit Report</button>
+                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('maintModal').classList.remove('active')">Cancel</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
 <script>
 const sidebar  = document.getElementById('admSidebar');
 const overlay  = document.getElementById('admOverlay');
@@ -148,6 +209,45 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
     localStorage.setItem('rmu_theme', t);
     themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
 });
+
+function showToast(msg, isSuccess=true) {
+    const t = document.createElement('div');
+    t.style.cssText = `background:${isSuccess?'var(--success)':'var(--danger)'};color:#fff;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);margin-top:10px;display:flex;align-items:center;gap:10px;animation:slideIn 0.3s ease-out forwards;`;
+    t.innerHTML = `<i class="fas ${isSuccess?'fa-check-circle':'fa-exclamation-triangle'}"></i> ${msg}`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 4000);
+}
+
+document.getElementById('maintForm').addEventListener('submit', async(e)=>{
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    btn.disabled = true;
+
+    const fd = new FormData(e.target);
+    try {
+        const res = await fetch('admin_maintenance_actions.php', { method: 'POST', body: fd });
+        const data = await res.json();
+        
+        if (data.success) {
+            showToast(data.message, true);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast(data.message, false);
+            btn.innerHTML = origText;
+            btn.disabled = false;
+        }
+    } catch(err) {
+        showToast('Network error while processing file upload.', false);
+        console.error(err);
+        btn.innerHTML = origText;
+        btn.disabled = false;
+    }
+});
 </script>
+<style>
+@keyframes slideIn { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+</style>
 </body>
 </html>
