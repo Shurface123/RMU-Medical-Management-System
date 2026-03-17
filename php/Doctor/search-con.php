@@ -3,7 +3,9 @@
 
 <head>
     <title>RMU MEDICAL SICKBAY</title>
-    <link rel="shortcut icon" href="https://juniv.edu/images/favicon.ico">
+    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
 
 
     <!-- fonts -->

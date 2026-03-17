@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validate role
     $valid_roles = [
-        'patient', 'doctor', 'pharmacist',
+        'patient', 'doctor', 'pharmacist', 'nurse', 'lab_technician',
         // All staff sub-roles (registered directly — no generic 'staff' login)
         'ambulance_driver', 'cleaner', 'laundry_staff', 'maintenance', 'security', 'kitchen_staff'
     ];
@@ -113,14 +113,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_execute($doctor_stmt);
             mysqli_stmt_close($doctor_stmt);
         } elseif ($is_staff_role) {
-            // Generate unique employee ID
-            $emp_id = 'STF-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            // Insert staff record with exact sub-role and approval_status = pending
-            $staff_sql = "INSERT INTO staff (user_id, full_name, email, phone, employee_id, role, approval_status, created_at)
-                          VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())";
+            // Generate unique employee_id — retry until unique
+            $attempt = 0;
+            do {
+                $emp_id = 'STF-' . date('Y') . '-' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
+                $chk = mysqli_prepare($conn, "SELECT id FROM staff WHERE employee_id = ? LIMIT 1");
+                mysqli_stmt_bind_param($chk, "s", $emp_id);
+                mysqli_stmt_execute($chk);
+                mysqli_stmt_store_result($chk);
+                $emp_exists = mysqli_stmt_num_rows($chk) > 0;
+                mysqli_stmt_close($chk);
+                $attempt++;
+            } while ($emp_exists && $attempt < 10);
+
+            // Generate unique staff_id — satisfies the UNIQUE constraint on staff.staff_id
+            $attempt2 = 0;
+            do {
+                $staff_id_val = 'STF' . strtoupper(substr(md5($user_id . microtime() . rand()), 0, 8));
+                $chk2 = mysqli_prepare($conn, "SELECT id FROM staff WHERE staff_id = ? LIMIT 1");
+                mysqli_stmt_bind_param($chk2, "s", $staff_id_val);
+                mysqli_stmt_execute($chk2);
+                mysqli_stmt_store_result($chk2);
+                $sid_exists = mysqli_stmt_num_rows($chk2) > 0;
+                mysqli_stmt_close($chk2);
+                $attempt2++;
+            } while ($sid_exists && $attempt2 < 10);
+
+            // Insert staff record including both staff_id and employee_id
+            $staff_sql = "INSERT INTO staff (user_id, full_name, email, phone, staff_id, employee_id, role, approval_status, created_at)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
             $staff_stmt = mysqli_prepare($conn, $staff_sql);
-            mysqli_stmt_bind_param($staff_stmt, "isssss", $user_id, $fullname, $email, $phone, $emp_id, $role);
-            mysqli_stmt_execute($staff_stmt);
+            mysqli_stmt_bind_param($staff_stmt, "issssss",
+                $user_id, $fullname, $email, $phone,
+                $staff_id_val, $emp_id, $role
+            );
+            if (!mysqli_stmt_execute($staff_stmt)) {
+                mysqli_stmt_close($staff_stmt);
+                mysqli_stmt_close($stmt);
+                header("Location: register.php?error=" . urlencode("Staff registration failed. Please try again."));
+                exit();
+            }
             mysqli_stmt_close($staff_stmt);
         }
         

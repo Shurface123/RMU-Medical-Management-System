@@ -14,7 +14,9 @@ $active_page = $active_page ?? '';
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo ($page_title ?? 'Admin') . ' — RMU Medical Sickbay'; ?></title>
-    <link rel="shortcut icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8iLCWYue_TYmdWLVce7EYTVG4wZBjW9FJtw&s">
+    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -7,7 +7,9 @@ require_once '../db_conn.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnostic Services - RMU Medical Sickbay</title>
-    <link rel="shortcut icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8iLCWYue_TYmdWLVce7EYTVG4wZBjW9FJtw&s">
+    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/main.css">
     <style>

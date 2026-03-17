@@ -221,9 +221,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .info-box i {
             color: #667eea;
-            margin-right: 8px;
         }
     </style>
+    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
 </head>
 <body>
     <div class="container">

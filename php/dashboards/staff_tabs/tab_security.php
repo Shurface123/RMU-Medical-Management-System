@@ -5,7 +5,7 @@
 if ($staffRole !== 'security') { echo '<div id="sec-security" class="dash-section"></div>'; return; }
 
 $incidents    = dbSelect($conn,"SELECT * FROM security_incidents WHERE staff_id=? ORDER BY reported_at DESC LIMIT 20","i",[$staff_id]);
-$patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND log_type='patrol_checkin' ORDER BY logged_at DESC LIMIT 10","i",[$staff_id]);
+$patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND incident_type='patrol log' ORDER BY reported_at DESC LIMIT 10","i",[$staff_id]);
 ?>
 <div id="sec-security" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
@@ -21,7 +21,7 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
         <?php
         $stats_sec = [
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_incidents WHERE staff_id=? AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Incidents Today','icon'=>'fa-exclamation-triangle','color'=>'var(--danger)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_logs WHERE staff_id=? AND log_type='patrol_checkin' AND DATE(logged_at)=?","is",[$staff_id,$today]), 'label'=>'Patrol Check-ins','icon'=>'fa-route','color'=>'var(--primary)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_logs WHERE staff_id=? AND incident_type='patrol log' AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Patrol Check-ins','icon'=>'fa-route','color'=>'var(--primary)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=?","is",[$staff_id,$today]), 'label'=>'Visitors Logged','icon'=>'fa-users','color'=>'var(--success)'],
         ];
         foreach($stats_sec as $s): ?>
@@ -71,8 +71,8 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
                 <tbody>
                 <?php foreach($patrol_logs as $p): ?>
                 <tr>
-                    <td><i class="fas fa-map-marker-alt" style="color:var(--role-accent);margin-right:.5rem;"></i><?=e($p['checkpoint']??'—')?></td>
-                    <td><?=date('H:i',strtotime($p['logged_at']))?></td>
+                    <td><i class="fas fa-map-marker-alt" style="color:var(--role-accent);margin-right:.5rem;"></i><?=e($p['location']??'—')?></td>
+                    <td><?=date('H:i',strtotime($p['reported_at']))?></td>
                     <td style="color:var(--text-muted);font-size:1.2rem;"><?=e($p['notes']??'—')?></td>
                 </tr>
                 <?php endforeach; ?>

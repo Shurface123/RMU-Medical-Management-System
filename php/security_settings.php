@@ -323,7 +323,11 @@ $loginStats = $securityManager->getLoginStatistics($userId, 30);
             font-size: 14px;
             color: #2c3e50;
         }
+       /* Optional custom theme vars could override --primary-color etc. */
     </style>
+    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
 </head>
 <body>
     <div class="container">

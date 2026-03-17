@@ -15,7 +15,7 @@ switch ($staffRole) {
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM ambulance_requests WHERE status='pending'"),       'label'=>'Pending Requests',   'icon'=>'fa-siren-on','color'=>'var(--danger)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM ambulance_trips WHERE driver_id=? AND DATE(created_at)=?","is",[$staff_id,$today]), 'label'=>'Trips Today','icon'=>'fa-ambulance','color'=>'var(--primary)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM ambulance_trips WHERE driver_id=? AND trip_status='completed' AND DATE(completed_at)=?","is",[$staff_id,$today]), 'label'=>'Completed Today','icon'=>'fa-check-circle','color'=>'var(--success)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM vehicles WHERE assigned_driver_id=? AND status='active'","i",[$staff_id]) ?: '—', 'label'=>'My Vehicle','icon'=>'fa-truck','color'=>'var(--info)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM vehicles WHERE assigned_driver_id=? AND status='available'","i",[$staff_id]) ?: '—', 'label'=>'My Vehicle','icon'=>'fa-truck','color'=>'var(--info)'],
         ];
         $quick_actions = [
             ['label'=>'View Requests',  'icon'=>'fa-siren-on', 'tab'=>'ambulance'],
@@ -25,7 +25,7 @@ switch ($staffRole) {
         break;
     case 'cleaner':
         $overview_stats = [
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_schedules WHERE assigned_to=? AND shift_date=? AND status='scheduled'","is",[$staff_id,$today]), 'label'=>'Pending Tasks',  'icon'=>'fa-broom',    'color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_schedules WHERE assigned_to=? AND schedule_date=? AND status='scheduled'","is",[$staff_id,$today]), 'label'=>'Pending Tasks',  'icon'=>'fa-broom',    'color'=>'var(--warning)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_logs WHERE staff_id=? AND DATE(created_at)=? AND completed_at IS NOT NULL","is",[$staff_id,$today]), 'label'=>'Completed Today','icon'=>'fa-check',    'color'=>'var(--success)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM contamination_reports WHERE staff_id=? AND status='reported'","i",[$staff_id]), 'label'=>'Open Reports', 'icon'=>'fa-biohazard', 'color'=>'var(--danger)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_schedules WHERE assigned_to=? AND status='urgent'","i",[$staff_id]) ?: 0, 'label'=>'Urgent','icon'=>'fa-exclamation-triangle','color'=>'#E67E22'],
@@ -38,9 +38,9 @@ switch ($staffRole) {
         break;
     case 'laundry_staff':
         $overview_stats = [
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE staff_id=? AND status NOT IN ('delivered','cancelled')","i",[$staff_id]), 'label'=>'Active Batches',  'icon'=>'fa-tshirt',  'color'=>'var(--primary)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE staff_id=? AND status='collected'","i",[$staff_id]),  'label'=>'Pending Pickup','icon'=>'fa-box-open', 'color'=>'var(--warning)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE staff_id=? AND DATE(delivered_at)=?","is",[$staff_id,$today]), 'label'=>'Delivered Today','icon'=>'fa-check-circle','color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE assigned_to=? AND delivery_status NOT IN ('delivered')","i",[$staff_id]), 'label'=>'Active Batches',  'icon'=>'fa-tshirt',  'color'=>'var(--primary)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE assigned_to=? AND collection_status='collected'","i",[$staff_id]),  'label'=>'Pending Pickup','icon'=>'fa-box-open', 'color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE assigned_to=? AND DATE(delivered_at)=?","is",[$staff_id,$today]), 'label'=>'Delivered Today','icon'=>'fa-check-circle','color'=>'var(--success)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_inventory WHERE quantity <= reorder_level"), 'label'=>'Low Stock Alerts','icon'=>'fa-box','color'=>'var(--danger)'],
         ];
         $quick_actions = [
@@ -51,7 +51,7 @@ switch ($staffRole) {
         break;
     case 'maintenance':
         $overview_stats = [
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE status='open' AND (assigned_to IS NULL OR assigned_to=0)"), 'label'=>'Open Requests',  'icon'=>'fa-wrench',  'color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE status='reported' AND (assigned_to IS NULL OR assigned_to=0)"), 'label'=>'Open Requests',  'icon'=>'fa-wrench',  'color'=>'var(--danger)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE assigned_to=? AND status='in progress'","i",[$staff_id]),  'label'=>'In Progress',    'icon'=>'fa-tools',   'color'=>'var(--warning)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE assigned_to=? AND status='completed' AND DATE(completed_at)=?","is",[$staff_id,$today]), 'label'=>'Completed Today','icon'=>'fa-check','color'=>'var(--success)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM maintenance_requests WHERE assigned_to=? AND status='on hold'","i",[$staff_id]), 'label'=>'On Hold','icon'=>'fa-pause-circle','color'=>'var(--info)'],
@@ -66,7 +66,7 @@ switch ($staffRole) {
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_incidents WHERE staff_id=? AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Incidents Today','icon'=>'fa-shield-alt','color'=>'var(--danger)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=? AND exit_time IS NULL","is",[$staff_id,$today]), 'label'=>'Active Visitors','icon'=>'fa-users','color'=>'var(--warning)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=?","is",[$staff_id,$today]), 'label'=>'Visitors Today','icon'=>'fa-user-check','color'=>'var(--primary)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_logs WHERE staff_id=? AND DATE(logged_at)=? AND log_type='patrol_checkin'","is",[$staff_id,$today]), 'label'=>'Patrol Check-ins','icon'=>'fa-map-marker-alt','color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_logs WHERE staff_id=? AND DATE(reported_at)=? AND incident_type='patrol log'","is",[$staff_id,$today]), 'label'=>'Patrol Check-ins','icon'=>'fa-map-marker-alt','color'=>'var(--success)'],
         ];
         $quick_actions = [
             ['label'=>'Log Incident',   'icon'=>'fa-exclamation','tab'=>'security','modal'=>'incidentModal'],
@@ -76,10 +76,10 @@ switch ($staffRole) {
         break;
     case 'kitchen_staff':
         $overview_stats = [
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND DATE(scheduled_time)=? AND status='pending'","is",[$staff_id,$today]), 'label'=>'Pending Meals',   'icon'=>'fa-utensils','color'=>'var(--warning)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND status='delivered' AND DATE(delivered_at)=?","is",[$staff_id,$today]), 'label'=>'Delivered Today',  'icon'=>'fa-check',  'color'=>'var(--success)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND DATE(created_at)=? AND preparation_status='pending'","is",[$staff_id,$today]), 'label'=>'Pending Meals',   'icon'=>'fa-utensils','color'=>'var(--warning)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND delivery_status='delivered' AND DATE(delivered_at)=?","is",[$staff_id,$today]), 'label'=>'Delivered Today',  'icon'=>'fa-check',  'color'=>'var(--success)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_dietary_flags WHERE status='flagged' AND DATE(flagged_at)=?","s",[$today]), 'label'=>'Dietary Alerts','icon'=>'fa-allergies','color'=>'var(--danger)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND status='in preparation'","i",[$staff_id]), 'label'=>'In Prep','icon'=>'fa-fire','color'=>'var(--info)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM kitchen_tasks WHERE assigned_to=? AND preparation_status='in preparation'","i",[$staff_id]), 'label'=>'In Prep','icon'=>'fa-fire','color'=>'var(--info)'],
         ];
         $quick_actions = [
             ['label'=>'My Meal Tasks','icon'=>'fa-list','tab'=>'kitchen'],

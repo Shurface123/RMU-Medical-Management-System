@@ -4,8 +4,8 @@
  */
 if ($staffRole !== 'security') { echo '<div id="sec-visitors" class="dash-section"></div>'; return; }
 
-$today_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=? ORDER BY id DESC","is",[$staff_id,$today]);
-$active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=? AND exit_time IS NULL ORDER BY id DESC","is",[$staff_id,$today]);
+$today_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=? ORDER BY log_id DESC","is",[$staff_id,$today]);
+$active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=? AND exit_time IS NULL ORDER BY log_id DESC","is",[$staff_id,$today]);
 ?>
 <div id="sec-visitors" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
@@ -25,12 +25,12 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
             <?php foreach($active_visitors as $v): ?>
             <tr style="background:var(--warning-light);">
                 <td><strong><?=e($v['visitor_name'])?></strong></td>
-                <td style="font-family:monospace;"><?=e($v['id_number']??'—')?></td>
+                <td style="font-family:monospace;"><?=e($v['visitor_id_number']??'—')?></td>
                 <td><?=e($v['purpose']??'—')?></td>
                 <td><?=e($v['person_visiting']??'—')?></td>
-                <td><?=e($v['ward']??'—')?></td>
+                <td><?=e($v['ward_department']??'—')?></td>
                 <td><?=date('H:i',strtotime($v['entry_time']))?></td>
-                <td><button class="btn btn-success btn-sm" onclick="logExit(<?=$v['id']?>)"><i class="fas fa-sign-out-alt"></i> Log Exit</button></td>
+                <td><button class="btn btn-success btn-sm" onclick="logExit(<?=$v['log_id']?>)"><i class="fas fa-sign-out-alt"></i> Log Exit</button></td>
             </tr>
             <?php endforeach; ?>
             </tbody>
@@ -52,10 +52,10 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
             ?>
             <tr>
                 <td><strong><?=e($v['visitor_name'])?></strong></td>
-                <td style="font-family:monospace;"><?=e($v['id_number']??'—')?></td>
+                <td style="font-family:monospace;"><?=e($v['visitor_id_number']??'—')?></td>
                 <td><?=e($v['purpose']??'—')?></td>
                 <td><?=e($v['person_visiting']??'—')?></td>
-                <td><?=e($v['ward']??'—')?></td>
+                <td><?=e($v['ward_department']??'—')?></td>
                 <td><?=date('H:i',strtotime($v['entry_time']))?></td>
                 <td><?=$has_exit?date('H:i',strtotime($v['exit_time'])):'—'?></td>
                 <td>
@@ -81,7 +81,7 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
             <input type="hidden" name="action" value="log_visitor">
             <div class="form-row">
                 <div class="form-group"><label>Visitor Name *</label><input name="visitor_name" type="text" class="form-control" required placeholder="Full name"></div>
-                <div class="form-group"><label>ID Number</label><input name="id_number" type="text" class="form-control" placeholder="National ID / Passport"></div>
+                <div class="form-group"><label>ID Number</label><input name="visitor_id_number" type="text" class="form-control" placeholder="National ID / Passport"></div>
             </div>
             <div class="form-group"><label>Purpose of Visit *</label>
                 <select name="purpose" class="form-control" required>
