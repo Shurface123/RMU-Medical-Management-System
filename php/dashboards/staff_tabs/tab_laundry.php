@@ -4,9 +4,9 @@
  */
 if ($staffRole !== 'laundry_staff') { echo '<div id="sec-laundry" class="dash-section"></div>'; return; }
 
-$batches   = dbSelect($conn,"SELECT * FROM laundry_batches WHERE staff_id=? ORDER BY FIELD(status,'collected','washing','ironing','quality check','delivered'), created_at DESC LIMIT 30","i",[$staff_id]);
-$inventory = dbSelect($conn,"SELECT * FROM laundry_inventory ORDER BY quantity ASC LIMIT 20");
-$damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports WHERE staff_id=? ORDER BY reported_at DESC LIMIT 10","i",[$staff_id]);
+$batches   = dbSelect($conn,"SELECT * FROM laundry_batches WHERE assigned_to=? ORDER BY created_at DESC LIMIT 30","i",[$staff_id]);
+$inventory = dbSelect($conn,"SELECT * FROM laundry_inventory ORDER BY available_quantity ASC LIMIT 20");
+$damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY reported_at DESC LIMIT 10");
 ?>
 <div id="sec-laundry" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
@@ -19,7 +19,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports WHERE sta
 
     <!-- Active Batches -->
     <div class="card" style="margin-bottom:2rem;">
-        <div class="card-header"><h3><i class="fas fa-layer-group"></i> Active Batches (<?=count(array_filter($batches,fn($b)=>$b['status']!=='delivered'))?>)</h3></div>
+        <div class="card-header"><h3><i class="fas fa-layer-group"></i> Active Batches (<?=count(array_filter($batches,fn($b)=>$b['delivery_status']!=='delivered'))?>)</h3></div>
         <?php if(empty($batches)): ?>
         <div class="card-body" style="text-align:center;padding:4rem;"><p style="color:var(--text-muted);">No batches registered yet.</p></div>
         <?php else: ?>
@@ -28,7 +28,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports WHERE sta
             <thead><tr><th>Batch Code</th><th>Items</th><th>Weight</th><th>Ward Origin</th><th>Status Pipeline</th><th>Actions</th></tr></thead>
             <tbody>
             <?php foreach($batches as $b):
-                $bs=$b['status']??'collected';
+                $bs=$b['delivery_status']==='delivered'?'delivered':($b['washing_status']==='in progress'?'washing':($b['collection_status']==='collected'?'collected':'pending'));
                 $pipeline=['collected','washing','ironing','quality check','delivered'];
                 $pi=array_search($bs,$pipeline);
                 $sc_map=['collected'=>'var(--warning)','washing'=>'var(--info)','ironing'=>'var(--primary)','quality check'=>'var(--role-accent)','delivered'=>'var(--success)'];
@@ -37,11 +37,11 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports WHERE sta
             ?>
             <tr>
                 <td><strong style="font-family:monospace;"><?=e($b['batch_code'])?></strong>
-                    <?php if($b['contamination_flag']): ?><span class="badge badge-urgent" style="font-size:1rem;margin-left:.5rem;"><i class="fas fa-biohazard"></i> Contaminated</span><?php endif; ?>
+                    <?php if($b['contaminated_items_count']): ?><span class="badge badge-urgent" style="font-size:1rem;margin-left:.5rem;"><i class="fas fa-biohazard"></i> Contaminated</span><?php endif; ?>
                 </td>
                 <td><?=e($b['item_count'])?> pcs | <?=e($b['item_type']??'—')?></td>
                 <td><?=$b['weight_kg']??'—'?> kg</td>
-                <td><?=e($b['origin_ward']??'—')?></td>
+                <td><?=e($b['requested_by']??'—')?></td>
                 <td>
                     <div style="display:flex;align-items:center;gap:.3rem;">
                         <?php foreach($pipeline as $i=>$pst): $done=($i<=$pi); ?>
@@ -52,7 +52,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports WHERE sta
                 </td>
                 <td>
                     <?php if($bs!=='delivered'): ?>
-                    <button class="btn btn-primary btn-sm" onclick="updateBatch(<?=$b['id']?>,'<?=e($next_status)?>')">
+                    <button class="btn btn-primary btn-sm" onclick="updateBatch(<?=$b['batch_id']?>),'<?=e($next_status)?>')">
                         <i class="fas fa-chevron-right"></i> <?=ucfirst($next_status)?>
                     </button>
                     <?php else: ?>
@@ -78,11 +78,11 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports WHERE sta
                 <thead><tr><th>Item</th><th>Quantity</th><th>Reorder Level</th><th>Alert</th></tr></thead>
                 <tbody>
                 <?php foreach($inventory as $inv):
-                    $qty=(int)$inv['quantity']; $reorder=(int)($inv['reorder_level']??10);
+                    $qty=(int)$inv['available_quantity']; $reorder=(int)($inv['reorder_level']??10);
                     $is_low=($qty<=$reorder); $is_out=($qty===0);
                 ?>
                 <tr>
-                    <td><?=e($inv['item_name']??'Unknown')?></td>
+                    <td><?=e($inv['item_type']??'Unknown')?></td>
                     <td><strong style="font-size:1.6rem;color:<?=$is_out?'var(--danger)':($is_low?'var(--warning)':'var(--success)')?>;"><?=$qty?></strong></td>
                     <td style="color:var(--text-muted);"><?=$reorder?></td>
                     <td><?php if($is_out): ?><span class="badge badge-urgent"><i class="fas fa-times"></i> Out of Stock</span>

@@ -4,8 +4,8 @@
  */
 if ($staffRole !== 'cleaner') { echo '<div id="sec-cleaning" class="dash-section"></div>'; return; }
 
-$schedules = dbSelect($conn,"SELECT * FROM cleaning_schedules WHERE assigned_to=? ORDER BY FIELD(status,'urgent','scheduled','in progress','completed'),shift_date ASC, scheduled_time ASC LIMIT 30","i",[$staff_id]);
-$my_reports = dbSelect($conn,"SELECT * FROM contamination_reports WHERE staff_id=? ORDER BY reported_at DESC LIMIT 10","i",[$staff_id]);
+$schedules = dbSelect($conn,"SELECT * FROM cleaning_schedules WHERE assigned_to=? ORDER BY FIELD(status,'urgent','scheduled','in progress','completed'),schedule_date ASC, start_time ASC LIMIT 30","i",[$staff_id]);
+$my_reports = dbSelect($conn,"SELECT * FROM contamination_reports WHERE reported_by=? ORDER BY reported_at DESC LIMIT 10","i",[$staff_id]);
 
 // Sanitation board overview
 $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as san_status FROM cleaning_logs WHERE completed_at IS NOT NULL GROUP BY ward_room_area ORDER BY ward_room_area LIMIT 20");
@@ -54,13 +54,13 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
             <tr>
                 <td><i class="fas fa-door-open" style="color:var(--role-accent);margin-right:.5rem;"></i><?=e($s['ward_room_area']??'—')?></td>
                 <td><i class="fas <?=$type_icon?>" style="margin-right:.4rem;"></i><?=e(ucfirst($s['cleaning_type']??'—'))?></td>
-                <td><?=$s['scheduled_time']?date('d M, H:i',strtotime($s['scheduled_time'])):'—'?></td>
+                <td><?=$s['start_time']?date('d M, H:i',strtotime($s['start_time'])):'—'?></td>
                 <td><span class="badge" style="background:color-mix(in srgb,<?=$st_c?> 15%,#fff 85%);color:<?=$st_c?>;"><?=ucfirst($st)?></span></td>
                 <td>
                     <?php if($st==='scheduled'||$st==='urgent'): ?>
-                    <button class="btn btn-primary btn-sm" onclick="startCleaning(<?=$s['id']?>)"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn btn-primary btn-sm" onclick="startCleaning(<?=$s['schedule_id']?>)"><i class="fas fa-play"></i> Start</button>
                     <?php elseif($st==='in progress'): ?>
-                    <button class="btn btn-success btn-sm" onclick="openCompleteClean(<?=$s['id']?>, '<?=e($s['ward_room_area']??'')?>')"><i class="fas fa-check"></i> Complete</button>
+                    <button class="btn btn-success btn-sm" onclick="openCompleteClean(<?=$s['schedule_id']?>, '<?=e($s['ward_room_area']??'')?>')"><i class="fas fa-check"></i> Complete</button>
                     <?php else: ?>
                     <span style="color:var(--text-muted);font-size:1.2rem;">Done</span>
                     <?php endif; ?>

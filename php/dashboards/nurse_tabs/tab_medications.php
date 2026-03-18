@@ -4,7 +4,7 @@
 <?php
 // ── Today's medication schedule ───────────────────────────
 $med_schedule = dbSelect($conn,
-    "SELECT ma.*, u.name AS patient_name, p.patient_id AS p_ref
+    "SELECT ma.*, u.user_name AS patient_name, p.patient_id AS p_ref
      FROM medication_administration ma
      JOIN patients pt ON ma.patient_id=pt.id JOIN users u ON pt.user_id=u.id
      JOIN patients p ON ma.patient_id=p.id
@@ -13,22 +13,23 @@ $med_schedule = dbSelect($conn,
 
 // ── Active medication schedules ───────────────────────────
 $active_schedules = dbSelect($conn,
-    "SELECT ms.*, u.name AS patient_name, p.patient_id AS p_ref
+    "SELECT ms.*, u.user_name AS patient_name, p.patient_id AS p_ref
      FROM medication_schedules ms
      JOIN patients pt ON ms.patient_id=pt.id JOIN users u ON pt.user_id=u.id
      JOIN patients p ON ms.patient_id=p.id
      WHERE ms.status='Active' AND ms.start_date<=? AND (ms.end_date IS NULL OR ms.end_date>=?)
-     ORDER BY u.name ASC","ss",[$today,$today]);
+     ORDER BY u.user_name ASC","ss",[$today,$today]);
 
 // ── Active prescriptions (from doctor) ────────────────────
 $active_rx = dbSelect($conn,
     "SELECT pr.id, pr.prescription_id AS rx_ref, pr.status, pr.prescription_date,
-            u.name AS patient_name, p.patient_id AS p_ref, ud.name AS doctor_name,
-            pi.medicine_name, pi.dosage, pi.frequency, pi.instructions, pi.id AS item_id
+            u.user_name AS patient_name, p.patient_id AS p_ref, ud.user_name AS doctor_name,
+            m.medicine_name, pi.dosage, pi.frequency, pi.instructions, pi.item_id
      FROM prescriptions pr
      JOIN patients p ON pr.patient_id=p.id JOIN users u ON p.user_id=u.id
      JOIN doctors d ON pr.doctor_id=d.id JOIN users ud ON d.user_id=ud.id
      LEFT JOIN prescription_items pi ON pi.prescription_id=pr.id
+     LEFT JOIN medicines m ON pi.medicine_id=m.id
      WHERE pr.status IN('Pending','Active','Partially Dispensed')
      ORDER BY pr.prescription_date DESC LIMIT 200");
 ?>

@@ -4,14 +4,8 @@
 <?php
 // ── All beds with current assignments ─────────────────────
 $beds = dbSelect($conn,
-    "SELECT bm.*, ba.patient_id, ba.admission_date, ba.status AS assign_status, ba.assigned_nurse_id,
-            u.name AS patient_name, p.patient_id AS p_ref,
-            iso.isolation_type, iso.status AS iso_status
+    "SELECT bm.*
      FROM bed_management bm
-     LEFT JOIN bed_assignments ba ON ba.bed_id=bm.id AND ba.status='Active'
-     LEFT JOIN patients p ON ba.patient_id=p.id
-     LEFT JOIN users u ON p.user_id=u.id
-     LEFT JOIN isolation_records iso ON iso.patient_id=ba.patient_id AND iso.status='Active'
      ORDER BY bm.ward, bm.bed_number ASC");
 
 // ── Group by ward ─────────────────────────────────────────
@@ -20,7 +14,7 @@ foreach($beds as $b){ $w = $b['ward'] ?? 'Unassigned'; $wards[$w][] = $b; }
 
 // ── Pending transfers ─────────────────────────────────────
 $transfers = dbSelect($conn,
-    "SELECT bt.*, u.name AS patient_name, p.patient_id AS p_ref
+    "SELECT bt.*, u.user_name AS patient_name, p.patient_id AS p_ref
      FROM bed_transfers bt
      JOIN patients p ON bt.patient_id=p.id JOIN users u ON p.user_id=u.id
      WHERE bt.status IN('Requested','Approved')
@@ -28,7 +22,7 @@ $transfers = dbSelect($conn,
 
 // ── Isolation records ─────────────────────────────────────
 $isolations = dbSelect($conn,
-    "SELECT ir.*, u.name AS patient_name
+    "SELECT ir.*, u.user_name AS patient_name
      FROM isolation_records ir
      JOIN patients p ON ir.patient_id=p.id JOIN users u ON p.user_id=u.id
      WHERE ir.status='Active'
@@ -78,10 +72,10 @@ $bed_stats = [
         else{ $bed_color='var(--success)'; $bed_bg='var(--success-light)'; $icon='fa-bed'; }
       ?>
         <div style="background:<?=$bed_bg?>;border:1.5px solid <?=$bed_color?>;border-radius:var(--radius-sm);padding:1rem;text-align:center;cursor:<?=$has_patient?'pointer':'default'?>;transition:var(--transition);"
-             <?=$has_patient?'onclick="openBedDetail('.(int)$b['id'].','.(int)$b['patient_id'].')"':''?>
+             <?=$has_patient?'onclick="openBedDetail('.(int)$b['bed_pk'].','.(int)$b['patient_id'].')"':''?>
              title="<?=$has_patient?e($b['patient_name']):($is_maint?'Under Maintenance':'Available')?>">
           <i class="fas <?=$icon?>" style="font-size:1.8rem;color:<?=$bed_color?>;margin-bottom:.5rem;display:block;"></i>
-          <div style="font-weight:700;font-size:1.3rem;color:<?=$bed_color?>;">Bed <?=e($b['bed_number']??$b['id'])?></div>
+          <div style="font-weight:700;font-size:1.3rem;color:<?=$bed_color?>;">Bed <?=e($b['bed_number']??$b['bed_pk'])?></div>
           <?php if($has_patient):?>
             <div style="font-size:1.05rem;color:var(--text-secondary);margin-top:.3rem;"><?=e($b['patient_name'])?></div>
             <?php if($is_iso):?><span class="badge badge-warning" style="margin-top:.4rem;font-size:.9rem;"><i class="fas fa-shield-virus"></i> <?=e($b['isolation_type'])?></span><?php endif;?>

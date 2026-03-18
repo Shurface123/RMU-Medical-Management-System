@@ -64,7 +64,7 @@ function requireAuth($redirectUrl = '../php/index.php') {
     if (!isAuthenticated()) {
         // Store the current page to redirect back after login
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
-        header("Location: $redirectUrl");
+        header("Location: /RMU-Medical-Management-System/php/index.php");
         exit();
     }
 }
@@ -80,7 +80,7 @@ function requireRole($requiredRole, $redirectUrl = '../php/index.php') {
     $currentRole = getCurrentRole();
     if ($currentRole !== $requiredRole) {
         // User is authenticated but doesn't have the required role
-        header("Location: $redirectUrl?error=Unauthorized access. Please login with appropriate credentials.");
+        header("Location: /RMU-Medical-Management-System/php/index.php?error=Unauthorized access. Please login with appropriate credentials.");
         exit();
     }
 }
@@ -95,7 +95,7 @@ function requireAnyRole($allowedRoles, $redirectUrl = '../php/index.php') {
     
     $currentRole = getCurrentRole();
     if (!in_array($currentRole, $allowedRoles)) {
-        header("Location: $redirectUrl?error=Unauthorized access. Please login with appropriate credentials.");
+        header("Location: /RMU-Medical-Management-System/php/index.php?error=Unauthorized access. Please login with appropriate credentials.");
         exit();
     }
 }
@@ -107,7 +107,7 @@ function requireAnyRole($allowedRoles, $redirectUrl = '../php/index.php') {
  */
 function enforceSingleDashboard($expectedRole) {
     if (!isAuthenticated()) {
-        header("Location: ../php/index.php");
+        header("Location: /RMU-Medical-Management-System/php/index.php");
         exit();
     }
     
@@ -118,22 +118,22 @@ function enforceSingleDashboard($expectedRole) {
         // Redirect to their appropriate dashboard
         switch ($currentRole) {
             case 'admin':
-                header("Location: ../php/home.php");
+                header("Location: /RMU-Medical-Management-System/php/home.php");
                 break;
             case 'doctor':
-                header("Location: ../php/dashboards/doctor_dashboard.php");
+                header("Location: /RMU-Medical-Management-System/php/dashboards/doctor_dashboard.php");
                 break;
             case 'nurse':
-                header("Location: ../php/dashboards/nurse_dashboard.php");
+                header("Location: /RMU-Medical-Management-System/php/dashboards/nurse_dashboard.php");
                 break;
             case 'patient':
-                header("Location: ../php/dashboards/patient_dashboard.php");
+                header("Location: /RMU-Medical-Management-System/php/dashboards/patient_dashboard.php");
                 break;
             case 'pharmacist':
-                header("Location: ../php/dashboards/pharmacy_dashboard.php");
+                header("Location: /RMU-Medical-Management-System/php/dashboards/pharmacy_dashboard.php");
                 break;
             case 'lab_technician':
-                header("Location: ../php/dashboards/lab_dashboard.php");
+                header("Location: /RMU-Medical-Management-System/php/dashboards/lab_dashboard.php");
                 break;
             case 'ambulance_driver':
             case 'cleaner':
@@ -142,10 +142,10 @@ function enforceSingleDashboard($expectedRole) {
             case 'security':
             case 'kitchen_staff':
             case 'staff':
-                header("Location: ../php/dashboards/staff_dashboard.php");
+                header("Location: /RMU-Medical-Management-System/php/dashboards/staff_dashboard.php");
                 break;
             default:
-                header("Location: ../php/index.php?error=Invalid session. Please login again.");
+                header("Location: /RMU-Medical-Management-System/php/index.php?error=Invalid session. Please login again.");
                 break;
         }
         exit();
@@ -219,7 +219,7 @@ function logout($redirectUrl = '../php/index.php') {
     session_destroy();
     
     // Redirect to login page
-    header("Location: $redirectUrl?message=Logged out successfully");
+    header("Location: /RMU-Medical-Management-System/php/index.php?message=Logged out successfully");
     exit();
 }
 
@@ -228,7 +228,7 @@ function logout($redirectUrl = '../php/index.php') {
  */
 function redirectToDashboard() {
     if (!isAuthenticated()) {
-        header("Location: ../php/index.php");
+        header("Location: /RMU-Medical-Management-System/php/index.php");
         exit();
     }
     
@@ -236,22 +236,22 @@ function redirectToDashboard() {
     
     switch ($role) {
         case 'admin':
-            header("Location: ../php/home.php");
+            header("Location: /RMU-Medical-Management-System/php/home.php");
             break;
         case 'doctor':
-            header("Location: ../php/dashboards/doctor_dashboard.php");
+            header("Location: /RMU-Medical-Management-System/php/dashboards/doctor_dashboard.php");
             break;
         case 'nurse':
-            header("Location: ../php/dashboards/nurse_dashboard.php");
+            header("Location: /RMU-Medical-Management-System/php/dashboards/nurse_dashboard.php");
             break;
         case 'patient':
-            header("Location: ../php/dashboards/patient_dashboard.php");
+            header("Location: /RMU-Medical-Management-System/php/dashboards/patient_dashboard.php");
             break;
         case 'pharmacist':
-            header("Location: ../php/dashboards/pharmacy_dashboard.php");
+            header("Location: /RMU-Medical-Management-System/php/dashboards/pharmacy_dashboard.php");
             break;
         case 'lab_technician':
-            header("Location: ../php/dashboards/lab_dashboard.php");
+            header("Location: /RMU-Medical-Management-System/php/dashboards/lab_dashboard.php");
             break;
         case 'ambulance_driver':
         case 'cleaner':
@@ -260,10 +260,10 @@ function redirectToDashboard() {
         case 'security':
         case 'kitchen_staff':
         case 'staff':
-            header("Location: ../php/dashboards/staff_dashboard.php");
+            header("Location: /RMU-Medical-Management-System/php/dashboards/staff_dashboard.php");
             break;
         default:
-            header("Location: ../php/index.php?error=Invalid role");
+            header("Location: /RMU-Medical-Management-System/php/index.php?error=Invalid role");
             break;
     }
     exit();

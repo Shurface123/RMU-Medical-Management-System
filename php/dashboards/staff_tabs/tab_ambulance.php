@@ -5,9 +5,9 @@
 if ($staffRole !== 'ambulance_driver') { echo '<div id="sec-ambulance" class="dash-section"></div>'; return; }
 
 // Pending trip requests
-$trip_requests = dbSelect($conn,"SELECT * FROM ambulance_requests WHERE status='pending' ORDER BY urgency_level DESC, id ASC LIMIT 20");
+$trip_requests = dbSelect($conn,"SELECT * FROM ambulance_requests WHERE status='Pending' ORDER BY emergency_type DESC, id ASC LIMIT 20");
 // Active trips for THIS driver
-$active_trip = dbRow($conn,"SELECT * FROM ambulance_trips WHERE driver_id=? AND trip_status NOT IN ('completed','cancelled') ORDER BY id DESC LIMIT 1","i",[$staff_id]);
+$active_trip = dbRow($conn,"SELECT * FROM ambulance_trips WHERE driver_id=? AND trip_status NOT IN ('completed','cancelled') ORDER BY trip_id DESC LIMIT 1","i",[$staff_id]);
 // Assigned vehicle
 $vehicle = dbRow($conn,"SELECT * FROM vehicles WHERE assigned_driver_id=? LIMIT 1","i",[$staff_id]);
 // Recent trips
@@ -69,7 +69,7 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
             <?php if(empty($trip_requests)): ?>
                 <p style="text-align:center;padding:3rem;color:var(--text-muted);">No pending requests.</p>
             <?php else: foreach($trip_requests as $r):
-                $urg=$r['urgency_level']??'normal';
+                $urg=$r['emergency_type']??'normal';
                 $urg_c=['critical'=>'var(--danger)','urgent'=>'var(--warning)','normal'=>'var(--info)'][$urg]??'var(--info)';
             ?>
             <div style="border:1.5px solid <?=$urg_c?>;border-radius:12px;padding:1.5rem;margin-bottom:1rem;background:color-mix(in srgb,<?=$urg_c?> 8%,#fff 92%);">

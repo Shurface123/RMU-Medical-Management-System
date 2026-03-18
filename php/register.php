@@ -459,7 +459,11 @@
                         <option value="">Select Role</option>
                         <option value="patient">Patient</option>
                         <option value="doctor">Doctor (requires admin approval)</option>
-                        <option value="pharmacist">Pharmacist</option>
+                        <optgroup label="─── Clinical Staff (requires admin approval) ───">
+                            <option value="nurse">Nurse</option>
+                            <option value="lab_technician">Lab Technician</option>
+                            <option value="pharmacist">Pharmacist</option>
+                        </optgroup>
                         <optgroup label="─── Support Staff (requires admin approval) ───">
                             <option value="ambulance_driver">Ambulance Driver</option>
                             <option value="cleaner">Cleaner</option>

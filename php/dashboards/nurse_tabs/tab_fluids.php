@@ -3,7 +3,7 @@
      ═══════════════════════════════════════════════════════════ -->
 <?php
 $iv_records = dbSelect($conn,
-    "SELECT iv.*, u.name AS patient_name, p.patient_id AS p_ref
+    "SELECT iv.*, u.user_name AS patient_name, p.patient_id AS p_ref
      FROM iv_fluid_records iv
      JOIN patients pt ON iv.patient_id=pt.id JOIN users u ON pt.user_id=u.id
      JOIN patients p ON iv.patient_id=p.id
@@ -12,19 +12,19 @@ $iv_records = dbSelect($conn,
      LIMIT 100","i",[$nurse_pk]);
 
 $fluid_balances = dbSelect($conn,
-    "SELECT fb.*, u.name AS patient_name
+    "SELECT fb.*, u.user_name AS patient_name
      FROM fluid_balance fb
      JOIN patients p ON fb.patient_id=p.id JOIN users u ON p.user_id=u.id
-     WHERE DATE(fb.recorded_at)=?
-     ORDER BY fb.recorded_at DESC LIMIT 100","s",[$today]);
+     WHERE fb.record_date=?
+     ORDER BY fb.created_at DESC LIMIT 100","s",[$today]);
 
 // Group fluid balance by patient
 $fb_by_patient = [];
 foreach($fluid_balances as $fb){
   $pid = $fb['patient_id'];
   if(!isset($fb_by_patient[$pid])) $fb_by_patient[$pid]=['name'=>$fb['patient_name'],'intake'=>0,'output'=>0,'records'=>[]];
-  if($fb['type']==='Intake') $fb_by_patient[$pid]['intake'] += (float)$fb['amount'];
-  else $fb_by_patient[$pid]['output'] += (float)$fb['amount'];
+  $fb_by_patient[$pid]['intake'] += (float)($fb['total_intake_ml']??0);
+  $fb_by_patient[$pid]['output'] += (float)($fb['total_output_ml']??0);
   $fb_by_patient[$pid]['records'][] = $fb;
 }
 ?>

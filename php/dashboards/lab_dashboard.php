@@ -22,13 +22,13 @@ function qv($c,$s){ $r=mysqli_query($c,$s); return $r?(mysqli_fetch_row($r)[0]??
 
 // ── Lab Technician Profile ────────────────────────────────
 $tech_row = mysqli_fetch_assoc(mysqli_query($conn,
-    "SELECT lt.*, u.name, u.email AS user_email, u.phone AS user_phone, u.profile_image, u.date_of_birth AS user_dob
+    "SELECT lt.*, u.user_name AS name, u.email AS user_email, u.phone AS user_phone, u.profile_image, u.date_of_birth AS user_dob
      FROM lab_technicians lt JOIN users u ON lt.user_id=u.id
      WHERE lt.user_id=$user_id LIMIT 1"));
 if (!$tech_row) {
     mysqli_query($conn,"INSERT IGNORE INTO lab_technicians (user_id,full_name,member_since) VALUES ($user_id,'".mysqli_real_escape_string($conn,$techName)."','$today')");
     $tech_row = mysqli_fetch_assoc(mysqli_query($conn,
-        "SELECT lt.*, u.name, u.email AS user_email, u.phone AS user_phone, u.profile_image, u.date_of_birth AS user_dob
+        "SELECT lt.*, u.user_name AS name, u.email AS user_email, u.phone AS user_phone, u.profile_image, u.date_of_birth AS user_dob
          FROM lab_technicians lt JOIN users u ON lt.user_id=u.id
          WHERE lt.user_id=$user_id LIMIT 1"));
 }
@@ -52,7 +52,7 @@ $stats = [
                          + (int)qv($conn,"SELECT COUNT(*) FROM notifications WHERE user_id=$user_id AND user_role='lab_technician' AND is_read=0"),
     'samples_today'     => qv($conn,"SELECT COUNT(*) FROM lab_samples WHERE DATE(created_at)='$today'"),
     'unreleased'        => qv($conn,"SELECT COUNT(*) FROM lab_results_v2 WHERE technician_id=$tech_pk AND released_to_doctor=0 AND result_status='Validated'"),
-    'unread_messages'   => qv($conn,"SELECT COUNT(*) FROM lab_internal_messages WHERE recipient_id=$tech_pk AND is_read=0"),
+    'unread_messages'   => qv($conn,"SELECT COUNT(*) FROM lab_internal_messages WHERE receiver_id=$tech_pk AND is_read=0"),
 ];
 
 // ── Turnaround Time (TAT) Background Monitoring ─────────────
@@ -71,7 +71,7 @@ if($tat_q) {
                 $ck = mysqli_query($conn, "SELECT 1 FROM lab_notifications WHERE related_record_id={$tat_o['id']} AND type='System' AND title LIKE '%Overdue%' AND DATE(created_at)='$today' LIMIT 1");
                 if(!mysqli_fetch_row($ck)) {
                     $msg = "Order {$tat_o['order_id']} ({$tat_o['test_name']}) has exceeded its target TAT of {$hrs_allowed}h.";
-                    mysqli_query($conn,"INSERT INTO lab_notifications (recipient_id, message, type, title, related_module, related_record_id, priority) VALUES ($tech_pk, '$msg', 'System', 'TAT Alert: Overdue', 'orders', {$tat_o['id']}, 'high')");
+                    mysqli_query($conn,"INSERT INTO lab_notifications (recipient_id, message, type, related_module, related_record_id) VALUES ($tech_pk, '$msg', 'System', 'orders', {$tat_o['id']})");
                 }
             }
         }
@@ -80,7 +80,7 @@ if($tat_q) {
 
 // ── All Orders ────────────────────────────────────────────
 $all_orders = [];
-$q = mysqli_query($conn,"SELECT lto.*, u_p.name AS patient_name, u_d.name AS doctor_name, p.patient_id AS p_ref,
+$q = mysqli_query($conn,"SELECT lto.*, u_p.user_name AS patient_name, u_d.user_name AS doctor_name, p.patient_id AS p_ref,
   lt_tech.full_name AS tech_name, p.id AS pat_pk, tc.normal_turnaround_hours
   FROM lab_test_orders lto
   LEFT JOIN lab_test_catalog tc ON lto.test_catalog_id=tc.id
@@ -97,7 +97,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $test_catalog[]=$r;
 
 // ── Samples ───────────────────────────────────────────────
 $samples = [];
-$q = mysqli_query($conn,"SELECT ls.*, u.name AS patient_name, lto.test_name, lto.urgency
+$q = mysqli_query($conn,"SELECT ls.*, u.user_name AS patient_name, lto.test_name, lto.urgency
   FROM lab_samples ls
   LEFT JOIN lab_test_orders lto ON ls.order_id=lto.id
   LEFT JOIN patients p ON ls.patient_id=p.id LEFT JOIN users u ON p.user_id=u.id
@@ -114,11 +114,11 @@ $reagents = [];
 $q = mysqli_query($conn,"
   SELECT r.*, 
     COALESCE(
-      (SELECT SUM(quantity_changed) * -1 
+      (SELECT SUM(quantity) * -1 
        FROM reagent_transactions rt 
        WHERE rt.reagent_id = r.id 
-         AND rt.transaction_type IN ('Used', 'Expired', 'Lost/Damaged') 
-         AND rt.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+         AND rt.transaction_type IN ('Used', 'Disposed') 
+         AND rt.transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
       ) / 30.0, 
     0) AS avg_daily_usage
   FROM reagent_inventory r 
@@ -138,7 +138,7 @@ if($q) {
 
 // ── Results ───────────────────────────────────────────────
 $results = [];
-$q = mysqli_query($conn,"SELECT lr.*, u_p.name AS patient_name, u_d.name AS doctor_name, lto.urgency
+$q = mysqli_query($conn,"SELECT lr.*, u_p.user_name AS patient_name, u_d.user_name AS doctor_name, lto.urgency
   FROM lab_results_v2 lr
   LEFT JOIN lab_test_orders lto ON lr.order_id=lto.id
   LEFT JOIN patients p ON lr.patient_id=p.id LEFT JOIN users u_p ON p.user_id=u_p.id
@@ -164,12 +164,12 @@ if($q) while($r=mysqli_fetch_assoc($q)) $qc_records[]=$r;
 
 // ── Messages ──────────────────────────────────────────────
 $messages = [];
-$q = mysqli_query($conn,"SELECT lm.*, u_s.name AS sender_name, u_r.name AS recipient_name
+$q = mysqli_query($conn,"SELECT lm.*, u_s.user_name AS sender_name, u_r.user_name AS recipient_name
   FROM lab_internal_messages lm
   LEFT JOIN users u_s ON lm.sender_id=u_s.id
-  LEFT JOIN users u_r ON lm.recipient_id=u_r.id
-  WHERE lm.sender_id=$user_id OR lm.recipient_id=$tech_pk
-  ORDER BY lm.created_at DESC LIMIT 100");
+  LEFT JOIN users u_r ON lm.receiver_id=u_r.id
+  WHERE lm.sender_id=$user_id OR lm.receiver_id=$tech_pk
+  ORDER BY lm.sent_at DESC LIMIT 100");
 if($q) while($r=mysqli_fetch_assoc($q)) $messages[]=$r;
 
 // ── Audit Trail ───────────────────────────────────────────
@@ -185,10 +185,10 @@ if($q) while($r=mysqli_fetch_assoc($q)) $activity[]=$r;
 // ── Notifications (merged: lab_notifications + shared notifications) ──
 $notifs = [];
 // 1. Lab-specific notifications
-$q = mysqli_query($conn,"SELECT id, type, title, message, is_read, module, related_id, priority, created_at FROM lab_notifications WHERE recipient_id=$tech_pk ORDER BY created_at DESC LIMIT 50");
+$q = mysqli_query($conn,"SELECT id, type, message, is_read, related_module AS module, related_record_id AS related_id, created_at FROM lab_notifications WHERE recipient_id=$tech_pk ORDER BY created_at DESC LIMIT 50");
 if($q) while($r=mysqli_fetch_assoc($q)) { $r['_source']='lab'; $notifs[]=$r; }
 // 2. Cross-dashboard notifications (from doctors/admins via crossNotify)
-$q = mysqli_query($conn,"SELECT id, type, title, message, is_read, related_module AS module, related_id, priority, created_at FROM notifications WHERE user_id=$user_id AND user_role='lab_technician' ORDER BY created_at DESC LIMIT 50");
+$q = mysqli_query($conn,"SELECT notification_id AS id, type, title, message, is_read, related_module AS module, related_id, priority, created_at FROM notifications WHERE user_id=$user_id AND user_role='lab_technician' ORDER BY created_at DESC LIMIT 50");
 if($q) while($r=mysqli_fetch_assoc($q)) { $r['_source']='shared'; $notifs[]=$r; }
 // Sort merged list by created_at desc, keep latest 60
 usort($notifs, function($a,$b){ return strtotime($b['created_at']) - strtotime($a['created_at']); });
@@ -215,7 +215,7 @@ if($q_tat) while($row = mysqli_fetch_assoc($q_tat)){
     // Dedup: only notify if no tat_alert was sent for this order in the last 8 hours
     $already = (int)qv($conn,
         "SELECT COUNT(*) FROM lab_notifications WHERE recipient_id=$tech_pk
-         AND type='tat_alert' AND related_id={$row['id']}
+         AND type='System' AND related_id={$row['id']}
          AND created_at >= DATE_SUB(NOW(), INTERVAL 8 HOUR)");
     if($already) continue;
     $hr  = (int)$row['hours_elapsed'];
@@ -227,8 +227,8 @@ if($q_tat) while($row = mysqli_fetch_assoc($q_tat)){
             'Lab Processing Delayed: '.$row['test_name'], $msg, 'orders', (int)$row['id'], 'normal');
     }
     // Log into lab_notifications for the technician (self-alert)
-    mysqli_query($conn,"INSERT INTO lab_notifications (recipient_id,type,title,message,is_read,module,related_id,created_at)
-        VALUES($tech_pk,'tat_alert','TAT Delay: ".mysqli_real_escape_string($conn,$row['test_name'])."',
+    mysqli_query($conn,"INSERT INTO lab_notifications (recipient_id,type,message,is_read,related_module,related_record_id,created_at)
+        VALUES($tech_pk,'System','TAT Delay: ".mysqli_real_escape_string($conn,$row['test_name'])."',
         '".mysqli_real_escape_string($conn,$msg)."',0,'orders',{$row['id']},NOW())");
     $tat_overdue[] = $row;
 }
@@ -506,7 +506,7 @@ textarea.form-control{resize:vertical;min-height:60px;}
     <!-- Critical Results Alert Panel -->
     <?php if($stats['critical_results']>0):
       $crit_results=[];
-      $cq=mysqli_query($conn,"SELECT lr.*, u_p.name AS patient_name, u_d.name AS doctor_name FROM lab_results_v2 lr LEFT JOIN patients p ON lr.patient_id=p.id LEFT JOIN users u_p ON p.user_id=u_p.id LEFT JOIN doctors d ON lr.doctor_id=d.id LEFT JOIN users u_d ON d.user_id=u_d.id WHERE lr.technician_id=$tech_pk AND lr.result_interpretation='Critical' AND DATE(lr.created_at)='$today' LIMIT 10");
+      $cq=mysqli_query($conn,"SELECT lr.*, u_p.user_name AS patient_name, u_d.user_name AS doctor_name FROM lab_results_v2 lr LEFT JOIN patients p ON lr.patient_id=p.id LEFT JOIN users u_p ON p.user_id=u_p.id LEFT JOIN doctors d ON lr.doctor_id=d.id LEFT JOIN users u_d ON d.user_id=u_d.id WHERE lr.technician_id=$tech_pk AND lr.result_interpretation='Critical' AND DATE(lr.created_at)='$today' LIMIT 10");
       if($cq) while($cr=mysqli_fetch_assoc($cq)) $crit_results[]=$cr;
     ?>
     <div class="adm-alert adm-alert-danger" style="margin-bottom:2rem;">

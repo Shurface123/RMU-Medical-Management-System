@@ -5,8 +5,8 @@
 <?php
 // ── Data Queries ──
 $prof = dbRow($conn,"SELECT * FROM nurse_professional_profile WHERE nurse_id=?","i",[$nurse_pk]);
-$nurse_certs = dbSelect($conn,"SELECT * FROM nurse_certifications WHERE nurse_id=? ORDER BY created_at DESC","i",[$nurse_pk]);
-$nurse_quals = dbSelect($conn,"SELECT * FROM nurse_qualifications WHERE nurse_id=? ORDER BY year DESC","i",[$nurse_pk]);
+$nurse_certs = dbSelect($conn,"SELECT * FROM nurse_certifications WHERE nurse_id=? ORDER BY uploaded_at DESC","i",[$nurse_pk]);
+$nurse_quals = dbSelect($conn,"SELECT * FROM nurse_qualifications WHERE nurse_id=? ORDER BY year_awarded DESC","i",[$nurse_pk]);
 $nurse_docs  = dbSelect($conn,"SELECT * FROM nurse_documents WHERE nurse_id=? ORDER BY uploaded_at DESC","i",[$nurse_pk]);
 $nurse_sess  = dbSelect($conn,"SELECT * FROM nurse_sessions WHERE nurse_id=? ORDER BY login_time DESC LIMIT 10","i",[$nurse_pk]);
 $nurse_log   = dbSelect($conn,"SELECT * FROM nurse_activity_log WHERE nurse_id=? ORDER BY created_at DESC LIMIT 20","i",[$nurse_pk]);
@@ -169,7 +169,7 @@ $avail_color = $avail_colors[$avail] ?? 'secondary';
   <?php foreach($nurse_quals as $q):?><div style="display:flex;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--border);">
     <i class="fas fa-graduation-cap" style="color:var(--primary);font-size:1.4rem;"></i>
     <div style="flex:1;"><strong><?=e($q['degree'])?></strong> — <?=e($q['institution'])?> (<?=e($q['year'])?>)</div>
-    <?php if($q['certificate_file']??''):?><a href="nurse_actions.php?action=secure_download&file_id=<?=$q['id']?>&source=nurse_qualifications&_csrf=<?=e($csrf_token)?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a><?php endif;?>
+    <?php if($q['certificate_file']??''):?><a href="/RMU-Medical-Management-System/php/dashboards/nurse_actions.php?action=secure_download&file_id=<?=$q['id']?>&source=nurse_qualifications&_csrf=<?=e($csrf_token)?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a><?php endif;?>
     <button class="btn btn-xs btn-danger" onclick="deleteQual(<?=$q['id']?>)"><i class="fas fa-trash"></i></button>
   </div><?php endforeach; endif;?>
 
@@ -181,7 +181,7 @@ $avail_color = $avail_colors[$avail] ?? 'secondary';
     <div style="flex:1;"><strong><?=e($c['certification_name'])?></strong> — <?=e($c['issuing_body'])?>
       <?php if($c['expiry_date']):?> · Exp: <?=date('d M Y',strtotime($c['expiry_date']))?> <?=$exp_days<=60?'<span class="badge badge-'.($exp_days<=0?'danger':'warning').'">'.$exp_days.'d</span>':''?><?php endif;?>
     </div>
-    <?php if($c['certificate_file']??''):?><a href="nurse_actions.php?action=secure_download&file_id=<?=$c['id']?>&source=nurse_certifications&_csrf=<?=e($csrf_token)?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a><?php endif;?>
+    <?php if($c['certificate_file']??''):?><a href="/RMU-Medical-Management-System/php/dashboards/nurse_actions.php?action=secure_download&file_id=<?=$c['id']?>&source=nurse_certifications&_csrf=<?=e($csrf_token)?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a><?php endif;?>
     <button class="btn btn-xs btn-danger" onclick="deleteCert(<?=$c['id']?>)"><i class="fas fa-trash"></i></button>
   </div><?php endforeach; endif;?>
   <?php if(empty($nurse_quals) && empty($nurse_certs)):?><p class="text-center text-muted" style="padding:1.5rem;">No qualifications or certifications added</p><?php endif;?>

@@ -62,7 +62,7 @@ $notif_toggles = [
     <td><?=round(($d['file_size']??0)/1024)?>KB</td>
     <td><?=date('d M Y',strtotime($d['uploaded_at']))?></td>
     <td class="action-btns">
-      <a href="nurse_actions.php?action=secure_download&file_id=<?=$d['id']?>&source=nurse_documents&_csrf=<?=e($csrf_token)?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a>
+      <a href="/RMU-Medical-Management-System/php/dashboards/nurse_actions.php?action=secure_download&file_id=<?=$d['id']?>&source=nurse_documents&_csrf=<?=e($csrf_token)?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a>
       <button class="btn btn-xs btn-danger" onclick="deleteDoc(<?=$d['id']?>)"><i class="fas fa-trash"></i></button>
     </td>
   </tr><?php endforeach;?></tbody></table></div><?php endif;?>

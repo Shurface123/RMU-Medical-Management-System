@@ -3,18 +3,18 @@
      ═══════════════════════════════════════════════════════════ -->
 <?php
 $education_records = dbSelect($conn,
-    "SELECT pe.*, u.name AS patient_name
+    "SELECT pe.*, u.user_name AS patient_name
      FROM patient_education pe
      JOIN patients p ON pe.patient_id=p.id JOIN users u ON p.user_id=u.id
      WHERE pe.nurse_id=?
-     ORDER BY pe.created_at DESC LIMIT 100","i",[$nurse_pk]);
+     ORDER BY pe.recorded_at DESC LIMIT 100","i",[$nurse_pk]);
 
 $discharge_instructions = dbSelect($conn,
-    "SELECT di.*, u.name AS patient_name
+    "SELECT di.*, u.user_name AS patient_name
      FROM discharge_instructions di
      JOIN patients p ON di.patient_id=p.id JOIN users u ON p.user_id=u.id
      WHERE di.nurse_id=?
-     ORDER BY di.created_at DESC LIMIT 100","i",[$nurse_pk]);
+     ORDER BY di.given_at DESC LIMIT 100","i",[$nurse_pk]);
 ?>
 <div id="sec-education" class="dash-section">
   <div class="sec-header">
@@ -37,12 +37,12 @@ $discharge_instructions = dbSelect($conn,
       $und_colors = ['Good'=>'success','Fair'=>'warning','Poor'=>'danger'];
     ?>
       <tr>
-        <td><?=date('d M Y h:i A',strtotime($ed['created_at']))?></td>
+        <td><?=date('d M Y h:i A',strtotime($ed['recorded_at']))?></td>
         <td><?=e($ed['patient_name'])?></td>
-        <td><strong><?=e($ed['topic'])?></strong></td>
-        <td><?=e($ed['method_used']??'—')?></td>
+        <td><strong><?=e($ed['education_topic'])?></strong></td>
+        <td><?=e($ed['method']??'—')?></td>
         <td><span class="badge badge-<?=$und_colors[$ed['understanding_level']]??'secondary'?>"><?=e($ed['understanding_level'])?></span></td>
-        <td><?=$ed['requires_followup']?'<span class="badge badge-warning">Yes</span>':'<span class="badge badge-success">No</span>'?></td>
+        <td><?=$ed['requires_follow_up']?'<span class="badge badge-warning">Yes</span>':'<span class="badge badge-success">No</span>'?></td>
         <td><button class="btn btn-xs btn-outline" onclick="viewEducation(<?=$ed['id']?>)"><i class="fas fa-eye"></i></button></td>
       </tr>
     <?php endforeach; endif;?></tbody></table></div>
@@ -58,10 +58,10 @@ $discharge_instructions = dbSelect($conn,
       <tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No discharge instructions yet</td></tr>
     <?php else: foreach($discharge_instructions as $di):?>
       <tr>
-        <td><?=date('d M Y',strtotime($di['created_at']))?></td>
+        <td><?=date('d M Y',strtotime($di['given_at']))?></td>
         <td><?=e($di['patient_name'])?></td>
         <td style="max-width:200px;"><?=e(substr($di['medication_instructions']??'—',0,80))?></td>
-        <td><?=e(substr($di['follow_up_details']??'—',0,60))?></td>
+        <td><?=e(substr($di['follow_up_appointments']??'—',0,60))?></td>
         <td><?=$di['patient_acknowledged']?'<span class="badge badge-success"><i class="fas fa-check"></i> Yes</span>':'<span class="badge badge-warning">Pending</span>'?></td>
         <td><button class="btn btn-xs btn-outline" onclick="viewDischarge(<?=$di['id']?>)"><i class="fas fa-eye"></i></button></td>
       </tr>

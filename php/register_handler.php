@@ -58,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // Normalise: any staff sub-role maps to the 'staff' group
     $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
+    $APPROVAL_ROLES  = ['doctor','nurse','lab_technician','pharmacist'];
+    $needs_approval  = in_array($role, $APPROVAL_ROLES);
     $is_staff_role   = in_array($role, $STAFF_SUB_ROLES);
 
     // Check if username already exists
@@ -92,9 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Insert new user
-    $sql = "INSERT INTO users (name, email, phone, user_name, password, user_role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    $sql = "INSERT INTO users (name, email, phone, user_name, password, user_role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
     $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "ssssss", $fullname, $email, $phone, $username, $hashed_password, $role);
+    mysqli_stmt_bind_param($stmt, "ssssssi", $fullname, $email, $phone, $username, $hashed_password, $role, $is_active);
     
     if (mysqli_stmt_execute($stmt)) {
         $user_id = mysqli_insert_id($conn);
@@ -107,12 +109,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_execute($patient_stmt);
             mysqli_stmt_close($patient_stmt);
         } elseif ($role === 'doctor') {
-            $doctor_sql = "INSERT INTO doctors (user_id, full_name, email, phone, created_at) VALUES (?, ?, ?, ?, NOW())";
+            $doctor_sql = "INSERT INTO doctors (user_id, full_name, specialization, created_at) VALUES (?, ?, '', NOW())";
             $doctor_stmt = mysqli_prepare($conn, $doctor_sql);
-            mysqli_stmt_bind_param($doctor_stmt, "isss", $user_id, $fullname, $email, $phone);
+            mysqli_stmt_bind_param($doctor_stmt, "is", $user_id, $fullname);
             mysqli_stmt_execute($doctor_stmt);
             mysqli_stmt_close($doctor_stmt);
-        } elseif ($is_staff_role) {
+        } elseif ($is_staff_role || $needs_approval) {
             // Generate unique employee_id — retry until unique
             $attempt = 0;
             do {
@@ -159,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_close($stmt);
 
         // Redirect with appropriate message
-        if ($is_staff_role) {
+        if ($is_staff_role || $needs_approval) {
             header("Location: index.php?info=" . urlencode("Registration successful! Your account is pending admin approval. You will be notified once approved."));
         } else {
             header("Location: index.php?success=Registration successful! Please login");

@@ -173,7 +173,7 @@ function viewResult(r){
   if(r.validated_at) h+='<div><strong>Validated:</strong> '+r.validated_at+'</div>';
   if(r.released_at) h+='<div><strong>Released:</strong> '+r.released_at+'</div>';
   if(r.amended_reason) h+='<div class="adm-alert adm-alert-warning" style="margin:0;"><i class="fas fa-edit"></i> <strong>Amended:</strong> '+r.amended_reason+'</div>';
-  if(r.report_file_path) h+='<div><a href="lab_download.php?type=result&id='+r.id+'" target="_blank" class="adm-btn adm-btn-sm adm-btn-ghost"><i class="fas fa-file-pdf"></i> Download Report</a></div>';
+  if(r.report_file_path) h+='<div><a href="/RMU-Medical-Management-System/php/dashboards/lab_download.php?type=result&id='+r.id+'" target="_blank" class="adm-btn adm-btn-sm adm-btn-ghost"><i class="fas fa-file-pdf"></i> Download Report</a></div>';
   h+='</div>';
   document.getElementById('orderDetailBody').innerHTML=h;openModal('orderDetailModal');
 }

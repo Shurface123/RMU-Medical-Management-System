@@ -4,8 +4,8 @@
  */
 if ($staffRole !== 'kitchen_staff') { echo '<div id="sec-kitchen" class="dash-section"></div>'; return; }
 
-$kitchen_tasks = dbSelect($conn,"SELECT * FROM kitchen_tasks WHERE assigned_to=? ORDER BY FIELD(status,'pending','in preparation','ready'),scheduled_time ASC LIMIT 30","i",[$staff_id]);
-$dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(flagged_at)=? ORDER BY id DESC LIMIT 10","s",[$today]);
+$kitchen_tasks = dbSelect($conn,"SELECT * FROM kitchen_tasks WHERE assigned_to=? ORDER BY FIELD(preparation_status,'pending','in preparation','ready'),scheduled_time ASC LIMIT 30","i",[$staff_id]);
+$dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(flagged_at)=? ORDER BY flag_id DESC LIMIT 10","s",[$today]);
 ?>
 <div id="sec-kitchen" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
@@ -40,9 +40,9 @@ $dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(
             <thead><tr><th>Meal Type</th><th>Ward/Dept</th><th>Qty</th><th>Dietary Req.</th><th>Scheduled</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
             <?php foreach($kitchen_tasks as $t):
-                $st=$t['status']??'pending';
+                $st=$t['preparation_status']??'pending';
                 $st_c=['pending'=>'var(--warning)','in preparation'=>'var(--primary)','ready'=>'var(--success)','delivered'=>'var(--text-muted)'][$st]??'var(--info)';
-                $has_dietary=!empty($t['dietary_requirements']) && strtolower($t['dietary_requirements'])!=='none';
+                $has_dietary=!empty($t['dietary_requirements']) && $t['dietary_requirements'] !== 'null';
                 $next=['pending'=>'in preparation','in preparation'=>'ready','ready'=>'delivered'][$st]??null;
             ?>
             <tr style="<?=$has_dietary?'border-left:3px solid var(--danger);':''?>">
@@ -61,7 +61,7 @@ $dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(
                 <td><span class="badge" style="background:color-mix(in srgb,<?=$st_c?> 15%,#fff 85%);color:<?=$st_c?>;"><?=ucfirst($st)?></span></td>
                 <td>
                     <?php if($next): ?>
-                    <button class="btn btn-primary btn-sm" onclick="updateKitchenTask(<?=$t['id']?>,'<?=e($next)?>')">
+                    <button class="btn btn-primary btn-sm" onclick="updateKitchenTask(<?=$t['task_id']?>,'<?=e($next)?>')">
                         <?php $icons=['in preparation'=>'fa-fire','ready'=>'fa-check','delivered'=>'fa-truck']; ?>
                         <i class="fas <?=$icons[$next]??'fa-chevron-right'?>"></i> <?=ucfirst($next)?>
                     </button>

@@ -27,7 +27,7 @@ switch ($staffRole) {
         $overview_stats = [
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_schedules WHERE assigned_to=? AND schedule_date=? AND status='scheduled'","is",[$staff_id,$today]), 'label'=>'Pending Tasks',  'icon'=>'fa-broom',    'color'=>'var(--warning)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_logs WHERE staff_id=? AND DATE(created_at)=? AND completed_at IS NOT NULL","is",[$staff_id,$today]), 'label'=>'Completed Today','icon'=>'fa-check',    'color'=>'var(--success)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM contamination_reports WHERE staff_id=? AND status='reported'","i",[$staff_id]), 'label'=>'Open Reports', 'icon'=>'fa-biohazard', 'color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM contamination_reports WHERE reported_by=? AND status='reported'","i",[$staff_id]), 'label'=>'Open Reports', 'icon'=>'fa-biohazard', 'color'=>'var(--danger)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM cleaning_schedules WHERE assigned_to=? AND status='urgent'","i",[$staff_id]) ?: 0, 'label'=>'Urgent','icon'=>'fa-exclamation-triangle','color'=>'#E67E22'],
         ];
         $quick_actions = [
@@ -41,7 +41,7 @@ switch ($staffRole) {
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE assigned_to=? AND delivery_status NOT IN ('delivered')","i",[$staff_id]), 'label'=>'Active Batches',  'icon'=>'fa-tshirt',  'color'=>'var(--primary)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE assigned_to=? AND collection_status='collected'","i",[$staff_id]),  'label'=>'Pending Pickup','icon'=>'fa-box-open', 'color'=>'var(--warning)'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_batches WHERE assigned_to=? AND DATE(delivered_at)=?","is",[$staff_id,$today]), 'label'=>'Delivered Today','icon'=>'fa-check-circle','color'=>'var(--success)'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_inventory WHERE quantity <= reorder_level"), 'label'=>'Low Stock Alerts','icon'=>'fa-box','color'=>'var(--danger)'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM laundry_inventory WHERE available_quantity <= reorder_level"), 'label'=>'Low Stock Alerts','icon'=>'fa-box','color'=>'var(--danger)'],
         ];
         $quick_actions = [
             ['label'=>'Register Batch','icon'=>'fa-plus','tab'=>'laundry','modal'=>'newBatchModal'],

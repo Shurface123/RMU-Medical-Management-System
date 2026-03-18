@@ -3,19 +3,17 @@
      ═══════════════════════════════════════════════════════════ -->
 <?php
 $active_alerts = dbSelect($conn,
-    "SELECT ea.*, u.name AS triggered_by_name, up.name AS patient_name,
-            ud.name AS responder_name
+    "SELECT ea.*, u.user_name AS triggered_by_name, up.user_name AS patient_name
      FROM emergency_alerts ea
-     LEFT JOIN nurses n ON ea.triggered_by=n.id LEFT JOIN users u ON n.user_id=u.id
+     LEFT JOIN nurses n ON ea.nurse_id=n.id LEFT JOIN users u ON n.user_id=u.id
      LEFT JOIN patients p ON ea.patient_id=p.id LEFT JOIN users up ON p.user_id=up.id
-     LEFT JOIN users ud ON ea.responded_by=ud.id
      WHERE ea.status IN('Active','Responded')
      ORDER BY FIELD(ea.status,'Active','Responded'), ea.triggered_at DESC");
 
 $resolved_alerts = dbSelect($conn,
-    "SELECT ea.*, u.name AS triggered_by_name, up.name AS patient_name
+    "SELECT ea.*, u.user_name AS triggered_by_name, up.user_name AS patient_name
      FROM emergency_alerts ea
-     LEFT JOIN nurses n ON ea.triggered_by=n.id LEFT JOIN users u ON n.user_id=u.id
+     LEFT JOIN nurses n ON ea.nurse_id=n.id LEFT JOIN users u ON n.user_id=u.id
      LEFT JOIN patients p ON ea.patient_id=p.id LEFT JOIN users up ON p.user_id=up.id
      WHERE ea.status='Resolved'
      ORDER BY ea.resolved_at DESC LIMIT 50");
