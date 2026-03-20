@@ -63,98 +63,108 @@ if ($q_io) {
 }
 ?>
 
-<div class="tab-content" id="fluids">
+<div class="tab-content active" id="fluids">
 
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <h4 class="mb-0"><i class="fas fa-tint text-info me-2"></i> IV & Fluid Management</h4>
-            <p class="text-muted mb-0">Track IV infusions and daily Intake & Output (I&O) charts.</p>
+    <!-- Section Header -->
+    <div class="sec-header">
+        <div>
+            <h2 style="font-size:2.4rem; font-weight:800; color:var(--info); margin-bottom:.3rem;"><i class="fas fa-tint pulse-fade"></i> IV & Fluid Management</h2>
+            <p style="font-size:1.3rem; color:var(--text-muted);">Real-time monitoring of active infusions and daily fluid balance dynamics.</p>
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <button class="btn btn-primary shadow-sm" style="border-radius:20px;" onclick="document.getElementById('ioForm').reset(); new bootstrap.Modal(document.getElementById('ioModal')).show();">
+        <div style="display:flex; gap:1.2rem; align-items:center;">
+             <div style="background:rgba(52,152,219,0.05); border:1px solid rgba(52,152,219,0.1); padding:.8rem 1.5rem; border-radius:12px; display:flex; align-items:center; gap:1rem;">
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--info); display:inline-block;"></span>
+                <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);">Monitoring <small style="font-weight:700; color:var(--info);">ACTIVE</small></div>
+            </div>
+            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('ioForm').reset(); document.getElementById('ioModal').style.display='flex';" style="border-radius:12px; font-weight:700;">
                 <i class="fas fa-plus"></i> Record I&O
             </button>
-            <button class="btn btn-outline-info shadow-sm ms-2" style="border-radius:20px;" onclick="document.getElementById('ivForm').reset(); new bootstrap.Modal(document.getElementById('ivModal')).show();">
+            <button class="adm-btn adm-btn-ghost" onclick="document.getElementById('ivForm').reset(); document.getElementById('ivModal').style.display='flex';" style="border-radius:12px; font-weight:700; border-color:var(--info); color:var(--info);">
                 <i class="fas fa-syringe"></i> Start IV
             </button>
         </div>
     </div>
 
-    <ul class="nav nav-tabs mb-4" id="fluidTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold px-4" id="iv-tab" data-bs-toggle="tab" data-bs-target="#iv-content" type="button" role="tab">
-                <i class="fas fa-syringe text-info me-1"></i> Active IV Infusions
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold px-4" id="io-tab" data-bs-toggle="tab" data-bs-target="#io-content" type="button" role="tab">
-                <i class="fas fa-balance-scale text-primary me-1"></i> Daily I&O Charts
-            </button>
-        </li>
-    </ul>
+    <!-- Sub-Navigation -->
+    <div style="margin-bottom:2.5rem; border-bottom:2px solid var(--border); display:flex; gap:3rem;">
+        <button class="tab-link active" onclick="switchFluidSubTab('iv')" id="btn-iv-tab" style="padding:1rem 0; font-weight:800; font-size:1.3rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+            <i class="fas fa-syringe"></i> ACTIVE INFUSIONS
+        </button>
+        <button class="tab-link" onclick="switchFluidSubTab('io')" id="btn-io-tab" style="padding:1rem 0; font-weight:700; font-size:1.3rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+            <i class="fas fa-balance-scale"></i> CLINICAL I&O CHARTS
+        </button>
+    </div>
 
-    <div class="tab-content" id="fluidTabsContent">
+    <div id="fluid-sub-content">
         
-        <!-- IV Infusions Tab -->
-        <div class="tab-pane fade show active border-0" id="iv-content" role="tabpanel">
-            <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Patient</th>
-                                    <th>Fluid Type</th>
-                                    <th>Volume (ml)</th>
-                                    <th>Rate (ml/hr)</th>
-                                    <th>Site</th>
-                                    <th>Started</th>
-                                    <th>Status</th>
-                                    <th class="text-end pe-4">Actions</th>
+        <!-- ACTIVE IV INFUSIONS -->
+        <div id="iv-content">
+            <div class="adm-card shadow-sm">
+                <div class="adm-card-header" style="background:rgba(52,152,219,0.02); border-bottom:1.5px solid var(--border);">
+                    <h3 style="font-size:1.4rem; font-weight:700; color:var(--info);"><i class="fas fa-list-ul"></i> Active Ward Infusions</h3>
+                </div>
+                <div class="adm-card-body" style="padding:0;">
+                    <div class="adm-table-wrap">
+                        <table class="adm-table">
+                            <thead>
+                                <tr style="background:var(--surface-2);">
+                                    <th style="padding:1.5rem 2rem;">PATIENT / LOCATION</th>
+                                    <th>FLUID TYPE</th>
+                                    <th>VOLUME PROGRESS</th>
+                                    <th>RATE (ml/hr)</th>
+                                    <th>SITE</th>
+                                    <th>STARTED</th>
+                                    <th>STATUS</th>
+                                    <th style="padding:1.5rem 2rem;">MANAGEMENT</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if(empty($iv_records)): ?>
-                                    <tr><td colspan="8" class="text-center py-5 text-muted">No active IV infusions in this ward.</td></tr>
+                                    <tr><td colspan="8" style="text-align:center;padding:5rem;color:var(--text-muted); font-weight:600; font-size:1.3rem;"><i class="fas fa-tint-slash" style="font-size:3rem; display:block; margin-bottom:1rem; opacity:0.3;"></i> No active IV infusions reported in this ward.</td></tr>
                                 <?php else: foreach($iv_records as $iv): ?>
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="fw-bold"><?= e($iv['patient_name']) ?></div>
-                                            <small class="text-muted">Bed <?= e($iv['bed_number']) ?> (<?= e($iv['pid']) ?>)</small>
+                                    <tr style="border-bottom:1px solid var(--border);">
+                                        <td style="padding:1.5rem 2rem;">
+                                            <div style="font-weight:800; color:var(--text-primary); font-size:1.3rem;"><?= e($iv['patient_name']) ?></div>
+                                            <div style="font-size:1.1rem; color:var(--info); font-weight:700; text-transform:uppercase;">BED <?= e($iv['bed_number']) ?> <span style="color:var(--text-muted); font-weight:500;">| <?= e($iv['pid']) ?></span></div>
                                         </td>
-                                        <td class="fw-bold text-dark"><?= e($iv['fluid_type']) ?></td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                                                    <?php $pct = min(100, ($iv['volume_ordered']>0) ? ($iv['volume_infused'] / $iv['volume_ordered'] * 100) : 0); ?>
-                                                    <div class="progress-bar bg-info" role="progressbar" style="width: <?= $pct ?>%;"></div>
+                                        <td style="font-weight:700; color:var(--text-primary); font-size:1.2rem;"><?= e($iv['fluid_type']) ?></td>
+                                        <td style="min-width:180px;">
+                                            <div style="display:flex; flex-direction:column; gap:.5rem;">
+                                                <div style="display:flex; justify-content:space-between; align-items:center; font-size:1.1rem; font-weight:700;">
+                                                    <span style="color:var(--text-secondary);"><?= number_format($iv['volume_infused']) ?> ml <small style="font-weight:500; opacity:0.6;">INFUSED</small></span>
+                                                    <span style="color:var(--text-muted);"><?= number_format($iv['volume_ordered']) ?> ml</span>
                                                 </div>
-                                                <small class="fw-bold"><?= $iv['volume_infused'] ?>/<?= $iv['volume_ordered'] ?></small>
+                                                <div style="height:8px; background:var(--surface-3); border-radius:10px; overflow:hidden;">
+                                                    <?php $pct = min(100, ($iv['volume_ordered']>0) ? ($iv['volume_infused'] / $iv['volume_ordered'] * 100) : 0); ?>
+                                                    <div style="width:<?= $pct ?>%; height:100%; background:var(--info); border-radius:10px;" class="<?= $iv['status']=='Running' ? 'pulse-fade' : '' ?>"></div>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td><?= e($iv['infusion_rate']) ?></td>
-                                        <td><?= e($iv['site'] ?: 'N/A') ?></td>
-                                        <td><?= date('H:i', strtotime($iv['start_time'])) ?></td>
+                                        <td style="font-weight:800; color:var(--text-primary); font-size:1.3rem;"><?= e($iv['infusion_rate']) ?> <small style="font-size:.9rem; opacity:0.6;">ml/h</small></td>
+                                        <td style="font-weight:600; color:var(--text-secondary);"><?= e($iv['site'] ?: '--') ?></td>
+                                        <td style="font-weight:700; color:var(--text-muted);"><?= date('H:i', strtotime($iv['start_time'])) ?></td>
                                         <td>
                                             <?php
-                                                $bg = 'bg-secondary';
-                                                if($iv['status']=='Running') $bg = 'bg-success';
-                                                elseif($iv['status']=='Ordered') $bg = 'bg-warning text-dark';
-                                                elseif($iv['status']=='Paused') $bg = 'bg-warning text-dark';
+                                                $status = $iv['status'];
+                                                $bg = 'var(--surface-3)';
+                                                $color = 'var(--text-secondary)';
+                                                if($status=='Running') { $bg = 'rgba(46,204,113,0.1)'; $color = 'var(--success)'; }
+                                                elseif($status=='Ordered') { $bg = 'rgba(241,196,15,0.1)'; $color = 'var(--warning)'; }
+                                                elseif($status=='Paused') { $bg = 'rgba(52,152,219,0.1)'; $color = 'var(--info)'; }
                                             ?>
-                                            <span class="badge <?= $bg ?> rounded-pill px-3 py-2"><?= e($iv['status']) ?></span>
+                                            <span class="adm-badge" style="background:<?= $bg ?>; color:<?= $color ?>; border:none; font-weight:800; padding:.5rem 1.2rem; font-size:1rem;"><?= strtoupper(e($status)) ?></span>
                                         </td>
-                                        <td class="text-end pe-4">
+                                        <td style="padding:1.5rem 2rem;">
                                             <div class="dropdown">
-                                                <button class="btn btn-sm btn-light shadow-sm dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown">
-                                                    Manage
+                                                <button class="adm-btn adm-btn-ghost adm-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius:8px; font-weight:700; border-color:var(--border);">
+                                                    Actions
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 10px;">
-                                                    <li><a class="dropdown-item text-primary" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Running')"><i class="fas fa-play me-2"></i> Start / Resume</a></li>
-                                                    <li><a class="dropdown-item text-warning" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Paused')"><i class="fas fa-pause me-2"></i> Pause</a></li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li><a class="dropdown-item text-success" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Completed')"><i class="fas fa-check-double me-2"></i> Mark Completed</a></li>
-                                                    <li><a class="dropdown-item text-danger" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Stopped')"><i class="fas fa-stop me-2"></i> Stop Early</a></li>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius:12px; padding:.8rem;">
+                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Running')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--success);"><i class="fas fa-play" style="width:20px;"></i> Start / Resume</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Paused')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--warning);"><i class="fas fa-pause" style="width:20px;"></i> Pause</a></li>
+                                                    <li><hr class="dropdown-divider" style="margin:.5rem 0;"></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Completed')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--info);"><i class="fas fa-check-double" style="width:20px;"></i> Mark Completed</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Stopped')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--danger);"><i class="fas fa-stop" style="width:20px;"></i> Stop Early</a></li>
                                                 </ul>
                                             </div>
                                         </td>
@@ -167,61 +177,101 @@ if ($q_io) {
             </div>
         </div>
 
-        <!-- I&O Charts Tab -->
-        <div class="tab-pane fade border-0" id="io-content" role="tabpanel">
-            <div class="row g-4">
+        <!-- DAILY I&O CHARTS -->
+        <div id="io-content" style="display:none;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap:2.5rem;">
                 <?php if(empty($io_records)): ?>
-                    <div class="col-12 text-center py-5 text-muted">
-                        <i class="fas fa-balance-scale fs-1 mb-3 opacity-25 text-primary"></i>
-                        <h5>No I&O charted today</h5>
-                        <p>Record fluid intakes and outputs to track patient fluid balances.</p>
+                    <div class="adm-card shadow-sm" style="grid-column: 1 / -1; height:350px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1.5rem; text-align:center;">
+                        <div style="width:70px; height:70px; border-radius:50%; background:rgba(52,152,219,0.1); display:flex; align-items:center; justify-content:center; font-size:3rem; color:var(--info);">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div>
+                            <h4 style="font-weight:700; color:var(--text-primary); margin:0;">No I&O Charts Active</h4>
+                            <p style="font-size:1.2rem; color:var(--text-muted);">Record fluid intake and output to begin tracking daily balance.</p>
+                        </div>
                     </div>
                 <?php else: foreach($io_records as $io): 
                     $net = floatval($io['net_balance']);
-                    $net_color = 'text-success';
-                    if($net < -500) $net_color = 'text-warning';
-                    if($net < -1000) $net_color = 'text-danger';
-                    if($net > 1000) $net_color = 'text-info';
+                    $net_color = 'var(--success)';
+                    if($net < -500) $net_color = 'var(--warning)';
+                    if($net < -1000) $net_color = 'var(--danger)';
+                    if($net > 1000) $net_color = 'var(--info)';
                 ?>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card h-100 border-0 shadow-sm" style="border-radius: 12px; border-top: 4px solid var(--primary-color) !important;">
-                            <div class="card-body">
-                                <h5 class="fw-bold mb-1"><?= e($io['patient_name']) ?></h5>
-                                <p class="text-muted small mb-3">Bed <?= e($io['bed_number']) ?> (<?= e($io['pid']) ?>)</p>
-                                
-                                <div class="row text-center mb-3">
-                                    <div class="col-6 border-end">
-                                        <div class="text-muted small fw-bold">INTAKE (ml)</div>
-                                        <h4 class="text-primary mb-0"><?= number_format($io['total_intake'],1) ?></h4>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted small fw-bold">OUTPUT (ml)</div>
-                                        <h4 class="text-danger mb-0"><?= number_format($io['total_output'],1) ?></h4>
+                    <div class="adm-card shadow-sm" style="border:none; overflow:hidden;">
+                        <div class="adm-card-header" style="background:var(--surface-2); border-bottom:1.5px solid var(--border); padding:1.5rem 2rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+                                <div>
+                                    <h5 style="font-weight:800; font-size:1.4rem; color:var(--text-primary); margin:0;"><?= e($io['patient_name']) ?></h5>
+                                    <div style="font-size:1.1rem; color:var(--info); font-weight:700; text-transform:uppercase; margin-top:.3rem;">BED <?= e($io['bed_number']) ?> <span style="color:var(--text-muted); font-weight:500;">| <?= e($io['pid']) ?></span></div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <small style="font-size:1rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Net Balance</small>
+                                    <div style="font-size:1.5rem; font-weight:900; color:<?= $net_color ?>;">
+                                        <?= $net > 0 ? '+' : '' ?><?= number_format($net,0) ?> <small style="font-size:1rem;">ml</small>
                                     </div>
                                 </div>
-                                <div class="text-center py-2 bg-light rounded mb-3">
-                                    <small class="text-muted fw-bold">NET BALANCE:</small> 
-                                    <h5 class="<?= $net_color ?> d-inline mb-0 align-middle">
-                                        <?= $net > 0 ? '+' : '' ?><?= number_format($net,1) ?> ml
-                                    </h5>
+                            </div>
+                        </div>
+                        <div class="adm-card-body" style="padding:2rem;">
+                            
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5px; background:var(--border); border-radius:12px; overflow:hidden; border:1px solid var(--border); margin-bottom:2rem;">
+                                <!-- INTAKE SECTION -->
+                                <div style="background:#fff; padding:1.5rem;">
+                                    <div style="display:flex; align-items:center; gap:.8rem; margin-bottom:1.5rem;">
+                                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(52,152,219,0.1); display:flex; align-items:center; justify-content:center; color:var(--info);">
+                                            <i class="fas fa-arrow-down" style="font-size:.9rem;"></i>
+                                        </div>
+                                        <span style="font-weight:800; font-size:1.1rem; color:var(--text-secondary); text-transform:uppercase;">Intake</span>
+                                        <span style="margin-left:auto; font-weight:900; font-size:1.4rem; color:var(--info);"><?= number_format($io['total_intake'],0) ?> <small style="font-size:.8rem; opacity:0.6;">ml</small></span>
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; gap:.8rem;">
+                                        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; color:var(--text-muted);">
+                                            <span>Oral / Enteral</span>
+                                            <span><?= number_format($io['in']['oral'] ?? 0) ?> ml</span>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; color:var(--text-muted);">
+                                            <span>IV / Infusions</span>
+                                            <span><?= number_format($io['in']['iv'] ?? 0) ?> ml</span>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; color:var(--text-muted);">
+                                            <span>Other (NG/Bolus)</span>
+                                            <span><?= number_format($io['in']['ng_tube'] ?? 0) ?> ml</span>
+                                        </div>
+                                    </div>
                                 </div>
+                                <!-- OUTPUT SECTION -->
+                                <div style="background:#fff; padding:1.5rem;">
+                                    <div style="display:flex; align-items:center; gap:.8rem; margin-bottom:1.5rem;">
+                                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(231,76,60,0.1); display:flex; align-items:center; justify-content:center; color:var(--danger);">
+                                            <i class="fas fa-arrow-up" style="font-size:.9rem;"></i>
+                                        </div>
+                                        <span style="font-weight:800; font-size:1.1rem; color:var(--text-secondary); text-transform:uppercase;">Output</span>
+                                        <span style="margin-left:auto; font-weight:900; font-size:1.4rem; color:var(--danger);"><?= number_format($io['total_output'],0) ?> <small style="font-size:.8rem; opacity:0.6;">ml</small></span>
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; gap:.8rem;">
+                                        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; color:var(--text-muted);">
+                                            <span>Urine Output</span>
+                                            <span><?= number_format($io['out']['urine'] ?? 0) ?> ml</span>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; color:var(--text-muted);">
+                                            <span>Surgical Drains</span>
+                                            <span><?= number_format($io['out']['drain'] ?? 0) ?> ml</span>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:600; color:var(--text-muted);">
+                                            <span>Other / Emesis</span>
+                                            <span><?= number_format($io['out']['emesis'] ?? 0) ?> ml</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <div class="row small text-muted">
-                                    <div class="col-6">
-                                        <ul class="list-unstyled mb-0 list-bordered">
-                                            <li>Oral: <?= $io['in']['oral'] ?? 0 ?></li>
-                                            <li>IV: <?= $io['in']['iv'] ?? 0 ?></li>
-                                            <li>Tube: <?= $io['in']['ng_tube'] ?? 0 ?></li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-6">
-                                        <ul class="list-unstyled mb-0 list-bordered-start">
-                                            <li>Urine: <?= $io['out']['urine'] ?? 0 ?></li>
-                                            <li>Drain: <?= $io['out']['drain'] ?? 0 ?></li>
-                                            <li>Emesis: <?= $io['out']['emesis'] ?? 0 ?></li>
-                                        </ul>
-                                    </div>
-                                </div>
+                            <div style="display:flex; gap:1rem;">
+                                <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="showIoQuickAdd(<?= $io['patient_id'] ?>, '<?= e($io['patient_name']) ?>')" style="flex:1; border-radius:8px; font-weight:700;">
+                                    <i class="fas fa-plus"></i> View Full Chart
+                                </button>
+                                <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="showIoFormWithPatient(<?= $io['patient_id'] ?>)" style="flex:1; border-radius:8px; font-weight:700; border-color:var(--primary); color:var(--primary);">
+                                    <i class="fas fa-edit"></i> Update Balance
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -232,67 +282,65 @@ if ($q_io) {
     </div>
 </div>
 
-<style>
-.list-bordered li { border-bottom: 1px dashed #ddd; padding: 2px 0; }
-.list-bordered li:last-child { border-bottom: none; }
-.list-bordered-start li { border-bottom: 1px dashed #ddd; padding: 2px 0; }
-.list-bordered-start li:last-child { border-bottom: none; }
-</style>
-
 <!-- ========================================== -->
 <!-- MODAL: START IV INFUSION                   -->
 <!-- ========================================== -->
-<div class="modal fade" id="ivModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border-radius: 15px; border: none;">
-            <div class="modal-header bg-info text-white" style="border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title"><i class="fas fa-syringe me-2"></i> Start / Order IV Fluid</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+<div class="modal-bg" id="ivModal">
+    <div class="modal-box" style="max-width:550px;">
+        <div class="modal-header" style="background:var(--info);">
+            <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-syringe"></i> Initiate IV Infusion</h3>
+            <button class="modal-close" onclick="document.getElementById('ivModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+        </div>
+        <div style="padding:2.5rem;">
             <form id="ivForm">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="start_iv">
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Patient</label>
-                        <select class="form-select" name="patient_id" required>
-                            <option value="">-- Select Patient --</option>
-                            <?php foreach($patients_in_ward as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= e($p['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                
+                <div class="form-group" style="margin-bottom:1.8rem;">
+                    <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Select Patient</label>
+                    <select class="form-control" name="patient_id" required style="padding:.8rem; font-weight:600; font-size:1.3rem;">
+                        <option value="">-- Clinical Subject --</option>
+                        <?php foreach($patients_in_ward as $p): ?>
+                            <option value="<?= $p['id'] ?>">Bed <?= e($p['bed_number']) ?>: <?= e($p['name']) ?> (<?= e($p['patient_id']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.8rem;">
+                    <div class="form-group">
+                        <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Fluid Type</label>
+                        <input type="text" class="form-control" name="fluid_type" placeholder="e.g. Normal Saline 0.9%" required style="padding:.8rem; font-weight:600;">
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold small text-uppercase">Fluid Type</label>
-                            <input type="text" class="form-control" name="fluid_type" placeholder="Normal Saline, RL..." required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold small text-uppercase">Site / Line</label>
-                            <input type="text" class="form-control" name="site" placeholder="RFA, Left hand..." required>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold small text-uppercase">Vol. Ordered (ml)</label>
-                            <input type="number" step="0.1" class="form-control" name="volume_ordered" placeholder="e.g. 1000" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold small text-uppercase">Rate (ml/hr)</label>
-                            <input type="number" step="0.1" class="form-control" name="infusion_rate" placeholder="e.g. 125" required>
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Immediate Action</label>
-                        <select class="form-select" name="initial_status">
-                            <option value="Ordered">Just Ordered (Not Started)</option>
-                            <option value="Running">Start Infusion Now</option>
-                        </select>
+                    <div class="form-group">
+                        <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Access Site</label>
+                        <input type="text" class="form-control" name="site" placeholder="e.g. Left Forearm" required style="padding:.8rem; font-weight:600;">
                     </div>
                 </div>
-                <div class="modal-footer bg-light" style="border-radius:0 0 15px 15px;">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info text-white rounded-pill px-4">Submit Order</button>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.8rem;">
+                    <div class="form-group">
+                        <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Ordered Volume (ml)</label>
+                        <input type="number" step="1" class="form-control" name="volume_ordered" placeholder="e.g. 1000" required style="padding:.8rem; font-weight:600; font-size:1.3rem; color:var(--primary);">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Flow Rate (ml/h)</label>
+                        <input type="number" step="1" class="form-control" name="infusion_rate" placeholder="e.g. 125" required style="padding:.8rem; font-weight:600; font-size:1.3rem; color:var(--primary);">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:2.5rem;">
+                    <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Immediate Status</label>
+                    <select class="form-control" name="initial_status" style="padding:.8rem; font-weight:700; color:var(--info);">
+                        <option value="Ordered">Physician Order Only (Verification Pending)</option>
+                        <option value="Running" selected>Initiate Infusion Immediately</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
+                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('ivModal').style.display='none'" style="font-weight:700;">Cancel</button>
+                    <button type="submit" class="adm-btn adm-btn-info" style="padding:.8rem 3rem; font-weight:800; border-radius:12px;">
+                        <i class="fas fa-play"></i> CONFIRM & START
+                    </button>
                 </div>
             </form>
         </div>
@@ -302,54 +350,79 @@ if ($q_io) {
 <!-- ========================================== -->
 <!-- MODAL: RECORD INTAKE & OUTPUT              -->
 <!-- ========================================== -->
-<div class="modal fade" id="ioModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border-radius: 15px; border: none;">
-            <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title"><i class="fas fa-balance-scale me-2"></i> Update Daily I&O</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+<div class="modal-bg" id="ioModal">
+    <div class="modal-box" style="max-width:650px;">
+        <div class="modal-header" style="background:var(--primary);">
+            <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-balance-scale"></i> Update Fluid Balance</h3>
+            <button class="modal-close" onclick="document.getElementById('ioModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+        </div>
+        <div style="padding:2.5rem;">
             <form id="ioForm">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="update_io">
-                <div class="modal-body p-4 bg-light">
-                    <div class="mb-4">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Patient</label>
-                        <select class="form-select" name="patient_id" required>
-                            <option value="">-- Select Patient --</option>
-                            <?php foreach($patients_in_ward as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= e($p['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> This adds to the cumulative total for today.</small>
+                
+                <div class="form-group" style="margin-bottom:2rem;">
+                    <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Select Patient</label>
+                    <select class="form-control" name="patient_id" id="ioPatientSelect" required style="padding:.8rem; font-weight:800; font-size:1.4rem; border:1.5px solid var(--primary);">
+                        <option value="">-- Clinical Subject --</option>
+                        <?php foreach($patients_in_ward as $p): ?>
+                            <option value="<?= $p['id'] ?>">Bed <?= e($p['bed_number']) ?>: <?= e($p['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div style="margin-top:.8rem; padding:.8rem; background:rgba(var(--primary-rgb),0.05); border-radius:8px; font-size:1.1rem; color:var(--primary); font-weight:600;">
+                        <i class="fas fa-info-circle"></i> This entry will be added to the patient's cumulative daily total.
                     </div>
+                </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="card border-primary h-100">
-                                <div class="card-header bg-primary text-white py-2">Add INTAKE (ml)</div>
-                                <div class="card-body p-3">
-                                    <div class="mb-2"><label class="small text-muted">Oral</label><input type="number" step="0.1" name="in_oral" class="form-control form-control-sm" value="0"></div>
-                                    <div class="mb-2"><label class="small text-muted">IV/Fluids</label><input type="number" step="0.1" name="in_iv" class="form-control form-control-sm" value="0"></div>
-                                    <div class="mb-0"><label class="small text-muted">NG Tube/Other</label><input type="number" step="0.1" name="in_ng" class="form-control form-control-sm" value="0"></div>
-                                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem; margin-bottom:2.5rem;">
+                    <!-- Intake Column -->
+                    <div style="background:rgba(52,152,219,0.03); border:1.5px solid rgba(52,152,219,0.1); border-radius:12px; padding:1.5rem;">
+                        <h4 style="font-size:1.2rem; font-weight:800; color:var(--info); margin-bottom:1.5rem; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:.8rem;">
+                            <i class="fas fa-plus-circle"></i> Intake (ml)
+                        </h4>
+                        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                            <div class="form-group">
+                                <label style="display:block; font-size:1rem; font-weight:700; color:var(--text-muted); margin-bottom:.5rem;">Oral / Bolus</label>
+                                <input type="number" step="1" name="in_oral" class="form-control" value="0" style="font-weight:800; color:var(--info); font-size:1.4rem;">
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; font-size:1rem; font-weight:700; color:var(--text-muted); margin-bottom:.5rem;">IV Fluids</label>
+                                <input type="number" step="1" name="in_iv" class="form-control" value="0" style="font-weight:800; color:var(--info); font-size:1.4rem;">
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; font-size:1rem; font-weight:700; color:var(--text-muted); margin-bottom:.5rem;">NG / Other</label>
+                                <input type="number" step="1" name="in_ng" class="form-control" value="0" style="font-weight:800; color:var(--info); font-size:1.4rem;">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card border-danger h-100">
-                                <div class="card-header bg-danger text-white py-2">Add OUTPUT (ml)</div>
-                                <div class="card-body p-3">
-                                    <div class="mb-2"><label class="small text-muted">Urine</label><input type="number" step="0.1" name="out_urine" class="form-control form-control-sm" value="0"></div>
-                                    <div class="mb-2"><label class="small text-muted">Drain</label><input type="number" step="0.1" name="out_drain" class="form-control form-control-sm" value="0"></div>
-                                    <div class="mb-0"><label class="small text-muted">Emesis/Other</label><input type="number" step="0.1" name="out_emesis" class="form-control form-control-sm" value="0"></div>
-                                </div>
+                    </div>
+                    
+                    <!-- Output Column -->
+                    <div style="background:rgba(231,76,60,0.03); border:1.5px solid rgba(231,76,60,0.1); border-radius:12px; padding:1.5rem;">
+                        <h4 style="font-size:1.2rem; font-weight:800; color:var(--danger); margin-bottom:1.5rem; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:.8rem;">
+                            <i class="fas fa-minus-circle"></i> Output (ml)
+                        </h4>
+                        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                            <div class="form-group">
+                                <label style="display:block; font-size:1rem; font-weight:700; color:var(--text-muted); margin-bottom:.5rem;">Urine</label>
+                                <input type="number" step="1" name="out_urine" class="form-control" value="0" style="font-weight:800; color:var(--danger); font-size:1.4rem;">
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; font-size:1rem; font-weight:700; color:var(--text-muted); margin-bottom:.5rem;">Surgical Drain</label>
+                                <input type="number" step="1" name="out_drain" class="form-control" value="0" style="font-weight:800; color:var(--danger); font-size:1.4rem;">
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; font-size:1rem; font-weight:700; color:var(--text-muted); margin-bottom:.5rem;">Emesis / Other</label>
+                                <input type="number" step="1" name="out_emesis" class="form-control" value="0" style="font-weight:800; color:var(--danger); font-size:1.4rem;">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 bg-white" style="border-radius:0 0 15px 15px;">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSaveIo">Save Balance</button>
+
+                <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
+                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('ioModal').style.display='none'" style="font-weight:700;">Cancel</button>
+                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSaveIo" style="padding:.8rem 3.5rem; font-weight:900; border-radius:12px; font-size:1.2rem;">
+                        <i class="fas fa-save" style="margin-right:.6rem;"></i> UPDATE LOG
+                    </button>
                 </div>
             </form>
         </div>
@@ -357,26 +430,65 @@ if ($q_io) {
 </div>
 
 <script>
-function updateIvStatus(iv_id, status) {
-    if(confirm('Change IV status to ' + status + '?')) {
-        $.post('../nurse/process_fluids.php', {
-            action: 'update_iv_status',
-            iv_id: iv_id,
-            status: status,
-            _csrf: '<?= generateCsrfToken() ?>'
-        }, function(res) {
-            if(res.success) location.reload(); else alert(res.message);
-        }, 'json');
+function switchFluidSubTab(tab) {
+    $('.tab-link').removeClass('active').css({'color': 'var(--text-muted)', 'border-bottom-color': 'transparent', 'font-weight': '700'});
+    $('#btn-'+tab+'-tab').addClass('active').css({'color': 'var(--primary)', 'border-bottom-color': 'var(--primary)', 'font-weight': '800'});
+    
+    if(tab === 'iv') {
+        $('#iv-content').show();
+        $('#io-content').hide();
+    } else {
+        $('#iv-content').hide();
+        $('#io-content').show();
     }
+}
+
+function showIoFormWithPatient(patientId) {
+    $('#ioPatientSelect').val(patientId);
+    $('#ioForm')[0].reset();
+    $('#ioPatientSelect').val(patientId);
+    document.getElementById('ioModal').style.display = 'flex';
+}
+
+function updateIvStatus(iv_id, status) {
+    const statusLower = status.toLowerCase();
+    const actionText = status === 'Running' ? 'start / resume' : (status === 'Paused' ? 'pause' : (status === 'Completed' ? 'complete' : 'stop early'));
+    
+    Swal.fire({
+        title: `Confirm IV Update?`,
+        text: `You are about to ${actionText} this infusion record.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: status === 'Running' ? 'var(--success)' : (status === 'Paused' ? 'var(--warning)' : 'var(--info)'),
+        confirmButtonText: 'Yes, Update Status'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('../nurse/process_fluids.php', {
+                action: 'update_iv_status',
+                iv_id: iv_id,
+                status: status,
+                _csrf: '<?= generateCsrfToken() ?>'
+            }, function(res) {
+                if(res.success) {
+                    Swal.fire({ icon: 'success', title: 'Infusion Updated', timer: 1000, showConfirmButton: false });
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: res.message });
+                }
+            }, 'json');
+        }
+    });
 }
 
 $(document).ready(function() {
     $('#ivForm, #ioForm').on('submit', function(e) {
         e.preventDefault();
         const formId = $(this).attr('id');
-        const btn = formId === 'ioForm' ? $('#btnSaveIo') : $(this).find('button[type=submit]');
-        const origText = btn.html();
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        const isIo = formId === 'ioForm';
+        const btn = isIo ? $('#btnSaveIo') : $(this).find('button[type=submit]');
+        const origHtml = btn.html();
+        
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
         
         $.ajax({
             url: '../nurse/process_fluids.php',
@@ -385,15 +497,22 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(res) {
                 if(res.success) {
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: isIo ? 'Balance Recorded' : 'Infusion Transmitted',
+                        text: res.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('Error: ' + res.message);
-                    btn.prop('disabled', false).html(origText);
+                    Swal.fire({ icon: 'error', title: 'Action Failed', text: res.message });
+                    btn.prop('disabled', false).html(origHtml);
                 }
             },
             error: function() {
-                alert('An error occurred.');
-                btn.prop('disabled', false).html(origText);
+                Swal.fire({ icon: 'error', title: 'System Error', text: 'Communication failure with clinical server.' });
+                btn.prop('disabled', false).html(origHtml);
             }
         });
     });

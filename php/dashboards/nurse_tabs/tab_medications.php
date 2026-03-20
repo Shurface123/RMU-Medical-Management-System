@@ -19,7 +19,7 @@ $q_str = "
         ma.scheduled_time, ma.administered_at, ma.status, ma.notes,
         p.patient_id, u.name AS patient_name, u.gender, u.date_of_birth,
         b.ward, b.bed_number,
-        COALESCE(u.profile_photo, '') AS profile_photo
+        '' AS profile_photo
     FROM medication_administration ma
     JOIN patients p ON ma.patient_id = p.id
     JOIN users u ON p.user_id = u.id
@@ -55,16 +55,21 @@ if ($q) {
 }
 ?>
 
-<div class="tab-content" id="medications">
+<div class="tab-content active" id="medications">
 
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <h4 class="mb-0"><i class="fas fa-pills text-muted me-2"></i> Medication Schedule</h4>
-            <p class="text-muted mb-0">Today's schedule for patients in <strong><?= e($ward_assigned) ?></strong></p>
+    <!-- Section Header -->
+    <div class="sec-header">
+        <div>
+            <h2 style="font-size:2.2rem; font-weight:800; color:var(--text-primary); margin-bottom:.3rem;"><i class="fas fa-prescription-bottle-alt text-primary"></i> Medication Administration</h2>
+            <p style="font-size:1.25rem; color:var(--text-muted);">Current MAR schedule for ward: <strong style="color:var(--text-primary);"><?= e($ward_assigned) ?></strong></p>
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <button class="btn btn-outline-primary" style="border-radius:20px;" onclick="location.reload();">
-                <i class="fas fa-sync-alt"></i> Refresh Schedule
+        <div style="display:flex; gap:1.2rem; align-items:center;">
+            <div style="display:flex; align-items:center; gap:.8rem; background:rgba(var(--primary-rgb), 0.05); padding:.7rem 1.2rem; border-radius:12px; border:1px solid rgba(var(--primary-rgb), 0.1);">
+                <i class="far fa-calendar-alt text-primary"></i>
+                <span style="font-size:1.2rem; font-weight:700; color:var(--text-primary);"><?= date('D, d M Y') ?></span>
+            </div>
+            <button class="adm-btn adm-btn-ghost" onclick="location.reload();" style="width:42px; height:42px; padding:0; border-radius:12px;">
+                <i class="fas fa-sync-alt"></i>
             </button>
         </div>
     </div>
@@ -74,101 +79,124 @@ if ($q) {
         $t_pending = array_reduce($meds, fn($c,$m) => $c + ($m['status']=='Pending'?1:0), 0);
         $t_admin   = array_reduce($meds, fn($c,$m) => $c + ($m['status']=='Administered'?1:0), 0);
         $t_missed  = array_reduce($meds, fn($c,$m) => $c + (in_array($m['status'],['Missed','Refused','Held'])?1:0), 0);
+        $overdue_count = array_reduce($meds, fn($c,$m) => $c + ($m['is_overdue']?1:0), 0);
     ?>
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card bg-light border-0 shadow-sm" style="border-radius:10px; border-left: 4px solid var(--primary-color) !important;">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted mb-1">Pending</h6>
-                        <h3 class="mb-0 text-dark"><?= $t_pending ?></h3>
-                    </div>
-                    <div style="font-size:2rem; opacity:0.2;"><i class="fas fa-clock"></i></div>
-                </div>
+    <div class="adm-summary-strip" style="margin-bottom:2.5rem;">
+        <div class="adm-mini-card">
+            <div class="adm-mini-card-num orange"><?= $t_pending ?></div>
+            <div class="adm-mini-card-label">
+                <i class="fas fa-clock text-warning" style="margin-right:.5rem;"></i>Scheduled
+                <?php if($overdue_count > 0): ?>
+                    <span class="adm-badge adm-badge-danger pulse-fade" style="margin-left:.8rem; font-size:1rem;"><?= $overdue_count ?> OVERDUE</span>
+                <?php endif; ?>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-light border-0 shadow-sm" style="border-radius:10px; border-left: 4px solid #27ae60 !important;">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted mb-1">Administered</h6>
-                        <h3 class="mb-0 text-success"><?= $t_admin ?></h3>
-                    </div>
-                    <div style="font-size:2rem; opacity:0.2;"><i class="fas fa-check-circle"></i></div>
-                </div>
-            </div>
+        <div class="adm-mini-card">
+            <div class="adm-mini-card-num green"><?= $t_admin ?></div>
+            <div class="adm-mini-card-label"><i class="fas fa-check-double text-success" style="margin-right:.5rem;"></i>Administered</div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-light border-0 shadow-sm" style="border-radius:10px; border-left: 4px solid #e74c3c !important;">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="text-muted mb-1">Missed/Held</h6>
-                        <h3 class="mb-0 text-danger"><?= $t_missed ?></h3>
-                    </div>
-                    <div style="font-size:2rem; opacity:0.2;"><i class="fas fa-times-circle"></i></div>
-                </div>
-            </div>
+        <div class="adm-mini-card" style="background:<?= $t_missed > 0 ? 'rgba(231,76,60,0.03)' : '' ?>;">
+            <div class="adm-mini-card-num red"><?= $t_missed ?></div>
+            <div class="adm-mini-card-label"><i class="fas fa-exclamation-circle text-danger" style="margin-right:.5rem;"></i>Missed / Held</div>
         </div>
     </div>
 
     <!-- Medication List -->
-    <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="medsTable">
-                    <thead class="bg-light">
+    <div class="adm-card shadow-sm">
+        <div class="adm-card-header" style="justify-content:space-between;">
+            <h3 style="font-size:1.5rem; font-weight:700;"><i class="fas fa-list-check text-primary"></i> Daily Administration Record</h3>
+            <span class="adm-badge" style="background:var(--surface-2); color:var(--text-secondary); border:1px solid var(--border); font-weight:700;">WARD MAR · <?= strtoupper($ward_assigned) ?></span>
+        </div>
+        <div class="adm-card-body" style="padding:0;">
+            <div class="adm-table-wrap">
+                <table class="adm-table" id="medsTable">
+                    <thead>
                         <tr>
-                            <th class="ps-4">Time</th>
-                            <th>Patient</th>
-                            <th>Medication (Route)</th>
+                            <th>Sched. Time</th>
+                            <th>Patient Identity</th>
+                            <th>Medication / Route</th>
                             <th>Dosage</th>
                             <th>Status</th>
-                            <th class="text-end pe-4">Action</th>
+                            <th style="text-align:right;">Clinical Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if(empty($meds)): ?>
-                            <tr><td colspan="6" class="text-center py-5 text-muted">No medications scheduled for today in this ward.</td></tr>
-                        <?php else: foreach($meds as $m): ?>
-                            <tr class="<?= $m['is_overdue'] ? 'bg-danger bg-opacity-10' : '' ?>">
-                                <td class="ps-4">
-                                    <span class="fw-bold <?= $m['is_overdue']?'text-danger':($m['status']=='Administered'?'text-success':'text-dark') ?>">
-                                        <?= date('H:i', strtotime($m['scheduled_time'])) ?>
-                                    </span>
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding:5rem 2rem; color:var(--text-muted);">
+                                    <div style="opacity:0.2; margin-bottom:1.5rem;">
+                                        <i class="fas fa-pills" style="font-size:4rem;"></i>
+                                    </div>
+                                    <h5 style="font-weight:600; font-size:1.4rem;">No Scheduled Medications</h5>
+                                    <p style="font-size:1.2rem;">All clear for the current shift in this ward.</p>
+                                </td>
+                            </tr>
+                        <?php else: foreach($meds as $m): 
+                            $is_high_alert = preg_match('/(Insulin|Warfarin|Heparin|Digoxin|Morphine|Dopamine)/i', $m['medicine_name']);
+                        ?>
+                            <tr class="<?= $m['is_overdue'] ? 'row-overdue' : '' ?>" style="transition:all .2s ease;">
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:.8rem;">
+                                        <i class="fas fa-clock <?= $m['is_overdue']?'text-danger':($m['status']=='Administered'?'text-success':'text-warning') ?>" style="font-size:1.2rem;"></i>
+                                        <span style="font-family:monospace; font-weight:800; font-size:1.4rem; color:var(--text-primary);">
+                                            <?= date('H:i', strtotime($m['scheduled_time'])) ?>
+                                        </span>
+                                    </div>
+                                    <?php if($m['is_overdue']): ?>
+                                        <small class="text-danger" style="font-weight:700; text-transform:uppercase; font-size:0.9rem;">Overdue</small>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar me-3 bg-<?= $m['gender']=='Male'?'primary':'danger' ?> text-white rounded-circle d-flex align-items-center justify-content-center" style="width:35px;height:35px;opacity:0.8;font-size:0.9rem;">
+                                    <div style="display:flex; align-items:center; gap:1.2rem;">
+                                        <div style="width:38px; height:38px; border-radius:10px; background:<?= $m['gender']=='Male' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(231, 76, 60, 0.1)' ?>; color:<?= $m['gender']=='Male' ? 'var(--primary)' : 'var(--danger)' ?>; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; border:1px solid rgba(0,0,0,0.05); flex-shrink:0;">
                                             <?= strtoupper(substr($m['patient_name'],0,1)) ?>
                                         </div>
                                         <div>
-                                            <h6 class="mb-0 fw-bold" style="font-size:0.95rem;"><?= e($m['patient_name']) ?></h6>
-                                            <small class="text-muted"><?= e($m['ward']) ?>-B<?= e($m['bed_number']) ?> (<?= e($m['patient_id']) ?>)</small>
+                                            <div style="font-weight:700; font-size:1.35rem; color:var(--text-primary); margin-bottom:.1rem;"><?= e($m['patient_name']) ?></div>
+                                            <small style="color:var(--text-muted); font-weight:600;"><?= e($m['ward']) ?> (Bed <?= e($m['bed_number']) ?>) · <span style="font-family:monospace;">#<?= e($m['patient_id']) ?></span></small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold" style="color:var(--primary-dark);"><?= e($m['medicine_name']) ?></div>
-                                    <small class="text-muted"><i class="fas fa-route"></i> <?= e($m['route']) ?></small>
+                                    <div style="display:flex; align-items:center; gap:.8rem;">
+                                        <div style="flex:1;">
+                                            <div style="font-weight:700; font-size:1.4rem; color:var(--text-primary); display:flex; align-items:center; gap:.5rem;">
+                                                <?= e($m['medicine_name']) ?>
+                                                <?php if($is_high_alert): ?>
+                                                    <span class="adm-badge adm-badge-danger" style="font-size:0.85rem; padding:.2rem .5rem;" title="High Alert Medication"><i class="fas fa-skull"></i> ALERT</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div style="font-size:1.15rem; color:var(--text-muted); font-weight:500;">
+                                                <i class="fas fa-directions"></i> Via: <span style="color:var(--text-secondary); font-weight:600;"><?= e($m['route']) ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="fw-bold text-dark"><?= e($m['dosage']) ?></td>
+                                <td>
+                                    <span style="font-weight:800; font-size:1.4rem; color:var(--primary); background:rgba(var(--primary-rgb),0.05); padding:.3rem .8rem; border-radius:8px; border:1px solid rgba(var(--primary-rgb),0.1);">
+                                        <?= e($m['dosage']) ?>
+                                    </span>
+                                </td>
                                 <td>
                                     <?php if($m['status'] == 'Pending'): ?>
-                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-clock"></i> Pending</span>
+                                        <span class="adm-badge adm-badge-warning" style="font-weight:700; padding:.4rem 1rem;"><i class="fas fa-hourglass-start"></i> PENDING</span>
                                     <?php elseif($m['status'] == 'Administered'): ?>
-                                        <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check"></i> Administered <br><small><?= date('H:i', strtotime($m['administered_at'])) ?></small></span>
+                                        <div style="display:flex; flex-direction:column; gap:.3rem;">
+                                            <span class="adm-badge adm-badge-success" style="font-weight:700; padding:.4rem 1rem;"><i class="fas fa-check-double"></i> GIVEN</span>
+                                            <small style="color:var(--text-muted); font-weight:600; text-align:center; font-size:1rem;"><?= date('H:i', strtotime($m['administered_at'])) ?></small>
+                                        </div>
                                     <?php else: ?>
-                                        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-times"></i> <?= e($m['status']) ?></span>
+                                        <span class="adm-badge adm-badge-danger" style="font-weight:700; padding:.4rem 1rem;"><i class="fas fa-ban"></i> <?= strtoupper(e($m['status'])) ?></span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="text-end pe-4">
+                                <td style="text-align:right;">
                                     <?php if($m['status'] == 'Pending'): ?>
-                                        <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" onclick="openAdministerModal(<?= $m['admin_pk'] ?>, '<?= e(addslashes($m['patient_name'])) ?>', '<?= e(addslashes($m['medicine_name'])) ?>', '<?= e(addslashes($m['dosage'])) ?>', '<?= e(addslashes($m['route'])) ?>')">
+                                        <button class="adm-btn adm-btn-primary" onclick="openAdministerModal(<?= $m['admin_pk'] ?>, '<?= e(addslashes($m['patient_name'])) ?>', '<?= e(addslashes($m['medicine_name'])) ?>', '<?= e(addslashes($m['dosage'])) ?>', '<?= e(addslashes($m['route'])) ?>')" style="padding:.6rem 1.5rem; border-radius:10px; font-weight:700;">
                                             <i class="fas fa-syringe"></i> Verify
                                         </button>
                                     <?php else: ?>
-                                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
-                                            <i class="fas fa-lock"></i> Locked
+                                        <button class="adm-btn adm-btn-ghost" style="opacity:0.6;" disabled>
+                                            <i class="fas fa-lock-open"></i> Archive
                                         </button>
                                     <?php endif; ?>
                                 </td>
@@ -184,74 +212,81 @@ if ($q) {
 <!-- ========================================== -->
 <!-- MODAL: ADMINISTER MEDICATION               -->
 <!-- ========================================== -->
-<div class="modal fade" id="administerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md">
-        <div class="modal-content" style="border-radius: 15px; border: none;">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white; border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title"><i class="fas fa-prescription-bottle-alt me-2"></i> Verify & Administer</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- ========================================== -->
+<!-- MODAL: ADMINISTER MEDICATION               -->
+<!-- ========================================== -->
+<div class="modal-bg" id="administerModal">
+    <div class="modal-box" style="max-width:680px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+        <div class="modal-header" style="background:var(--primary); padding:1.8rem 2.5rem;">
+            <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-prescription-bottle-alt" style="margin-right:.8rem;"></i> Medication Verification</h3>
+            <button class="modal-close" onclick="closeAdministerModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+        </div>
+        
+        <div style="padding:2.5rem;">
+            <!-- Safety Alert -->
+            <div style="background:rgba(231,76,60,0.05); border:1px solid rgba(231,76,60,0.15); border-radius:12px; padding:1.2rem 1.5rem; margin-bottom:2rem; display:flex; align-items:center; gap:1.2rem;">
+                <i class="fas fa-shield-alt text-danger" style="font-size:2rem;"></i>
+                <div>
+                    <strong style="color:var(--danger); font-size:1.2rem; display:block; margin-bottom:.2rem;">SAFETY PROTOCOL: THE 5 RIGHTS</strong>
+                    <p style="margin:0; font-size:1.1rem; color:var(--text-secondary); font-weight:600;">Right Patient · Right Drug · Right Dose · Right Route · Right Time</p>
+                </div>
             </div>
-            
+
             <form id="administerForm">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="administer_med">
                 <input type="hidden" name="admin_id" id="med_admin_id">
                 
-                <div class="modal-body p-4">
-                    
-                    <div class="alert alert-warning mb-4" style="border-radius: 10px; border-left: 4px solid #f39c12;">
-                        <h6 class="fw-bold mb-1"><i class="fas fa-exclamation-triangle"></i> Complete the 5 Rights</h6>
-                        <small>Right Patient, Right Drug, Right Dose, Right Route, Right Time.</small>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
-                            <span class="text-muted">Patient:</span>
-                            <span class="fw-bold" id="med_patient_name"></span>
+                <!-- Medication Context Banner -->
+                <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:15px; padding:1.5rem 1.8rem; margin-bottom:2.2rem;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+                        <div class="info-item">
+                            <small style="text-transform:uppercase; font-size:0.9rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:.3rem;">Patient</small>
+                            <div id="med_patient_name" style="font-weight:700; font-size:1.3rem; color:var(--text-primary);">Loading...</div>
                         </div>
-                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
-                            <span class="text-muted">Drug:</span>
-                            <span class="fw-bold text-primary" id="med_drug_name"></span>
+                        <div class="info-item">
+                            <small style="text-transform:uppercase; font-size:0.9rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:.3rem;">Route</small>
+                            <div id="med_route" style="font-weight:700; font-size:1.3rem; color:var(--text-primary);">Loading...</div>
                         </div>
-                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
-                            <span class="text-muted">Dosage:</span>
-                            <span class="fw-bold" id="med_dosage"></span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
-                            <span class="text-muted">Route:</span>
-                            <span class="fw-bold" id="med_route"></span>
+                        <div class="info-item" style="grid-column: span 2; background:rgba(var(--primary-rgb),0.05); padding:1rem; border-radius:10px; border:1px solid rgba(var(--primary-rgb),0.1);">
+                            <small style="text-transform:uppercase; font-size:0.9rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:.3rem;">Medication &amp; Dosage</small>
+                            <div style="display:flex; align-items:center; gap:.8rem;">
+                                <span id="med_drug_name" style="font-weight:800; font-size:1.6rem; color:var(--primary);">Drug Name</span>
+                                <span id="med_dosage" style="font-weight:700; font-size:1.4rem; color:var(--text-secondary); opacity:0.8;">(Dose)</span>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Outcome Status</label>
-                        <select class="form-select" name="med_status" id="med_status" required>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
+                    <div>
+                        <label style="display:block; font-size:1.15rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem;">Outcome Status</label>
+                        <select class="form-control" name="med_status" id="med_status" required style="font-weight:600; padding:.8rem;">
                             <option value="Administered">Administered</option>
                             <option value="Refused">Refused by Patient</option>
-                            <option value="Held">Held (Doctor's Orders/Contraindicated)</option>
-                            <option value="Missed">Missed/Unavailable</option>
+                            <option value="Held">Held (Doctor's Orders)</option>
+                            <option value="Missed">Missed / Unavailable</option>
                         </select>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Verification Method</label>
-                        <select class="form-select" name="verification_method" required>
-                            <option value="Manual">Manual Verification</option>
-                            <option value="Barcode">Barcode Scanned</option>
-                            <option value="eMAR">Double eMAR Check</option>
+                    <div>
+                        <label style="display:block; font-size:1.15rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem;">Verification Mode</label>
+                        <select class="form-control" name="verification_method" required style="font-weight:600; padding:.8rem;">
+                            <option value="Manual">Manual Visual Check</option>
+                            <option value="Barcode">Barcode Scanned (Wristband)</option>
+                            <option value="eMAR">Double Nurse eMAR Check</option>
                         </select>
                     </div>
-
-                    <div class="mb-2" id="med_notes_div">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Clinical Notes</label>
-                        <textarea class="form-control" name="notes" id="med_notes" rows="2" placeholder="Required if refused or held..."></textarea>
-                    </div>
-
                 </div>
-                <div class="modal-footer bg-light" style="border-radius: 0 0 15px 15px;">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnAdminSave">
-                        <i class="fas fa-check-circle me-1"></i> Confirm
+
+                <div class="form-group" id="med_notes_div">
+                    <label style="display:block; font-size:1.15rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem;">Clinical Documentation / Reasoning</label>
+                    <textarea class="form-control" name="notes" id="med_notes" rows="2" placeholder="Mandatory if medication was Refused or Held..."></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
+                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeAdministerModal()" style="font-weight:600;">Cancel</button>
+                    <button type="submit" class="adm-btn adm-btn-primary" id="btnAdminSave" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);">
+                        <i class="fas fa-check-double"></i> Confirm Administration
                     </button>
                 </div>
             </form>
@@ -264,59 +299,75 @@ function openAdministerModal(adminId, patientName, drugName, dosage, route) {
     document.getElementById('med_admin_id').value = adminId;
     document.getElementById('med_patient_name').textContent = patientName;
     document.getElementById('med_drug_name').textContent = drugName;
-    document.getElementById('med_dosage').textContent = dosage;
+    document.getElementById('med_dosage').textContent = '(' + dosage + ')';
     document.getElementById('med_route').textContent = route;
     
     document.getElementById('administerForm').reset();
-    $('#med_status').trigger('change'); // trigger logic
-    
-    new bootstrap.Modal(document.getElementById('administerModal')).show();
+    $('#med_status').trigger('change');
+    document.getElementById('administerModal').style.display = 'flex';
+}
+function closeAdministerModal() {
+    document.getElementById('administerModal').style.display = 'none';
 }
 
 $(document).ready(function() {
-    $('#medsTable').DataTable({
-        "pageLength": 10,
-        "ordering": true,
-        "order": [[0, "asc"]], // Time
-        "language": { "search": "", "searchPlaceholder": "Search schedule..." }
-    });
+    if ($.fn.DataTable) {
+        $('#medsTable').DataTable({
+            pageLength: 10, ordering: true, order: [[0, "asc"]],
+            language: { search: "", searchPlaceholder: "Search MAR schedule..." }
+        });
+        $('.dataTables_filter input').addClass('form-control').css({'width':'250px','border-radius':'10px'});
+    }
 
-    // Make notes required if not Administered
     $('#med_status').on('change', function() {
-        if($(this).val() !== 'Administered') {
-            $('#med_notes').prop('required', true);
-            $('#med_notes_div label').html('Clinical Notes <span class="text-danger">*</span>');
+        const status = $(this).val();
+        if(status !== 'Administered') {
+            $('#med_notes').prop('required', true).attr('placeholder', 'Please provide clinical reason for: ' + status);
+            $('#med_notes_div label').html('Reason for Non-Administration <span class="text-danger">*</span>');
         } else {
-            $('#med_notes').prop('required', false);
-            $('#med_notes_div label').html('Clinical Notes');
+            $('#med_notes').prop('required', false).attr('placeholder', 'Optional clinical observations...');
+            $('#med_notes_div label').html('Clinical Documentation / Reasoning');
         }
     });
 
     $('#administerForm').on('submit', function(e) {
         e.preventDefault();
-        if(!confirm("Are you sure you want to commit this medication record? This action cannot be undone.")) return;
-        const btn = $('#btnAdminSave');
-        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
         
-        $.ajax({
-            url: '../nurse/process_medication.php',
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(res) {
-                if(res.success) {
-                    $('#administerModal').modal('hide');
-                    location.reload();
-                } else {
-                    alert('Error: ' + res.message);
-                    btn.html('<i class="fas fa-check-circle me-1"></i> Confirm').prop('disabled', false);
-                }
-            },
-            error: function() {
-                alert('An error occurred.');
-                btn.html('<i class="fas fa-check-circle me-1"></i> Confirm').prop('disabled', false);
+        Swal.fire({
+            title: 'Confirm Administration?',
+            text: "Are you certain you have verified the 5 Rights and wish to commit this medical record?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--primary)',
+            cancelButtonColor: 'var(--text-muted)',
+            confirmButtonText: 'Yes, Confirm & Sign'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const btn = $('#btnAdminSave');
+                btn.html('<i class="fas fa-spinner fa-spin"></i> Authenticating...').prop('disabled', true);
+                
+                $.ajax({
+                    url: '../nurse/process_medication.php',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function(res) {
+                        if(res.success) {
+                            Swal.fire({ icon: 'success', title: 'Committed!', text: 'MAR record updated successfully.', timer: 1500, showConfirmButton: false });
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Commit Failed', text: res.message });
+                            btn.html('<i class="fas fa-check-double"></i> Confirm Administration').prop('disabled', false);
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({ icon: 'error', title: 'System Error', text: 'Loss of communication with Pharmacy Information System.' });
+                        btn.html('<i class="fas fa-check-double"></i> Confirm Administration').prop('disabled', false);
+                    }
+                });
             }
         });
     });
 });
 </script>
+

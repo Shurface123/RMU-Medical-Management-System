@@ -87,81 +87,78 @@ if($q_fluids) {
 }
 ?>
 
-<div class="tab-content" id="analytics">
+<div class="tab-content active" id="analytics">
 
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-8">
-            <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-chart-pie me-2"></i> Performance Analytics</h4>
-            <p class="text-muted mb-0">Visual breakdown of clinical activities, medication administration, and facility alerts.</p>
+    <!-- Section Header -->
+    <div class="sec-header">
+        <div>
+            <h2 style="font-size:2.4rem; font-weight:800; color:var(--primary); margin-bottom:.3rem;"><i class="fas fa-chart-line pulse-fade" style="margin-right:.8rem;"></i> Performance Analytics</h2>
+            <p style="font-size:1.3rem; color:var(--text-muted);">Real-time clinical metrics and departmental performance monitoring.</p>
         </div>
-        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            <button class="btn btn-outline-secondary rounded-pill shadow-sm" onclick="window.print()">
-                <i class="fas fa-print me-2"></i> Print Dashboard
+        <div style="display:flex; gap:1.2rem; align-items:center;">
+             <div style="background:rgba(var(--primary-rgb),0.05); border:1px solid rgba(var(--primary-rgb),0.1); padding:.8rem 1.5rem; border-radius:12px; display:flex; align-items:center; gap:1rem;">
+                <span class="activity-dot shadow-sm" style="background:var(--success); position:static;"></span>
+                <div style="font-size:1.2rem; font-weight:800; color:var(--text-primary);">Clinical Insight: <small style="font-weight:700; color:var(--success);">LIVE ACTIVE</small></div>
+            </div>
+            <button class="adm-btn adm-btn-ghost" onclick="window.print()" style="border-radius:12px; font-weight:700; border-color:var(--primary); color:var(--primary);">
+                <i class="fas fa-print"></i> Print Analysis
             </button>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        
+    <!-- Charts Grid Row 1: Doughnut + Line -->
+    <div class="charts-grid" style="display:grid; grid-template-columns:1fr 1.5fr; gap:2.5rem; margin-bottom:2.5rem;">
+
         <!-- Task Completion Donut -->
-        <div class="col-lg-4 col-md-6">
-            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-tasks me-2"></i> My Tasks (This Month)</h6>
-                </div>
-                <div class="card-body">
-                    <div style="position: relative; height: 250px; width: 100%;">
-                        <canvas id="taskChart"></canvas>
-                    </div>
-                </div>
+        <div class="adm-card shadow-sm">
+            <div class="adm-card-header" style="background:rgba(var(--primary-rgb),0.02); border-bottom:1.5px solid var(--border);">
+                <h3 style="font-size:1.4rem; font-weight:700; color:var(--primary);"><i class="fas fa-tasks"></i> My Task Distribution <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">(Monthly)</span></h3>
+            </div>
+            <div class="adm-card-body" style="padding:2.5rem;">
+                <div class="chart-wrap" style="height:300px;"><canvas id="taskChart"></canvas></div>
             </div>
         </div>
 
         <!-- Medication Trends Line -->
-        <div class="col-lg-8 col-md-6">
-            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-pills me-2"></i> Meds Administered (Last 7 Days)</h6>
-                </div>
-                <div class="card-body">
-                    <div style="position: relative; height: 250px; width: 100%;">
-                        <canvas id="medChart"></canvas>
-                    </div>
-                </div>
+        <div class="adm-card shadow-sm">
+            <div class="adm-card-header" style="background:rgba(var(--primary-rgb),0.02); border-bottom:1.5px solid var(--border);">
+                <h3 style="font-size:1.4rem; font-weight:700; color:var(--primary);"><i class="fas fa-pills"></i> Medication Administration <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">(7 Day Trend)</span></h3>
+            </div>
+            <div class="adm-card-body" style="padding:2.5rem;">
+                <div class="chart-wrap" style="height:300px;"><canvas id="medChart"></canvas></div>
             </div>
         </div>
 
-        <!-- Emergency Alerts Polar -->
-        <div class="col-lg-6">
-            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-ambulance me-2"></i> Facility Alerts (This Month)</h6>
-                </div>
-                <div class="card-body">
-                    <div style="position: relative; height: 300px; width: 100%;">
-                        <canvas id="alertChart"></canvas>
-                    </div>
-                </div>
+    </div>
+
+    <!-- Charts Grid Row 2: Polar + Bar -->
+    <div class="charts-grid" style="display:grid; grid-template-columns:1.2fr 1fr; gap:2.5rem;">
+
+        <!-- Emergency Alerts Polar Area -->
+        <div class="adm-card shadow-sm">
+            <div class="adm-card-header" style="background:rgba(var(--primary-rgb),0.02); border-bottom:1.5px solid var(--border);">
+                <h3 style="font-size:1.4rem; font-weight:700; color:var(--danger);"><i class="fas fa-ambulance"></i> Emergency Response Log <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">(Facility Wide)</span></h3>
+            </div>
+            <div class="adm-card-body" style="padding:2.5rem;">
+                <div class="chart-wrap" style="height:350px;"><canvas id="alertChart"></canvas></div>
             </div>
         </div>
 
         <!-- Fluid Balance Bar -->
-        <div class="col-lg-6">
-            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-tint me-2"></i> Avg Fluid Balance (My Charting)</h6>
-                </div>
-                <div class="card-body">
-                    <?php if(empty($fluidLabels)): ?>
-                        <div class="h-100 d-flex align-items-center justify-content-center text-muted">
-                            <p><i class="fas fa-info-circle"></i> No fluid charts recorded in last 5 days.</p>
-                        </div>
-                    <?php else: ?>
-                        <div style="position: relative; height: 300px; width: 100%;">
-                            <canvas id="fluidChart"></canvas>
-                        </div>
-                    <?php endif; ?>
-                </div>
+        <div class="adm-card shadow-sm">
+            <div class="adm-card-header" style="background:rgba(var(--primary-rgb),0.02); border-bottom:1.5px solid var(--border);">
+                <h3 style="font-size:1.4rem; font-weight:700; color:var(--info);"><i class="fas fa-tint"></i> Clinical Balance Average <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">(Assigned Patients)</span></h3>
+            </div>
+            <div class="adm-card-body" style="padding:2.5rem;">
+                <?php if(empty($fluidLabels)): ?>
+                    <div style="padding:6rem 2rem; text-align:center; color:var(--text-muted);">
+                        <i class="fas fa-chart-bar" style="font-size:4rem; opacity:0.1; margin-bottom:1.5rem; display:block;"></i>
+                        <h5 style="font-size:1.4rem; font-weight:700;">Insufficient Data Points</h5>
+                        <p style="font-size:1.15rem;">Complete more I&O charts to view trends.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="chart-wrap" style="height:350px;"><canvas id="fluidChart"></canvas></div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -169,22 +166,24 @@ if($q_fluids) {
 
 </div>
 
-<!-- Chart.js Injection Library is already available via main dashboard layout -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Standard Colors based on project theme
-    const cPrimary = '#E67E22'; // Orange
-    const cSuccess = '#28a745';
-    const cWarning = '#ffc107';
-    const cDanger  = '#dc3545';
-    const cInfo    = '#17a2b8';
+    // Premium Color Tokens
+    const cPrimary = '#E67E22'; 
+    const cSuccess = '#2ecc71';
+    const cWarning = '#f1c40f';
+    const cDanger  = '#e74c3c';
+    const cInfo    = '#3498db';
+    const cNeutral = '#95a5a6';
+
+    const chartFont = { family: "'Inter', 'Segoe UI', sans-serif", size: 12, weight: '600' };
 
     // 1. Task Chart (Doughnut)
     const taskCtx = document.getElementById('taskChart').getContext('2d');
     new Chart(taskCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Completed', 'Pending', 'Overdue'],
+            labels: ['Completed', 'In Progress', 'Critical'],
             datasets: [{
                 data: [
                     <?= $taskStats['Completed'] ?>, 
@@ -192,24 +191,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     <?= $taskStats['Overdue'] ?>
                 ],
                 backgroundColor: [cSuccess, cWarning, cDanger],
-                borderWidth: 0,
-                cutout: '70%'
+                hoverOffset: 15,
+                borderWidth: 6,
+                borderColor: '#fff',
+                cutout: '75%'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 30, font: chartFont } },
+                tooltip: { padding: 15, backgroundColor: 'rgba(0,0,0,0.8)', titleFont: { size: 14, weight: '800' } }
             }
         }
     });
 
     // 2. Med Chart (Line)
     const medCtx = document.getElementById('medChart').getContext('2d');
-    // Create gradient
-    let gradientMed = medCtx.createLinearGradient(0, 0, 0, 400);
-    gradientMed.addColorStop(0, 'rgba(230, 126, 34, 0.4)'); // Primary Orange transparent
+    let gradientMed = medCtx.createLinearGradient(0, 0, 0, 300);
+    gradientMed.addColorStop(0, 'rgba(230, 126, 34, 0.25)');
     gradientMed.addColorStop(1, 'rgba(230, 126, 34, 0.0)');
 
     new Chart(medCtx, {
@@ -217,19 +218,18 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: <?= json_encode($medLabels) ?>,
             datasets: [{
-                label: 'Doses Administered',
+                label: 'Dosage Units',
                 data: <?= json_encode($medValues) ?>,
                 borderColor: cPrimary,
                 backgroundColor: gradientMed,
-                borderWidth: 3,
-                pointBackgroundColor: cPrimary,
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: cPrimary,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                borderWidth: 4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: cPrimary,
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 9,
                 fill: true,
-                tension: 0.4 // Smooth curve
+                tension: 0.45
             }]
         },
         options: {
@@ -237,8 +237,8 @@ document.addEventListener('DOMContentLoaded', function() {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                y: { beginAtZero: true, grid: { borderDash: [5, 5] }, ticks: { stepSize: 1 } },
-                x: { grid: { display: false } }
+                y: { beginAtZero: true, grid: { borderDash: [6, 6], color: 'rgba(0,0,0,0.05)' }, ticks: { font: chartFont, padding: 10 } },
+                x: { grid: { display: false }, ticks: { font: chartFont, padding: 10 } }
             }
         }
     });
@@ -252,19 +252,21 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 data: <?= json_encode($alertData) ?>,
                 backgroundColor: [
-                    'rgba(220, 53, 69, 0.7)', // Danger
-                    'rgba(255, 193, 7, 0.7)', // Warning
-                    'rgba(23, 162, 184, 0.7)', // Info
-                    'rgba(40, 167, 69, 0.7)', // Success
-                    'rgba(108, 117, 125, 0.7)' // Secondary
+                    'rgba(231, 76, 60, 0.75)', 
+                    'rgba(241, 196, 15, 0.75)', 
+                    'rgba(52, 152, 219, 0.75)', 
+                    'rgba(46, 204, 113, 0.75)', 
+                    'rgba(149, 165, 166, 0.75)'
                 ],
-                borderWidth: 1
+                borderWidth: 2,
+                borderColor: '#fff'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'right' } }
+            scales: { r: { ticks: { display: false }, grid: { color: 'rgba(0,0,0,0.05)' } } },
+            plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: chartFont } } }
         }
     });
 
@@ -277,26 +279,28 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: <?= json_encode($fluidLabels) ?>,
             datasets: [
                 {
-                    label: 'Avg Intake (ml)',
+                    label: 'Clinical Intake (ml)',
                     data: <?= json_encode($fluidInData) ?>,
                     backgroundColor: cInfo,
-                    borderRadius: 4
+                    borderRadius: 8,
+                    barPercentage: 0.6
                 },
                 {
-                    label: 'Avg Output (ml)',
+                    label: 'Clinical Output (ml)',
                     data: <?= json_encode($fluidOutData) ?>,
                     backgroundColor: cDanger,
-                    borderRadius: 4
+                    borderRadius: 8,
+                    barPercentage: 0.6
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
+            plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 20, font: chartFont } } },
             scales: {
-                y: { beginAtZero: true, grid: { borderDash: [5, 5] } },
-                x: { grid: { display: false } }
+                y: { beginAtZero: true, grid: { borderDash: [6, 6], color: 'rgba(0,0,0,0.05)' }, ticks: { font: chartFont, padding: 10 } },
+                x: { grid: { display: false }, ticks: { font: chartFont, padding: 10 } }
             }
         }
     });

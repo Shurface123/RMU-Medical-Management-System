@@ -10,11 +10,19 @@ include '../includes/_sidebar.php';
 // Fetch pending registrations
 $pending = [];
 $q_pending = mysqli_query($conn, "
-    SELECT s.id as staff_id, s.employee_id, s.role, u.name, u.email, u.phone, u.created_at
+    SELECT s.id as staff_id, s.employee_id, s.role, u.name, u.email, u.phone, u.created_at, 'staff' as source_table
     FROM staff s
     JOIN users u ON s.user_id = u.id
     WHERE s.approval_status = 'pending'
-    ORDER BY u.created_at DESC
+    
+    UNION ALL
+    
+    SELECT n.id as staff_id, n.nurse_id as employee_id, 'nurse' as role, u.name, u.email, u.phone, u.created_at, 'nurse' as source_table
+    FROM nurses n
+    JOIN users u ON n.user_id = u.id
+    WHERE n.approval_status = 'pending'
+    
+    ORDER BY created_at DESC
 ");
 if ($q_pending) while ($row = mysqli_fetch_assoc($q_pending)) $pending[] = $row;
 
@@ -22,13 +30,24 @@ if ($q_pending) while ($row = mysqli_fetch_assoc($q_pending)) $pending[] = $row;
 $recent = [];
 $q_recent = mysqli_query($conn, "
     SELECT s.id as staff_id, s.employee_id, s.role, s.approval_status, s.rejection_reason, s.approved_at,
-           u.name as staff_name, ua.name as admin_name
+           u.name as staff_name, ua.name as admin_name, 'staff' as source_table
     FROM staff s
     JOIN users u ON s.user_id = u.id
     LEFT JOIN users ua ON s.approved_by = ua.id
     WHERE s.approval_status IN ('approved','rejected')
       AND s.approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-    ORDER BY s.approved_at DESC LIMIT 15
+      
+    UNION ALL
+    
+    SELECT n.id as staff_id, n.nurse_id as employee_id, 'nurse' as role, n.approval_status, n.rejection_reason, n.approved_at,
+           u.name as staff_name, ua.name as admin_name, 'nurse' as source_table
+    FROM nurses n
+    JOIN users u ON n.user_id = u.id
+    LEFT JOIN users ua ON n.approved_by = ua.id
+    WHERE n.approval_status IN ('approved','rejected')
+      AND n.approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      
+    ORDER BY approved_at DESC LIMIT 15
 ");
 if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
 ?>
@@ -99,10 +118,10 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                             <td><?php echo date('M d, Y g:i A', strtotime($p['created_at'])); ?></td>
                             <td style="text-align:right;">
                                 <div style="display:inline-flex;gap:.5rem;">
-                                    <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveStaff(<?php echo $p['staff_id']; ?>)">
+                                    <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveStaff(<?php echo $p['staff_id']; ?>, '<?php echo $p['source_table']; ?>')">
                                         <i class="fas fa-check"></i> Approve
                                     </button>
-                                    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectStaff(<?php echo $p['staff_id']; ?>)">
+                                    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectStaff(<?php echo $p['staff_id']; ?>, '<?php echo $p['source_table']; ?>')">
                                         <i class="fas fa-times"></i> Reject
                                     </button>
                                 </div>
@@ -163,11 +182,12 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
 </main>
 
 <script>
-async function approveStaff(id) {
+async function approveStaff(id, type) {
     if (!confirm('Are you sure you want to approve this application? They will gain dashboard access immediately.')) return;
     const fd = new FormData();
     fd.append('action', 'approve_staff');
     fd.append('staff_id', id);
+    fd.append('type', type);
 
     try {
         const res = await fetch('admin_staff_actions.php', { method: 'POST', body: fd });
@@ -180,7 +200,7 @@ async function approveStaff(id) {
     } catch (e) { alert('Network error'); console.error(e); }
 }
 
-async function rejectStaff(id) {
+async function rejectStaff(id, type) {
     const reason = prompt('Please enter a reason for rejection (this will be shown to the applicant):');
     if (reason === null) return;
     
@@ -188,6 +208,7 @@ async function rejectStaff(id) {
     fd.append('action', 'reject_staff');
     fd.append('staff_id', id);
     fd.append('reason', reason);
+    fd.append('type', type);
 
     try {
         const res = await fetch('admin_staff_actions.php', { method: 'POST', body: fd });

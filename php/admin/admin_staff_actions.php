@@ -23,16 +23,19 @@ $admin_id = (int)$_SESSION['user_id'];
 switch ($action) {
     case 'approve_staff':
         $staff_id = (int)($_POST['staff_id'] ?? 0);
+        $type = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $sql = "UPDATE staff SET approval_status = 'approved', approved_by = ?, approved_at = NOW(), rejection_reason = NULL WHERE id = ?";
+        $table = ($type === 'nurse') ? 'nurses' : 'staff';
+        $sql = "UPDATE $table SET approval_status = 'approved', approved_by = ?, approved_at = NOW(), rejection_reason = NULL WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "ii", $admin_id, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
-            // Log to audit body
-            mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, actioned_at) VALUES ($staff_id, $admin_id, 'approved', NOW())");
-            echo json_encode(['success' => true, 'message' => 'Staff member approved successfully.']);
+            if ($type === 'staff') {
+                mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, actioned_at) VALUES ($staff_id, $admin_id, 'approved', NOW())");
+            }
+            echo json_encode(['success' => true, 'message' => ucfirst($type) . ' member approved successfully.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Database error.']);
         }
@@ -42,16 +45,20 @@ switch ($action) {
     case 'reject_staff':
         $staff_id = (int)($_POST['staff_id'] ?? 0);
         $reason   = trim($_POST['reason'] ?? 'Rejected by administration.');
+        $type     = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $sql = "UPDATE staff SET approval_status = 'rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? WHERE id = ?";
+        $table = ($type === 'nurse') ? 'nurses' : 'staff';
+        $sql = "UPDATE $table SET approval_status = 'rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "isi", $admin_id, $reason, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
-            $safe_reason = mysqli_real_escape_string($conn, $reason);
-            mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, reason, actioned_at) VALUES ($staff_id, $admin_id, 'rejected', '$safe_reason', NOW())");
-            echo json_encode(['success' => true, 'message' => 'Staff member rejected.']);
+            if ($type === 'staff') {
+                $safe_reason = mysqli_real_escape_string($conn, $reason);
+                mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, reason, actioned_at) VALUES ($staff_id, $admin_id, 'rejected', '$safe_reason', NOW())");
+            }
+            echo json_encode(['success' => true, 'message' => ucfirst($type) . ' member rejected.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Database error.']);
         }

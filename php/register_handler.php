@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validate role
     $valid_roles = [
-        'patient', 'doctor', 'pharmacist',
+        'patient', 'doctor', 'pharmacist', 'nurse',
         // All staff sub-roles (registered directly — no generic 'staff' login)
         'ambulance_driver', 'cleaner', 'laundry_staff', 'maintenance', 'security', 'kitchen_staff'
     ];
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // Normalise: any staff sub-role maps to the 'staff' group
     $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
-    $APPROVAL_ROLES  = ['doctor','pharmacist'];
+    $APPROVAL_ROLES  = ['doctor','pharmacist','nurse'];
     $needs_approval  = in_array($role, $APPROVAL_ROLES);
     $is_staff_role   = in_array($role, $STAFF_SUB_ROLES);
 
@@ -114,7 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($doctor_stmt, "is", $user_id, $fullname);
             mysqli_stmt_execute($doctor_stmt);
             mysqli_stmt_close($doctor_stmt);
-        } elseif ($is_staff_role || $needs_approval) {
+        } elseif ($role === 'nurse') {
+            $nurse_sql = "INSERT INTO nurses (user_id, full_name, email, phone, approval_status, created_at) VALUES (?, ?, ?, ?, 'pending', NOW())";
+            $nurse_stmt = mysqli_prepare($conn, $nurse_sql);
+            mysqli_stmt_bind_param($nurse_stmt, "isss", $user_id, $fullname, $email, $phone);
+            mysqli_stmt_execute($nurse_stmt);
+            mysqli_stmt_close($nurse_stmt);
+        } elseif ($is_staff_role || ($needs_approval && !in_array($role, ['doctor', 'nurse']))) {
             // Generate unique employee_id — retry until unique
             $attempt = 0;
             do {

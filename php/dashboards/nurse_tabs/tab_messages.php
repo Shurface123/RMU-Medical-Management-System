@@ -63,199 +63,209 @@ if ($q_sent) {
 }
 ?>
 
-<div class="tab-content" id="messages">
+<div class="tab-content active" id="messages">
 
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-comments me-2"></i> Messages</h4>
-            <p class="text-muted mb-0">Secure communication with doctors and administration.</p>
+    <div class="sec-header">
+        <div>
+            <h2 style="font-size:2.4rem; font-weight:800; color:var(--primary); margin-bottom:.3rem;"><i class="fas fa-comments pulse-fade"></i> Clinical Communications</h2>
+            <p style="font-size:1.3rem; color:var(--text-muted);">Secure messaging between nursing staff, physicians, and administration.</p>
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="new bootstrap.Modal(document.getElementById('composeModal')).show();">
-                <i class="fas fa-pen me-2"></i> Compose
-            </button>
-        </div>
+        <button class="adm-btn adm-btn-primary" onclick="document.getElementById('composeForm').reset(); document.getElementById('composeModal').style.display='flex';" style="border-radius:12px; font-weight:700;">
+            <i class="fas fa-pen"></i> New Message
+        </button>
     </div>
 
-    <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); min-height: 600px;">
-        <div class="row g-0 h-100">
-            
-            <!-- Left Sidebar (Folders/List) -->
-            <div class="col-md-4 border-end bg-light" style="border-radius: 12px 0 0 12px;">
-                <div class="p-3 border-bottom bg-white" style="border-radius: 12px 0 0 0;">
-                    <ul class="nav nav-pills nav-fill" id="msgTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-pill fw-bold" id="inbox-tab" data-bs-toggle="tab" data-bs-target="#inbox-list" type="button">
-                                <i class="fas fa-inbox me-1"></i> Inbox
-                                <?php 
-                                    $unread = array_reduce($inbox, fn($c,$m) => $c + ($m['is_read']?0:1), 0);
-                                    if($unread > 0) echo "<span class='badge bg-danger ms-1'>$unread</span>";
-                                ?>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-pill fw-bold" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent-list" type="button">
-                                <i class="fas fa-paper-plane me-1"></i> Sent
-                            </button>
-                        </li>
-                    </ul>
+    <!-- Messages Layout Grid -->
+    <div style="display:grid; grid-template-columns: 380px 1fr; gap: 2rem; align-items: start;">
+        
+        <!-- Folders & Message List Card -->
+        <div class="adm-card shadow-sm" style="margin-bottom:0; height:650px; display:flex; flex-direction:column;">
+            <div class="adm-card-header" style="padding: 1.5rem 2rem; background:rgba(var(--primary-rgb),0.02); border-bottom:1.5px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                     <h3 style="font-size:1.4rem; font-weight:700; color:var(--primary); margin:0;">Mailbox</h3>
+                     <i class="fas fa-search" style="color:var(--text-muted); cursor:pointer; opacity:0.5;"></i>
                 </div>
-
-                <div class="tab-content h-100" style="overflow-y: auto; max-height: 550px;">
-                    <!-- Inbox List -->
-                    <div class="tab-pane fade show active" id="inbox-list">
-                        <?php if(empty($inbox)): ?>
-                            <div class="text-center p-4 text-muted"><i class="fas fa-envelope-open-text fs-2 mb-2 opacity-50"></i><br>Inbox is empty.</div>
-                        <?php else: ?>
-                            <div class="list-group list-group-flush msg-list">
-                                <?php foreach($inbox as $m): 
-                                    $bg = $m['is_read'] ? 'bg-white' : 'bg-primary bg-opacity-10 header-border';
-                                ?>
-                                    <a href="#" class="list-group-item list-group-item-action p-3 <?= $bg ?>" onclick="viewMessage('inbox', <?= htmlspecialchars(json_encode($m)) ?>)">
-                                        <div class="d-flex w-100 justify-content-between mb-1">
-                                            <h6 class="mb-0 fw-bold <?= $m['is_read']?'text-dark':'text-primary' ?> text-truncate" style="max-width:70%;">
-                                                <?= e($m['sender_name']) ?> <small class="text-muted">(<?= ucfirst(e($m['sender_role'])) ?>)</small>
-                                            </h6>
-                                            <small class="text-muted" style="font-size: 0.75rem;"><?= date('d M, H:i', strtotime($m['sent_at'])) ?></small>
-                                        </div>
-                                        <p class="mb-1 text-truncate fw-bold <?= $m['is_read']?'text-secondary':'text-dark' ?>" style="font-size: 0.9rem;">
-                                            <?= e($m['subject'] ?: 'No Subject') ?>
-                                        </p>
-                                        <small class="text-muted text-truncate d-block"><?= e(substr($m['message_content'], 0, 50)) ?>...</small>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Sent List -->
-                    <div class="tab-pane fade" id="sent-list">
-                        <?php if(empty($sent)): ?>
-                            <div class="text-center p-4 text-muted"><i class="fas fa-paper-plane fs-2 mb-2 opacity-50"></i><br>No messages sent.</div>
-                        <?php else: ?>
-                            <div class="list-group list-group-flush msg-list">
-                                <?php foreach($sent as $m): ?>
-                                    <a href="#" class="list-group-item list-group-item-action p-3 bg-white" onclick="viewMessage('sent', <?= htmlspecialchars(json_encode($m)) ?>)">
-                                        <div class="d-flex w-100 justify-content-between mb-1">
-                                            <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width:70%;">
-                                                To: <?= e($m['receiver_name']) ?>
-                                            </h6>
-                                            <small class="text-muted" style="font-size: 0.75rem;"><?= date('d M', strtotime($m['sent_at'])) ?></small>
-                                        </div>
-                                        <p class="mb-1 text-truncate fw-bold text-secondary" style="font-size: 0.9rem;">
-                                            <?= e($m['subject'] ?: 'No Subject') ?>
-                                        </p>
-                                        <small class="text-muted text-truncate d-block">
-                                            <?php if($m['is_read']): ?><i class="fas fa-check-double text-success me-1"></i><?php endif; ?>
-                                            <?= e(substr($m['message_content'], 0, 50)) ?>...
-                                        </small>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                <div style="display:flex; gap:1.5rem; border-bottom:1.5px solid var(--border);">
+                    <button class="tab-link active" id="inbox-ftab" onclick="switchFolder('inbox')" style="padding:1rem 0; font-weight:800; font-size:1.2rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+                        <i class="fas fa-inbox"></i> Inbox
+                        <?php 
+                            $unread = array_reduce($inbox, fn($c,$m) => $c + ($m['is_read']?0:1), 0);
+                            if($unread > 0) echo "<span style='background:var(--danger); color:#fff; font-size:.9rem; padding:.2rem .6rem; border-radius:10px; font-weight:900;'>$unread</span>";
+                        ?>
+                    </button>
+                    <button class="tab-link" id="sent-ftab" onclick="switchFolder('sent')" style="padding:1rem 0; font-weight:700; font-size:1.2rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+                        <i class="fas fa-paper-plane"></i> Sent
+                    </button>
                 </div>
             </div>
-
-            <!-- Right Reading Pane -->
-            <div class="col-md-8 bg-white" style="border-radius: 0 12px 12px 0;">
-                <div id="read-pane-empty" class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
-                    <div class="bg-light rounded-circle p-4 mb-3 d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
-                        <i class="fas fa-envelope-open fs-1 opacity-25"></i>
-                    </div>
-                    <h5 class="fw-bold opacity-50">Select a message to read</h5>
+            
+            <div class="adm-card-body" style="padding:0; overflow-y: auto; flex:1;">
+                <!-- Inbox List -->
+                <div id="inbox-list" class="folder-content">
+                    <?php if(empty($inbox)): ?>
+                        <div style="padding:5rem 2rem; text-align:center; color:var(--text-muted);">
+                            <i class="fas fa-envelope-open-text" style="font-size:4rem; opacity:0.1; margin-bottom:1.5rem; display:block;"></i>
+                            <div style="font-weight:700; font-size:1.4rem;">Inbox Empty</div>
+                            <p style="font-size:1.1rem; margin-top:.5rem;">Your secure clinical inbox is clear.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach($inbox as $m): 
+                            $is_unread = !$m['is_read'];
+                        ?>
+                            <div class="activity-item msg-item <?= $is_unread ? 'unread-msg' : '' ?>" style="padding: 1.8rem 2rem; cursor:pointer; border-bottom:1px solid var(--border); transition:0.2s ease;" onclick="viewMessage('inbox', <?= htmlspecialchars(json_encode($m)) ?>, this)">
+                                <div class="activity-dot" style="<?= $is_unread ? 'background:var(--primary); box-shadow:0 0 8px var(--primary);' : 'background:var(--border);' ?> width:10px; height:10px; left:12px; top:28px;"></div>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;">
+                                        <h6 style="margin:0; font-size:1.4rem; font-weight:<?= $is_unread ? '800' : '600' ?>; color:var(--text-primary);" class="text-truncate">
+                                            <?= e($m['sender_name']) ?>
+                                        </h6>
+                                        <small style="color:var(--text-muted); font-size:1.1rem; font-weight:700;"><?= date('H:i', strtotime($m['sent_at'])) ?></small>
+                                    </div>
+                                    <div style="font-size:1.25rem; color:<?= $is_unread ? 'var(--primary)' : 'var(--text-secondary)' ?>; font-weight:<?= $is_unread ? '700' : '500' ?>; margin-bottom:0.4rem;" class="text-truncate">
+                                        <?= e($m['subject'] ?: '(No Subject)') ?>
+                                    </div>
+                                    <div style="font-size:1.15rem; color:var(--text-muted); opacity:0.8;" class="text-truncate"><?= e(substr($m['message_content'], 0, 50)) ?>...</div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
 
-                <div id="read-pane-content" class="h-100 d-none flex-column">
-                    <div class="p-4 border-bottom w-100 bg-light" style="border-radius: 0 12px 0 0;">
-                        <h4 id="msgSubject" class="fw-bold text-dark mb-3">Subject</h4>
+                <!-- Sent List -->
+                <div id="sent-list" class="folder-content" style="display:none;">
+                    <?php if(empty($sent)): ?>
+                         <div style="padding:5rem 2rem; text-align:center; color:var(--text-muted);">
+                            <i class="fas fa-paper-plane" style="font-size:4rem; opacity:0.1; margin-bottom:1.5rem; display:block;"></i>
+                            <div style="font-weight:700; font-size:1.4rem;">No Sent Messages</div>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach($sent as $m): ?>
+                            <div class="activity-item msg-item" style="padding: 1.8rem 2rem; cursor:pointer; border-bottom:1px solid var(--border);" onclick="viewMessage('sent', <?= htmlspecialchars(json_encode($m)) ?>, this)">
+                                <div class="activity-dot" style="background:var(--border); width:10px; height:10px; left:12px; top:28px;"></div>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;">
+                                        <h6 style="margin:0; font-size:1.4rem; font-weight:600; color:var(--text-primary);" class="text-truncate">
+                                            To: <?= e($m['receiver_name']) ?>
+                                        </h6>
+                                        <small style="color:var(--text-muted); font-size:1.1rem; font-weight:700;"><?= date('d M', strtotime($m['sent_at'])) ?></small>
+                                    </div>
+                                    <div style="font-size:1.25rem; color:var(--text-secondary); margin-bottom:0.4rem;" class="text-truncate">
+                                        <?= e($m['subject'] ?: '(No Subject)') ?>
+                                    </div>
+                                    <div style="font-size:1.15rem; color:var(--text-muted); display:flex; align-items:center; gap:.5rem;">
+                                        <?php if($m['is_read']): ?><i class="fas fa-check-double text-success" style="font-size:1rem;"></i><?php endif; ?>
+                                        <span class="text-truncate"><?= e(substr($m['message_content'], 0, 50)) ?>...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reading Pane Card -->
+        <div class="adm-card shadow-sm" style="margin-bottom:0; height:650px; display:flex; flex-direction:column; background:var(--surface-1);">
+                <div id="read-pane-empty" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0.4;">
+                    <div style="width: 120px; height: 120px; border-radius:50%; background:var(--surface-3); display:flex; align-items:center; justify-content:center; margin-bottom:2rem;">
+                         <i class="fas fa-envelope-open" style="font-size:4rem; color:var(--text-muted);"></i>
+                    </div>
+                    <h5 style="font-size:1.6rem; font-weight:700; color:var(--text-muted);">Select a clinical message to read</h5>
+                    <p style="font-size:1.2rem; color:var(--text-muted);">Patient privacy is protected during communication.</p>
+                </div>
+
+                <div id="read-pane-content" style="display:none; flex-direction:column; height:100%;">
+                    <div style="padding:3rem; background:rgba(var(--primary-rgb),0.02); border-bottom:1.5px solid var(--border);">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2.5rem;">
+                             <h4 id="msgSubject" style="font-size:2.2rem; font-weight:800; color:var(--text-primary); margin:0;">Subject</h4>
+                             <div style="display:flex; gap:1rem;">
+                                 <button class="adm-btn adm-btn-ghost" style="padding:.5rem 1rem; border-radius:10px;"><i class="fas fa-print"></i></button>
+                                 <button class="adm-btn adm-btn-ghost text-danger" style="padding:.5rem 1rem; border-radius:10px; border-color:rgba(231,76,60,0.2);"><i class="fas fa-trash"></i></button>
+                             </div>
+                        </div>
                         
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3 shadow-sm" style="width: 45px; height: 45px; font-size: 1.2rem;" id="msgAvatar">
-                                    ?
-                                </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:1.5rem;">
+                                <div id="msgAvatar" style="width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:2rem; color:#fff; box-shadow:0 8px 15px rgba(var(--primary-rgb),0.2);">?</div>
                                 <div>
-                                    <h6 class="mb-0 fw-bold" id="msgFromTo">Sender -> Me</h6>
-                                    <small class="text-muted" id="msgDate">Date Time</small>
+                                    <h6 id="msgFromTo" style="margin:0; font-size:1.6rem; font-weight:700; color:var(--text-primary);">Sender</h6>
+                                    <small id="msgDate" style="color:var(--text-muted); font-size:1.2rem; font-weight:600;">Date Time</small>
                                 </div>
                             </div>
-                            <div>
-                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="btnReply" onclick="replyMessage()"><i class="fas fa-reply me-1"></i> Reply</button>
-                            </div>
+                            <button class="adm-btn adm-btn-primary" id="btnReply" onclick="replyMessage()" style="padding:.8rem 2.5rem; border-radius:12px; font-weight:700;"><i class="fas fa-reply" style="margin-right:.6rem;"></i> Reply</button>
                         </div>
                     </div>
 
-                    <div id="msgPatientContext" class="bg-primary bg-opacity-10 p-2 text-center text-primary d-none border-bottom" style="font-size: 0.85rem; font-weight: 600;">
-                        <i class="fas fa-user-injured me-1"></i> Regarding Patient: <span id="msgPatientName"></span>
+                    <div id="msgPatientContext" style="display:none; padding:1.2rem 3rem; background:rgba(var(--primary-rgb),0.05); color:var(--primary); font-size:1.3rem; font-weight:800; border-bottom:1px solid rgba(var(--primary-rgb),0.1); display:flex; align-items:center; gap:1rem;">
+                        <i class="fas fa-user-injured pulse-fade"></i> Clinical Focus: <span id="msgPatientName" style="color:var(--text-primary); font-weight:900;"></span>
                     </div>
 
-                    <div class="p-4" style="overflow-y: auto; flex-grow: 1; font-size: 1rem; line-height: 1.6;" id="msgBody">
-                        Message Content Goes Here
+                    <div id="msgBody" style="padding:4rem 3.5rem; overflow-y:auto; flex:1; font-size:1.5rem; line-height:1.8; color:var(--text-primary); background:#fff;">
+                        Message Content
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-.msg-list .list-group-item { border-left: none; border-right: none; transition: all 0.2s; }
-.msg-list .list-group-item:first-child { border-top: none; }
-.msg-list .list-group-item.header-border { border-left: 4px solid var(--primary-color); }
+.unread-msg { background: rgba(var(--primary-rgb), 0.04); }
+.active-msg { background: rgba(var(--primary-rgb), 0.1) !important; border-left: 5px solid var(--primary) !important; }
+.msg-item:hover { background: var(--surface-2); }
 </style>
 
 <!-- ========================================== -->
 <!-- MODAL: COMPOSE MESSAGE                     -->
 <!-- ========================================== -->
-<div class="modal fade" id="composeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border-radius: 15px; border: none;">
-            <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title"><i class="fas fa-pen me-2"></i> Compose Message</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+<div class="modal-bg" id="composeModal">
+    <div class="modal-box" style="max-width:800px;">
+        <div class="modal-header" style="background:var(--primary);">
+            <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-pen-nib"></i> Compose Secure Clinical Message</h3>
+            <button class="modal-close" onclick="document.getElementById('composeModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+        </div>
+        <div style="padding:3rem;">
             <form id="composeForm">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="send_message">
-                <div class="modal-body p-4 bg-light">
-                    
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold small text-uppercase">To (Recipient)</label>
-                            <select class="form-select border-primary" name="receiver_id" id="compReceiver" required>
-                                <option value="">-- Select Staff Member --</option>
-                                <?php foreach($staff_list as $s): ?>
-                                    <option value="<?= $s['user_id'] ?>"><?= ucfirst(e($s['user_role'])) ?>: <?= e($s['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold small text-uppercase">Regarding Patient (Optional)</label>
-                            <select class="form-select" name="patient_id" id="compPatient">
-                                <option value="">-- No specific patient --</option>
-                                <?php foreach($patients_list as $p): ?>
-                                    <option value="<?= $p['id'] ?>"><?= e($p['name']) ?> (<?= e($p['patient_id']) ?>)</option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem;">
+                    <div class="form-group">
+                        <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">To (Recipient)</label>
+                        <select class="form-control" name="receiver_id" id="compReceiver" required style="padding:.8rem; font-weight:800; font-size:1.4rem; border:1.5px solid var(--primary);">
+                            <option value="">-- select staff member --</option>
+                            <?php foreach($staff_list as $s): ?>
+                                <option value="<?= $s['user_id'] ?>"><?= strtoupper(e($s['user_role'])) ?>: <?= e($s['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Subject</label>
-                        <input type="text" class="form-control" name="subject" id="compSubject" placeholder="Brief subject line..." required>
+                    <div class="form-group">
+                        <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Patient Link (Optional)</label>
+                        <select class="form-control" name="patient_id" id="compPatient" style="padding:.8rem; font-weight:600;">
+                            <option value="">-- no clinical context --</option>
+                            <?php foreach($patients_list as $p): ?>
+                                <option value="<?= $p['id'] ?>"><?= e($p['name']) ?> (<?= e($p['patient_id']) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-
-                    <div class="mb-0">
-                        <label class="form-label text-muted fw-bold small text-uppercase">Message Body</label>
-                        <textarea class="form-control" name="message_content" id="compBody" rows="6" placeholder="Type your message here..." required></textarea>
-                    </div>
-
                 </div>
-                <div class="modal-footer border-0 bg-white" style="border-radius:0 0 15px 15px;">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Discard</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold" id="btnSendMsg"><i class="fas fa-paper-plane me-2"></i> Send</button>
+
+                <div class="form-group" style="margin-bottom:2rem;">
+                    <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Subject Line</label>
+                    <input type="text" class="form-control" name="subject" id="compSubject" placeholder="Brief and descriptive..." required style="padding:1rem; font-weight:800; font-size:1.4rem; color:var(--primary);">
+                </div>
+
+                <div class="form-group" style="margin-bottom:2.5rem;">
+                    <label style="display:block; font-size:1.1rem; font-weight:700; color:var(--text-secondary); margin-bottom:.8rem; text-transform:uppercase;">Message Instructions / Narrative</label>
+                    <textarea class="form-control" name="message_content" id="compBody" rows="7" placeholder="Provide detailed clinical information..." required style="padding:1.5rem; font-size:1.4rem; line-height:1.6; font-weight:500;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
+                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('composeModal').style.display='none'" style="font-weight:700;">Discard</button>
+                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSendMsg" style="padding:.8rem 5rem; font-weight:900; border-radius:12px; font-size:1.4rem;">
+                        <i class="fas fa-paper-plane" style="margin-right:.8rem;"></i> TRANSMIT MESSAGE
+                    </button>
                 </div>
             </form>
         </div>
@@ -266,45 +276,60 @@ if ($q_sent) {
 let currentMsg = null;
 let currentFolder = '';
 
-function viewMessage(folder, msg) {
+function switchFolder(folder) {
+    $('.tab-link').removeClass('active').css({'color': 'var(--text-muted)', 'border-bottom-color': 'transparent', 'font-weight': '700'});
+    $(`#${folder}-ftab`).addClass('active').css({'color': 'var(--primary)', 'border-bottom-color': 'var(--primary)', 'font-weight': '800'});
+    
+    if(folder === 'inbox') {
+        $('#inbox-list').show();
+        $('#sent-list').hide();
+    } else {
+        $('#inbox-list').hide();
+        $('#sent-list').show();
+    }
+}
+
+function viewMessage(folder, msg, element) {
     currentMsg = msg;
     currentFolder = folder;
     
-    $('#read-pane-empty').addClass('d-none');
-    $('#read-pane-content').removeClass('d-none').addClass('d-flex');
+    $('.msg-item').removeClass('active-msg shadow-sm');
+    $(element).addClass('active-msg shadow-sm');
     
-    $('#msgSubject').text(msg.subject || 'No Subject');
-    $('#msgBody').html(msg.message_content.replace(/\n/g, '<br>'));
+    $('#read-pane-empty').hide();
+    $('#read-pane-content').css('display', 'flex').css('opacity', '0').animate({ opacity: 1 }, 200);
     
-    // Formatting Dates beautifully
+    $('#msgSubject').text(msg.subject || '(No Subject)');
+    $('#msgBody').html(msg.message_content.replace(/\n\g, '<br>'));
+    
     const msgDate = new Date(msg.sent_at);
     $('#msgDate').text(msgDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }));
     
     if(folder === 'inbox') {
         const initial = msg.sender_name.charAt(0).toUpperCase();
-        $('#msgAvatar').text(initial).removeClass('bg-secondary').addClass('bg-primary');
-        $('#msgFromTo').html(`${msg.sender_name} <small class="text-muted fw-normal">to me</small>`);
-        $('#btnReply').removeClass('d-none');
+        $('#msgAvatar').text(initial).css('background', 'var(--primary)');
+        $('#msgFromTo').html(`${msg.sender_name} <small style="font-weight:600; color:var(--text-muted); margin-left:.5rem; font-size:1.2rem;">to me</small>`);
+        $('#btnReply').show();
         
-        // Mark as read via AJAX if unread
         if(msg.is_read == 0) {
-            $.post('../nurse/process_messages.php', { action: 'mark_read', msg_id: msg.id, _csrf: '<?= generateCsrfToken() ?>' }, function(res) {
-               // Silently update
-            });
-            msg.is_read = 1; // local update
+            $.post('../nurse/process_messages.php', { action: 'mark_read', msg_id: msg.id, _csrf: '<?= generateCsrfToken() ?>' });
+            msg.is_read = 1;
+            $(element).find('.activity-dot').css({'background': 'var(--border)', 'box-shadow': 'none'});
+            $(element).find('h6').css('font-weight', '600');
+            $(element).removeClass('unread-msg');
         }
     } else {
         const initial = msg.receiver_name.charAt(0).toUpperCase();
-        $('#msgAvatar').text(initial).removeClass('bg-primary').addClass('bg-secondary');
-        $('#msgFromTo').html(`Me <small class="text-muted fw-normal">to ${msg.receiver_name}</small>`);
-        $('#btnReply').addClass('d-none');
+        $('#msgAvatar').text(initial).css('background', 'var(--info)');
+        $('#msgFromTo').html(`Me <small style="font-weight:600; color:var(--text-muted); margin-left:.5rem; font-size:1.2rem;">to ${msg.receiver_name}</small>`);
+        $('#btnReply').hide();
     }
 
     if(msg.patient_name) {
-        $('#msgPatientContext').removeClass('d-none');
+        $('#msgPatientContext').css('display', 'flex');
         $('#msgPatientName').text(`${msg.patient_name} (${msg.pid})`);
     } else {
-        $('#msgPatientContext').addClass('d-none');
+        $('#msgPatientContext').hide();
     }
 }
 
@@ -312,23 +337,24 @@ function replyMessage() {
     if(!currentMsg || currentFolder !== 'inbox') return;
     
     document.getElementById('composeForm').reset();
-    $('#compReceiver').val(currentMsg.sender_id); // sender_id points to users.id
+    $('#compReceiver').val(currentMsg.sender_id);
     $('#compPatient').val(currentMsg.patient_id);
     
     let subj = currentMsg.subject || '';
     if(!subj.toUpperCase().startsWith('RE:')) subj = 'Re: ' + subj;
     $('#compSubject').val(subj);
     
-    $('#compBody').val('');
-    new bootstrap.Modal(document.getElementById('composeModal')).show();
+    $('#compBody').val('\n\n--- Original Message ---\n' + currentMsg.message_content).focus();
+    document.getElementById('composeModal').style.display='flex';
 }
 
 $(document).ready(function() {
     $('#composeForm').on('submit', function(e) {
         e.preventDefault();
         const btn = $('#btnSendMsg');
-        const origText = btn.html();
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+        const origHtml = btn.html();
+        
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Encrypting & Transmitting...');
         
         $.ajax({
             url: '../nurse/process_messages.php',
@@ -337,15 +363,30 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(res) {
                 if(res.success) {
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Message Transmitted',
+                        text: 'Transmission secure and finalized.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('Error: ' + res.message);
-                    btn.prop('disabled', false).html(origText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Transmission Failed',
+                        text: res.message
+                    });
+                    btn.prop('disabled', false).html(origHtml);
                 }
             },
             error: function() {
-                alert('An error occurred.');
-                btn.prop('disabled', false).html(origText);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Fault',
+                    text: 'Communication server unreachable.'
+                });
+                btn.prop('disabled', false).html(origHtml);
             }
         });
     });

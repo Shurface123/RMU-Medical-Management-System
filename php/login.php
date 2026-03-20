@@ -108,6 +108,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // $approval === 'approved' → fall through to routing
                 }
 
+                // ── Nurse approval gate ───────────────────────
+                if ($role === 'nurse') {
+                    $app_q = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM nurses WHERE user_id=? LIMIT 1");
+                    mysqli_stmt_bind_param($app_q, "i", $row['id']);
+                    mysqli_stmt_execute($app_q);
+                    $app_res = mysqli_stmt_get_result($app_q);
+                    if (mysqli_num_rows($app_res) > 0) {
+                        $nurse_row = mysqli_fetch_assoc($app_res);
+                        $approval = $nurse_row['approval_status'] ?? 'pending';
+                        $reason   = $nurse_row['rejection_reason'] ?? 'Contact administration for details.';
+
+                        if ($approval === 'pending') {
+                            header("Location: index.php?error=" . urlencode("Your nursing account is pending admin approval. You will be notified once approved."));
+                            exit();
+                        }
+
+                        if ($approval === 'rejected') {
+                            header("Location: index.php?error=" . urlencode("Nursing account rejected: $reason"));
+                            exit();
+                        }
+                    }
+                }
+
                 // Route by role
                 switch ($role) {
                     case 'admin':          header("Location: home.php"); break;

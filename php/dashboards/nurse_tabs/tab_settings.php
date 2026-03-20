@@ -5,94 +5,117 @@
 if (!isset($conn)) exit;
 ?>
 
-<div class="tab-content" id="settings">
+<div class="tab-content active" id="settings">
 
-    <div class="row align-items-center mb-4">
-        <div class="col-12">
-            <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-cogs me-2"></i> System Settings</h4>
-            <p class="text-muted mb-0">Customize your dashboard experience, alerts, and aesthetic themes.</p>
+    <!-- Section Header -->
+    <div class="sec-header">
+        <div>
+            <h2 style="font-size:2.4rem; font-weight:800; color:var(--primary); margin-bottom:.3rem;"><i class="fas fa-sliders-h pulse-fade" style="margin-right:.8rem;"></i> Display & Alert Configuration</h2>
+            <p style="font-size:1.3rem; color:var(--text-muted);">Personalize terminal aesthetics and auditory clinical triggers.</p>
+        </div>
+        <div>
+            <span class="adm-badge" style="background:rgba(var(--primary-rgb),0.1); color:var(--primary); font-weight:800; padding:.6rem 1.2rem; border-radius:10px; border:1px solid rgba(var(--primary-rgb),0.2); display:flex; align-items:center; gap:.8rem;">
+                <i class="fas fa-save"></i> PREFERENCES AUTO-SYNC
+            </span>
         </div>
     </div>
 
-    <div class="row g-4 border-top pt-4">
-
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3rem; align-items:start;">
+        
         <!-- Theme & UI Preferences -->
-        <div class="col-lg-6">
-            <div class="card h-100 border-0 shadow-sm" style="border-radius: 12px;">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-paint-roller text-primary me-2"></i> Aesthetic & Theme Options</h6>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-4">The RMU Nurse Dashboard defaults to a high-contrast Light Theme for clinical readability. You may switch to Dark Mode for night shifts.</p>
-                    
-                    <div class="list-group list-group-flush border rounded">
-                        <label class="list-group-item d-flex justify-content-between align-items-center p-3 cursor-pointer">
+        <div class="adm-card shadow-sm" style="border-radius:24px; border:none; overflow:hidden;">
+            <div class="adm-card-header" style="background:var(--surface-2); padding:2rem 3rem; border-bottom:1.5px solid var(--border);">
+                <h3 style="margin:0; font-weight:900; font-size:1.6rem; color:var(--text-primary); letter-spacing:-0.4px;">
+                    <i class="fas fa-palette text-primary" style="margin-right:.8rem;"></i> Aesthetic Interface
+                </h3>
+            </div>
+            <div class="adm-card-body" style="padding:4rem 3.5rem;">
+                <p style="font-size:1.3rem; line-height:1.6; color:var(--text-secondary); margin-bottom:3.5rem; font-weight:500;">
+                    The RMU Nurse Dashboard defaults to a high-fidelity **Clinical Standard** for maximum clarity. Switch to **Night Shift** mode for reduced ocular strain during nocturnal duties.
+                </p>
+                
+                <div style="display:flex; flex-direction:column; gap:2rem;">
+                    <label style="display:flex; align-items:center; justify-content:space-between; padding:2rem; background:var(--surface-2); border-radius:18px; border:1.8px solid var(--border); cursor:pointer; transition:0.3s cubic-bezier(0.4, 0, 0.2, 1);" class="pref-card">
+                        <div style="display:flex; align-items:center; gap:2rem;">
+                            <div style="width:60px; height:60px; border-radius:18px; background:#fff; display:flex; align-items:center; justify-content:center; color:var(--warning); font-size:2.2rem; border:1.5px solid var(--border); box-shadow:0 10px 20px rgba(0,0,0,0.05);">
+                                <i class="fas fa-sun"></i>
+                            </div>
                             <div>
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-sun text-warning me-2"></i> RMU Light Theme (Default)</h6>
-                                <small class="text-muted">High contrast, bright background with Orange accents.</small>
+                                <h4 style="margin:0; font-weight:800; font-size:1.6rem; color:var(--text-primary);">Clinical Standard</h4>
+                                <div style="font-size:1.15rem; color:var(--text-muted); font-weight:600;">High contrast with safety orange.</div>
                             </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input theme-toggle" type="radio" name="theme_mode" value="light" id="themeLight" checked style="transform: scale(1.3);">
+                        </div>
+                        <input type="radio" name="theme_mode" value="light" class="theme-toggle" checked style="width:28px; height:28px; accent-color:var(--primary);">
+                    </label>
+
+                    <label style="display:flex; align-items:center; justify-content:space-between; padding:2rem; background:rgba(44, 62, 80, 0.03); border-radius:18px; border:1.8px solid var(--border); cursor:pointer; transition:0.3s cubic-bezier(0.4, 0, 0.2, 1);" class="pref-card">
+                        <div style="display:flex; align-items:center; gap:2rem;">
+                            <div style="width:60px; height:60px; border-radius:18px; background:#1a1a2e; display:flex; align-items:center; justify-content:center; color:#fff; font-size:2.2rem; box-shadow:0 10px 20px rgba(0,0,0,0.15);">
+                                <i class="fas fa-moon"></i>
                             </div>
-                        </label>
-                        <label class="list-group-item d-flex justify-content-between align-items-center p-3 cursor-pointer">
                             <div>
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-moon text-secondary me-2"></i> Night Shift Dark Mode</h6>
-                                <small class="text-muted">Low ocular strain, dark UI elements.</small>
+                                <h4 style="margin:0; font-weight:800; font-size:1.6rem; color:var(--text-primary);">Night Shift Protocol</h4>
+                                <div style="font-size:1.15rem; color:var(--text-muted); font-weight:600;">Deep clinical palette for low light.</div>
                             </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input theme-toggle" type="radio" name="theme_mode" value="dark" id="themeDark" style="transform: scale(1.3);">
-                            </div>
-                        </label>
-                    </div>
+                        </div>
+                        <input type="radio" name="theme_mode" value="dark" class="theme-toggle" style="width:28px; height:28px; accent-color:var(--primary);">
+                    </label>
                 </div>
             </div>
         </div>
 
         <!-- Notification & Alert Preferences -->
-        <div class="col-lg-6">
-            <div class="card h-100 border-0 shadow-sm" style="border-radius: 12px;">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-bell text-danger me-2"></i> Alert & Audio Settings</h6>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-4">Configure how the dashboard notifies you of incoming critical alerts, emergency triggers, and direct messages.</p>
-                    
-                    <div class="list-group list-group-flush border rounded mb-3">
-                        <label class="list-group-item d-flex justify-content-between align-items-center p-3 cursor-pointer">
+        <div class="adm-card shadow-sm" style="border-radius:24px; border:none; overflow:hidden;">
+            <div class="adm-card-header" style="background:var(--surface-2); padding:2rem 3rem; border-bottom:1.5px solid var(--border);">
+                <h3 style="margin:0; font-weight:900; font-size:1.6rem; color:var(--text-primary); letter-spacing:-0.4px;">
+                    <i class="fas fa-volume-up text-danger" style="margin-right:.8rem;"></i> Audio Telemetry
+                </h3>
+            </div>
+            <div class="adm-card-body" style="padding:4rem 3.5rem;">
+                <p style="font-size:1.3rem; line-height:1.6; color:var(--text-secondary); margin-bottom:3.5rem; font-weight:500;">
+                    Configure real-time terminal audio behavior. Auditory clinical triggers assist in immediate response times to critical ward status changes.
+                </p>
+                
+                <div style="display:flex; flex-direction:column; gap:2rem; margin-bottom:4rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:2rem; background:rgba(var(--danger-rgb),0.02); border-radius:18px; border:1.5px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:2rem;">
+                            <div style="width:50px; height:50px; border-radius:14px; background:rgba(var(--danger-rgb),0.1); display:flex; align-items:center; justify-content:center; font-size:2.2rem; color:var(--danger);">
+                                <i class="fas fa-ambulance"></i>
+                            </div>
                             <div>
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-volume-up text-primary me-2"></i> Audio Alerts: Emergency</h6>
-                                <small class="text-muted">Play loud siren loop on incoming Code Blue / Rapid Response.</small>
+                                <h4 style="margin:0; font-weight:800; font-size:1.5rem; color:var(--text-primary);">Code Blue Siren</h4>
+                                <div style="font-size:1.15rem; color:var(--text-muted); font-weight:600;">Looping trigger for incoming emergencies.</div>
                             </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input setting-toggle" type="checkbox" id="sndEmergency" checked style="transform: scale(1.3);">
-                            </div>
-                        </label>
-                        <label class="list-group-item d-flex justify-content-between align-items-center p-3 cursor-pointer">
-                            <div>
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-comment-dots text-info me-2"></i> Audio Alerts: Messages</h6>
-                                <small class="text-muted">Play soft chime on incoming Doctor/Admin messages.</small>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input setting-toggle" type="checkbox" id="sndMessages" checked style="transform: scale(1.3);">
-                            </div>
-                        </label>
-                        <label class="list-group-item d-flex justify-content-between align-items-center p-3 cursor-pointer">
-                            <div>
-                                <h6 class="mb-0 fw-bold"><i class="fas fa-desktop text-success me-2"></i> Browser Notifications</h6>
-                                <small class="text-muted">Show OS-level popups for clinical alerts.</small>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input setting-toggle" type="checkbox" id="sndBrowser" style="transform: scale(1.3);">
-                            </div>
+                        </div>
+                        <label class="adm-switch" style="width:65px; height:34px;">
+                            <input type="checkbox" id="sndEmergency" checked>
+                            <span class="adm-slider round" style="border-radius:34px;"></span>
                         </label>
                     </div>
 
-                    <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" onclick="testEmergencySound()">
-                        <i class="fas fa-play me-1"></i> Test Emergency Siren
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:2rem; background:rgba(var(--primary-rgb),0.02); border-radius:18px; border:1.5px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:2rem;">
+                            <div style="width:50px; height:50px; border-radius:14px; background:rgba(var(--primary-rgb),0.1); display:flex; align-items:center; justify-content:center; font-size:2.2rem; color:var(--primary);">
+                                <i class="fas fa-comment-medical"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin:0; font-weight:800; font-size:1.5rem; color:var(--text-primary);">Intercom Chimes</h4>
+                                <div style="font-size:1.15rem; color:var(--text-muted); font-weight:600;">Soft cues for doctor-staff coordination.</div>
+                            </div>
+                        </div>
+                        <label class="adm-switch" style="width:65px; height:34px;">
+                            <input type="checkbox" id="sndMessages" checked>
+                            <span class="adm-slider round" style="border-radius:34px;"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+                    <button class="adm-btn adm-btn-ghost" style="padding:1.4rem; border-radius:14px; font-weight:800; border-width:2px; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:1rem;" onclick="testEmergencySound()">
+                        <i class="fas fa-play-circle" style="font-size:1.6rem; color:var(--danger);"></i> TEST SIREN
                     </button>
-                    <button class="btn btn-outline-info btn-sm rounded-pill fw-bold ms-2" onclick="testMessageSound()">
-                        <i class="fas fa-play me-1"></i> Test Message Chime
+                    <button class="adm-btn adm-btn-ghost" style="padding:1.4rem; border-radius:14px; font-weight:800; border-width:2px; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:1rem;" onclick="testMessageSound()">
+                        <i class="fas fa-play-circle" style="font-size:1.6rem; color:var(--primary);"></i> TEST CHIME
                     </button>
                 </div>
             </div>
@@ -106,36 +129,38 @@ if (!isset($conn)) exit;
 
 </div>
 
+<style>
+.adm-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.adm-switch input { opacity: 0; width: 0; height: 0; }
+.adm-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
+.adm-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+input:checked + .adm-slider { background-color: var(--primary); }
+input:checked + .adm-slider:before { transform: translateX(24px); }
+.adm-slider.round { border-radius: 34px; }
+.adm-slider.round:before { border-radius: 50%; }
+</style>
+
 <script>
-// ==========================================
-// LOCAL STORAGE SETTINGS INJECTION
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    
     // Load existing settings
-    const theme = localStorage.getItem('rmu_nurse_theme') || 'light';
+    const theme = localStorage.getItem('rmu_theme') || 'light';
     const sndEmerg = localStorage.getItem('rmu_snd_emerg') !== 'false';
     const sndMsg = localStorage.getItem('rmu_snd_msg') !== 'false';
-    const sndBwsr = localStorage.getItem('rmu_snd_bwsr') === 'true';
 
     // Apply UI states
     if(theme === 'dark') {
-        document.getElementById('themeDark').checked = true;
-        document.body.classList.add('dark-mode');
+        document.querySelector('input[name="theme_mode"][value="dark"]').checked = true;
     }
     document.getElementById('sndEmergency').checked = sndEmerg;
     document.getElementById('sndMessages').checked = sndMsg;
-    document.getElementById('sndBrowser').checked = sndBwsr;
 
     // Theme Switcher Event
     document.querySelectorAll('.theme-toggle').forEach(el => {
         el.addEventListener('change', (e) => {
-            if(e.target.value === 'dark') {
-                document.body.classList.add('dark-mode');
-                localStorage.setItem('rmu_nurse_theme', 'dark');
-            } else {
-                document.body.classList.remove('dark-mode');
-                localStorage.setItem('rmu_nurse_theme', 'light');
+            if(window.applyTheme) applyTheme(e.target.value);
+            else {
+                document.documentElement.setAttribute('data-theme', e.target.value);
+                localStorage.setItem('rmu_theme', e.target.value);
             }
         });
     });
@@ -143,71 +168,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Audio Switcher Events
     document.getElementById('sndEmergency').addEventListener('change', (e) => localStorage.setItem('rmu_snd_emerg', e.target.checked));
     document.getElementById('sndMessages').addEventListener('change', (e) => localStorage.setItem('rmu_snd_msg', e.target.checked));
-    document.getElementById('sndBrowser').addEventListener('change', (e) => {
-        localStorage.setItem('rmu_snd_bwsr', e.target.checked);
-        if(e.target.checked) requestBrowserNotificationPermission();
-    });
 });
 
-function requestBrowserNotificationPermission() {
-    if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission !== "granted") {
-                alert("Browser notifications blocked. Please enable them in your browser settings.");
-                document.getElementById('sndBrowser').checked = false;
-                localStorage.setItem('rmu_snd_bwsr', false);
-            }
-        });
-    } else {
-        alert("This browser does not support desktop notification");
-    }
-}
-
-// Global exposure for playing alerts (can be called by polling scripts later)
-window.playEmergencyAlert = function() {
-    if(localStorage.getItem('rmu_snd_emerg') !== 'false') {
-        document.getElementById('audioEmergency').play().catch(e => console.log('Audio autoplay blocked by browser'));
-    }
-};
-
-window.playMessageAlert = function() {
-    if(localStorage.getItem('rmu_snd_msg') !== 'false') {
-        document.getElementById('audioMessage').play().catch(e => console.log('Audio autoplay blocked by browser'));
-    }
-};
-
 function testEmergencySound() {
-    document.getElementById('audioEmergency').currentTime = 0;
-    document.getElementById('audioEmergency').play();
+    const a = document.getElementById('audioEmergency');
+    a.currentTime = 0;
+    a.play().catch(e => alert("Audio playback failed. Please interact with the page first."));
 }
 
 function testMessageSound() {
-    document.getElementById('audioMessage').currentTime = 0;
-    document.getElementById('audioMessage').play();
+    const a = document.getElementById('audioMessage');
+    a.currentTime = 0;
+    a.play().catch(e => alert("Audio playback failed. Please interact with the page first."));
 }
 </script>
-
-<style>
-.cursor-pointer { cursor: pointer; }
-.cursor-pointer:hover { background-color: rgba(0,0,0,0.02); }
-
-/* Basic Dark Mode Implementation */
-body.dark-mode {
-    background-color: #121212 !important;
-    color: #e0e0e0 !important;
-}
-body.dark-mode .card, body.dark-mode .bg-white {
-    background-color: #1e1e1e !important;
-    border-color: #333 !important;
-}
-body.dark-mode .text-dark {
-    color: #ffffff !important;
-}
-body.dark-mode .text-muted {
-    color: #a0a0a0 !important;
-}
-body.dark-mode .list-group-item {
-    background-color: transparent !important;
-    border-color: #333 !important;
-}
-</style>

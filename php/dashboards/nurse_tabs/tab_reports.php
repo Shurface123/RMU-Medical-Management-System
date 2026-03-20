@@ -1,82 +1,93 @@
 <?php
 // ============================================================
-// NURSE DASHBOARD - REPORTS & EXPORTS (MODULE 12)
+// NURSE DASHBOARD - REPORTS & EXPORTS (MODULE 11)
 // ============================================================
 if (!isset($conn)) exit;
 ?>
 
-<div class="tab-content" id="reports">
+<div class="tab-content active" id="reports">
 
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-file-export me-2"></i> Clinical Reports Hub</h4>
-            <p class="text-muted mb-0">Generate, print, and export structured CSV/PDF reports for auditing.</p>
+    <!-- Section Header -->
+    <div class="sec-header">
+        <div>
+            <h2 style="font-size:2.4rem; font-weight:800; color:var(--primary); margin-bottom:.3rem;"><i class="fas fa-file-invoice pulse-fade" style="margin-right:.8rem;"></i> Clinical Reports Hub</h2>
+            <p style="font-size:1.3rem; color:var(--text-muted);">Secure extraction of encrypted clinical data for administrative and legal documentation.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:1rem;">
+             <span class="adm-badge" style="background:rgba(var(--info-rgb),0.1); color:var(--info); font-weight:800; border:1px solid rgba(var(--info-rgb),0.2); padding:.6rem 1.2rem; border-radius:10px; display:flex; align-items:center; gap:.8rem;">
+                <i class="fas fa-shield-alt"></i> HIPAA COMPLIANT ACCESS
+             </span>
         </div>
     </div>
 
-    <div class="row justify-content-center mt-5">
-        <div class="col-lg-8">
-            <div class="card" style="border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 15px 15px 0 0;">
-                    <h4 class="mb-0"><i class="fas fa-clipboard-check me-2"></i> Report Generator</h4>
-                    <p class="text-white-50 mb-0 small mt-1">Select parameters below to extract your clinical data</p>
+    <!-- Main Generator Card -->
+    <div class="adm-card shadow-sm" style="max-width:1000px; margin: 3rem auto; border:none; overflow:hidden;">
+        <div class="adm-card-header" style="background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#fff; padding:3rem 4rem; border:none;">
+            <div style="display:flex; align-items:center; gap:2.5rem;">
+                <div style="width:70px; height:70px; border-radius:18px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:3rem; backdrop-filter:blur(5px);">
+                    <i class="fas fa-layer-group"></i>
                 </div>
+                <div>
+                    <h3 style="margin:0; font-weight:900; font-size:2.2rem; letter-spacing:-0.5px;">Clinical Data Engine</h3>
+                    <p style="margin:0.5rem 0 0; opacity:0.9; font-size:1.3rem; font-weight:500;">Configure data extraction parameters for secure audit-ready reports.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="adm-card-body" style="padding:5rem 6rem;">
+            <form action="../nurse/process_reports.php" method="POST" target="_blank" id="reportForm">
+                <?= csrfField() ?>
                 
-                <div class="card-body p-5 bg-white" style="border-radius: 0 0 15px 15px;">
-                    <form action="../nurse/process_reports.php" method="POST" target="_blank" id="reportForm">
-                        <?= csrfField() ?>
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-dark"><i class="fas fa-filter text-primary me-2"></i> Data Category (Required)</label>
-                            <select class="form-select form-select-lg border-primary" name="report_type" required style="border-radius: 10px;">
-                                <option value="">-- Select Report Type --</option>
-                                <option value="vitals">Patient Vitals Flowsheet</option>
-                                <option value="medications">Medication Administration Log (MAR)</option>
-                                <option value="fluids">I&O / Fluid Balance Charts</option>
-                                <option value="emergencies">Emergency Alert History</option>
-                                <option value="tasks">Completed Clinical Tasks & Handovers</option>
-                            </select>
-                        </div>
-
-                        <div class="row g-4 mb-5">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-dark"><i class="far fa-calendar-alt text-primary me-2"></i> Start Date</label>
-                                <input type="date" class="form-control form-control-lg" name="start_date" value="<?= date('Y-m-d', strtotime('-7 days')) ?>" required style="border-radius: 10px;">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-dark"><i class="far fa-calendar-check text-primary me-2"></i> End Date</label>
-                                <input type="date" class="form-control form-control-lg" name="end_date" value="<?= date('Y-m-d') ?>" required style="border-radius: 10px;">
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-center gap-3">
-                            <button type="submit" name="export_format" value="csv" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm fw-bold hover-lift">
-                                <i class="fas fa-file-csv me-2"></i> Download CSV
-                            </button>
-                            <!-- In a full implementation, PDF would route to something like TCPDF/Dompdf or use window.print. 
-                                 We will handle a "Print View" HTML response for PDF saving. -->
-                            <button type="submit" name="export_format" value="print" class="btn btn-outline-primary btn-lg rounded-pill px-5 shadow-sm fw-bold hover-lift">
-                                <i class="fas fa-print me-2"></i> Print View (PDF)
-                            </button>
-                        </div>
-                    </form>
+                <div class="form-group" style="margin-bottom:4rem;">
+                    <label style="font-weight:800; font-size:1.2rem; color:var(--text-secondary); margin-bottom:1.2rem; display:block; text-transform:uppercase; letter-spacing:0.05em;">Clinical Data Category</label>
+                    <select class="form-control" name="report_type" required style="height:65px; font-size:1.5rem; font-weight:800; border:2px solid var(--border); border-radius:14px; padding:0 2rem; color:var(--primary);">
+                        <option value="">-- select report subject --</option>
+                        <option value="vitals">Physiologic Vitals Flowsheet</option>
+                        <option value="medications">Medication Administration Record (MAR)</option>
+                        <option value="fluids">Intake & Output / Fluid Balance</option>
+                        <option value="emergencies">Code Blue / Emergency Event Audit</option>
+                        <option value="tasks">Nurse Task Completion & Handovers</option>
+                    </select>
                 </div>
-            </div>
-            
-            <div class="alert alert-warning mt-4 text-center rounded-pill shadow-sm" style="border: 1px dashed #ffc107;">
-                <i class="fas fa-lock me-2"></i> <strong>Confidentiality Notice:</strong> Generated reports contain PHI (Protected Health Information). Ensure rigorous compliance with HIPAA / RMU privacy policies when distributing exported files.
-            </div>
 
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:3rem; margin-bottom:5rem;">
+                    <div class="form-group">
+                        <label style="font-weight:700; font-size:1.1rem; color:var(--text-secondary); margin-bottom:.8rem; display:block;">Extraction Start Date</label>
+                        <input type="date" class="form-control" name="start_date" value="<?= date('Y-m-d', strtotime('-7 days')) ?>" required style="height:55px; border-radius:12px; font-weight:700; font-size:1.3rem; border:1.5px solid var(--border);">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight:700; font-size:1.1rem; color:var(--text-secondary); margin-bottom:.8rem; display:block;">Extraction End Date</label>
+                        <input type="date" class="form-control" name="end_date" value="<?= date('Y-m-d') ?>" required style="height:55px; border-radius:12px; font-weight:700; font-size:1.3rem; border:1.5px solid var(--border);">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:center; gap:2.5rem; padding-top:4.5rem; border-top:1.5px solid var(--border);">
+                    <button type="submit" name="export_format" value="csv" class="adm-btn adm-btn-ghost" style="padding:1.4rem 4rem; border-radius:15px; font-weight:800; font-size:1.4rem; border-width:2px; display:flex; align-items:center; gap:1.2rem;">
+                        <i class="fas fa-file-csv" style="font-size:1.8rem; color:var(--success);"></i> Export to CSV
+                    </button>
+                    <button type="submit" name="export_format" value="print" class="adm-btn adm-btn-primary" style="padding:1.4rem 6rem; border-radius:15px; font-weight:900; font-size:1.4rem; box-shadow:0 10px 25px rgba(var(--primary-rgb),0.3); display:flex; align-items:center; gap:1.2rem;">
+                        <i class="fas fa-print" style="font-size:1.8rem;"></i> GENERATE AUDIT VIEW
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="adm-card-footer" style="background:rgba(var(--primary-rgb),0.02); padding:2rem 6rem; font-size:1.2rem; color:var(--text-muted); display:flex; align-items:center; gap:1.5rem; border-top:1.5px solid var(--border);">
+            <div style="width:10px; height:10px; border-radius:50%; background:var(--primary); animation:pulse 2s infinite;"></div>
+            <span style="font-weight:600;">System is ready for real-time extraction based on current synchronized clinical data.</span>
         </div>
     </div>
-</div>
 
-<style>
-.hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hover-lift:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-}
-</style>
+    <!-- Security Panel -->
+    <div style="max-width:1000px; margin: 4rem auto; padding:2.5rem; background:rgba(231,76,60,0.05); border:1.5px solid rgba(231,76,60,0.15); border-radius:20px; display:flex; gap:2rem; align-items:flex-start;">
+        <div style="width:60px; height:60px; border-radius:14px; background:rgba(231,76,60,0.1); display:flex; align-items:center; justify-content:center; font-size:2.4rem; color:var(--danger); flex-shrink:0;">
+             <i class="fas fa-user-shield"></i>
+        </div>
+        <div>
+            <h4 style="margin:0; font-size:1.5rem; font-weight:900; color:var(--danger); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:.8rem;">Data Protection Protocol (PHI)</h4>
+            <p style="margin:0; font-size:1.3rem; line-height:1.6; color:var(--text-secondary); font-weight:500;">
+                All extracted reports contain highly sensitive **Protected Health Information (PHI)**. Data extraction must be performed only for legitimate clinical or administrative purposes. Unauthorized distribution or storage in non-compliant environments is a violation of facility policy and federal health privacy laws.
+            </p>
+        </div>
+    </div>
+
+</div>
