@@ -26,7 +26,7 @@ function logActivity($conn,$pat_pk,$user_id,$type,$desc){
     mysqli_query($conn,"INSERT INTO patient_activity_log(patient_id,user_id,action_type,action_description,ip_address,device_info,created_at) VALUES($pat_pk,$user_id,'$type','$desc','$ip','$dev',NOW())");
 }
 function recalcCompleteness($conn,$pat_pk){
-    $p=mysqli_fetch_assoc(mysqli_query($conn,"SELECT name,date_of_birth,gender,phone,address FROM patients WHERE id=$pat_pk"));
+    $p=mysqli_fetch_assoc(mysqli_query($conn,"SELECT name,date_of_birth,gender,phone,street_address FROM patients WHERE id=$pat_pk"));
     $pi=($p&&$p['name']&&$p['date_of_birth']&&$p['gender']&&$p['phone'])?1:0;
     $mp=mysqli_fetch_assoc(mysqli_query($conn,"SELECT blood_type,height_cm,weight_kg FROM patient_medical_profile WHERE patient_id=$pat_pk"));
     $mpc=($mp&&$mp['blood_type']&&$mp['height_cm']&&$mp['weight_kg'])?1:0;
@@ -73,7 +73,7 @@ case 'upload_profile_photo':
 // ── SECTION B: Update Personal Info ──────────────────────
 case 'update_personal_info':
     $fields=['name','date_of_birth','gender','marital_status','nationality','religion','occupation',
-             'national_id','phone','secondary_phone','email','street_address','city','region','country','postal_code','address'];
+             'national_id','phone','secondary_phone','email','street_address','city','region','country','postal_code'];
     $sets=[];
     foreach($fields as $f){
         if(isset($post[$f])){$sets[]="$f='".esc($conn,$post[$f])."'";}

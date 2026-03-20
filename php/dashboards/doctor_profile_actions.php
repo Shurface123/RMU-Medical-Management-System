@@ -427,8 +427,6 @@ case 'get_stats':
         'month_appointments' =>(int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM appointments WHERE doctor_id=$doc_pk AND appointment_date>='$mstart'"))[0]??0),
         'total_prescriptions'=>(int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM prescriptions WHERE doctor_id=$doc_pk"))[0]??0),
         'month_prescriptions'=>(int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM prescriptions WHERE doctor_id=$doc_pk AND prescription_date>='$mstart'"))[0]??0),
-        'total_lab_requests' =>(int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM lab_tests WHERE doctor_id=$doc_pk"))[0]??0),
-        'month_lab_requests' =>(int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM lab_tests WHERE doctor_id=$doc_pk AND created_at>='$mstart'"))[0]??0),
     ];
     // Busiest day
     $bd=mysqli_fetch_assoc(mysqli_query($conn,"SELECT DAYNAME(appointment_date) AS d,COUNT(*) AS c FROM appointments WHERE doctor_id=$doc_pk GROUP BY d ORDER BY c DESC LIMIT 1"));

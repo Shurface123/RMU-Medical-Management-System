@@ -66,21 +66,7 @@
         </div>
       </div>
     </div>
-    <div class="adm-card">
-      <div class="adm-card-header"><h3><i class="fas fa-flask"></i> Lab Request Status</h3></div>
-      <div style="padding:1.5rem;">
-        <?php
-        $lb_pending=count(array_filter($lab_requests,fn($r)=>$r['status']==='Pending'));
-        $lb_done=count(array_filter($lab_requests,fn($r)=>in_array($r['status'],['Completed','Reviewed'])));
-        $lb_total=count($lab_requests);
-        ?>
-        <div class="adm-summary-strip" style="grid-template-columns:repeat(3,1fr);margin:0;">
-          <div class="adm-mini-card"><div class="adm-mini-card-num blue"><?=$lb_total?></div><div class="adm-mini-card-label">Total</div></div>
-          <div class="adm-mini-card"><div class="adm-mini-card-num orange"><?=$lb_pending?></div><div class="adm-mini-card-label">Pending</div></div>
-          <div class="adm-mini-card"><div class="adm-mini-card-num green"><?=$lb_done?></div><div class="adm-mini-card-label">Reviewed</div></div>
-        </div>
-      </div>
-    </div>
+    <div class="adm-card" style="display:none;"></div>
   </div>
 </div>
 <script>

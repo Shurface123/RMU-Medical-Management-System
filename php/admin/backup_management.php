@@ -19,7 +19,7 @@ $auditLogger = new AuditLogger($conn);
 // Database credentials
 $dbHost = 'localhost';
 $dbUser = 'root';
-$dbPass = '';
+$dbPass = 'Confrontation@433';
 $dbName = 'rmu_medical_sickbay';
 
 // Backup directory
@@ -32,37 +32,37 @@ if (!file_exists($backupDir)) {
 if (isset($_POST['create_backup'])) {
     $timestamp = date('Y-m-d_H-i-s');
     $backupFile = $backupDir . 'backup_' . $timestamp . '.sql';
-    
+
     // Get all tables
     $tables = [];
     $result = mysqli_query($conn, "SHOW TABLES");
     while ($row = mysqli_fetch_row($result)) {
         $tables[] = $row[0];
     }
-    
+
     $sqlDump = "-- RMU Medical Sickbay Database Backup\n";
     $sqlDump .= "-- Generated: " . date('Y-m-d H:i:s') . "\n";
     $sqlDump .= "-- Database: $dbName\n\n";
     $sqlDump .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
-    
+
     // Loop through tables
     foreach ($tables as $table) {
         // Drop table statement
         $sqlDump .= "DROP TABLE IF EXISTS `$table`;\n";
-        
+
         // Create table statement
         $createTable = mysqli_query($conn, "SHOW CREATE TABLE `$table`");
         $row = mysqli_fetch_row($createTable);
         $sqlDump .= $row[1] . ";\n\n";
-        
+
         // Insert data
         $rows = mysqli_query($conn, "SELECT * FROM `$table`");
         $numFields = mysqli_num_fields($rows);
-        
+
         if (mysqli_num_rows($rows) > 0) {
             $sqlDump .= "INSERT INTO `$table` VALUES\n";
             $rowCount = 0;
-            
+
             while ($row = mysqli_fetch_row($rows)) {
                 $sqlDump .= "(";
                 for ($i = 0; $i < $numFields; $i++) {
@@ -70,7 +70,8 @@ if (isset($_POST['create_backup'])) {
                     $row[$i] = str_replace("\n", "\\n", $row[$i]);
                     if (isset($row[$i])) {
                         $sqlDump .= '"' . $row[$i] . '"';
-                    } else {
+                    }
+                    else {
                         $sqlDump .= 'NULL';
                     }
                     if ($i < ($numFields - 1)) {
@@ -80,20 +81,22 @@ if (isset($_POST['create_backup'])) {
                 $rowCount++;
                 if ($rowCount < mysqli_num_rows($rows)) {
                     $sqlDump .= "),\n";
-                } else {
+                }
+                else {
                     $sqlDump .= ");\n\n";
                 }
             }
         }
     }
-    
+
     $sqlDump .= "SET FOREIGN_KEY_CHECKS=1;\n";
-    
+
     // Save to file
     if (file_put_contents($backupFile, $sqlDump)) {
         $auditLogger->logAction($_SESSION['user_id'], 'backup_create', 'database', null, "Created database backup: $timestamp");
         $message = "Backup created successfully: backup_$timestamp.sql";
-    } else {
+    }
+    else {
         $error = "Failed to create backup file.";
     }
 }
@@ -102,11 +105,12 @@ if (isset($_POST['create_backup'])) {
 if (isset($_GET['delete'])) {
     $filename = basename($_GET['delete']);
     $filepath = $backupDir . $filename;
-    
+
     if (file_exists($filepath) && unlink($filepath)) {
         $auditLogger->logAction($_SESSION['user_id'], 'backup_delete', 'database', null, "Deleted backup: $filename");
         $message = "Backup deleted successfully.";
-    } else {
+    }
+    else {
         $error = "Failed to delete backup.";
     }
 }
@@ -125,7 +129,7 @@ if (is_dir($backupDir)) {
         }
     }
     // Sort by date, newest first
-    usort($backups, function($a, $b) {
+    usort($backups, function ($a, $b) {
         return $b['date'] - $a['date'];
     });
 }
@@ -294,13 +298,15 @@ if (is_dir($backupDir)) {
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
         
         <?php if (isset($error)): ?>
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
         
         <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> Backups are stored in the <code>/backups/</code> directory. Make sure to download and store backups in a secure location outside the web server.
@@ -315,7 +321,8 @@ if (is_dir($backupDir)) {
                     <h3>No Backups Found</h3>
                     <p>Click "Create New Backup" to create your first database backup.</p>
                 </div>
-            <?php else: ?>
+            <?php
+else: ?>
                 <table>
                     <thead>
                         <tr>
@@ -340,10 +347,12 @@ if (is_dir($backupDir)) {
                                     </a>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php
+    endforeach; ?>
                     </tbody>
                 </table>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </div>
         
         <div class="info-card">

@@ -10,9 +10,6 @@ $q=mysqli_query($conn,"(SELECT 'Appointment' AS type, a.status, CONCAT('Dr. ',u.
   UNION ALL
   (SELECT 'Prescription', pr.status, pr.medication_name, pr.updated_at
     FROM prescriptions pr WHERE pr.patient_id=$pat_pk ORDER BY pr.updated_at DESC LIMIT 3)
-  UNION ALL
-  (SELECT 'Lab Test', lt.status, lt.test_name, lt.updated_at
-    FROM lab_tests lt WHERE lt.patient_id=$pat_pk ORDER BY lt.updated_at DESC LIMIT 3)
   ORDER BY ts DESC LIMIT 8");
 if($q) while($r=mysqli_fetch_assoc($q)) $activity[]=$r;
 
@@ -34,7 +31,8 @@ if($next_appt){$days_until=(int)date_diff(date_create($next_appt['appointment_da
 
 // Last visit
 $last_visit=mysqli_fetch_assoc(mysqli_query($conn,"SELECT visit_date,diagnosis FROM medical_records WHERE patient_id=$pat_pk ORDER BY visit_date DESC LIMIT 1"));
-$age=$pat_row['date_of_birth']?((int)date_diff(date_create($pat_row['date_of_birth']),date_create('today'))->y):null;
+$dob=$pat_row['date_of_birth']??null;
+$age=$dob?((int)date_diff(date_create($dob),date_create('today'))->y):null;
 ?>
 
 <div id="sec-overview" class="dash-section">
@@ -63,7 +61,6 @@ $age=$pat_row['date_of_birth']?((int)date_diff(date_create($pat_row['date_of_bir
   <div class="adm-summary-strip" style="margin-bottom:2rem;">
     <div class="adm-mini-card"><div class="adm-mini-card-num blue"><?=$stats['upcoming']?></div><div class="adm-mini-card-label">Upcoming Appts</div></div>
     <div class="adm-mini-card"><div class="adm-mini-card-num orange"><?=$stats['active_rx']?></div><div class="adm-mini-card-label">Active Rx</div></div>
-    <div class="adm-mini-card"><div class="adm-mini-card-num" style="color:var(--warning);"><?=$stats['pending_labs']?></div><div class="adm-mini-card-label">Pending Labs</div></div>
     <div class="adm-mini-card"><div class="adm-mini-card-num" style="color:var(--danger);"><?=$stats['unread_notif']?></div><div class="adm-mini-card-label">Unread Alerts</div></div>
     <div class="adm-mini-card"><div class="adm-mini-card-num" style="color:var(--success);"><?=$stats['emerg_contacts']?></div><div class="adm-mini-card-label">Emerg. Contacts</div></div>
   </div>
@@ -163,10 +160,6 @@ $age=$pat_row['date_of_birth']?((int)date_diff(date_create($pat_row['date_of_bir
           <a href="#" onclick="showTab('prescriptions',document.querySelector('.adm-nav-item[onclick*=prescriptions]'));return false;" class="quick-action-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;text-decoration:none;color:var(--text-primary);transition:all .2s;cursor:pointer;">
             <div style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;font-size:1.3rem;background:#e8f8f5;color:#1abc9c;"><i class="fas fa-pills"></i></div>
             <div style="font-size:1.15rem;font-weight:600;">View Rx</div>
-          </a>
-          <a href="#" onclick="showTab('lab',document.querySelector('.adm-nav-item[onclick*=lab]'));return false;" class="quick-action-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;text-decoration:none;color:var(--text-primary);transition:all .2s;cursor:pointer;">
-            <div style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;font-size:1.3rem;background:#f5eef8;color:#8e44ad;"><i class="fas fa-flask"></i></div>
-            <div style="font-size:1.15rem;font-weight:600;">Lab Results</div>
           </a>
           <a href="#" onclick="showTab('records',document.querySelector('.adm-nav-item[onclick*=records]'));return false;" class="quick-action-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;text-decoration:none;color:var(--text-primary);transition:all .2s;cursor:pointer;">
             <div style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;font-size:1.3rem;background:#fef9e7;color:#f39c12;"><i class="fas fa-file-medical"></i></div>

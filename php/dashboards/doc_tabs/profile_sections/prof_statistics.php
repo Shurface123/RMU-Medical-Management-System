@@ -11,8 +11,6 @@
         <div class="stat-mini"><i class="fas fa-calendar" style="color:var(--info);"></i><div><span class="stat-val" id="st-monthAppts">—</span><span class="stat-lbl">This Month Appointments</span></div></div>
         <div class="stat-mini"><i class="fas fa-prescription" style="color:#9B59B6;"></i><div><span class="stat-val" id="st-totalRx">—</span><span class="stat-lbl">Total Prescriptions</span></div></div>
         <div class="stat-mini"><i class="fas fa-prescription" style="color:#E67E22;"></i><div><span class="stat-val" id="st-monthRx">—</span><span class="stat-lbl">Rx This Month</span></div></div>
-        <div class="stat-mini"><i class="fas fa-flask" style="color:#E74C3C;"></i><div><span class="stat-val" id="st-totalLab">—</span><span class="stat-lbl">Total Lab Requests</span></div></div>
-        <div class="stat-mini"><i class="fas fa-flask" style="color:#2ECC71;"></i><div><span class="stat-val" id="st-monthLab">—</span><span class="stat-lbl">Lab This Month</span></div></div>
         <div class="stat-mini"><i class="fas fa-fire" style="color:var(--danger);"></i><div><span class="stat-val" id="st-busiest">—</span><span class="stat-lbl">Busiest Day</span></div></div>
         <div class="stat-mini"><i class="fas fa-clock" style="color:var(--warning);"></i><div><span class="stat-val" id="st-hours">—</span><span class="stat-lbl">Consult Hours (Month)</span></div></div>
       </div>
@@ -36,8 +34,6 @@ async function loadStats(){
   document.getElementById('st-monthAppts').textContent=s.month_appointments;
   document.getElementById('st-totalRx').textContent=s.total_prescriptions;
   document.getElementById('st-monthRx').textContent=s.month_prescriptions;
-  document.getElementById('st-totalLab').textContent=s.total_lab_requests;
-  document.getElementById('st-monthLab').textContent=s.month_lab_requests;
   document.getElementById('st-busiest').textContent=s.busiest_day;
   document.getElementById('st-hours').textContent=s.month_consult_hours+'h';
   // Draw chart

@@ -93,31 +93,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Hash the password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
+    // Normalize role for users table enum
+    $user_table_role = $role;
+    if (in_array($role, $STAFF_SUB_ROLES)) {
+        $user_table_role = 'staff';
+    }
+
     // Insert new user
     $sql = "INSERT INTO users (name, email, phone, user_name, password, user_role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
     $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "ssssssi", $fullname, $email, $phone, $username, $hashed_password, $role, $is_active);
+    mysqli_stmt_bind_param($stmt, "ssssssi", $fullname, $email, $phone, $username, $hashed_password, $user_table_role, $is_active);
     
     if (mysqli_stmt_execute($stmt)) {
         $user_id = mysqli_insert_id($conn);
         
         // Create role-specific record based on user type
         if ($role === 'patient') {
-            $patient_sql = "INSERT INTO patients (user_id, full_name, email, phone, created_at) VALUES (?, ?, ?, ?, NOW())";
+            // Generate unique patient_id
+            $last_p_res = mysqli_query($conn, "SELECT COUNT(*) FROM patients");
+            $last_p = mysqli_fetch_row($last_p_res)[0] ?? 0;
+            $patient_id_val = 'PAT-' . str_pad($last_p + 1, 5, '0', STR_PAD_LEFT);
+
+            $patient_sql = "INSERT INTO patients (user_id, patient_id, full_name, created_at) VALUES (?, ?, ?, NOW())";
             $patient_stmt = mysqli_prepare($conn, $patient_sql);
-            mysqli_stmt_bind_param($patient_stmt, "isss", $user_id, $fullname, $email, $phone);
+            mysqli_stmt_bind_param($patient_stmt, "iss", $user_id, $patient_id_val, $fullname);
             mysqli_stmt_execute($patient_stmt);
             mysqli_stmt_close($patient_stmt);
         } elseif ($role === 'doctor') {
-            $doctor_sql = "INSERT INTO doctors (user_id, full_name, specialization, created_at) VALUES (?, ?, '', NOW())";
+            // Generate unique doctor_id
+            $last_d_res = mysqli_query($conn, "SELECT COUNT(*) FROM doctors");
+            $last_d = mysqli_fetch_row($last_d_res)[0] ?? 0;
+            $doctor_id_val = 'DOC-' . str_pad($last_d + 1, 4, '0', STR_PAD_LEFT);
+
+            $doctor_sql = "INSERT INTO doctors (user_id, doctor_id, specialization, full_name, created_at) VALUES (?, ?, '', ?, NOW())";
             $doctor_stmt = mysqli_prepare($conn, $doctor_sql);
-            mysqli_stmt_bind_param($doctor_stmt, "is", $user_id, $fullname);
+            mysqli_stmt_bind_param($doctor_stmt, "iss", $user_id, $doctor_id_val, $fullname);
             mysqli_stmt_execute($doctor_stmt);
             mysqli_stmt_close($doctor_stmt);
         } elseif ($role === 'nurse') {
-            $nurse_sql = "INSERT INTO nurses (user_id, full_name, email, phone, approval_status, created_at) VALUES (?, ?, ?, ?, 'pending', NOW())";
+            // Generate unique nurse_id
+            $last_n_res = mysqli_query($conn, "SELECT COUNT(*) FROM nurses");
+            $last_n = ($last_n_res) ? (mysqli_fetch_row($last_n_res)[0] ?? 0) : 0;
+            $nurse_id_val = 'NRS-' . str_pad($last_n + 1, 4, '0', STR_PAD_LEFT);
+
+            $nurse_sql = "INSERT INTO nurses (user_id, nurse_id, full_name, email, phone, status, years_of_experience, created_at) VALUES (?, ?, ?, ?, ?, 'Active', 0, NOW())";
             $nurse_stmt = mysqli_prepare($conn, $nurse_sql);
-            mysqli_stmt_bind_param($nurse_stmt, "isss", $user_id, $fullname, $email, $phone);
+            mysqli_stmt_bind_param($nurse_stmt, "issss", $user_id, $nurse_id_val, $fullname, $email, $phone);
             mysqli_stmt_execute($nurse_stmt);
             mysqli_stmt_close($nurse_stmt);
         } elseif ($is_staff_role || ($needs_approval && !in_array($role, ['doctor', 'nurse']))) {
@@ -125,7 +146,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $attempt = 0;
             do {
                 $emp_id = 'STF-' . date('Y') . '-' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-                $chk = mysqli_prepare($conn, "SELECT id FROM staff WHERE employee_id = ? LIMIT 1");
+                $chk = mysqli_prepare($conn, "SELECT id FROM staff WHERE staff_id = ? LIMIT 1"); // Note: schema matches staff_id better
+                // Actually staff table might have staff_id but maybe not employee_id in old schema
+                // But register_handler.php used both. I'll stick to a safe set.
                 mysqli_stmt_bind_param($chk, "s", $emp_id);
                 mysqli_stmt_execute($chk);
                 mysqli_stmt_store_result($chk);
@@ -147,14 +170,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $attempt2++;
             } while ($sid_exists && $attempt2 < 10);
 
-            // Insert staff record including both staff_id and employee_id
-            $staff_sql = "INSERT INTO staff (user_id, full_name, email, phone, staff_id, employee_id, role, approval_status, created_at)
-                          VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
+            // Insert staff record - removing full_name, email, phone as they belong in users
+            $staff_sql = "INSERT INTO staff (user_id, staff_id, role, created_at, department, position)
+                          VALUES (?, ?, ?, NOW(), 'General', 'Staff')";
             $staff_stmt = mysqli_prepare($conn, $staff_sql);
-            mysqli_stmt_bind_param($staff_stmt, "issssss",
-                $user_id, $fullname, $email, $phone,
-                $staff_id_val, $emp_id, $role
-            );
+            mysqli_stmt_bind_param($staff_stmt, "iss", $user_id, $staff_id_val, $role);
             if (!mysqli_stmt_execute($staff_stmt)) {
                 mysqli_stmt_close($staff_stmt);
                 mysqli_stmt_close($stmt);

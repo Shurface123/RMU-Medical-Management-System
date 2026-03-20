@@ -1,4 +1,4 @@
-﻿<?php // TAB: OVERVIEW ?>
+<?php // TAB: OVERVIEW ?>
 <div id="sec-overview" class="dash-section">
 
   <!-- Hero Banner -->
@@ -23,9 +23,6 @@
       <button onclick="showTab('prescriptions',document.querySelector('.adm-nav-item[onclick*=prescriptions]'))" class="adm-btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);margin:.3rem;">
         <i class="fas fa-prescription-bottle-medical"></i> New Rx
       </button>
-      <button onclick="showTab('lab',document.querySelector('.adm-nav-item[onclick*=lab]'))" class="adm-btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);margin:.3rem;">
-        <i class="fas fa-flask"></i> Lab Test
-      </button>
     </div>
   </div>
 
@@ -38,10 +35,6 @@
     <div class="adm-mini-card" onclick="showTab('patients',document.querySelector('.adm-nav-item[onclick*=patients]'))">
       <div class="adm-mini-card-num teal"><?=$stats['total_patients']?></div>
       <div class="adm-mini-card-label"><i class="fas fa-users"></i> My Patients</div>
-    </div>
-    <div class="adm-mini-card" onclick="showTab('lab',document.querySelector('.adm-nav-item[onclick*=lab]'))">
-      <div class="adm-mini-card-num orange"><?=$stats['pending_labs']?></div>
-      <div class="adm-mini-card-label"><i class="fas fa-flask"></i> Pending Labs</div>
     </div>
     <div class="adm-mini-card" onclick="showTab('prescriptions',document.querySelector('.adm-nav-item[onclick*=prescriptions]'))">
       <div class="adm-mini-card-num green"><?=$stats['active_rx']?></div>
@@ -139,11 +132,7 @@
           <?php if(empty($activity)):?>
             <p style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:1.2rem;">No activity yet.</p>
           <?php else: foreach($activity as $act):
-            $dot=match($act['type']){
-              'Prescription'=>'orange',
-              'Lab Test'=>'blue',
-              default=>($act['status']==='Completed'?'':'')
-            };
+            $dot=($act['type']==='Prescription')?'orange':'';
           ?>
             <div class="activity-item">
               <span class="activity-dot <?=$dot?>"></span>
@@ -151,7 +140,10 @@
                 <div style="font-size:1.2rem;font-weight:500;"><?=htmlspecialchars($act['type'])?> &mdash; <?=htmlspecialchars($act['person']??'')?></div>
                 <div style="font-size:1.1rem;color:var(--text-muted);"><?=date('d M, g:i A',strtotime($act['ts']))?></div>
               </div>
-              <?php $bc=match($act['status']){'Completed'=>'success','Pending'=>'warning','Cancelled'=>'danger',default=>'info'}; ?>
+              <?php 
+                $bc_map=['Completed'=>'success','Pending'=>'warning','Cancelled'=>'danger'];
+                $bc=$bc_map[$act['status']] ?? 'info';
+              ?>
               <span class="adm-badge adm-badge-<?=$bc?>"><?=$act['status']?></span>
             </div>
           <?php endforeach; endif;?>
@@ -164,9 +156,6 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:1.5rem;">
           <button onclick="openModal('modalNewRx')" class="adm-btn adm-btn-primary" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;">
             <i class="fas fa-prescription-bottle-medical" style="font-size:1.5rem;"></i><span style="font-size:1.1rem;">New Prescription</span>
-          </button>
-          <button onclick="openModal('modalNewLab')" class="adm-btn adm-btn-warning" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;">
-            <i class="fas fa-flask" style="font-size:1.5rem;"></i><span style="font-size:1.1rem;">Lab Request</span>
           </button>
           <button onclick="openModal('modalNewRecord')" class="adm-btn adm-btn-success" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;">
             <i class="fas fa-file-circle-plus" style="font-size:1.5rem;"></i><span style="font-size:1.1rem;">Add Record</span>

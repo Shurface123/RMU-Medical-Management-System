@@ -101,13 +101,22 @@ if ($q) while ($r=mysqli_fetch_assoc($q)) $beds[]=$r;
 
 // ── Staff Directory ───────────────────────────────────────
 $staff=[];
-$q=mysqli_query($conn,"SELECT * FROM staff_directory WHERE status='Active' ORDER BY role, full_name");
+$q=mysqli_query($conn,
+    "SELECT u.id, u.name AS full_name, u.email, u.phone, 
+            CASE 
+                WHEN u.user_role='doctor' THEN 'Doctor'
+                WHEN u.user_role='nurse' THEN 'Nurse'
+                WHEN u.user_role='pharmacist' THEN 'Pharmacist'
+                WHEN u.user_role='admin' THEN 'Admin'
+                ELSE 'Staff'
+            END AS role,
+            s.department, s.staff_id, 'Active' AS status
+     FROM users u 
+     LEFT JOIN staff s ON u.id = s.user_id
+     WHERE u.user_role IN ('doctor','nurse','pharmacist','admin','staff')
+     ORDER BY role, full_name LIMIT 100");
 if ($q) while ($r=mysqli_fetch_assoc($q)) $staff[]=$r;
-if (empty($staff)) {
-    // fallback to users table
-    $q=mysqli_query($conn,"SELECT id, user_name AS full_name, email, phone, user_role AS role, '' AS department, '' AS staff_id, 'Active' AS status FROM users WHERE user_role IN('doctor','pharmacist','admin') ORDER BY user_role, user_name LIMIT 50");
-    if ($q) while ($r=mysqli_fetch_assoc($q)) $staff[]=$r;
-}
+
 
 // ── Notifications ─────────────────────────────────────────
 $notifs=[];

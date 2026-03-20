@@ -15,7 +15,7 @@ $active_tab = $_GET['tab'] ?? 'overview';
 
 // ── Patient Record ──────────────────────────────────────────
 $pat_row = mysqli_fetch_assoc(mysqli_query($conn,
-    "SELECT p.*, u.name, u.email, u.phone, u.gender, u.date_of_birth, u.address,
+    "SELECT p.*, u.name, u.email, u.phone, u.gender, u.date_of_birth,
             u.profile_image, u.created_at AS member_since, u.last_login_at
      FROM patients p JOIN users u ON p.user_id=u.id
      WHERE p.user_id=$user_id LIMIT 1")) ?? [];
@@ -29,8 +29,6 @@ $r=mysqli_query($conn,"SELECT COUNT(*) c FROM appointments WHERE patient_id=$pat
 $stats['upcoming']=$r?(int)mysqli_fetch_assoc($r)['c']:0;
 $r=mysqli_query($conn,"SELECT COUNT(*) c FROM prescriptions WHERE patient_id=$pat_pk AND status IN('Pending','Active')");
 $stats['active_rx']=$r?(int)mysqli_fetch_assoc($r)['c']:0;
-$r=mysqli_query($conn,"SELECT COUNT(*) c FROM lab_tests WHERE patient_id=$pat_pk AND status='Pending'");
-$stats['pending_labs']=$r?(int)mysqli_fetch_assoc($r)['c']:0;
 $r=mysqli_query($conn,"SELECT COUNT(*) c FROM notifications WHERE user_id=$user_id AND is_read=0");
 $stats['unread_notif']=$r?(int)mysqli_fetch_assoc($r)['c']:0;
 $r=mysqli_query($conn,"SELECT COUNT(*) c FROM emergency_contacts WHERE patient_id=$pat_pk");
@@ -143,10 +141,6 @@ input:checked+.notif-slider::before{transform:translateX(18px);}
       <?php if($stats['active_rx']>0):?><span class="adm-badge adm-badge-warning" style="margin-left:auto;font-size:1rem;"><?=$stats['active_rx']?></span><?php endif;?>
     </a>
     <div class="adm-nav-label" style="margin-top:1rem;">Clinical</div>
-    <a href="#" class="adm-nav-item <?=($active_tab==='lab')?'active':''?>" onclick="showTab('lab',this)">
-      <i class="fas fa-flask"></i><span>Lab Results</span>
-      <?php if($stats['pending_labs']>0):?><span class="adm-badge adm-badge-warning" style="margin-left:auto;font-size:1rem;"><?=$stats['pending_labs']?></span><?php endif;?>
-    </a>
     <a href="#" class="adm-nav-item <?=($active_tab==='records')?'active':''?>" onclick="showTab('records',this)"><i class="fas fa-file-medical"></i><span>Medical Records</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='emergency')?'active':''?>" onclick="showTab('emergency',this)"><i class="fas fa-phone-alt"></i><span>Emergency Contacts</span></a>
     <div class="adm-nav-label" style="margin-top:1rem;">Account</div>
@@ -198,7 +192,6 @@ input:checked+.notif-slider::before{transform:translateX(18px);}
     <?php include __DIR__.'/pat_tabs/tab_book.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_appointments.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_prescriptions.php'; ?>
-    <?php include __DIR__.'/pat_tabs/tab_lab.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_records.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_emergency.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_notifications.php'; ?>
