@@ -1,92 +1,305 @@
-<!-- ═══════════════════════════════════════════════════════════
-     MODULE 11: ANALYTICS — tab_analytics.php
-     ═══════════════════════════════════════════════════════════ -->
-<div id="sec-analytics" class="dash-section">
-  <div class="sec-header">
-    <h2><i class="fas fa-chart-bar"></i> Analytics</h2>
-    <div style="display:flex;gap:.8rem;align-items:center;">
-      <label style="font-size:1.2rem;font-weight:600;">Range:</label>
-      <select id="analyticRange" class="form-control" style="width:auto;" onchange="loadAnalytics()">
-        <option value="7d">Last 7 Days</option><option value="30d">Last 30 Days</option><option value="90d">Last 90 Days</option>
-      </select>
-    </div>
-  </div>
+<?php
+// ============================================================
+// NURSE DASHBOARD - ANALYTICS (MODULE 11)
+// ============================================================
+if (!isset($conn)) exit;
 
-  <div class="charts-grid">
-    <!-- Vitals Recorded Per Day -->
-    <div class="info-card"><h4 style="margin-bottom:.8rem;"><i class="fas fa-heartbeat" style="color:var(--role-accent);"></i> Vitals Recorded Per Day</h4><div class="chart-wrap"><canvas id="chartVitalsDaily"></canvas></div></div>
-
-    <!-- Medication Compliance -->
-    <div class="info-card"><h4 style="margin-bottom:.8rem;"><i class="fas fa-pills" style="color:var(--primary);"></i> Medication Admin Compliance</h4><div class="chart-wrap"><canvas id="chartMedCompliance"></canvas></div></div>
-
-    <!-- Task Completion by Shift -->
-    <div class="info-card"><h4 style="margin-bottom:.8rem;"><i class="fas fa-clipboard-list" style="color:var(--success);"></i> Task Completion Rate</h4><div class="chart-wrap"><canvas id="chartTaskRate"></canvas></div></div>
-
-    <!-- Emergency Alerts Over Time -->
-    <div class="info-card"><h4 style="margin-bottom:.8rem;"><i class="fas fa-triangle-exclamation" style="color:var(--danger);"></i> Emergency Alerts</h4><div class="chart-wrap"><canvas id="chartEmergency"></canvas></div></div>
-
-    <!-- Fluid Balance Trend -->
-    <div class="info-card"><h4 style="margin-bottom:.8rem;"><i class="fas fa-droplet" style="color:var(--info);"></i> Fluid Balance Trend</h4><div class="chart-wrap"><canvas id="chartFluidBalance"></canvas></div></div>
-
-    <!-- Bed Occupancy -->
-    <div class="info-card"><h4 style="margin-bottom:.8rem;"><i class="fas fa-bed" style="color:var(--warning);"></i> Bed Occupancy Rate</h4><div class="chart-wrap"><canvas id="chartBedOccupancy"></canvas></div></div>
-  </div>
-
-  <!-- Patient Education This Month -->
-  <div class="info-card" style="margin-top:1rem;">
-    <h4 style="margin-bottom:.8rem;"><i class="fas fa-book-medical" style="color:var(--role-accent);"></i> Patient Education Completed (This Month)</h4>
-    <div class="chart-wrap" style="height:200px;"><canvas id="chartEducation"></canvas></div>
-  </div>
-</div>
-
-<script>
-let analyticsCharts = {};
-
-async function loadAnalytics(){
-  const range = document.getElementById('analyticRange')?.value || '7d';
-  const r = await nurseAction({action:'get_analytics', range: range});
-  if(!r.success) return;
-  const d = r.data;
-
-  // Destroy old charts
-  Object.values(analyticsCharts).forEach(c=>c&&c.destroy&&c.destroy());
-  analyticsCharts = {};
-
-  const mkChart = (id,type,labels,datasets,opts={}) => {
-    const ctx = document.getElementById(id);
-    if(!ctx) return;
-    analyticsCharts[id] = new Chart(ctx,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:datasets.length>1,position:'bottom',labels:{font:{size:11}}}},...opts}});
-  };
-
-  // 1. Vitals daily
-  mkChart('chartVitalsDaily','bar',d.vitals_daily?.labels||[],[{label:'Vitals Recorded',data:d.vitals_daily?.data||[],backgroundColor:'#E91E6344',borderColor:'#E91E63',borderWidth:2}]);
-
-  // 2. Medication compliance (doughnut)
-  mkChart('chartMedCompliance','doughnut',['Administered','Missed','Refused','Held'],[{data:[d.med_admin||0,d.med_missed||0,d.med_refused||0,d.med_held||0],backgroundColor:['#27AE60','#E74C3C','#F39C12','#3498DB']}],{scales:{}});
-
-  // 3. Task completion rate
-  mkChart('chartTaskRate','bar',d.task_rate?.labels||[],[{label:'Completed',data:d.task_rate?.completed||[],backgroundColor:'#27AE6044',borderColor:'#27AE60',borderWidth:2},{label:'Pending/Overdue',data:d.task_rate?.pending||[],backgroundColor:'#E74C3C44',borderColor:'#E74C3C',borderWidth:2}]);
-
-  // 4. Emergency alerts
-  mkChart('chartEmergency','line',d.emergency?.labels||[],[{label:'Alerts',data:d.emergency?.data||[],borderColor:'#E74C3C',backgroundColor:'#E74C3C22',tension:.4,fill:true}]);
-
-  // 5. Fluid balance trend
-  mkChart('chartFluidBalance','line',d.fluid?.labels||[],[{label:'Intake',data:d.fluid?.intake||[],borderColor:'#3498DB',tension:.3},{label:'Output',data:d.fluid?.output||[],borderColor:'#F39C12',tension:.3}]);
-
-  // 6. Bed occupancy (doughnut)
-  mkChart('chartBedOccupancy','doughnut',['Occupied','Available','Maintenance'],[{data:[d.beds_occupied||0,d.beds_available||0,d.beds_maintenance||0],backgroundColor:['#3498DB','#27AE60','#95A5A6']}],{scales:{}});
-
-  // 7. Education
-  mkChart('chartEducation','bar',d.education?.labels||[],[{label:'Education Records',data:d.education?.data||[],backgroundColor:'#E91E6344',borderColor:'#E91E63',borderWidth:2}]);
+// ── 1. TASKS COMPLETION (Current Month) ──────────────────────
+$q_tasks = mysqli_query($conn, "
+    SELECT status, COUNT(*) as count 
+    FROM nurse_tasks 
+    WHERE nurse_id = $nurse_pk 
+      AND MONTH(created_at) = MONTH(CURRENT_DATE())
+      AND YEAR(created_at) = YEAR(CURRENT_DATE())
+    GROUP BY status
+");
+$taskStats = ['Pending' => 0, 'Completed' => 0, 'Overdue' => 0];
+if($q_tasks) {
+    while($r = mysqli_fetch_assoc($q_tasks)) {
+        if(isset($taskStats[$r['status']])) $taskStats[$r['status']] = (int)$r['count'];
+    }
 }
 
-// Load analytics when tab is shown
-document.addEventListener('DOMContentLoaded',()=>{
-  const observer = new MutationObserver(()=>{
-    if(document.getElementById('sec-analytics')?.classList.contains('active') && !analyticsCharts['chartVitalsDaily']){
-      loadAnalytics();
+// ── 2. MEDICATIONS ADMINISTERED (Last 7 Days) ────────────────
+$q_meds = mysqli_query($conn, "
+    SELECT DATE(administered_at) as d, COUNT(*) as count 
+    FROM medication_administration 
+    WHERE nurse_id = $nurse_pk 
+      AND status = 'Administered'
+      AND administered_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+    GROUP BY DATE(administered_at)
+    ORDER BY d ASC
+");
+$medLabels = [];
+$medData = [];
+// Pre-fill last 7 days with 0s
+for($i=6; $i>=0; $i--) {
+    $d = date('Y-m-d', strtotime("-$i days"));
+    $medLabels[] = date('D, M d', strtotime($d));
+    $medData[$d] = 0;
+}
+if($q_meds) {
+    while($r = mysqli_fetch_assoc($q_meds)) {
+        if(isset($medData[$r['d']])) $medData[$r['d']] = (int)$r['count'];
     }
-  });
-  observer.observe(document.getElementById('sec-analytics'),{attributes:true,attributeFilter:['class']});
+}
+$medValues = array_values($medData);
+
+// ── 3. EMERGENCY ALERTS DISTRIBUTION (Global Facility) ────────
+$q_alerts = mysqli_query($conn, "
+    SELECT alert_type, COUNT(*) as count 
+    FROM emergency_alerts 
+    WHERE MONTH(triggered_at) = MONTH(CURRENT_DATE())
+      AND YEAR(triggered_at) = YEAR(CURRENT_DATE())
+    GROUP BY alert_type
+    ORDER BY count DESC
+");
+$alertLabels = [];
+$alertData = [];
+if($q_alerts) {
+    while($r = mysqli_fetch_assoc($q_alerts)) {
+        $alertLabels[] = $r['alert_type'];
+        $alertData[] = (int)$r['count'];
+    }
+}
+if(empty($alertData)) {
+    $alertLabels = ['No Alerts']; $alertData = [1]; 
+}
+
+// ── 4. FLUID BALANCE AVERAGES (My Patients, last 5 days) ─────
+$q_fluids = mysqli_query($conn, "
+    SELECT record_date, AVG(total_intake) as avg_in, AVG(total_output) as avg_out 
+    FROM fluid_balance 
+    WHERE nurse_id = $nurse_pk 
+      AND record_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 5 DAY)
+    GROUP BY record_date
+    ORDER BY record_date ASC
+");
+$fluidLabels = [];
+$fluidInData = [];
+$fluidOutData = [];
+if($q_fluids) {
+    while($r = mysqli_fetch_assoc($q_fluids)) {
+        $fluidLabels[] = date('M d', strtotime($r['record_date']));
+        $fluidInData[] = round($r['avg_in'], 1);
+        $fluidOutData[] = round($r['avg_out'], 1);
+    }
+}
+?>
+
+<div class="tab-content" id="analytics">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-chart-pie me-2"></i> Performance Analytics</h4>
+            <p class="text-muted mb-0">Visual breakdown of clinical activities, medication administration, and facility alerts.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <button class="btn btn-outline-secondary rounded-pill shadow-sm" onclick="window.print()">
+                <i class="fas fa-print me-2"></i> Print Dashboard
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        
+        <!-- Task Completion Donut -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-tasks me-2"></i> My Tasks (This Month)</h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="taskChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medication Trends Line -->
+        <div class="col-lg-8 col-md-6">
+            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-pills me-2"></i> Meds Administered (Last 7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="medChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Alerts Polar -->
+        <div class="col-lg-6">
+            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-ambulance me-2"></i> Facility Alerts (This Month)</h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="alertChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fluid Balance Bar -->
+        <div class="col-lg-6">
+            <div class="card h-100" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold mb-0 text-muted text-uppercase"><i class="fas fa-tint me-2"></i> Avg Fluid Balance (My Charting)</h6>
+                </div>
+                <div class="card-body">
+                    <?php if(empty($fluidLabels)): ?>
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted">
+                            <p><i class="fas fa-info-circle"></i> No fluid charts recorded in last 5 days.</p>
+                        </div>
+                    <?php else: ?>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="fluidChart"></canvas>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Chart.js Injection Library is already available via main dashboard layout -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Standard Colors based on project theme
+    const cPrimary = '#E67E22'; // Orange
+    const cSuccess = '#28a745';
+    const cWarning = '#ffc107';
+    const cDanger  = '#dc3545';
+    const cInfo    = '#17a2b8';
+
+    // 1. Task Chart (Doughnut)
+    const taskCtx = document.getElementById('taskChart').getContext('2d');
+    new Chart(taskCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Pending', 'Overdue'],
+            datasets: [{
+                data: [
+                    <?= $taskStats['Completed'] ?>, 
+                    <?= $taskStats['Pending'] ?>, 
+                    <?= $taskStats['Overdue'] ?>
+                ],
+                backgroundColor: [cSuccess, cWarning, cDanger],
+                borderWidth: 0,
+                cutout: '70%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+            }
+        }
+    });
+
+    // 2. Med Chart (Line)
+    const medCtx = document.getElementById('medChart').getContext('2d');
+    // Create gradient
+    let gradientMed = medCtx.createLinearGradient(0, 0, 0, 400);
+    gradientMed.addColorStop(0, 'rgba(230, 126, 34, 0.4)'); // Primary Orange transparent
+    gradientMed.addColorStop(1, 'rgba(230, 126, 34, 0.0)');
+
+    new Chart(medCtx, {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($medLabels) ?>,
+            datasets: [{
+                label: 'Doses Administered',
+                data: <?= json_encode($medValues) ?>,
+                borderColor: cPrimary,
+                backgroundColor: gradientMed,
+                borderWidth: 3,
+                pointBackgroundColor: cPrimary,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: cPrimary,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4 // Smooth curve
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { borderDash: [5, 5] }, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 3. Emergency Alerts Chart (Polar Area)
+    const alertCtx = document.getElementById('alertChart').getContext('2d');
+    new Chart(alertCtx, {
+        type: 'polarArea',
+        data: {
+            labels: <?= json_encode($alertLabels) ?>,
+            datasets: [{
+                data: <?= json_encode($alertData) ?>,
+                backgroundColor: [
+                    'rgba(220, 53, 69, 0.7)', // Danger
+                    'rgba(255, 193, 7, 0.7)', // Warning
+                    'rgba(23, 162, 184, 0.7)', // Info
+                    'rgba(40, 167, 69, 0.7)', // Success
+                    'rgba(108, 117, 125, 0.7)' // Secondary
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+    <?php if(!empty($fluidLabels)): ?>
+    // 4. Fluid Balance Chart (Bar)
+    const fluidCtx = document.getElementById('fluidChart').getContext('2d');
+    new Chart(fluidCtx, {
+        type: 'bar',
+        data: {
+            labels: <?= json_encode($fluidLabels) ?>,
+            datasets: [
+                {
+                    label: 'Avg Intake (ml)',
+                    data: <?= json_encode($fluidInData) ?>,
+                    backgroundColor: cInfo,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Avg Output (ml)',
+                    data: <?= json_encode($fluidOutData) ?>,
+                    backgroundColor: cDanger,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, grid: { borderDash: [5, 5] } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    <?php endif; ?>
 });
 </script>

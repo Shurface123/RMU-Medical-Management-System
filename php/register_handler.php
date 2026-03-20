@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validate role
     $valid_roles = [
-        'patient', 'doctor', 'pharmacist', 'nurse', 'lab_technician',
+        'patient', 'doctor', 'pharmacist',
         // All staff sub-roles (registered directly — no generic 'staff' login)
         'ambulance_driver', 'cleaner', 'laundry_staff', 'maintenance', 'security', 'kitchen_staff'
     ];
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // Normalise: any staff sub-role maps to the 'staff' group
     $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
-    $APPROVAL_ROLES  = ['doctor','nurse','lab_technician','pharmacist'];
+    $APPROVAL_ROLES  = ['doctor','pharmacist'];
     $needs_approval  = in_array($role, $APPROVAL_ROLES);
     $is_staff_role   = in_array($role, $STAFF_SUB_ROLES);
 

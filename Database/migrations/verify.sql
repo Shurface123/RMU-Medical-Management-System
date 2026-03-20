@@ -1,0 +1,2 @@
+SHOW TABLES LIKE '%nurse%';
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'rmu_medical_sickbay' AND TABLE_NAME IN ('patient_vitals','vital_thresholds','medication_administration', 'medication_schedules','nursing_notes','wound_care_records', 'shift_handover','iv_fluid_records','fluid_balance', 'bed_transfers','isolation_records','emergency_alerts', 'patient_education','discharge_instructions') ORDER BY TABLE_NAME;

@@ -1,159 +1,353 @@
-<!-- ═══════════════════════════════════════════════════════════
-     MODULE 10: DOCTOR-NURSE COMMUNICATION — tab_messages.php
-     ═══════════════════════════════════════════════════════════ -->
 <?php
-$conversations = dbSelect($conn,
-    "SELECT m.*, u.name AS other_name, u.profile_image AS other_photo,
-            u.is_active AS other_online,
-            (SELECT COUNT(*) FROM nurse_doctor_messages m2 WHERE m2.sender_id=m.sender_id AND m2.receiver_id=? AND m2.is_read=0) AS unread_count
-     FROM nurse_doctor_messages m
-     JOIN users u ON (CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END)=u.id
-     WHERE m.sender_id=? OR m.receiver_id=?
-     ORDER BY m.sent_at DESC","iiii",[$user_id,$user_id,$user_id,$user_id]);
+// ============================================================
+// NURSE DASHBOARD - MESSAGES (MODULE 10)
+// ============================================================
+if (!isset($conn)) exit;
 
-// Deduplicate to unique conversations
-$unique_convos = [];
-foreach($conversations as $c){
-  $other_id = ($c['sender_id']==$user_id) ? $c['receiver_id'] : $c['sender_id'];
-  if(!isset($unique_convos[$other_id])){
-    $unique_convos[$other_id] = [
-      'other_id'=>$other_id,'other_name'=>$c['other_name'],'other_photo'=>$c['other_photo'],
-      'other_online'=>$c['other_online'],'last_message'=>$c['message_text'],
-      'last_time'=>$c['sent_at'],'unread'=>(int)($c['unread_count']??0)
-    ];
-  }
+// ── GET PATIENTS (For context linking) ───────────────────────
+$patients_list = [];
+$q_pw = mysqli_query($conn, "
+    SELECT p.id, p.patient_id, u.name 
+    FROM patients p 
+    JOIN users u ON p.user_id = u.id 
+    ORDER BY u.name ASC
+");
+if ($q_pw) {
+    while($r = mysqli_fetch_assoc($q_pw)) $patients_list[] = $r;
 }
 
-$doctors_list = dbSelect($conn,
-    "SELECT u.id, u.name, u.profile_image, u.is_active
-     FROM users u WHERE u.user_role='doctor' AND u.is_active=1
-     ORDER BY u.name ASC");
+// ── GET DOCTORS & ADMINS ─────────────────────────────────────
+$staff_list = [];
+$q_staff = mysqli_query($conn, "
+    SELECT id AS user_id, name, user_role 
+    FROM users 
+    WHERE user_role IN ('doctor', 'admin') AND id != $user_id
+    ORDER BY user_role ASC, name ASC
+");
+if ($q_staff) {
+    while($r = mysqli_fetch_assoc($q_staff)) $staff_list[] = $r;
+}
+
+// ── GET INBOX MESSAGES ───────────────────────────────────────
+$inbox = [];
+$q_inbox = mysqli_query($conn, "
+    SELECT m.*, 
+           u.name AS sender_name, u.user_role AS sender_role_display,
+           p.patient_id as pid, pu.name as patient_name
+    FROM nurse_doctor_messages m
+    JOIN users u ON m.sender_id = u.id
+    LEFT JOIN patients p ON m.patient_id = p.id
+    LEFT JOIN users pu ON p.user_id = pu.id
+    WHERE m.receiver_id = $user_id
+    ORDER BY m.sent_at DESC
+");
+if ($q_inbox) {
+    while($r = mysqli_fetch_assoc($q_inbox)) $inbox[] = $r;
+}
+
+// ── GET SENT MESSAGES ────────────────────────────────────────
+$sent = [];
+$q_sent = mysqli_query($conn, "
+    SELECT m.*, 
+           u.name AS receiver_name, u.user_role AS receiver_role_display,
+           p.patient_id as pid, pu.name as patient_name
+    FROM nurse_doctor_messages m
+    JOIN users u ON m.receiver_id = u.id
+    LEFT JOIN patients p ON m.patient_id = p.id
+    LEFT JOIN users pu ON p.user_id = pu.id
+    WHERE m.sender_id = $user_id
+    ORDER BY m.sent_at DESC LIMIT 50
+");
+if ($q_sent) {
+    while($r = mysqli_fetch_assoc($q_sent)) $sent[] = $r;
+}
 ?>
-<div id="sec-messages" class="dash-section">
-  <div class="sec-header">
-    <h2><i class="fas fa-comment-medical"></i> Doctor-Nurse Messages</h2>
-    <button class="btn btn-primary" onclick="openModal('newMessageModal')"><i class="fas fa-plus"></i> New Message</button>
-  </div>
 
-  <div style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;min-height:500px;">
-    <!-- ── Conversation List ── -->
-    <div class="info-card" style="max-height:600px;overflow-y:auto;">
-      <h4 style="margin-bottom:1rem;">Conversations</h4>
-      <?php if(empty($unique_convos)):?>
-        <p class="text-center text-muted" style="padding:2rem;">No conversations yet</p>
-      <?php else: foreach($unique_convos as $oid => $cv):?>
-        <div style="display:flex;align-items:center;gap:.8rem;padding:.8rem;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);border-bottom:1px solid var(--border);"
-             onclick="loadConversation(<?=$oid?>,'<?=e($cv['other_name'])?>')" class="msg-conv-item" data-id="<?=$oid?>">
-          <div style="position:relative;">
-            <?php if($cv['other_photo'] && $cv['other_photo']!=='default-avatar.png'):?>
-              <img src="/RMU-Medical-Management-System/<?=e($cv['other_photo'])?>" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-            <?php else:?>
-              <div style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;"><?=strtoupper(substr($cv['other_name'],0,1))?></div>
-            <?php endif;?>
-            <span style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:<?=$cv['other_online']?'var(--success)':'var(--text-muted)'?>;border:2px solid var(--surface);"></span>
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:1.2rem;"><?=e($cv['other_name'])?></div>
-            <div style="font-size:1rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?=e(substr($cv['last_message'],0,40))?></div>
-          </div>
-          <?php if($cv['unread']>0):?><span class="badge badge-danger"><?=$cv['unread']?></span><?php endif;?>
+<div class="tab-content" id="messages">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-comments me-2"></i> Messages</h4>
+            <p class="text-muted mb-0">Secure communication with doctors and administration.</p>
         </div>
-      <?php endforeach; endif;?>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="new bootstrap.Modal(document.getElementById('composeModal')).show();">
+                <i class="fas fa-pen me-2"></i> Compose
+            </button>
+        </div>
     </div>
 
-    <!-- ── Message Thread ── -->
-    <div class="info-card" style="display:flex;flex-direction:column;">
-      <div id="msgThreadHeader" style="display:flex;align-items:center;gap:.8rem;padding-bottom:1rem;border-bottom:1px solid var(--border);margin-bottom:1rem;">
-        <h4 id="msgThreadTitle" style="flex:1;">Select a conversation</h4>
-      </div>
-      <div id="msgThreadBody" style="flex:1;overflow-y:auto;max-height:400px;padding:1rem 0;">
-        <p class="text-center text-muted" style="padding:3rem;"><i class="fas fa-comments" style="font-size:3rem;display:block;margin-bottom:1rem;opacity:.3;"></i>Select a conversation to view messages</p>
-      </div>
-      <div id="msgReplyBox" style="display:none;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;">
-        <div style="display:flex;gap:.8rem;">
-          <input type="hidden" id="msg_receiver_id">
-          <input id="msg_reply_text" class="form-control" style="flex:1;" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendReply()">
-          <button class="btn btn-primary" onclick="sendReply()"><i class="fas fa-paper-plane"></i></button>
+    <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); min-height: 600px;">
+        <div class="row g-0 h-100">
+            
+            <!-- Left Sidebar (Folders/List) -->
+            <div class="col-md-4 border-end bg-light" style="border-radius: 12px 0 0 12px;">
+                <div class="p-3 border-bottom bg-white" style="border-radius: 12px 0 0 0;">
+                    <ul class="nav nav-pills nav-fill" id="msgTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active rounded-pill fw-bold" id="inbox-tab" data-bs-toggle="tab" data-bs-target="#inbox-list" type="button">
+                                <i class="fas fa-inbox me-1"></i> Inbox
+                                <?php 
+                                    $unread = array_reduce($inbox, fn($c,$m) => $c + ($m['is_read']?0:1), 0);
+                                    if($unread > 0) echo "<span class='badge bg-danger ms-1'>$unread</span>";
+                                ?>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-pill fw-bold" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent-list" type="button">
+                                <i class="fas fa-paper-plane me-1"></i> Sent
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tab-content h-100" style="overflow-y: auto; max-height: 550px;">
+                    <!-- Inbox List -->
+                    <div class="tab-pane fade show active" id="inbox-list">
+                        <?php if(empty($inbox)): ?>
+                            <div class="text-center p-4 text-muted"><i class="fas fa-envelope-open-text fs-2 mb-2 opacity-50"></i><br>Inbox is empty.</div>
+                        <?php else: ?>
+                            <div class="list-group list-group-flush msg-list">
+                                <?php foreach($inbox as $m): 
+                                    $bg = $m['is_read'] ? 'bg-white' : 'bg-primary bg-opacity-10 header-border';
+                                ?>
+                                    <a href="#" class="list-group-item list-group-item-action p-3 <?= $bg ?>" onclick="viewMessage('inbox', <?= htmlspecialchars(json_encode($m)) ?>)">
+                                        <div class="d-flex w-100 justify-content-between mb-1">
+                                            <h6 class="mb-0 fw-bold <?= $m['is_read']?'text-dark':'text-primary' ?> text-truncate" style="max-width:70%;">
+                                                <?= e($m['sender_name']) ?> <small class="text-muted">(<?= ucfirst(e($m['sender_role'])) ?>)</small>
+                                            </h6>
+                                            <small class="text-muted" style="font-size: 0.75rem;"><?= date('d M, H:i', strtotime($m['sent_at'])) ?></small>
+                                        </div>
+                                        <p class="mb-1 text-truncate fw-bold <?= $m['is_read']?'text-secondary':'text-dark' ?>" style="font-size: 0.9rem;">
+                                            <?= e($m['subject'] ?: 'No Subject') ?>
+                                        </p>
+                                        <small class="text-muted text-truncate d-block"><?= e(substr($m['message_content'], 0, 50)) ?>...</small>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Sent List -->
+                    <div class="tab-pane fade" id="sent-list">
+                        <?php if(empty($sent)): ?>
+                            <div class="text-center p-4 text-muted"><i class="fas fa-paper-plane fs-2 mb-2 opacity-50"></i><br>No messages sent.</div>
+                        <?php else: ?>
+                            <div class="list-group list-group-flush msg-list">
+                                <?php foreach($sent as $m): ?>
+                                    <a href="#" class="list-group-item list-group-item-action p-3 bg-white" onclick="viewMessage('sent', <?= htmlspecialchars(json_encode($m)) ?>)">
+                                        <div class="d-flex w-100 justify-content-between mb-1">
+                                            <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width:70%;">
+                                                To: <?= e($m['receiver_name']) ?>
+                                            </h6>
+                                            <small class="text-muted" style="font-size: 0.75rem;"><?= date('d M', strtotime($m['sent_at'])) ?></small>
+                                        </div>
+                                        <p class="mb-1 text-truncate fw-bold text-secondary" style="font-size: 0.9rem;">
+                                            <?= e($m['subject'] ?: 'No Subject') ?>
+                                        </p>
+                                        <small class="text-muted text-truncate d-block">
+                                            <?php if($m['is_read']): ?><i class="fas fa-check-double text-success me-1"></i><?php endif; ?>
+                                            <?= e(substr($m['message_content'], 0, 50)) ?>...
+                                        </small>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Reading Pane -->
+            <div class="col-md-8 bg-white" style="border-radius: 0 12px 12px 0;">
+                <div id="read-pane-empty" class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                    <div class="bg-light rounded-circle p-4 mb-3 d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                        <i class="fas fa-envelope-open fs-1 opacity-25"></i>
+                    </div>
+                    <h5 class="fw-bold opacity-50">Select a message to read</h5>
+                </div>
+
+                <div id="read-pane-content" class="h-100 d-none flex-column">
+                    <div class="p-4 border-bottom w-100 bg-light" style="border-radius: 0 12px 0 0;">
+                        <h4 id="msgSubject" class="fw-bold text-dark mb-3">Subject</h4>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3 shadow-sm" style="width: 45px; height: 45px; font-size: 1.2rem;" id="msgAvatar">
+                                    ?
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold" id="msgFromTo">Sender -> Me</h6>
+                                    <small class="text-muted" id="msgDate">Date Time</small>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="btnReply" onclick="replyMessage()"><i class="fas fa-reply me-1"></i> Reply</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="msgPatientContext" class="bg-primary bg-opacity-10 p-2 text-center text-primary d-none border-bottom" style="font-size: 0.85rem; font-weight: 600;">
+                        <i class="fas fa-user-injured me-1"></i> Regarding Patient: <span id="msgPatientName"></span>
+                    </div>
+
+                    <div class="p-4" style="overflow-y: auto; flex-grow: 1; font-size: 1rem; line-height: 1.6;" id="msgBody">
+                        Message Content Goes Here
+                    </div>
+                </div>
+            </div>
+
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
-<!-- ═══════ NEW MESSAGE MODAL ═══════ -->
-<div class="modal-bg" id="newMessageModal">
-  <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-paper-plane" style="color:var(--role-accent);"></i> New Message</h3><button class="modal-close" onclick="closeModal('newMessageModal')"><i class="fas fa-times"></i></button></div>
-    <div class="form-group"><label>Doctor *</label>
-      <select id="nm_doctor" class="form-control"><option value="">Select Doctor</option>
-        <?php foreach($doctors_list as $d):?>
-          <option value="<?=$d['id']?>"><?=e($d['name'])?> <?=$d['is_active']?'🟢':'🔴'?></option>
-        <?php endforeach;?></select>
+<style>
+.msg-list .list-group-item { border-left: none; border-right: none; transition: all 0.2s; }
+.msg-list .list-group-item:first-child { border-top: none; }
+.msg-list .list-group-item.header-border { border-left: 4px solid var(--primary-color); }
+</style>
+
+<!-- ========================================== -->
+<!-- MODAL: COMPOSE MESSAGE                     -->
+<!-- ========================================== -->
+<div class="modal fade" id="composeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-pen me-2"></i> Compose Message</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="composeForm">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="send_message">
+                <div class="modal-body p-4 bg-light">
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold small text-uppercase">To (Recipient)</label>
+                            <select class="form-select border-primary" name="receiver_id" id="compReceiver" required>
+                                <option value="">-- Select Staff Member --</option>
+                                <?php foreach($staff_list as $s): ?>
+                                    <option value="<?= $s['user_id'] ?>"><?= ucfirst(e($s['user_role'])) ?>: <?= e($s['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold small text-uppercase">Regarding Patient (Optional)</label>
+                            <select class="form-select" name="patient_id" id="compPatient">
+                                <option value="">-- No specific patient --</option>
+                                <?php foreach($patients_list as $p): ?>
+                                    <option value="<?= $p['id'] ?>"><?= e($p['name']) ?> (<?= e($p['patient_id']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold small text-uppercase">Subject</label>
+                        <input type="text" class="form-control" name="subject" id="compSubject" placeholder="Brief subject line..." required>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label text-muted fw-bold small text-uppercase">Message Body</label>
+                        <textarea class="form-control" name="message_content" id="compBody" rows="6" placeholder="Type your message here..." required></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer border-0 bg-white" style="border-radius:0 0 15px 15px;">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Discard</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold" id="btnSendMsg"><i class="fas fa-paper-plane me-2"></i> Send</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="form-group"><label>Related Patient (optional)</label>
-      <select id="nm_patient" class="form-control"><option value="">None</option>
-        <?php foreach($all_patients_for_vitals as $ap):?><option value="<?=$ap['id']?>"><?=e($ap['patient_name'])?></option><?php endforeach;?></select>
-    </div>
-    <div class="form-group"><label>Message *</label><textarea id="nm_message" class="form-control" rows="4" placeholder="Type your message..."></textarea></div>
-    <div class="form-group"><label>Priority</label>
-      <select id="nm_priority" class="form-control"><option value="Normal">Normal</option><option value="Urgent">Urgent</option></select>
-    </div>
-    <button class="btn btn-primary" onclick="sendNewMessage()" style="width:100%;"><i class="fas fa-paper-plane"></i> Send Message</button>
-  </div>
 </div>
 
 <script>
-let currentConvoId = null;
+let currentMsg = null;
+let currentFolder = '';
 
-async function loadConversation(doctorId, name){
-  currentConvoId = doctorId;
-  document.getElementById('msgThreadTitle').textContent = 'Dr. ' + name;
-  document.getElementById('msg_receiver_id').value = doctorId;
-  document.getElementById('msgReplyBox').style.display = 'block';
-  document.querySelectorAll('.msg-conv-item').forEach(el=>el.style.background='');
-  document.querySelector(`.msg-conv-item[data-id="${doctorId}"]`)?.style.setProperty('background','var(--role-accent-light)');
+function viewMessage(folder, msg) {
+    currentMsg = msg;
+    currentFolder = folder;
+    
+    $('#read-pane-empty').addClass('d-none');
+    $('#read-pane-content').removeClass('d-none').addClass('d-flex');
+    
+    $('#msgSubject').text(msg.subject || 'No Subject');
+    $('#msgBody').html(msg.message_content.replace(/\n/g, '<br>'));
+    
+    // Formatting Dates beautifully
+    const msgDate = new Date(msg.sent_at);
+    $('#msgDate').text(msgDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }));
+    
+    if(folder === 'inbox') {
+        const initial = msg.sender_name.charAt(0).toUpperCase();
+        $('#msgAvatar').text(initial).removeClass('bg-secondary').addClass('bg-primary');
+        $('#msgFromTo').html(`${msg.sender_name} <small class="text-muted fw-normal">to me</small>`);
+        $('#btnReply').removeClass('d-none');
+        
+        // Mark as read via AJAX if unread
+        if(msg.is_read == 0) {
+            $.post('../nurse/process_messages.php', { action: 'mark_read', msg_id: msg.id, _csrf: '<?= generateCsrfToken() ?>' }, function(res) {
+               // Silently update
+            });
+            msg.is_read = 1; // local update
+        }
+    } else {
+        const initial = msg.receiver_name.charAt(0).toUpperCase();
+        $('#msgAvatar').text(initial).removeClass('bg-primary').addClass('bg-secondary');
+        $('#msgFromTo').html(`Me <small class="text-muted fw-normal">to ${msg.receiver_name}</small>`);
+        $('#btnReply').addClass('d-none');
+    }
 
-  const r = await nurseAction({action:'get_messages', other_user_id: doctorId});
-  if(!r.success){document.getElementById('msgThreadBody').innerHTML='<p class="text-center" style="color:var(--danger);">Error loading messages</p>';return;}
-
-  const msgs = r.data || [];
-  const myId = <?=$user_id?>;
-  document.getElementById('msgThreadBody').innerHTML = msgs.length===0 ? '<p class="text-center text-muted">No messages yet</p>' :
-    msgs.map(m => {
-      const isMine = m.sender_id == myId;
-      return `<div style="display:flex;justify-content:${isMine?'flex-end':'flex-start'};margin-bottom:.8rem;">
-        <div style="max-width:70%;padding:.8rem 1.2rem;border-radius:${isMine?'16px 16px 4px 16px':'16px 16px 16px 4px'};
-          background:${isMine?'var(--role-accent)':'var(--surface-2)'};color:${isMine?'#fff':'var(--text-primary)'};font-size:1.2rem;">
-          <div>${m.message_text}</div>
-          <div style="font-size:.9rem;opacity:.7;margin-top:.3rem;text-align:right;">${new Date(m.sent_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
-        </div></div>`;
-    }).join('');
-
-  // Scroll to bottom
-  const body = document.getElementById('msgThreadBody');
-  body.scrollTop = body.scrollHeight;
-
-  // Mark as read
-  nurseAction({action:'mark_messages_read', other_user_id: doctorId});
+    if(msg.patient_name) {
+        $('#msgPatientContext').removeClass('d-none');
+        $('#msgPatientName').text(`${msg.patient_name} (${msg.pid})`);
+    } else {
+        $('#msgPatientContext').addClass('d-none');
+    }
 }
 
-async function sendReply(){
-  const text = document.getElementById('msg_reply_text').value.trim();
-  if(!text) return;
-  const r = await nurseAction({action:'send_message', receiver_id: document.getElementById('msg_receiver_id').value, message_text: text});
-  if(r.success){
-    document.getElementById('msg_reply_text').value='';
-    loadConversation(currentConvoId, document.getElementById('msgThreadTitle').textContent.replace('Dr. ',''));
-  } else { showToast(r.message||'Error','error'); }
+function replyMessage() {
+    if(!currentMsg || currentFolder !== 'inbox') return;
+    
+    document.getElementById('composeForm').reset();
+    $('#compReceiver').val(currentMsg.sender_id); // sender_id points to users.id
+    $('#compPatient').val(currentMsg.patient_id);
+    
+    let subj = currentMsg.subject || '';
+    if(!subj.toUpperCase().startsWith('RE:')) subj = 'Re: ' + subj;
+    $('#compSubject').val(subj);
+    
+    $('#compBody').val('');
+    new bootstrap.Modal(document.getElementById('composeModal')).show();
 }
 
-async function sendNewMessage(){
-  if(!validateForm({nm_doctor:'Doctor',nm_message:'Message'})) return;
-  const r = await nurseAction({action:'send_message', receiver_id: document.getElementById('nm_doctor').value,
-    message_text: document.getElementById('nm_message').value,
-    patient_id: document.getElementById('nm_patient').value,
-    priority: document.getElementById('nm_priority').value});
-  showToast(r.message||'Sent',r.success?'success':'error');
-  if(r.success){closeModal('newMessageModal');setTimeout(()=>location.reload(),1000);}
-}
+$(document).ready(function() {
+    $('#composeForm').on('submit', function(e) {
+        e.preventDefault();
+        const btn = $('#btnSendMsg');
+        const origText = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+        
+        $.ajax({
+            url: '../nurse/process_messages.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if(res.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + res.message);
+                    btn.prop('disabled', false).html(origText);
+                }
+            },
+            error: function() {
+                alert('An error occurred.');
+                btn.prop('disabled', false).html(origText);
+            }
+        });
+    });
+});
 </script>

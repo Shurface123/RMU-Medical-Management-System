@@ -1,88 +1,82 @@
-<!-- ═══════════════════════════════════════════════════════════
-     MODULE 12: REPORTS — tab_reports.php
-     ═══════════════════════════════════════════════════════════ -->
-<div id="sec-reports" class="dash-section">
-  <div class="sec-header"><h2><i class="fas fa-file-export"></i> Reports</h2></div>
+<?php
+// ============================================================
+// NURSE DASHBOARD - REPORTS & EXPORTS (MODULE 12)
+// ============================================================
+if (!isset($conn)) exit;
+?>
 
-  <div class="cards-grid">
-    <!-- Report Cards -->
-    <?php
-    $report_types = [
-      ['id'=>'vitals','icon'=>'fa-heartbeat','color'=>'#E91E63','title'=>'Vital Signs Report','desc'=>'BP, HR, Temp, SpO2 readings by patient & date range'],
-      ['id'=>'medications','icon'=>'fa-pills','color'=>'#2980B9','title'=>'Medication Admin Report','desc'=>'Administered, missed, refused medications by patient'],
-      ['id'=>'notes','icon'=>'fa-notes-medical','color'=>'#F39C12','title'=>'Nursing Notes Report','desc'=>'All nursing notes by patient, shift, date range'],
-      ['id'=>'fluids','icon'=>'fa-droplet','color'=>'#3498DB','title'=>'Fluid Balance Report','desc'=>'Intake/output/net balance by patient and date'],
-      ['id'=>'tasks','icon'=>'fa-clipboard-list','color'=>'#27AE60','title'=>'Task Completion Report','desc'=>'Task completion rates by shift and date range'],
-      ['id'=>'emergency','icon'=>'fa-triangle-exclamation','color'=>'#E74C3C','title'=>'Emergency Alerts Report','desc'=>'All emergency alerts, response times, outcomes'],
-      ['id'=>'wounds','icon'=>'fa-band-aid','color'=>'#9B59B6','title'=>'Wound Care Report','desc'=>'Wound assessments and healing progress by patient'],
-      ['id'=>'handover','icon'=>'fa-exchange-alt','color'=>'#1ABC9C','title'=>'Shift Handover Report','desc'=>'Handover summaries and acknowledgements'],
-      ['id'=>'education','icon'=>'fa-book-medical','color'=>'#E67E22','title'=>'Education & Discharge Report','desc'=>'Patient education records and discharge instructions'],
-    ];
-    foreach($report_types as $rt):
-    ?>
-    <div class="info-card" style="cursor:pointer;border-left:3px solid <?=$rt['color']?>;" onclick="openReportConfig('<?=$rt['id']?>','<?=e($rt['title'])?>')">
-      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;">
-        <div style="width:48px;height:48px;border-radius:12px;background:<?=$rt['color']?>15;color:<?=$rt['color']?>;display:flex;align-items:center;justify-content:center;font-size:1.6rem;"><i class="fas <?=$rt['icon']?>"></i></div>
-        <div><div style="font-size:1.4rem;font-weight:700;"><?=$rt['title']?></div><div style="font-size:1.1rem;color:var(--text-secondary);"><?=$rt['desc']?></div></div>
-      </div>
-      <div style="display:flex;gap:.5rem;">
-        <span class="badge badge-secondary"><i class="fas fa-file-pdf"></i> PDF</span>
-        <span class="badge badge-secondary"><i class="fas fa-file-csv"></i> CSV</span>
-        <span class="badge badge-secondary"><i class="fas fa-file-excel"></i> Excel</span>
-      </div>
+<div class="tab-content" id="reports">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-file-export me-2"></i> Clinical Reports Hub</h4>
+            <p class="text-muted mb-0">Generate, print, and export structured CSV/PDF reports for auditing.</p>
+        </div>
     </div>
-    <?php endforeach;?>
-  </div>
+
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-8">
+            <div class="card" style="border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+                <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0"><i class="fas fa-clipboard-check me-2"></i> Report Generator</h4>
+                    <p class="text-white-50 mb-0 small mt-1">Select parameters below to extract your clinical data</p>
+                </div>
+                
+                <div class="card-body p-5 bg-white" style="border-radius: 0 0 15px 15px;">
+                    <form action="../nurse/process_reports.php" method="POST" target="_blank" id="reportForm">
+                        <?= csrfField() ?>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark"><i class="fas fa-filter text-primary me-2"></i> Data Category (Required)</label>
+                            <select class="form-select form-select-lg border-primary" name="report_type" required style="border-radius: 10px;">
+                                <option value="">-- Select Report Type --</option>
+                                <option value="vitals">Patient Vitals Flowsheet</option>
+                                <option value="medications">Medication Administration Log (MAR)</option>
+                                <option value="fluids">I&O / Fluid Balance Charts</option>
+                                <option value="emergencies">Emergency Alert History</option>
+                                <option value="tasks">Completed Clinical Tasks & Handovers</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark"><i class="far fa-calendar-alt text-primary me-2"></i> Start Date</label>
+                                <input type="date" class="form-control form-control-lg" name="start_date" value="<?= date('Y-m-d', strtotime('-7 days')) ?>" required style="border-radius: 10px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark"><i class="far fa-calendar-check text-primary me-2"></i> End Date</label>
+                                <input type="date" class="form-control form-control-lg" name="end_date" value="<?= date('Y-m-d') ?>" required style="border-radius: 10px;">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="submit" name="export_format" value="csv" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm fw-bold hover-lift">
+                                <i class="fas fa-file-csv me-2"></i> Download CSV
+                            </button>
+                            <!-- In a full implementation, PDF would route to something like TCPDF/Dompdf or use window.print. 
+                                 We will handle a "Print View" HTML response for PDF saving. -->
+                            <button type="submit" name="export_format" value="print" class="btn btn-outline-primary btn-lg rounded-pill px-5 shadow-sm fw-bold hover-lift">
+                                <i class="fas fa-print me-2"></i> Print View (PDF)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning mt-4 text-center rounded-pill shadow-sm" style="border: 1px dashed #ffc107;">
+                <i class="fas fa-lock me-2"></i> <strong>Confidentiality Notice:</strong> Generated reports contain PHI (Protected Health Information). Ensure rigorous compliance with HIPAA / RMU privacy policies when distributing exported files.
+            </div>
+
+        </div>
+    </div>
 </div>
 
-<!-- ═══════ REPORT CONFIG MODAL ═══════ -->
-<div class="modal-bg" id="reportConfigModal">
-  <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-file-export" style="color:var(--role-accent);"></i> <span id="rpt_title">Generate Report</span></h3><button class="modal-close" onclick="closeModal('reportConfigModal')"><i class="fas fa-times"></i></button></div>
-    <input type="hidden" id="rpt_type">
-    <div class="form-group"><label>Patient (optional)</label>
-      <select id="rpt_patient" class="form-control"><option value="">All Patients</option>
-        <?php foreach($all_patients_for_vitals as $ap):?><option value="<?=$ap['id']?>"><?=e($ap['patient_name'])?></option><?php endforeach;?></select>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Date From *</label><input id="rpt_from" type="date" class="form-control" value="<?=date('Y-m-01')?>"></div>
-      <div class="form-group"><label>Date To *</label><input id="rpt_to" type="date" class="form-control" value="<?=$today?>"></div>
-    </div>
-    <div class="form-group"><label>Export Format *</label>
-      <select id="rpt_format" class="form-control"><option value="pdf">PDF</option><option value="csv">CSV</option><option value="xlsx">Excel (XLSX)</option></select>
-    </div>
-    <button class="btn btn-primary" onclick="generateReport()" style="width:100%;"><i class="fas fa-download"></i> Generate & Download</button>
-  </div>
-</div>
-
-<script>
-function openReportConfig(type,title){
-  document.getElementById('rpt_type').value=type;
-  document.getElementById('rpt_title').textContent=title;
-  openModal('reportConfigModal');
+<style>
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-async function generateReport(){
-  const type=document.getElementById('rpt_type').value;
-  const format=document.getElementById('rpt_format').value;
-  const from=document.getElementById('rpt_from').value;
-  const to=document.getElementById('rpt_to').value;
-  const patient=document.getElementById('rpt_patient').value;
-
-  if(!from||!to){showToast('Please select date range','error');return;}
-
-  showToast('Generating report...','info');
-  const r=await nurseAction({action:'generate_report',report_type:type,format:format,date_from:from,date_to:to,patient_id:patient});
-  if(r.success && r.download_url){
-    const a=document.createElement('a');a.href=r.download_url;a.download='';a.click();
-    showToast('Report downloaded','success');
-  } else if(r.success && r.data) {
-    // For CSV, create blob
-    const blob=new Blob([r.data],{type:'text/csv'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=`nurse_${type}_report.${format}`;a.click();
-    showToast('Report downloaded','success');
-  } else { showToast(r.message||'Report generation failed','error'); }
-  closeModal('reportConfigModal');
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
 }
-</script>
+</style>

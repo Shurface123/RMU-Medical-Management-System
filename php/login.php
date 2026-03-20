@@ -79,15 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role']      = $role;
                 $_SESSION['user_role'] = $role;
 
-                // Log successful login for lab technicians
-                if ($role === 'lab_technician') {
-                    if (!function_exists('logLabActivity')) require_once __DIR__ . '/dashboards/lab_security.php';
-                    // We only load dbVal securely if we actually found lab_security.php
-                    if (function_exists('dbVal')) {
-                        $tp = dbVal($conn, "SELECT id FROM lab_technicians WHERE user_id=? LIMIT 1", "i", [(int)$row['id']]);
-                        if ($tp) logLabActivity($conn, (int)$tp, 'login_success', 'security', null);
-                    }
-                }
+
 
                 // ── Staff sub-role approval gate ───────────────────────
                 $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
@@ -123,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     case 'patient':        header("Location: dashboards/patient_dashboard.php"); break;
                     case 'pharmacist':     header("Location: dashboards/pharmacy_dashboard.php"); break;
                     case 'nurse':          header("Location: dashboards/nurse_dashboard.php"); break;
-                    case 'lab_technician': header("Location: dashboards/lab_dashboard.php"); break;
                     case 'ambulance_driver':
                     case 'cleaner':
                     case 'laundry_staff':
@@ -150,13 +141,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $c_res = mysqli_stmt_get_result($check_fails);
                     $fails = mysqli_fetch_assoc($c_res)['fails'] ?? 0;
 
-                    if ($fails >= 5) {
-                        $lock_upd = mysqli_prepare($conn, "UPDATE users SET locked_until=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?");
-                        mysqli_stmt_bind_param($lock_upd, "i", $row['id']);
-                        mysqli_stmt_execute($lock_upd);
-                        header("Location: index.php?error=" . urlencode('Account locked due to multiple failed attempts. Try again in 15 minutes.'));
-                        exit();
-                    }
+                        if ($fails >= 5) {
+                            $lock_upd = mysqli_prepare($conn, "UPDATE users SET locked_until=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?");
+                            mysqli_stmt_bind_param($lock_upd, "i", $row['id']);
+                            mysqli_stmt_execute($lock_upd);
+
+                            // Notify Admins of brute-force attack
+                            $msg = "Security Alert: Account '{$row['user_name']}' has been locked due to multiple failed login attempts from IP $ip.";
+                            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notifications (user_id, message, type, related_module, created_at) SELECT id, ?, 'Security Alert', 'users', NOW() FROM users WHERE user_role='admin'");
+                            mysqli_stmt_bind_param($notif_stmt, "s", $msg);
+                            mysqli_stmt_execute($notif_stmt);
+
+                            header("Location: index.php?error=" . urlencode('Account locked due to multiple failed attempts. Try again in 15 minutes.'));
+                            exit();
+                        }
                 }
                 header("Location: index.php?error=Incorrect username, password, or role");
                 exit();

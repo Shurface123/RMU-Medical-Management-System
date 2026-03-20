@@ -123,18 +123,14 @@ function enforceSingleDashboard($expectedRole) {
             case 'doctor':
                 header("Location: /RMU-Medical-Management-System/php/dashboards/doctor_dashboard.php");
                 break;
-            case 'nurse':
-                header("Location: /RMU-Medical-Management-System/php/dashboards/nurse_dashboard.php");
-                break;
+
             case 'patient':
                 header("Location: /RMU-Medical-Management-System/php/dashboards/patient_dashboard.php");
                 break;
             case 'pharmacist':
                 header("Location: /RMU-Medical-Management-System/php/dashboards/pharmacy_dashboard.php");
                 break;
-            case 'lab_technician':
-                header("Location: /RMU-Medical-Management-System/php/dashboards/lab_dashboard.php");
-                break;
+
             case 'ambulance_driver':
             case 'cleaner':
             case 'laundry_staff':
@@ -241,18 +237,14 @@ function redirectToDashboard() {
         case 'doctor':
             header("Location: /RMU-Medical-Management-System/php/dashboards/doctor_dashboard.php");
             break;
-        case 'nurse':
-            header("Location: /RMU-Medical-Management-System/php/dashboards/nurse_dashboard.php");
-            break;
+
         case 'patient':
             header("Location: /RMU-Medical-Management-System/php/dashboards/patient_dashboard.php");
             break;
         case 'pharmacist':
             header("Location: /RMU-Medical-Management-System/php/dashboards/pharmacy_dashboard.php");
             break;
-        case 'lab_technician':
-            header("Location: /RMU-Medical-Management-System/php/dashboards/lab_dashboard.php");
-            break;
+
         case 'ambulance_driver':
         case 'cleaner':
         case 'laundry_staff':
@@ -278,19 +270,5 @@ function isStaff() {
     return isAuthenticated() && in_array(getCurrentRole(), $staffRoles);
 }
 
-/**
- * Check if user is a lab technician
- * @return bool
- */
-function isLabTechnician() {
-    return isAuthenticated() && getCurrentRole() === 'lab_technician';
-}
 
-/**
- * Check if user is a nurse
- * @return bool
- */
-function isNurse() {
-    return isAuthenticated() && getCurrentRole() === 'nurse';
-}
 ?>

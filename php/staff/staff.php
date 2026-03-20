@@ -35,7 +35,7 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
         <div class="adm-page-header">
             <div class="adm-page-header-left">
                 <h1>Staff Management</h1>
-                <p>Manage all non-clinical staff members — pharmacists, nurses, receptionists, and lab technicians.</p>
+                <p>Manage all non-clinical staff members — pharmacists, receptionists, and support staff.</p>
             </div>
             <a href="/RMU-Medical-Management-System/php/register.php?role=staff" class="adm-btn adm-btn-primary">
                 <i class="fas fa-user-plus"></i> Add Staff Member
@@ -51,11 +51,7 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                 <div class="adm-mini-card-num green"><?php echo $total_staff; ?></div>
                 <div class="adm-mini-card-label">Active</div>
             </div>
-            <div class="adm-mini-card">
-                <?php $nurses    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff s JOIN users u ON s.user_id=u.id WHERE u.user_role='nurse'"))[0] ?? 0; ?>
-                <div class="adm-mini-card-num blue"><?php echo $nurses; ?></div>
-                <div class="adm-mini-card-label">Nurses</div>
-            </div>
+
             <div class="adm-mini-card">
                 <?php $pharma = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff s JOIN users u ON s.user_id=u.id WHERE u.user_role='pharmacist'"))[0] ?? 0; ?>
                 <div class="adm-mini-card-num orange"><?php echo $pharma; ?></div>
@@ -72,7 +68,7 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                 <select name="role" class="adm-search-input">
                     <option value="">All Roles</option>
                     <?php 
-                    $roles_list = ['nurse','pharmacist','receptionist','lab_technician',
+                    $roles_list = ['pharmacist','receptionist',
                                    'ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff','staff'];
                     foreach ($roles_list as $r): 
                     ?>
@@ -127,7 +123,7 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                                 $role_colors = [
                                     'ambulance_driver' => 'primary', 'cleaner' => 'info', 'laundry_staff' => 'warning',
                                     'maintenance' => 'success', 'security' => 'danger', 'kitchen_staff' => 'warning',
-                                    'nurse' => 'info', 'pharmacist' => 'warning', 'lab_technician' => 'primary'
+                                    'pharmacist' => 'warning'
                                 ];
                                 $role_cls = $role_colors[$st['user_role']] ?? 'secondary';
                                 

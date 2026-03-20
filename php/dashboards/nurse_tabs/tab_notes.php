@@ -1,216 +1,244 @@
-<!-- ═══════════════════════════════════════════════════════════
-     MODULE 5: NURSING NOTES & OBSERVATIONS — tab_notes.php
-     ═══════════════════════════════════════════════════════════ -->
 <?php
-$nursing_notes = dbSelect($conn,
-    "SELECT nn.*, u.name AS patient_name, p.patient_id AS p_ref,
-            ns.shift_type
-     FROM nursing_notes nn
-     JOIN patients p ON nn.patient_id=p.id JOIN users u ON p.user_id=u.id
-     LEFT JOIN nurse_shifts ns ON nn.shift_id=ns.id
-     WHERE nn.nurse_id=?
-     ORDER BY nn.created_at DESC LIMIT 100","i",[$nurse_pk]);
+// ============================================================
+// NURSE DASHBOARD - NURSING NOTES (MODULE 5)
+// ============================================================
+if (!isset($conn)) exit;
 
-$wound_records = dbSelect($conn,
-    "SELECT wc.*, u.name AS patient_name
-     FROM wound_care_records wc
-     JOIN patients p ON wc.patient_id=p.id JOIN users u ON p.user_id=u.id
-     WHERE wc.nurse_id=?
-     ORDER BY wc.created_at DESC LIMIT 50","i",[$nurse_pk]);
+// ── GET SHIFT & WARD ─────────────────────────────────────────
+$shift_q = mysqli_query($conn, "SELECT id, ward_assigned FROM nurse_shifts WHERE nurse_id=$nurse_pk AND shift_date='$today' AND status='Active' LIMIT 1");
+$current_shift = mysqli_fetch_assoc($shift_q);
+$ward_assigned = $current_shift['ward_assigned'] ?? 'All Wards';
+$shift_pk      = $current_shift['id'] ?? null;
+
+// ── FETCH AVAILABLE PATIENTS FOR NEW NOTE DROPDOWN ───────────
+$patients_in_ward = [];
+$q_pw = mysqli_query($conn, "
+    SELECT p.id, p.patient_id, u.name 
+    FROM patients p 
+    JOIN users u ON p.user_id = u.id 
+    JOIN bed_assignments ba ON p.id = ba.patient_id AND ba.status='Occupied'
+    JOIN beds b ON ba.bed_id = b.id
+    WHERE b.ward = '".mysqli_real_escape_string($conn, $ward_assigned)."'
+    ORDER BY u.name ASC
+");
+if ($q_pw) {
+    while($r = mysqli_fetch_assoc($q_pw)) $patients_in_ward[] = $r;
+}
+
+// ── FETCH RECENT NOTES ───────────────────────────────────────
+$notes = [];
+$q_str = "
+    SELECT 
+        nn.id AS note_pk, nn.note_id, nn.note_type, nn.note_content, nn.is_locked, nn.created_at,
+        p.patient_id, u.name AS patient_name, u.gender,
+        n_author.full_name AS author_name,
+        b.ward, b.bed_number
+    FROM nursing_notes nn
+    JOIN patients p ON nn.patient_id = p.id
+    JOIN users u ON p.user_id = u.id
+    JOIN nurses n_author ON nn.nurse_id = n_author.id
+    LEFT JOIN bed_assignments ba ON p.id = ba.patient_id AND ba.status = 'Occupied'
+    LEFT JOIN beds b ON ba.bed_id = b.id
+";
+// Show notes for patients in this ward OR notes created by this nurse recently
+if ($ward_assigned !== 'All Wards' && $ward_assigned !== 'Not Assigned') {
+    $q_str .= " WHERE (b.ward = '".mysqli_real_escape_string($conn, $ward_assigned)."' OR nn.nurse_id = $nurse_pk)";
+}
+$q_str .= " ORDER BY nn.created_at DESC LIMIT 50";
+
+$q_notes = mysqli_query($conn, $q_str);
+if ($q_notes) {
+    while ($r = mysqli_fetch_assoc($q_notes)) {
+        $notes[] = $r;
+    }
+}
 ?>
-<div id="sec-notes" class="dash-section">
-  <div class="sec-header">
-    <h2><i class="fas fa-notes-medical"></i> Nursing Notes</h2>
-    <div style="display:flex;gap:.8rem;">
-      <button class="btn btn-primary" onclick="openModal('addNoteModal')"><i class="fas fa-plus"></i> Add Note</button>
-      <button class="btn btn-outline" onclick="openModal('woundCareModal')"><i class="fas fa-band-aid"></i> Wound Care</button>
+
+<div class="tab-content" id="notes">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h4 class="mb-0"><i class="fas fa-clipboard-list text-muted me-2"></i> Nursing Notes</h4>
+            <p class="text-muted mb-0">Clinical documentation for <strong><?= e($ward_assigned) ?></strong></p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <?php if($shift_pk): ?>
+                <button class="btn btn-primary" style="border-radius:20px;" onclick="newNoteModal()">
+                    <i class="fas fa-plus"></i> Add New Note
+                </button>
+            <?php else: ?>
+                <button class="btn btn-secondary disabled" style="border-radius:20px;" title="Active shift required">
+                    <i class="fas fa-plus"></i> Add New Note
+                </button>
+            <?php endif; ?>
+        </div>
     </div>
-  </div>
 
-  <div class="filter-tabs">
-    <span class="ftab active" onclick="filterNotes('all',this)">All Notes</span>
-    <span class="ftab" onclick="filterNotes('General',this)">General</span>
-    <span class="ftab" onclick="filterNotes('Observation',this)">Observation</span>
-    <span class="ftab" onclick="filterNotes('Wound',this)">Wound</span>
-    <span class="ftab" onclick="filterNotes('Behavior',this)">Behavior</span>
-    <span class="ftab" onclick="filterNotes('Incident',this)">Incident</span>
-  </div>
-
-  <!-- ── Notes List ── -->
-  <div class="info-card" style="margin-bottom:1.5rem;">
-    <div class="table-responsive"><table class="adm-table" id="notesTable"><thead><tr>
-      <th>Date/Time</th><th>Patient</th><th>Type</th><th>Note</th><th>Shift</th><th>Status</th><th>Actions</th>
-    </tr></thead><tbody>
-    <?php if(empty($nursing_notes)):?>
-      <tr><td colspan="7" class="text-center text-muted" style="padding:3rem;">No nursing notes yet</td></tr>
-    <?php else: foreach($nursing_notes as $nn):
-      $locked = (int)($nn['is_locked']??0);
-    ?>
-      <tr data-note-type="<?=e($nn['note_type'])?>">
-        <td><?=date('d M Y h:i A',strtotime($nn['created_at']))?></td>
-        <td><?=e($nn['patient_name'])?><br><small class="text-muted"><?=e($nn['p_ref']??'')?></small></td>
-        <td><span class="badge badge-<?=($nn['note_type']==='Incident')?'danger':(($nn['note_type']==='Wound')?'warning':'info')?>"><?=e($nn['note_type'])?></span></td>
-        <td style="max-width:300px;"><?=e(substr($nn['note_content'],0,120))?><?=strlen($nn['note_content'])>120?'...':''?></td>
-        <td><?=e($nn['shift_type']??'—')?></td>
-        <td><?=$locked?'<span class="badge badge-secondary"><i class="fas fa-lock"></i> Locked</span>':'<span class="badge badge-success"><i class="fas fa-unlock"></i> Open</span>'?></td>
-        <td class="action-btns">
-          <button class="btn btn-xs btn-outline" onclick="viewNote(<?=$nn['id']?>)" title="View"><i class="fas fa-eye"></i></button>
-          <?php if(!$locked):?><button class="btn btn-xs btn-primary" onclick="editNote(<?=$nn['id']?>)" title="Edit"><i class="fas fa-edit"></i></button><?php endif;?>
-        </td>
-      </tr>
-    <?php endforeach; endif;?></tbody></table></div>
-  </div>
-
-  <!-- ── Wound Care Records ── -->
-  <?php if(!empty($wound_records)):?>
-  <div class="info-card">
-    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-band-aid" style="color:var(--warning);"></i> Wound Care Records</h3>
-    <div class="table-responsive"><table class="data-table"><thead><tr>
-      <th>Patient</th><th>Location</th><th>Description</th><th>Dressing</th><th>Healing</th><th>Next Care</th><th>Date</th>
-    </tr></thead><tbody>
-    <?php foreach($wound_records as $wr):?>
-      <tr>
-        <td><?=e($wr['patient_name'])?></td>
-        <td><?=e($wr['wound_location'])?></td>
-        <td style="max-width:200px;"><?=e(substr($wr['wound_description']??'',0,80))?></td>
-        <td><?=e($wr['dressing_type']??'—')?></td>
-        <td><span class="badge badge-<?=($wr['healing_status']==='Improving')?'success':(($wr['healing_status']==='Worsening')?'danger':'warning')?>"><?=e($wr['healing_status'])?></span></td>
-        <td><?=$wr['next_care_due']?date('d M h:i A',strtotime($wr['next_care_due'])):'—'?></td>
-        <td><?=date('d M Y',strtotime($wr['created_at']))?></td>
-      </tr>
-    <?php endforeach;?></tbody></table></div>
-  </div>
-  <?php endif;?>
+    <!-- Notes Feed -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-body p-0">
+                    <?php if(empty($notes)): ?>
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-file-medical-alt fs-1 mb-3 opacity-25"></i>
+                            <h5>No recent notes</h5>
+                            <p>There are no nursing notes documented for patients in this ward yet.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="list-group list-group-flush" style="border-radius: 12px;">
+                            <?php foreach($notes as $n): ?>
+                                <div class="list-group-item p-4">
+                                    <div class="d-flex w-100 justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar me-3 bg-<?= $n['gender']=='Male'?'primary':'danger' ?> bg-opacity-10 text-<?= $n['gender']=='Male'?'primary':'danger' ?> rounded-circle d-flex align-items-center justify-content-center" style="width:45px;height:45px; font-weight:bold; font-size:1.2rem;">
+                                                <?= strtoupper(substr($n['patient_name'],0,1)) ?>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold" style="font-size: 1.05rem;">
+                                                    <?= e($n['patient_name']) ?> <span class="text-muted fw-normal fs-6 ms-1">(<?= e($n['patient_id']) ?>)</span>
+                                                </h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> <?= e($n['ward'] ?: 'Unknown') ?> - Bed <?= e($n['bed_number'] ?: 'N/A') ?>
+                                                    &nbsp;|&nbsp;
+                                                    <i class="fas fa-user-nurse"></i> <?= e($n['author_name']) ?>
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block fw-bold"><i class="far fa-clock"></i> <?= date('d M Y, H:i', strtotime($n['created_at'])) ?></small>
+                                            <?php
+                                                $b_color = 'bg-secondary';
+                                                switch($n['note_type']) {
+                                                    case 'Wound Care':  $b_color = 'bg-danger'; break;
+                                                    case 'Observation': $b_color = 'bg-info'; break;
+                                                    case 'Handover':    $b_color = 'bg-primary'; break;
+                                                    case 'Assessment':  $b_color = 'bg-success'; break;
+                                                    case 'Incident':    $b_color = 'bg-warning text-dark'; break;
+                                                }
+                                            ?>
+                                            <span class="badge <?= $b_color ?> mt-1"><i class="fas fa-tag"></i> <?= e($n['note_type']) ?></span>
+                                            
+                                            <?php if($n['is_locked']): ?>
+                                                <span class="badge bg-dark mt-1" title="Locked for compliance"><i class="fas fa-lock"></i> Locked</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 p-3 bg-light rounded" style="font-family: Georgia, serif; line-height: 1.6; color: #444;">
+                                        <?= nl2br(e($n['note_content'])) ?>
+                                    </div>
+                                    <div class="mt-2 text-end">
+                                        <small class="text-muted">Note ID: <?= e($n['note_id']) ?></small>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- ═══════ ADD NOTE MODAL ═══════ -->
-<div class="modal-bg" id="addNoteModal">
-  <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-notes-medical" style="color:var(--role-accent);"></i> Add Nursing Note</h3><button class="modal-close" onclick="closeModal('addNoteModal')"><i class="fas fa-times"></i></button></div>
-    <div class="form-row">
-      <div class="form-group"><label>Patient *</label>
-        <select id="nn_patient" class="form-control"><option value="">Select Patient</option>
-          <?php foreach($all_patients_for_vitals as $ap):?><option value="<?=$ap['id']?>"><?=e($ap['patient_name'])?></option><?php endforeach;?></select>
-      </div>
-      <div class="form-group"><label>Note Type *</label>
-        <select id="nn_type" class="form-control">
-          <option value="General">General Observation</option><option value="Observation">Clinical Observation</option>
-          <option value="Wound">Wound Care</option><option value="Behavior">Patient Behavior</option>
-          <option value="Incident">Incident Report</option><option value="Assessment">Assessment</option>
-          <option value="Pain">Pain Assessment</option><option value="Handoff">Shift Handoff</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group"><label>Note Content *</label><textarea id="nn_content" class="form-control" rows="6" placeholder="Enter detailed nursing observation or note..."></textarea></div>
-    <div class="form-group"><label>Attachments (images/docs)</label><input type="file" id="nn_files" class="form-control" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"></div>
-    <button class="btn btn-primary" onclick="submitNote()" style="width:100%;"><i class="fas fa-save"></i> Save Note</button>
-  </div>
-</div>
+<!-- ========================================== -->
+<!-- MODAL: ADD NURSING NOTE                    -->
+<!-- ========================================== -->
+<div class="modal fade" id="newNoteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white; border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-file-signature me-2"></i> Document Clinical Note</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form id="noteForm">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="add_note">
+                <input type="hidden" name="shift_id" value="<?= $shift_pk ?>">
+                
+                <div class="modal-body p-4">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold small text-uppercase">Patient</label>
+                            <select class="form-select" name="patient_id" required>
+                                <option value="">-- Select Patient in Ward --</option>
+                                <?php foreach($patients_in_ward as $p): ?>
+                                    <option value="<?= $p['id'] ?>"><?= e($p['name']) ?> (<?= e($p['patient_id']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                            <?php if(empty($patients_in_ward)): ?>
+                                <small class="text-danger mt-1 d-block"><i class="fas fa-info-circle"></i> No patients are currently assigned to this ward.</small>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold small text-uppercase">Note Category</label>
+                            <select class="form-select" name="note_type" required>
+                                <option value="General">General</option>
+                                <option value="Assessment">Assessment</option>
+                                <option value="Observation">Observation</option>
+                                <option value="Wound Care">Wound Care</option>
+                                <option value="Behavior">Behavior</option>
+                                <option value="Incident">Incident</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <label class="form-label text-muted fw-bold small text-uppercase">Clinical Documentation</label>
+                            <textarea class="form-control" name="note_content" rows="6" placeholder="Enter objective findings, interventions, and evaluations..." required style="resize: vertical;"></textarea>
+                        </div>
 
-<!-- ═══════ WOUND CARE MODAL ═══════ -->
-<div class="modal-bg" id="woundCareModal">
-  <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-band-aid" style="color:var(--warning);"></i> Record Wound Care</h3><button class="modal-close" onclick="closeModal('woundCareModal')"><i class="fas fa-times"></i></button></div>
-    <div class="form-group"><label>Patient *</label>
-      <select id="wc_patient" class="form-control"><option value="">Select Patient</option>
-        <?php foreach($all_patients_for_vitals as $ap):?><option value="<?=$ap['id']?>"><?=e($ap['patient_name'])?></option><?php endforeach;?></select>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Wound Location *</label><input id="wc_location" class="form-control" placeholder="e.g. Left lower leg"></div>
-      <div class="form-group"><label>Wound Type</label>
-        <select id="wc_type" class="form-control"><option value="">Select</option><option value="Surgical">Surgical</option>
-          <option value="Pressure">Pressure</option><option value="Laceration">Laceration</option>
-          <option value="Burn">Burn</option><option value="Diabetic">Diabetic</option><option value="Other">Other</option></select>
-      </div>
-    </div>
-    <div class="form-group"><label>Description</label><textarea id="wc_desc" class="form-control" rows="3" placeholder="Wound appearance, size, drainage..."></textarea></div>
-    <div class="form-row">
-      <div class="form-group"><label>Care Provided</label><textarea id="wc_care" class="form-control" rows="2" placeholder="Cleaning method, medication applied..."></textarea></div>
-      <div class="form-group"><label>Dressing Type</label><input id="wc_dressing" class="form-control" placeholder="e.g. Gauze, transparent film"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Healing Status</label>
-        <select id="wc_healing" class="form-control"><option value="Stable">Stable</option><option value="Improving">Improving</option><option value="Worsening">Worsening</option><option value="Healed">Healed</option></select>
-      </div>
-      <div class="form-group"><label>Next Care Due</label><input id="wc_next" type="datetime-local" class="form-control"></div>
-    </div>
-    <div class="form-group"><label>Wound Images</label><input type="file" id="wc_images" class="form-control" multiple accept=".jpg,.jpeg,.png"></div>
-    <button class="btn btn-warning" onclick="submitWoundCare()" style="width:100%;"><i class="fas fa-save"></i> Save Wound Care Record</button>
-  </div>
-</div>
+                        <div class="col-12 mt-3">
+                            <div class="alert alert-warning py-2 mb-0" style="font-size:0.85rem;">
+                                <i class="fas fa-lock text-warning me-1"></i> <strong>Audit Compliance:</strong> Notes cannot be edited after submission. They will be permanently locked when your shift ends.
+                            </div>
+                        </div>
+                    </div>
 
-<!-- ═══════ VIEW NOTE MODAL ═══════ -->
-<div class="modal-bg" id="viewNoteModal">
-  <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-eye" style="color:var(--role-accent);"></i> Note Details</h3><button class="modal-close" onclick="closeModal('viewNoteModal')"><i class="fas fa-times"></i></button></div>
-    <div id="viewNoteContent"><p class="text-center text-muted" style="padding:3rem;">Loading...</p></div>
-  </div>
+                </div>
+                <div class="modal-footer bg-light" style="border-radius: 0 0 15px 15px;">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSaveNote" <?= empty($patients_in_ward) ? 'disabled' : '' ?>>
+                        <i class="fas fa-save me-1"></i> Submit Note
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
-function filterNotes(type,el){
-  document.querySelectorAll('#sec-notes .ftab').forEach(f=>f.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('#notesTable tbody tr').forEach(row=>{
-    if(type==='all') row.style.display='';
-    else row.style.display=(row.dataset.noteType===type)?'':'none';
-  });
+function newNoteModal() {
+    document.getElementById('noteForm').reset();
+    new bootstrap.Modal(document.getElementById('newNoteModal')).show();
 }
 
-async function submitNote(){
-  if(!validateForm({nn_patient:'Patient',nn_content:'Note content'})) return;
-  const fd=new FormData();
-  fd.append('action','add_nursing_note');
-  fd.append('patient_id',document.getElementById('nn_patient').value);
-  fd.append('note_type',document.getElementById('nn_type').value);
-  fd.append('note_content',document.getElementById('nn_content').value);
-  const files=document.getElementById('nn_files').files;
-  for(let i=0;i<files.length;i++) fd.append('attachments[]',files[i]);
-  const r=await nurseAction(fd);
-  showToast(r.message||'Saved',r.success?'success':'error');
-  if(r.success){closeModal('addNoteModal');setTimeout(()=>location.reload(),1200);}
-}
-
-async function submitWoundCare(){
-  if(!validateForm({wc_patient:'Patient',wc_location:'Wound location'})) return;
-  const fd=new FormData();
-  fd.append('action','add_wound_care');
-  fd.append('patient_id',document.getElementById('wc_patient').value);
-  fd.append('wound_location',document.getElementById('wc_location').value);
-  fd.append('wound_type',document.getElementById('wc_type').value);
-  fd.append('wound_description',document.getElementById('wc_desc').value);
-  fd.append('care_provided',document.getElementById('wc_care').value);
-  fd.append('dressing_type',document.getElementById('wc_dressing').value);
-  fd.append('healing_status',document.getElementById('wc_healing').value);
-  fd.append('next_care_due',document.getElementById('wc_next').value);
-  const imgs=document.getElementById('wc_images').files;
-  for(let i=0;i<imgs.length;i++) fd.append('wound_images[]',imgs[i]);
-  const r=await nurseAction(fd);
-  showToast(r.message||'Saved',r.success?'success':'error');
-  if(r.success){closeModal('woundCareModal');setTimeout(()=>location.reload(),1200);}
-}
-
-async function viewNote(noteId){
-  openModal('viewNoteModal');
-  document.getElementById('viewNoteContent').innerHTML='<p class="text-center text-muted" style="padding:3rem;">Loading...</p>';
-  const r=await nurseAction({action:'get_note_detail',note_id:noteId});
-  if(!r.success){document.getElementById('viewNoteContent').innerHTML='<p class="text-center" style="color:var(--danger);">'+r.message+'</p>';return;}
-  const n=r.data;
-  document.getElementById('viewNoteContent').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
-      <div><p><strong>Patient:</strong> ${n.patient_name}</p><p><strong>Type:</strong> ${n.note_type}</p></div>
-      <div><p><strong>Date:</strong> ${n.created_at}</p><p><strong>Status:</strong> ${n.is_locked?'🔒 Locked':'🔓 Open'}</p></div>
-    </div>
-    <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:1.5rem;white-space:pre-wrap;font-size:1.25rem;line-height:1.7;">${n.note_content}</div>
-    ${n.attachments?'<div style="margin-top:1rem;"><strong>Attachments:</strong> '+n.attachments+'</div>':''}`;
-}
-
-async function editNote(noteId){
-  const r=await nurseAction({action:'get_note_detail',note_id:noteId});
-  if(!r.success){showToast(r.message||'Error','error');return;}
-  document.getElementById('nn_patient').value=r.data.patient_id;
-  document.getElementById('nn_type').value=r.data.note_type;
-  document.getElementById('nn_content').value=r.data.note_content_raw||r.data.note_content;
-  openModal('addNoteModal');
-}
+$(document).ready(function() {
+    $('#noteForm').on('submit', function(e) {
+        e.preventDefault();
+        const btn = $('#btnSaveNote');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        
+        $.ajax({
+            url: '../nurse/process_notes.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if(res.success) {
+                    $('#newNoteModal').modal('hide');
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + res.message);
+                    btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Submit Note');
+                }
+            },
+            error: function() {
+                alert('An error occurred while saving the note.');
+                btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Submit Note');
+            }
+        });
+    });
+});
 </script>

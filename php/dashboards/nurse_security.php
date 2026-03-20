@@ -2,7 +2,6 @@
 // ============================================================
 // NURSE SECURITY MIDDLEWARE
 // Central security layer for the nurse dashboard
-// Mirrors pharmacy_security.php architecture
 // ============================================================
 
 // ── 1. Session Hardening ──────────────────────────────────
@@ -16,11 +15,11 @@ function initSecureSession() {
     if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
         ini_set('session.cookie_secure', 1);
     }
-    ini_set('session.gc_maxlifetime', 1800);
+    ini_set('session.gc_maxlifetime', 1800); // 30 min
 
     session_start();
 
-    // Regenerate ID every 15 minutes
+    // Regenerate ID every 15 minutes to prevent session fixation
     if (!isset($_SESSION['_sec_last_regen'])) {
         $_SESSION['_sec_last_regen'] = time();
     } elseif (time() - $_SESSION['_sec_last_regen'] > 900) {
@@ -37,7 +36,7 @@ function initSecureSession() {
     }
     $_SESSION['_sec_last_activity'] = time();
 
-    // Bind session to user agent
+    // Bind session to user agent to detect hijacking
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
     if (!isset($_SESSION['_sec_user_agent'])) {
         $_SESSION['_sec_user_agent'] = hash('sha256', $ua);
@@ -52,8 +51,7 @@ function initSecureSession() {
 // ── 2. Role-Based Access Control ──────────────────────────
 function enforceNurseRole() {
     $role = $_SESSION['user_role'] ?? $_SESSION['role'] ?? '';
-    // Nurse can login as 'nurse' or 'staff' (with staff_directory.role='Nurse')
-    if ($role !== 'nurse' && $role !== 'staff') {
+    if ($role !== 'nurse') {
         if (defined('AJAX_REQUEST')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Unauthorized: Nurse access only']);
@@ -165,30 +163,6 @@ function validateRequired($data, $fields) {
     return $missing;
 }
 
-function validateEmail($email) {
-    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
-}
-
-function validateInt($value, $min = null, $max = null) {
-    $v = filter_var($value, FILTER_VALIDATE_INT);
-    if ($v === false) return false;
-    if ($min !== null && $v < $min) return false;
-    if ($max !== null && $v > $max) return false;
-    return $v;
-}
-
-function validateFloat($value, $min = null) {
-    $v = filter_var($value, FILTER_VALIDATE_FLOAT);
-    if ($v === false) return false;
-    if ($min !== null && $v < $min) return false;
-    return $v;
-}
-
-function validateDate($date) {
-    $d = \DateTime::createFromFormat('Y-m-d', $date);
-    return $d && $d->format('Y-m-d') === $date;
-}
-
 // ── 6. File Upload Validation ─────────────────────────────
 function validateUpload($file, $allowedTypes = ['image/jpeg','image/png'], $maxSize = 2097152) {
     if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -202,6 +176,7 @@ function validateUpload($file, $allowedTypes = ['image/jpeg','image/png'], $maxS
     if (!in_array($mime, $allowedTypes)) {
         return ['valid' => false, 'error' => 'File type not allowed. Allowed: '.implode(', ', $allowedTypes)];
     }
+    // Check for PHP in file content (polyglot prevention)
     $content = file_get_contents($file['tmp_name'], false, null, 0, 1024);
     if (preg_match('/<\?php|<\?=/i', $content)) {
         return ['valid' => false, 'error' => 'Suspicious file content detected.'];
@@ -209,186 +184,34 @@ function validateUpload($file, $allowedTypes = ['image/jpeg','image/png'], $maxS
     return ['valid' => true];
 }
 
-// ── 7. Brute Force Protection ─────────────────────────────
-function checkBruteForce($conn, $nurseId, $maxAttempts = 5, $lockoutMinutes = 15) {
-    $cutoff = date('Y-m-d H:i:s', strtotime("-$lockoutMinutes minutes"));
-    $attempts = dbVal($conn,
-        "SELECT COUNT(*) FROM nurse_activity_log WHERE nurse_id=? AND action_type='failed_login' AND created_at>?",
-        "is", [$nurseId, $cutoff]
-    );
-    return (int)$attempts >= $maxAttempts;
-}
-
-// ── 8. Secure Activity Logging ────────────────────────────
-function secureLog($conn, $nurseId, $desc, $type = 'general') {
+// ── 7. Secure Activity Logging ────────────────────────────
+function secureLogNurse($conn, $nurseId, $desc, $module = 'general') {
+    $log_id = 'NLG-' . strtoupper(uniqid());
     dbExecute($conn,
-        "INSERT INTO nurse_activity_log (nurse_id, action_type, action_description, ip_address, device) VALUES (?, ?, ?, ?, ?)",
-        "issss", [$nurseId, $type, $desc, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']
+        "INSERT INTO nurse_activity_log (log_id, nurse_id, action, module, ip_address, device) VALUES (?, ?, ?, ?, ?, ?)",
+        "sissss", [$log_id, $nurseId, $desc, $module, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']
     );
 }
-// Backward-compatible alias used in nurse_actions.php
-function logNurseActivity($conn, $nurseId, $type, $desc) {
-    secureLog($conn, $nurseId, $desc, $type);
-}
 
-// ── 9. Secure Notification ────────────────────────────────
-function secureNotify($conn, $userId, $msg, $type = 'system', $module = 'nurse') {
+// ── 8. Secure Notification ────────────────────────────────
+function secureNotifyNurse($conn, $nurseId, $msg, $type = 'General', $module = 'nurse_dashboard') {
+    $notif_id = 'NNOT-' . strtoupper(uniqid());
     dbExecute($conn,
-        "INSERT INTO notifications (user_id, message, type, related_module, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())",
-        "isss", [$userId, $msg, $type, $module]
+        "INSERT INTO nurse_notifications (notification_id, nurse_id, message, type, related_module, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())",
+        "sisss", [$notif_id, $nurseId, $msg, $type, $module]
     );
 }
 
-function secureNotifyAdmins($conn, $msg, $type = 'system', $module = 'nurse') {
-    $admins = dbSelect($conn, "SELECT id FROM users WHERE user_role='admin' AND is_active=1");
-    foreach ($admins as $a) {
-        secureNotify($conn, $a['id'], $msg, $type, $module);
-    }
-}
-
-function nurseNotify($conn, $nurseId, $msg, $type = 'System', $module = null, $relId = null) {
-    dbExecute($conn,
-        "INSERT INTO nurse_notifications (nurse_id, message, type, related_module, related_id, created_at) VALUES (?,?,?,?,?,NOW())",
-        "isssi", [$nurseId, $msg, $type, $module, $relId]
-    );
-}
-
-// ── 10. Security Headers ──────────────────────────────────
+// ── 9. Security Headers ──────────────────────────────────
 function setSecurityHeaders() {
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: DENY');
     header('X-XSS-Protection: 1; mode=block');
     header('Referrer-Policy: strict-origin-when-cross-origin');
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:;");
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.datatables.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.datatables.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob:;");
 }
 
-// ── 11. Output Encoding Helper ────────────────────────────
+// ── 10. Output Encoding Helper ────────────────────────────
 function e($value) {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
-
-// ── 12. Re-authentication ─────────────────────────────────
-function verifyPassword($conn, $userId, $password) {
-    $row = dbRow($conn, "SELECT password FROM users WHERE id=?", "i", [$userId]);
-    if (!$row) return false;
-    return password_verify($password, $row['password']);
-}
-
-// ── 13. Nursing Notes Immutability Enforcement ────────────
-/** Check if a nursing note is locked (shift ended). Returns true if note cannot be edited. */
-function isNoteLocked($conn, $noteId) {
-    $note = dbRow($conn, "SELECT nn.created_at, nn.is_locked, ns.end_time, ns.shift_date
-        FROM nursing_notes nn
-        LEFT JOIN nurse_shifts ns ON nn.shift_id = ns.id
-        WHERE nn.id = ?", "i", [$noteId]);
-    if (!$note) return true; // Can't find = locked
-    if ((int)($note['is_locked'] ?? 0)) return true;
-    // Lock if shift has ended
-    if ($note['end_time'] && $note['shift_date']) {
-        $shiftEnd = $note['shift_date'] . ' ' . $note['end_time'];
-        if (strtotime($shiftEnd) < time()) {
-            // Auto-lock the note at DB level
-            dbExecute($conn, "UPDATE nursing_notes SET is_locked=1 WHERE id=?", "i", [$noteId]);
-            return true;
-        }
-    }
-    // Also lock if note is older than 12 hours (fallback)
-    if (strtotime($note['created_at']) < strtotime('-12 hours')) {
-        dbExecute($conn, "UPDATE nursing_notes SET is_locked=1 WHERE id=?", "i", [$noteId]);
-        return true;
-    }
-    return false;
-}
-
-/** Enforce note immutability — call before any note edit */
-function enforceNoteImmutability($conn, $noteId) {
-    if (isNoteLocked($conn, $noteId)) {
-        if (defined('AJAX_REQUEST')) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'This note is locked and cannot be edited. Notes are locked after the shift ends.']);
-            exit;
-        }
-        die('Note is locked.');
-    }
-}
-
-// ── 14. Emergency Alert Cooldown ──────────────────────────
-/** Returns true if nurse can trigger emergency (no duplicate within 30 seconds) */
-function checkEmergencyCooldown($conn, $nurseId, $cooldownSeconds = 30) {
-    $cutoff = date('Y-m-d H:i:s', time() - $cooldownSeconds);
-    $recent = dbVal($conn,
-        "SELECT COUNT(*) FROM emergency_alerts WHERE triggered_by=? AND triggered_at > ?",
-        "is", [$nurseId, $cutoff]);
-    return (int)$recent === 0;
-}
-
-// ── 15. Secure File Download Handler ──────────────────────
-/** Serve a file for download without exposing the path in the URL */
-function serveSecureFile($conn, $nurseId, $fileId, $table = 'nurse_documents') {
-    $colMap = [
-        'nurse_documents' => ['file_path', 'document_name', 'nurse_id'],
-        'wound_care_records' => ['image_path', 'wound_location', 'nurse_id'],
-    ];
-    if (!isset($colMap[$table])) {
-        http_response_code(400); die('Invalid file source');
-    }
-    [$pathCol, $nameCol, $ownerCol] = $colMap[$table];
-    $file = dbRow($conn, "SELECT $pathCol, $nameCol FROM $table WHERE id=? AND $ownerCol=?", "ii", [(int)$fileId, $nurseId]);
-    if (!$file || empty($file[$pathCol])) {
-        http_response_code(404); die('File not found');
-    }
-    $fullPath = $_SERVER['DOCUMENT_ROOT'] . '/RMU-Medical-Management-System/' . $file[$pathCol];
-    if (!file_exists($fullPath)) {
-        http_response_code(404); die('File not found on disk');
-    }
-    // Prevent directory traversal
-    $realPath = realpath($fullPath);
-    $basePath = realpath($_SERVER['DOCUMENT_ROOT'] . '/RMU-Medical-Management-System/uploads/');
-    if (!$realPath || strpos($realPath, $basePath) !== 0) {
-        http_response_code(403); die('Access denied');
-    }
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime = $finfo->file($realPath);
-    $downloadName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $file[$nameCol] ?? 'download') . '.' . pathinfo($realPath, PATHINFO_EXTENSION);
-    header('Content-Type: ' . $mime);
-    header('Content-Disposition: attachment; filename="' . $downloadName . '"');
-    header('Content-Length: ' . filesize($realPath));
-    header('Cache-Control: no-cache, must-revalidate');
-    header('X-Content-Type-Options: nosniff');
-    readfile($realPath);
-    exit;
-}
-
-// ── 16. Nurse Ownership Validation ────────────────────────
-/** Validate that a record belongs to the current nurse */
-function validateNurseOwnership($conn, $table, $recordId, $nurseId, $col = 'nurse_id') {
-    $safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
-    return (bool)dbVal($conn, "SELECT COUNT(*) FROM $safe_table WHERE id=? AND $col=?", "ii", [(int)$recordId, (int)$nurseId]);
-}
-
-// ── 17. Rate Limiting for Sensitive Actions ────────────────
-function rateLimitAction($conn, $nurseId, $actionType, $maxPerHour = 30) {
-    $cutoff = date('Y-m-d H:i:s', strtotime('-1 hour'));
-    $count = dbVal($conn,
-        "SELECT COUNT(*) FROM nurse_activity_log WHERE nurse_id=? AND action_type=? AND created_at>?",
-        "iss", [$nurseId, $actionType, $cutoff]);
-    return (int)$count < $maxPerHour;
-}
-
-// ── 18. Password Strength Enforcement ─────────────────────
-function enforcePasswordStrength($password) {
-    $errors = [];
-    if (strlen($password) < 8) $errors[] = 'at least 8 characters';
-    if (!preg_match('/[A-Z]/', $password)) $errors[] = 'one uppercase letter';
-    if (!preg_match('/[a-z]/', $password)) $errors[] = 'one lowercase letter';
-    if (!preg_match('/[0-9]/', $password)) $errors[] = 'one digit';
-    return $errors;
-}
-
-// ── INIT: Called by nurse_dashboard.php & nurse_actions.php ─
-initSecureSession();
-setSecurityHeaders();
-$user_id = enforceNurseRole();
-require_once __DIR__ . '/../db_conn.php';
-date_default_timezone_set('Africa/Accra');
-$csrf_token = generateCsrfToken();

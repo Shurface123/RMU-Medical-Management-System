@@ -1,7 +1,7 @@
 <?php
-require_once dirname(__DIR__, 2) . '/dashboards/lab_security.php';
-initSecureSession();
-$user_id = enforceLabTechRole(); // Verify role
+require_once dirname(__DIR__, 2) . '/includes/auth_middleware.php';
+requireAnyRole(['admin', 'doctor']);
+$user_id = $_SESSION['user_id'];
 
 require_once dirname(__DIR__, 2) . '/db_conn.php';
 require_once dirname(__DIR__) . '/classes/ApiResponse.php';

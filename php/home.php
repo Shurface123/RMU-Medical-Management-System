@@ -27,8 +27,7 @@ $stats['staff'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM patients");
 $stats['patients'] = mysqli_fetch_assoc($result)['total'] ?? 0;
 
-$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM tests");
-$stats['tests'] = mysqli_fetch_assoc($result)['total'] ?? 0;
+
 
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM beds");
 $stats['beds'] = mysqli_fetch_assoc($result)['total'] ?? 0;
@@ -213,12 +212,7 @@ include 'includes/_sidebar.php';
                 <div class="adm-stat-value"><?php echo $stats['patients']; ?></div>
                 <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> Manage Patients</div>
             </a>
-            <a href="/RMU-Medical-Management-System/php/test/test.php" class="adm-stat-card">
-                <div class="adm-stat-icon tests"><i class="fas fa-flask"></i></div>
-                <div class="adm-stat-label">Lab Tests</div>
-                <div class="adm-stat-value"><?php echo $stats['tests']; ?></div>
-                <div class="adm-stat-footer"><i class="fas fa-arrow-right"></i> View Tests</div>
-            </a>
+
             <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="adm-stat-card">
                 <div class="adm-stat-icon beds"><i class="fas fa-procedures"></i></div>
                 <div class="adm-stat-label">Beds</div>
@@ -368,10 +362,7 @@ include 'includes/_sidebar.php';
                         <i class="fas fa-calendar-check"></i>
                         <span>Book Appointment</span>
                     </a>
-                    <a href="/RMU-Medical-Management-System/php/test/add-test.php" class="adm-action-tile">
-                        <i class="fas fa-flask"></i>
-                        <span>Add Lab Test</span>
-                    </a>
+
                     <a href="/RMU-Medical-Management-System/php/Ambulence/add-ambulence.php" class="adm-action-tile">
                         <i class="fas fa-ambulance"></i>
                         <span>Add Ambulance</span>

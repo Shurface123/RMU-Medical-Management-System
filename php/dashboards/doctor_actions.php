@@ -142,74 +142,13 @@ case 'cancel_prescription':
     if($pat_uid) notify($conn,$pat_uid,'patient','prescription','Prescription Cancelled','Your prescription for '.$rx['medication_name'].' has been cancelled by your doctor.','prescriptions',$id);
     ok();
 
-// ── Create Lab Request ────────────────────────────────────
+// ── Create Lab Request (Deprecated) ───────────────
 case 'create_lab_request':
-    $pat_id=(int)($post['patient_id']??0); $tn=esc($conn,$post['test_name']??'');
-    $tc=esc($conn,$post['test_category']??''); $urg=esc($conn,$post['urgency_level']??'Routine');
-    $td=esc($conn,$post['test_date']??date('Y-m-d')); $notes=esc($conn,$post['request_notes']??'');
-    if(!$pat_id||!$tn) fail('Missing fields');
+    fail('Lab module is currently disabled.');
 
-    // Doctor info for notification messages
-    $doc_info=mysqli_fetch_assoc(mysqli_query($conn,"SELECT u.name FROM doctors d JOIN users u ON d.user_id=u.id WHERE d.id=$doc_pk LIMIT 1"));
-    $doc_name=$doc_info['name']??'Doctor';
-
-    // 1. Insert into lab_tests (old table — backward compat with doctor/patient dashboards)
-    $test_id='LAB-'.strtoupper(substr(md5(uniqid()),0,8));
-    mysqli_query($conn,"INSERT INTO lab_tests (test_id,patient_id,doctor_id,test_name,test_category,test_date,urgency_level,request_notes,status,cost,created_at)
-      VALUES('$test_id',$pat_id,$doc_pk,'$tn','$tc','$td','$urg','$notes','Pending',0.00,NOW())");
-    $lid=(int)mysqli_insert_id($conn);
-    if(!$lid) fail('Could not create lab request');
-
-    // 2. Bridge → also insert into lab_test_orders (new table — lab dashboard queue)
-    $order_id='ORD-'.strtoupper(substr(md5(uniqid().$lid),0,8));
-    $tc_id_row=mysqli_fetch_assoc(mysqli_query($conn,"SELECT id FROM lab_test_catalog WHERE test_name LIKE '%".mysqli_real_escape_string($conn,$tn)."' LIMIT 1"));
-    $tc_id=$tc_id_row?(int)$tc_id_row['id']:null;
-    mysqli_query($conn,"INSERT INTO lab_test_orders (order_id,request_id,patient_id,doctor_id,test_name,test_catalog_id,urgency,clinical_notes,order_status,created_at)
-      VALUES('$order_id',$lid,$pat_id,$doc_pk,'$tn',".($tc_id?$tc_id:'NULL').",'$urg','$notes','Pending',NOW())");
-    $lto_id=(int)mysqli_insert_id($conn);
-
-    // 3. Notify all lab technicians via dual-write (notifications + lab_notifications)
-    $priority=($urg==='Critical'||$urg==='STAT')?'high':'normal';
-    notifyAllLabTechs($conn, 'order', '🧪 New Lab Order: '.$tn,
-        "Dr. $doc_name has ordered a $urg $tn test. Patient ID: $pat_id. Please process order $order_id.",
-        'orders', $lto_id ?: $lid, $priority);
-
-    // 4. Notify patient that lab test was requested
-    notifyPatient($conn, $pat_id, 'lab', 'Lab Test Ordered',
-        "Dr. $doc_name has ordered a lab test for you: $tn (Urgency: $urg). The lab will contact you.",
-        'lab', $lid);
-
-    ok(['test_id'=>$test_id,'order_id'=>$order_id]);
-
-// ── Review Lab Result ─────────────────────────────────────
+// ── Review Lab Result (Deprecated) ───────────────
 case 'review_lab':
-    $id=(int)($post['id']??0); $notes_r=esc($conn,$post['notes']??'');
-    $makeAccessible=(int)($post['patient_accessible']??1);
-    if(!$id) fail('Invalid ID');
-    mysqli_query($conn,"UPDATE lab_tests SET status='Reviewed',updated_at=NOW() WHERE id=$id AND doctor_id=$doc_pk");
-    if($notes_r) mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,doctor_notes='$notes_r',patient_accessible=$makeAccessible,patient_notified=$makeAccessible WHERE test_id=$id");
-    else mysqli_query($conn,"UPDATE lab_results SET doctor_reviewed=1,patient_accessible=$makeAccessible,patient_notified=$makeAccessible WHERE test_id=$id");
-    // Also update lab_test_orders status for consistency
-    mysqli_query($conn,"UPDATE lab_test_orders SET order_status='Completed',updated_at=NOW() WHERE request_id=$id AND doctor_id=$doc_pk");
-
-    $lt=mysqli_fetch_assoc(mysqli_query($conn,"SELECT lt.test_name,lt.patient_id FROM lab_tests lt WHERE lt.id=$id LIMIT 1"));
-    if($lt){
-        // Notify patient via crossNotify (proper dual-write awareness)
-        if($makeAccessible){
-            notifyPatient($conn,(int)$lt['patient_id'],'lab','✅ Lab Results Available',
-                'Your '.$lt['test_name'].' results have been reviewed by your doctor and are now available to view in your dashboard.',
-                'lab',$id,'high');
-        }
-        // Notify the lab technician that the doctor reviewed their result
-        $lto=mysqli_fetch_assoc(mysqli_query($conn,"SELECT lto.technician_id FROM lab_test_orders lto WHERE lto.request_id=$id LIMIT 1"));
-        if($lto&&$lto['technician_id']){
-            notifyLabTech($conn,(int)$lto['technician_id'],'result',
-                '✅ Result Reviewed by Doctor',
-                'Dr. has reviewed your lab result for '.$lt['test_name'].($makeAccessible?' and released it to the patient.':'.'),
-                'results',$id);
-        }
-    }
-    ok();
+    fail('Lab module is currently disabled.');
 
 // ── Add Patient Note ──────────────────────────────────────
 case 'add_patient_note':
@@ -233,14 +172,9 @@ case 'assign_bed':
     if($pat_uid) notify($conn,$pat_uid,'patient','system','Bed Assigned','A bed has been assigned for your admission.','beds');
     ok(['assignment_id'=>$assign_id]);
 
-// ── Send Staff Note ───────────────────────────────────────
+// ── Send Staff Note (Deprecated) ──────────────────
 case 'send_staff_note':
-    $tid=(int)($post['target_user_id']??0); $msg=esc($conn,$post['message']??'');
-    if(!$tid||!$msg) fail('Missing fields');
-    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
-    $dn=$dr2['full_name']??'Doctor';
-    notify($conn,$tid,'nurse','system',"Instruction from Dr. $dn",$msg,'staff');
-    ok();
+    fail('This feature is currently disabled.');
 
 // ── Update Profile ────────────────────────────────────────
 case 'update_profile':
@@ -272,86 +206,31 @@ case 'update_availability':
     mysqli_query($conn,"UPDATE doctors SET available_days='$days',available_hours='$hours',is_available=$avail,updated_at=NOW() WHERE user_id=$user_id");
     ok(['message'=>'Schedule updated']);
 
-// ── Assign Task to Nurse ──────────────────────────────────
+// ── Assign Task to Nurse (Deprecated) ─────────────
 case 'assign_nurse_task':
-    $nurse_id=(int)($post['nurse_id']??0);
-    $pat_id=(int)($post['patient_id']??0);
-    $title=esc($conn,$post['task_title']??'');
-    $desc=esc($conn,$post['task_description']??'');
-    $priority=esc($conn,$post['priority']??'Medium');
-    $due=esc($conn,$post['due_time']??'');
-    if(!$nurse_id||!$title) fail('Nurse ID and task title required');
-    mysqli_query($conn,"INSERT INTO nurse_tasks (nurse_id,assigned_by,patient_id,task_title,task_description,priority,due_time,status,created_at)
-      VALUES($nurse_id,$doc_pk,".($pat_id?:"NULL").",'$title','$desc','$priority',".($due?"'$due'":'NULL').",'Pending',NOW())");
-    $tid=(int)mysqli_insert_id($conn);
-    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
-    $dn=$dr2['full_name']??'Doctor';
-    notifyNurse($conn, $nurse_id, 'task', 'New Task Assigned',
-      "Dr. $dn assigned you a new task: $title" . ($priority==='High'||$priority==='Urgent' ? " (Priority: $priority)" : ''), 'tasks', $tid,
-      $priority==='Urgent' ? 'urgent' : ($priority==='High' ? 'high' : 'normal'));
-    ok(['task_id'=>$tid, 'message'=>'Task assigned to nurse']);
+    fail('Nurse module is currently disabled.');
 
-// ── Approve Bed Transfer ──────────────────────────────────
+// ── Approve Bed Transfer (Deprecated) ─────────────
 case 'approve_bed_transfer':
-    $tid=(int)($post['transfer_id']??0);
-    $action_type=esc($conn,$post['approval']??'Approved');
-    if(!$tid) fail('Transfer ID required');
-    if(!in_array($action_type,['Approved','Rejected'])) fail('Invalid approval');
-    $tr=mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM bed_transfers WHERE id=$tid LIMIT 1"));
-    if(!$tr) fail('Transfer not found');
-    mysqli_query($conn,"UPDATE bed_transfers SET status='$action_type',approved_by=$doc_pk,approved_at=NOW() WHERE id=$tid");
-    if($action_type==='Approved'){
-      // Update bed assignments
-      $pid=(int)$tr['patient_id']; $newBed=esc($conn,$tr['to_bed_id']); $newWard=esc($conn,$tr['to_ward']);
-      mysqli_query($conn,"UPDATE bed_assignments SET status='Transferred',discharge_date=NOW() WHERE patient_id=$pid AND status='Active'");
-      mysqli_query($conn,"UPDATE bed_management SET status='Available' WHERE bed_id='{$tr['from_bed_id']}'");
-      mysqli_query($conn,"UPDATE bed_management SET status='Occupied' WHERE bed_id='$newBed'");
-    }
-    // Notify the requesting nurse
-    $reqNurse=(int)$tr['requested_by'];
-    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
-    $dn=$dr2['full_name']??'Doctor';
-    $pName=getPatientNameById($conn,(int)$tr['patient_id']);
-    notifyNurse($conn, $reqNurse, 'bed_transfer', "Bed Transfer $action_type",
-      "Dr. $dn has {$action_type} the bed transfer for $pName.", 'beds', $tid);
-    ok(['message'=>"Transfer $action_type"]);
+    fail('Nurse module is currently disabled.');
 
-// ── Create Prescription + Nurse Med Schedule ──────────────
+// ── Create Prescription ──────────────────────────
 case 'create_prescription_with_schedule':
+    // Simplified to just create prescription without nurse schedule
     $pat_id=(int)($post['patient_id']??0); $med=esc($conn,$post['medicine_name']??'');
     $dos=esc($conn,$post['dosage']??''); $freq=esc($conn,$post['frequency']??'');
     $dur=esc($conn,$post['duration']??''); $qty=(int)($post['quantity']??1);
-    $inst=esc($conn,$post['instructions']??''); $nurse_id=(int)($post['nurse_id']??0);
+    $inst=esc($conn,$post['instructions']??'');
     if(!$pat_id||!$med||!$dos||!$freq) fail('Missing required fields');
     $rx_id='RX-'.strtoupper(substr(md5(uniqid()),0,8));
     mysqli_query($conn,"INSERT INTO prescriptions (prescription_id,patient_id,doctor_id,prescription_date,medication_name,dosage,frequency,duration,instructions,quantity,status,created_at)
       VALUES('$rx_id',$pat_id,$doc_pk,CURDATE(),'$med','$dos','$freq','$dur','$inst',$qty,'Active',NOW())");
     $rxid=(int)mysqli_insert_id($conn);
     if(!$rxid) fail('Could not create prescription');
-    // Create medication administration schedule entries for the nurse
-    $times=['08:00','12:00','18:00','22:00'];
-    $freq_map=['once daily'=>1,'od'=>1,'twice daily'=>2,'bd'=>2,'three times daily'=>3,'tds'=>3,'four times daily'=>4,'qds'=>4];
-    $freq_count=$freq_map[strtolower($freq)]??1;
-    for($i=0;$i<min($freq_count,4);$i++){
-      $sched_time=date('Y-m-d').' '.$times[$i].':00';
-      mysqli_query($conn,"INSERT INTO medication_administration (patient_id,nurse_id,prescription_id,medicine_name,dosage,route,scheduled_time,status,created_at)
-        VALUES($pat_id,".($nurse_id?:"NULL").",$rxid,'$med','$dos','Oral','$sched_time','Pending',NOW())");
-    }
+    
     // Notify patient
     $pat_uid=getPatientUserId($conn,$pat_id);
     if($pat_uid) notify($conn,$pat_uid,'patient','prescription','New Prescription','A new prescription has been issued: '.$med,'prescriptions',$rxid);
-    // Notify pharmacists
-    $dr2=mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
-    $drName=$dr2['full_name']??'Doctor';
-    $pharmUsers=mysqli_query($conn,"SELECT u.id FROM users u WHERE u.user_role='pharmacist' AND u.is_active=1");
-    while($pu=mysqli_fetch_assoc($pharmUsers)){
-      notify($conn,$pu['id'],'pharmacist','prescription','New Prescription',"Dr. $drName prescribed $med — pending dispensing.",'prescriptions',$rxid);
-    }
-    // Notify assigned nurse
-    if($nurse_id){
-      notifyNurse($conn, $nurse_id, 'medication', 'New Medication Schedule',
-        "Dr. $drName prescribed $med ($dos, $freq) for ".getPatientNameById($conn,$pat_id).". Added to your medication schedule.", 'medications', $rxid);
-    }
     ok(['prescription_id'=>$rx_id]);
 
 default:

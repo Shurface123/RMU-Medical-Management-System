@@ -364,9 +364,8 @@
                         <option value="">Select Role</option>
                         <option value="admin">Administrator</option>
                         <option value="doctor">Doctor</option>
-                        <option value="nurse">Nurse</option>
                         <option value="pharmacist">Pharmacist</option>
-                        <option value="lab_technician">Lab Technician</option>
+                        <option value="nurse">Nurse</option>
                         <option value="patient">Patient</option>
                         <optgroup label="─── Support Staff ───">
                             <option value="ambulance_driver">Ambulance Driver</option>

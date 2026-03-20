@@ -29,7 +29,7 @@ if (!$doc_row) {
 function qval($conn,$sql){$r=mysqli_query($conn,$sql);return $r?(mysqli_fetch_row($r)[0]??0):0;}
 $stats['today_appts']    = qval($conn,"SELECT COUNT(*) FROM appointments WHERE doctor_id=$doc_pk AND appointment_date='$today'");
 $stats['total_patients'] = qval($conn,"SELECT COUNT(DISTINCT patient_id) FROM appointments WHERE doctor_id=$doc_pk");
-$stats['pending_labs']   = qval($conn,"SELECT COUNT(*) FROM lab_tests WHERE doctor_id=$doc_pk AND status='Pending'");
+$stats['active_rx']      = qval($conn,"SELECT COUNT(*) FROM prescriptions WHERE doctor_id=$doc_pk AND status='Pending'");
 $stats['active_rx']      = qval($conn,"SELECT COUNT(*) FROM prescriptions WHERE doctor_id=$doc_pk AND status='Pending'");
 $stats['avail_beds']     = qval($conn,"SELECT COUNT(*) FROM beds WHERE status='Available'");
 $stats['low_stock']      = qval($conn,"SELECT COUNT(*) FROM medicines WHERE stock_quantity<=reorder_level");
@@ -67,15 +67,8 @@ $q=mysqli_query($conn,
      WHERE pr.doctor_id=$doc_pk ORDER BY pr.prescription_date DESC LIMIT 100");
 if ($q) while ($r=mysqli_fetch_assoc($q)) $prescriptions[]=$r;
 
-// ── Lab Requests ──────────────────────────────────────────
+// Lab Requests (Deprecated)
 $lab_requests=[];
-$q=mysqli_query($conn,
-    "SELECT lt.*, u.name AS patient_name, p.patient_id AS p_ref,
-            tech.name AS tech_name
-     FROM lab_tests lt JOIN patients p ON lt.patient_id=p.id JOIN users u ON p.user_id=u.id
-     LEFT JOIN users tech ON lt.technician_id=tech.id
-     WHERE lt.doctor_id=$doc_pk ORDER BY lt.created_at DESC LIMIT 100");
-if ($q) while ($r=mysqli_fetch_assoc($q)) $lab_requests[]=$r;
 
 // ── Patients Directory ────────────────────────────────────
 $patients=[];
@@ -112,7 +105,7 @@ $q=mysqli_query($conn,"SELECT * FROM staff_directory WHERE status='Active' ORDER
 if ($q) while ($r=mysqli_fetch_assoc($q)) $staff[]=$r;
 if (empty($staff)) {
     // fallback to users table
-    $q=mysqli_query($conn,"SELECT id, user_name AS full_name, email, phone, user_role AS role, '' AS department, '' AS staff_id, 'Active' AS status FROM users WHERE user_role IN('doctor','nurse','pharmacist','admin') ORDER BY user_role, user_name LIMIT 50");
+    $q=mysqli_query($conn,"SELECT id, user_name AS full_name, email, phone, user_role AS role, '' AS department, '' AS staff_id, 'Active' AS status FROM users WHERE user_role IN('doctor','pharmacist','admin') ORDER BY user_role, user_name LIMIT 50");
     if ($q) while ($r=mysqli_fetch_assoc($q)) $staff[]=$r;
 }
 
@@ -294,10 +287,7 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <a href="#" class="adm-nav-item <?=($active_tab==='records')?'active':''?>" onclick="showTab('records',this)"><i class="fas fa-file-medical"></i><span>Medical Records</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='prescriptions')?'active':''?>" onclick="showTab('prescriptions',this)"><i class="fas fa-prescription-bottle-medical"></i><span>Prescriptions</span></a>
     <div class="adm-nav-label" style="margin-top:1rem;">Clinical</div>
-    <a href="#" class="adm-nav-item <?=($active_tab==='lab')?'active':''?>" onclick="showTab('lab',this)">
-      <i class="fas fa-flask"></i><span>Lab Tests</span>
-      <?php if($stats['pending_labs']>0):?><span class="adm-badge adm-badge-warning" style="margin-left:auto;font-size:1rem;"><?=$stats['pending_labs']?></span><?php endif;?>
-    </a>
+
     <a href="#" class="adm-nav-item <?=($active_tab==='patients')?'active':''?>" onclick="showTab('patients',this)"><i class="fas fa-users"></i><span>Patient Records</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='medicine')?'active':''?>" onclick="showTab('medicine',this)">
       <i class="fas fa-pills"></i><span>Medicine Inventory</span>
@@ -355,7 +345,7 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <?php include __DIR__.'/doc_tabs/tab_appointments.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_records.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_prescriptions.php'; ?>
-    <?php include __DIR__.'/doc_tabs/tab_lab.php'; ?>
+
     <?php include __DIR__.'/doc_tabs/tab_patients.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_medicine.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_beds.php'; ?>
@@ -376,11 +366,11 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 <script>
 // ── Tab Navigation ─────────────────────────────────────────
 const TAB_TITLES={overview:'Overview',appointments:'Appointments',records:'Medical Records',
-  prescriptions:'Prescriptions',lab:'Lab Tests',patients:'Patient Records',
+  prescriptions:'Prescriptions',patients:'Patient Records',
   medicine:'Medicine Inventory',beds:'Bed Management',staff:'Staff Directory',
   analytics:'Analytics',reports:'Reports',profile:'My Profile',settings:'Settings'};
 const TAB_ICONS={overview:'fa-house-medical',appointments:'fa-calendar-check',records:'fa-file-medical',
-  prescriptions:'fa-prescription-bottle-medical',lab:'fa-flask',patients:'fa-users',
+  prescriptions:'fa-prescription-bottle-medical',patients:'fa-users',
   medicine:'fa-pills',beds:'fa-bed',staff:'fa-address-book',
   analytics:'fa-chart-bar',reports:'fa-file-export',profile:'fa-user-doctor',settings:'fa-gear'};
 

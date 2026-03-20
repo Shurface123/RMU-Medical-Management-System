@@ -1,240 +1,313 @@
-<!-- ═══════════════════════════════════════════════════════════
-     MODULE 6: TASK & SHIFT MANAGEMENT — tab_tasks.php
-     ═══════════════════════════════════════════════════════════ -->
 <?php
-$my_tasks = dbSelect($conn,
-    "SELECT nt.*, u.name AS patient_name, ua.name AS assigned_by_name
-     FROM nurse_tasks nt
-     LEFT JOIN patients p ON nt.patient_id=p.id LEFT JOIN users u ON p.user_id=u.id
-     LEFT JOIN users ua ON nt.assigned_by=ua.id
-     WHERE nt.nurse_id=?
-     ORDER BY FIELD(nt.status,'Overdue','Pending','In Progress','Completed','Cancelled'),
-              FIELD(nt.priority,'Urgent','High','Medium','Low'), nt.due_time ASC
-     LIMIT 100","i",[$nurse_pk]);
+// ============================================================
+// NURSE DASHBOARD - TASKS & SHIFTS (MODULE 6)
+// ============================================================
+if (!isset($conn)) exit;
 
-$my_shifts = dbSelect($conn,
-    "SELECT * FROM nurse_shifts WHERE nurse_id=? AND shift_date >= DATE_SUB(?,INTERVAL 7 DAY) ORDER BY shift_date ASC, start_time ASC","is",[$nurse_pk,$today]);
+// ── GET SHIFT INFO ───────────────────────────────────────────
+$shift_q = mysqli_query($conn, "SELECT * FROM nurse_shifts WHERE nurse_id=$nurse_pk AND shift_date='$today' AND status='Active' LIMIT 1");
+$current_shift = mysqli_fetch_assoc($shift_q);
+$shift_pk      = $current_shift['id'] ?? null;
+$handover_done = $current_shift['handover_submitted'] ?? 0;
 
-$shift_today = dbRow($conn,"SELECT * FROM nurse_shifts WHERE nurse_id=? AND shift_date=? LIMIT 1","is",[$nurse_pk,$today]);
+// ── FETCH PENDING TASKS ──────────────────────────────────────
+$tasks = [];
+$q_tasks = mysqli_query($conn, "
+    SELECT t.*, p.patient_id, u.name AS patient_name, u.gender 
+    FROM nurse_tasks t
+    LEFT JOIN patients p ON t.patient_id = p.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE t.nurse_id = $nurse_pk AND t.status IN ('Pending', 'In Progress')
+    ORDER BY t.due_time ASC, t.priority DESC
+");
+if ($q_tasks) {
+    while ($r = mysqli_fetch_assoc($q_tasks)) $tasks[] = $r;
+}
 
-$handovers = dbSelect($conn,
-    "SELECT sh.*, un.name AS outgoing_name, ui.name AS incoming_name
-     FROM shift_handover sh
-     LEFT JOIN nurses no2 ON sh.outgoing_nurse_id=no2.id LEFT JOIN users un ON no2.user_id=un.id
-     LEFT JOIN nurses ni ON sh.incoming_nurse_id=ni.id LEFT JOIN users ui ON ni.user_id=ui.id
-     WHERE sh.outgoing_nurse_id=? OR sh.incoming_nurse_id=?
-     ORDER BY sh.submitted_at DESC LIMIT 20","ii",[$nurse_pk,$nurse_pk]);
+// ── FETCH COMPLETED TASKS (TODAY) ────────────────────────────
+$completed_tasks = [];
+$q_comp = mysqli_query($conn, "
+    SELECT t.*, p.patient_id, u.name AS patient_name 
+    FROM nurse_tasks t
+    LEFT JOIN patients p ON t.patient_id = p.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE t.nurse_id = $nurse_pk AND t.status = 'Completed' AND DATE(t.completed_at) = '$today'
+    ORDER BY t.completed_at DESC
+");
+if ($q_comp) {
+    while ($r = mysqli_fetch_assoc($q_comp)) $completed_tasks[] = $r;
+}
 
-$priority_colors = ['Urgent'=>'danger','High'=>'warning','Medium'=>'info','Low'=>'success'];
-$status_colors   = ['Pending'=>'warning','In Progress'=>'primary','Completed'=>'success','Overdue'=>'danger','Cancelled'=>'secondary'];
+// ── FETCH UPCOMING SHIFTS ────────────────────────────────────
+$upcoming_shifts = [];
+$q_shifts = mysqli_query($conn, "
+    SELECT * FROM nurse_shifts 
+    WHERE nurse_id = $nurse_pk AND shift_date >= '$today' 
+    ORDER BY shift_date ASC, start_time ASC LIMIT 7
+");
+if ($q_shifts) {
+    while ($r = mysqli_fetch_assoc($q_shifts)) $upcoming_shifts[] = $r;
+}
 ?>
-<div id="sec-tasks" class="dash-section">
-  <div class="sec-header">
-    <h2><i class="fas fa-clipboard-list"></i> Tasks & Shifts</h2>
-    <div style="display:flex;gap:.8rem;">
-      <?php if($shift_today && !$shift_today['handover_submitted']):?>
-        <button class="btn btn-primary" onclick="openModal('handoverModal')"><i class="fas fa-exchange-alt"></i> Submit Handover</button>
-      <?php endif;?>
-    </div>
-  </div>
 
-  <!-- ── Filter Tabs ── -->
-  <div class="filter-tabs">
-    <span class="ftab active" onclick="filterTasks('all',this)">All Tasks</span>
-    <span class="ftab" onclick="filterTasks('Pending',this)">⏳ Pending</span>
-    <span class="ftab" onclick="filterTasks('In Progress',this)">🔄 In Progress</span>
-    <span class="ftab" onclick="filterTasks('Overdue',this)">🔴 Overdue</span>
-    <span class="ftab" onclick="filterTasks('Completed',this)">✅ Completed</span>
-  </div>
+<div class="tab-content" id="tasks">
 
-  <!-- ── Task List ── -->
-  <div class="info-card" style="margin-bottom:1.5rem;">
-    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-tasks" style="color:var(--role-accent);"></i> My Tasks</h3>
-    <div class="table-responsive"><table class="adm-table" id="tasksTable"><thead><tr>
-      <th>Task</th><th>Patient</th><th>Priority</th><th>Due</th><th>Assigned By</th><th>Status</th><th>Actions</th>
-    </tr></thead><tbody>
-    <?php if(empty($my_tasks)):?>
-      <tr><td colspan="7" class="text-center text-muted" style="padding:3rem;">No tasks assigned</td></tr>
-    <?php else: foreach($my_tasks as $t):?>
-      <tr data-task-status="<?=e($t['status'])?>" <?=$t['status']==='Overdue'?'style="border-left:3px solid var(--danger);"':''?>>
-        <td><strong><?=e($t['task_title'])?></strong><?php if($t['task_description']):?><br><small class="text-muted"><?=e(substr($t['task_description'],0,80))?></small><?php endif;?></td>
-        <td><?=e($t['patient_name']??'General')?></td>
-        <td><span class="badge badge-<?=$priority_colors[$t['priority']]??'secondary'?>"><?=e($t['priority'])?></span></td>
-        <td><?=$t['due_time']?date('d M h:i A',strtotime($t['due_time'])):'—'?></td>
-        <td><?=e($t['assigned_by_name']??'—')?><br><small class="text-muted"><?=e($t['assigned_by_role']??'')?></small></td>
-        <td><span class="badge badge-<?=$status_colors[$t['status']]??'secondary'?>"><?=e($t['status'])?></span></td>
-        <td class="action-btns">
-          <?php if(in_array($t['status'],['Pending','Overdue'])):?>
-            <button class="btn btn-xs btn-primary" onclick="updateTask(<?=$t['id']?>,'In Progress')" title="Start"><i class="fas fa-play"></i></button>
-          <?php endif;?>
-          <?php if(in_array($t['status'],['Pending','In Progress','Overdue'])):?>
-            <button class="btn btn-xs btn-success" onclick="completeTask(<?=$t['id']?>)" title="Complete"><i class="fas fa-check"></i></button>
-          <?php endif;?>
-        </td>
-      </tr>
-    <?php endforeach; endif;?></tbody></table></div>
-  </div>
-
-  <!-- ── Weekly Shift Schedule ── -->
-  <div class="info-card" style="margin-bottom:1.5rem;">
-    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-calendar-week" style="color:var(--primary);"></i> Shift Schedule (This Week)</h3>
-    <?php if(empty($my_shifts)):?>
-      <p class="text-center text-muted" style="padding:2rem;">No shifts scheduled this week</p>
-    <?php else:?>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;">
-      <?php foreach($my_shifts as $sh):
-        $is_today = ($sh['shift_date'] === $today);
-        $shift_colors = ['Morning'=>'#f39c12','Afternoon'=>'#3498db','Night'=>'#8e44ad'];
-        $bg_col = $shift_colors[$sh['shift_type']] ?? '#95a5a6';
-      ?>
-        <div style="background:<?=$bg_col?>15;border:1.5px solid <?=$bg_col?>;border-radius:var(--radius-sm);padding:1.2rem;<?=$is_today?'box-shadow:0 0 0 2px '.$bg_col.';':''?>">
-          <div style="font-weight:700;font-size:1.3rem;color:<?=$bg_col?>;"><?=date('D, d M',strtotime($sh['shift_date']))?></div>
-          <div style="font-size:1.2rem;margin-top:.3rem;"><i class="fas fa-clock"></i> <?=date('h:i A',strtotime($sh['start_time']))?> – <?=date('h:i A',strtotime($sh['end_time']))?></div>
-          <div style="margin-top:.4rem;"><span class="badge" style="background:<?=$bg_col?>;color:#fff;"><?=e($sh['shift_type'])?></span></div>
-          <?php if($sh['ward_assigned']):?><div style="font-size:1.1rem;margin-top:.3rem;color:var(--text-secondary);"><i class="fas fa-hospital"></i> <?=e($sh['ward_assigned'])?></div><?php endif;?>
-          <div style="margin-top:.4rem;"><span class="badge badge-<?=($sh['status']==='Completed')?'success':(($sh['status']==='Active')?'primary':'secondary')?>"><?=e($sh['status'])?></span></div>
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h4 class="mb-0"><i class="fas fa-tasks text-muted me-2"></i> Task & Shift Management</h4>
+            <p class="text-muted mb-0">Track clinical tasks and manage your rotations.</p>
         </div>
-      <?php endforeach;?>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <?php if($shift_pk && !$handover_done): ?>
+                <button class="btn btn-warning" style="border-radius:20px; font-weight:600;" onclick="openHandoverModal()">
+                    <i class="fas fa-clipboard-check"></i> Submit Shift Handover
+                </button>
+            <?php elseif($handover_done): ?>
+                <button class="btn btn-success" style="border-radius:20px;" disabled>
+                    <i class="fas fa-check-circle"></i> Handover Submitted
+                </button>
+            <?php endif; ?>
+        </div>
     </div>
-    <?php endif;?>
-  </div>
 
-  <!-- ── Handover History ── -->
-  <div class="info-card">
-    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-exchange-alt" style="color:var(--warning);"></i> Shift Handovers</h3>
-    <div class="table-responsive"><table class="data-table"><thead><tr>
-      <th>Date</th><th>Outgoing Nurse</th><th>Incoming Nurse</th><th>Ward</th><th>Acknowledged</th><th>Actions</th>
-    </tr></thead><tbody>
-    <?php if(empty($handovers)):?>
-      <tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No handovers recorded</td></tr>
-    <?php else: foreach($handovers as $ho):?>
-      <tr>
-        <td><?=date('d M h:i A',strtotime($ho['submitted_at']))?></td>
-        <td><?=e($ho['outgoing_name']??'—')?></td>
-        <td><?=e($ho['incoming_name']??'Pending')?></td>
-        <td><?=e($ho['ward']??'—')?></td>
-        <td><?=$ho['acknowledged']?'<span class="badge badge-success"><i class="fas fa-check"></i> Yes</span>':'<span class="badge badge-warning">Pending</span>'?></td>
-        <td>
-          <button class="btn btn-xs btn-outline" onclick="viewHandover(<?=$ho['id']?>)"><i class="fas fa-eye"></i></button>
-          <?php if(!$ho['acknowledged'] && $ho['incoming_nurse_id']==$nurse_pk):?>
-            <button class="btn btn-xs btn-success" onclick="acknowledgeHandover(<?=$ho['id']?>)"><i class="fas fa-check-double"></i> Ack</button>
-          <?php endif;?>
-        </td>
-      </tr>
-    <?php endforeach; endif;?></tbody></table></div>
-  </div>
+    <div class="row g-4">
+        <!-- Tasks Column -->
+        <div class="col-lg-8">
+            
+            <!-- Pending Tasks -->
+            <div class="card mb-4" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-header bg-white border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="mb-0 fw-bold" style="color: var(--primary-dark);"><i class="far fa-clock me-2 text-warning"></i> Pending Tasks (<?= count($tasks) ?>)</h5>
+                </div>
+                <div class="card-body p-0 mt-3">
+                    <?php if(empty($tasks)): ?>
+                        <div class="text-center py-5 text-muted">
+                            <i class="far fa-check-circle fs-1 mb-3 opacity-25"></i>
+                            <h5>All Caught Up!</h5>
+                            <p>You have no pending clinical tasks.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="list-group list-group-flush rounded-bottom">
+                            <?php foreach($tasks as $t): 
+                                $is_overdue = (strtotime($t['due_time']) < time());
+                                $badge_color = 'bg-secondary';
+                                if($t['priority'] == 'High') $badge_color = 'bg-danger';
+                                elseif($t['priority'] == 'Medium') $badge_color = 'bg-warning text-dark';
+                                elseif($t['priority'] == 'Low') $badge_color = 'bg-info text-dark';
+                            ?>
+                                <div class="list-group-item p-4 border-start border-4 <?= $is_overdue ? 'border-danger bg-danger bg-opacity-10' : 'border-primary' ?>">
+                                    <div class="d-flex w-100 justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <h6 class="mb-1 fw-bold fs-5">
+                                                <?= e($t['task_title']) ?>
+                                                <span class="badge <?= $badge_color ?> ms-2" style="font-size:0.7rem;"><i class="fas fa-exclamation"></i> <?= e($t['priority']) ?></span>
+                                            </h6>
+                                            <?php if($t['patient_name']): ?>
+                                                <small class="text-muted"><i class="fas fa-user-injured me-1"></i> <?= e($t['patient_name']) ?> (<?= e($t['patient_id']) ?>)</small>
+                                            <?php else: ?>
+                                                <small class="text-muted"><i class="fas fa-h-square me-1"></i> General Ward Task</small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="mb-2 <?= $is_overdue ? 'text-danger fw-bold' : 'text-muted' ?>">
+                                                <i class="far fa-clock"></i> Due: <?= date('H:i', strtotime($t['due_time'])) ?>
+                                                <?php if($is_overdue): ?>
+                                                    <br><small class="text-danger">(Overdue)</small>
+                                                <?php endif; ?>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="completeTask(<?= $t['id'] ?>)">
+                                                <i class="fas fa-check"></i> Mark Done
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="mb-0 text-dark opacity-75" style="font-size: 0.95rem;"><?= nl2br(e($t['task_description'])) ?></p>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Completed Tasks -->
+            <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-header bg-white border-bottom-0 pb-0 pt-4 px-4">
+                    <h6 class="mb-0 text-muted"><i class="fas fa-check-double me-2"></i> Completed Today (<?= count($completed_tasks) ?>)</h6>
+                </div>
+                <div class="card-body p-0 mt-3">
+                    <?php if(empty($completed_tasks)): ?>
+                        <div class="px-4 py-3 text-muted small">No tasks completed yet today.</div>
+                    <?php else: ?>
+                        <div class="list-group list-group-flush rounded-bottom">
+                            <?php foreach($completed_tasks as $t): ?>
+                                <div class="list-group-item bg-light px-4 py-3 blur-sm">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <div class="text-muted text-decoration-line-through">
+                                            <i class="fas fa-check text-success me-2"></i><?= e($t['task_title']) ?>
+                                            <?= $t['patient_name'] ? " - {$t['patient_name']}" : "" ?>
+                                        </div>
+                                        <small class="text-muted"><?= date('H:i', strtotime($t['completed_at'])) ?></small>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Shifts Column -->
+        <div class="col-lg-4">
+            <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <div class="card-header bg-white pb-0 pt-4 px-4">
+                    <h5 class="mb-0 fw-bold"><i class="far fa-calendar-alt text-primary me-2"></i> My Roster</h5>
+                </div>
+                <div class="card-body px-0">
+                    <div class="list-group list-group-flush">
+                        <?php if(empty($upcoming_shifts)): ?>
+                            <div class="px-4 py-3 text-muted text-center">No upcoming shifts scheduled.</div>
+                        <?php else: ?>
+                            <?php foreach($upcoming_shifts as $s): 
+                                $is_today = ($s['shift_date'] == $today);
+                                $is_active = ($s['status'] == 'Active');
+                            ?>
+                                <div class="list-group-item px-4 py-3 <?= $is_today ? ($is_active ? 'bg-primary bg-opacity-10 border-primary' : 'bg-light') : '' ?>">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1 <?= $is_today ? 'fw-bold' : '' ?>">
+                                                <?= $is_today ? 'Today' : date('l, d M', strtotime($s['shift_date'])) ?>
+                                            </h6>
+                                            <small class="text-muted"><i class="fas fa-map-marker-alt"></i> <?= e($s['ward_assigned'] ?: 'No Ward') ?></small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="badge <?= $s['shift_type']=='Morning'?'bg-info':($s['shift_type']=='Afternoon'?'bg-warning text-dark':'bg-dark') ?> mb-1">
+                                                <?= e($s['shift_type']) ?>
+                                            </div>
+                                            <br>
+                                            <small class="fw-bold"><?= date('H:i', strtotime($s['start_time'])) ?> - <?= date('H:i', strtotime($s['end_time'])) ?></small>
+                                        </div>
+                                    </div>
+                                    <?php if($is_active): ?>
+                                        <div class="text-primary mt-2 small fw-bold"><i class="fas fa-circle ms-1" style="font-size:8px;"></i> Currently Active Shift</div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- ═══════ HANDOVER MODAL ═══════ -->
-<div class="modal-bg" id="handoverModal">
-  <div class="modal-box wide" style="max-width:800px;">
-    <div class="modal-header"><h3><i class="fas fa-exchange-alt" style="color:var(--role-accent);"></i> Shift Handover</h3><button class="modal-close" onclick="closeModal('handoverModal')"><i class="fas fa-times"></i></button></div>
-    <p style="font-size:1.2rem;color:var(--text-secondary);margin-bottom:1.5rem;">Complete your end-of-shift handover. System will auto-populate your shift activities.</p>
-    <div class="form-group"><label>Incoming Nurse</label>
-      <select id="ho_incoming" class="form-control"><option value="">Select Incoming Nurse</option>
-        <?php $other_nurses = dbSelect($conn,"SELECT n.id, n.full_name FROM nurses n WHERE n.id!=? AND n.status='Active'","i",[$nurse_pk]);
-        foreach($other_nurses as $on):?><option value="<?=$on['id']?>"><?=e($on['full_name'])?></option><?php endforeach;?>
-      </select>
-    </div>
-    <div class="form-group"><label>Patient Summaries (auto-filled, editable)</label>
-      <textarea id="ho_patients" class="form-control" rows="5" placeholder="Loading shift summary..."><?php
-        $shift_patients = dbSelect($conn,"SELECT u.name FROM bed_assignments ba JOIN patients p ON ba.patient_id=p.id JOIN users u ON p.user_id=u.id WHERE ba.status='Active' LIMIT 20");
-        $summary_lines = [];
-        foreach($shift_patients as $sp) $summary_lines[] = "• " . $sp['name'] . ": Stable (update as needed)";
-        echo implode("\n", $summary_lines);
-      ?></textarea>
-    </div>
-    <div class="form-group"><label>Pending Incomplete Tasks</label>
-      <textarea id="ho_pending" class="form-control" rows="3" readonly><?php
-        $pending_t = dbSelect($conn,"SELECT task_title, priority FROM nurse_tasks WHERE nurse_id=? AND status IN('Pending','In Progress') ORDER BY FIELD(priority,'Urgent','High','Medium','Low')","i",[$nurse_pk]);
-        $plines=[];foreach($pending_t as $pt) $plines[]="• [{$pt['priority']}] {$pt['task_title']}";
-        echo implode("\n",$plines)?:'No pending tasks';
-      ?></textarea>
-    </div>
-    <div class="form-group"><label>Critical Patients to Watch</label><textarea id="ho_critical" class="form-control" rows="2" placeholder="Note any patients requiring close monitoring..."></textarea></div>
-    <div class="form-group"><label>Additional Handover Notes</label><textarea id="ho_notes" class="form-control" rows="3" placeholder="Any other important information for the incoming nurse..."></textarea></div>
-    <button class="btn btn-primary" onclick="submitHandover()" style="width:100%;"><i class="fas fa-paper-plane"></i> Submit Handover</button>
-  </div>
-</div>
+<!-- ========================================== -->
+<!-- MODAL: SHIFT HANDOVER                      -->
+<!-- ========================================== -->
+<div class="modal fade" id="handoverModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header bg-warning" style="border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-clipboard-check me-2"></i> Clinical Shift Handover</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form id="handoverForm">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="submit_handover">
+                <input type="hidden" name="shift_id" value="<?= $shift_pk ?>">
+                
+                <div class="modal-body p-4">
+                    
+                    <div class="alert alert-info mb-4">
+                        <strong>Shift:</strong> <?= e($current_shift['shift_type']??'') ?> (<?= e($ward_assigned) ?>) <br>
+                        Please provide a comprehensive summary for the incoming nurse. This is a legally binding document.
+                    </div>
 
-<!-- ═══════ TASK COMPLETION MODAL ═══════ -->
-<div class="modal-bg" id="taskCompleteModal">
-  <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-check-circle" style="color:var(--success);"></i> Complete Task</h3><button class="modal-close" onclick="closeModal('taskCompleteModal')"><i class="fas fa-times"></i></button></div>
-    <input type="hidden" id="tc_task_id">
-    <div class="form-group"><label>Completion Notes (optional)</label><textarea id="tc_notes" class="form-control" rows="3" placeholder="Describe how the task was completed..."></textarea></div>
-    <button class="btn btn-success" onclick="submitTaskComplete()" style="width:100%;"><i class="fas fa-check"></i> Mark Complete</button>
-  </div>
-</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold small text-uppercase">Incoming Nurse (Optional)</label>
+                            <select class="form-select" name="incoming_nurse_id">
+                                <option value="">-- Select Incoming Nurse --</option>
+                                <?php
+                                    $n_q = mysqli_query($conn, "SELECT id, full_name, nurse_id FROM nurses WHERE id != $nurse_pk AND status='Active' ORDER BY full_name");
+                                    if($n_q) while($n = mysqli_fetch_assoc($n_q)) {
+                                        echo "<option value='{$n['id']}'>".e($n['full_name'])." ({$n['nurse_id']})</option>";
+                                    }
+                                ?>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <label class="form-label text-muted fw-bold small text-uppercase">General Ward Status Summary</label>
+                            <textarea class="form-control" name="summary" rows="3" placeholder="Identify general ward conditions, admissions, discharges, etc." required></textarea>
+                        </div>
 
-<!-- ═══════ VIEW HANDOVER MODAL ═══════ -->
-<div class="modal-bg" id="viewHandoverModal">
-  <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-exchange-alt" style="color:var(--role-accent);"></i> Handover Details</h3><button class="modal-close" onclick="closeModal('viewHandoverModal')"><i class="fas fa-times"></i></button></div>
-    <div id="viewHandoverContent"><p class="text-center text-muted">Loading...</p></div>
-  </div>
+                        <div class="col-12 mt-3">
+                            <label class="form-label text-muted fw-bold small text-uppercase">Critical Patients / Pending Follow-ups</label>
+                            <textarea class="form-control" name="critical_patients_notes" rows="3" placeholder="List patients requiring close monitoring, pending labs, or overdue tasks..." required></textarea>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer bg-light" style="border-radius: 0 0 15px 15px;">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-5 fw-bold" id="btnSubmitHandover">
+                        <i class="fas fa-check-double me-1"></i> Sign off & Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
-function filterTasks(status,el){
-  document.querySelectorAll('#sec-tasks .ftab').forEach(f=>f.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('#tasksTable tbody tr').forEach(row=>{
-    if(status==='all') row.style.display='';
-    else row.style.display=(row.dataset.taskStatus===status)?'':'none';
-  });
+function completeTask(taskId) {
+    if(confirm("Mark this task as completed?")) {
+        $.post('../nurse/process_tasks.php', {
+            action: 'complete_task',
+            task_id: taskId,
+            _csrf: '<?= generateCsrfToken() ?>'
+        }, function(res) {
+            if(res.success) {
+                location.reload();
+            } else {
+                alert(res.message);
+            }
+        }, 'json');
+    }
 }
 
-async function updateTask(taskId,newStatus){
-  const r=await nurseAction({action:'update_task_status',task_id:taskId,status:newStatus});
-  showToast(r.message||'Updated',r.success?'success':'error');
-  if(r.success) setTimeout(()=>location.reload(),1000);
+function openHandoverModal() {
+    document.getElementById('handoverForm').reset();
+    new bootstrap.Modal(document.getElementById('handoverModal')).show();
 }
 
-function completeTask(taskId){
-  document.getElementById('tc_task_id').value=taskId;
-  document.getElementById('tc_notes').value='';
-  openModal('taskCompleteModal');
-}
-
-async function submitTaskComplete(){
-  const r=await nurseAction({action:'complete_task',task_id:document.getElementById('tc_task_id').value,
-    notes:document.getElementById('tc_notes').value});
-  showToast(r.message||'Done',r.success?'success':'error');
-  if(r.success){closeModal('taskCompleteModal');setTimeout(()=>location.reload(),1000);}
-}
-
-async function submitHandover(){
-  const r=await nurseAction({action:'submit_handover',
-    incoming_nurse_id:document.getElementById('ho_incoming').value,
-    patient_summaries:document.getElementById('ho_patients').value,
-    pending_tasks:document.getElementById('ho_pending').value,
-    critical_patients:document.getElementById('ho_critical').value,
-    handover_notes:document.getElementById('ho_notes').value});
-  showToast(r.message||'Submitted',r.success?'success':'error');
-  if(r.success){closeModal('handoverModal');setTimeout(()=>location.reload(),1200);}
-}
-
-async function acknowledgeHandover(hoId){
-  if(!confirmAction('Acknowledge this handover?')) return;
-  const r=await nurseAction({action:'acknowledge_handover',handover_id:hoId});
-  showToast(r.message||'Done',r.success?'success':'error');
-  if(r.success) setTimeout(()=>location.reload(),1000);
-}
-
-async function viewHandover(hoId){
-  openModal('viewHandoverModal');
-  const r=await nurseAction({action:'get_handover_detail',handover_id:hoId});
-  if(!r.success){document.getElementById('viewHandoverContent').innerHTML='<p class="text-center" style="color:var(--danger);">Error</p>';return;}
-  const h=r.data;
-  document.getElementById('viewHandoverContent').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
-      <div><p><strong>Outgoing:</strong> ${h.outgoing_name||'—'}</p><p><strong>Incoming:</strong> ${h.incoming_name||'Pending'}</p></div>
-      <div><p><strong>Ward:</strong> ${h.ward||'—'}</p><p><strong>Submitted:</strong> ${h.submitted_at||'—'}</p></div>
-    </div>
-    <div style="margin-bottom:1rem;"><strong>Patient Summaries:</strong><div style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);white-space:pre-wrap;margin-top:.5rem;">${h.patient_summaries||'—'}</div></div>
-    <div style="margin-bottom:1rem;"><strong>Pending Tasks:</strong><div style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);white-space:pre-wrap;margin-top:.5rem;">${h.pending_tasks||'—'}</div></div>
-    <div style="margin-bottom:1rem;"><strong>Critical Patients:</strong><div style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);white-space:pre-wrap;margin-top:.5rem;">${h.critical_patients||'—'}</div></div>
-    <div><strong>Notes:</strong><div style="background:var(--surface-2);padding:1rem;border-radius:var(--radius-sm);white-space:pre-wrap;margin-top:.5rem;">${h.handover_notes||'—'}</div></div>`;
-}
+$(document).ready(function() {
+    $('#handoverForm').on('submit', function(e) {
+        e.preventDefault();
+        const btn = $('#btnSubmitHandover');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Submitting...');
+        
+        $.ajax({
+            url: '../nurse/process_tasks.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if(res.success) {
+                    $('#handoverModal').modal('hide');
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + res.message);
+                    btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Sign off & Submit');
+                }
+            },
+            error: function() {
+                alert('An error occurred while submitting handover.');
+                btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Sign off & Submit');
+            }
+        });
+    });
+});
 </script>

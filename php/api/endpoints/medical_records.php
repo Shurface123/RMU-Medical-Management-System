@@ -33,7 +33,7 @@ function handleMedicalRecords(string $method, int $userId, string $userRole, ?in
         $whereClause = "mr.patient_id = ?";
         $bindTypes   = 'i';
         $bindParams  = [$patientId];
-    } elseif (in_array($userRole, ['doctor', 'admin', 'lab_technician', 'nurse'])) {
+    } elseif (in_array($userRole, ['doctor', 'admin'])) {
         if ($recordId) {
             $whereClause = "mr.id = ?";
             $bindTypes   = 'i';

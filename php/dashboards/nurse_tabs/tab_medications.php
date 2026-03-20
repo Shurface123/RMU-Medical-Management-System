@@ -1,240 +1,322 @@
-<!-- ═══════════════════════════════════════════════════════════
-     MODULE 3: MEDICATION ADMINISTRATION — tab_medications.php
-     ═══════════════════════════════════════════════════════════ -->
 <?php
-// ── Today's medication schedule ───────────────────────────
-$med_schedule = dbSelect($conn,
-    "SELECT ma.*, u.user_name AS patient_name, p.patient_id AS p_ref
-     FROM medication_administration ma
-     JOIN patients pt ON ma.patient_id=pt.id JOIN users u ON pt.user_id=u.id
-     JOIN patients p ON ma.patient_id=p.id
-     WHERE ma.nurse_id=? AND DATE(ma.scheduled_time)=?
-     ORDER BY ma.scheduled_time ASC","is",[$nurse_pk,$today]);
+// ============================================================
+// NURSE DASHBOARD - MEDICATION ADMINISTRATION (MODULE 3)
+// ============================================================
+if (!isset($conn)) exit;
 
-// ── Active medication schedules ───────────────────────────
-$active_schedules = dbSelect($conn,
-    "SELECT ms.*, u.user_name AS patient_name, p.patient_id AS p_ref
-     FROM medication_schedules ms
-     JOIN patients pt ON ms.patient_id=pt.id JOIN users u ON pt.user_id=u.id
-     JOIN patients p ON ms.patient_id=p.id
-     WHERE ms.status='Active' AND ms.start_date<=? AND (ms.end_date IS NULL OR ms.end_date>=?)
-     ORDER BY u.user_name ASC","ss",[$today,$today]);
+// ── GET SHIFT & WARD ─────────────────────────────────────────
+$shift_q = mysqli_query($conn, "SELECT ward_assigned FROM nurse_shifts WHERE nurse_id=$nurse_pk AND shift_date='$today' AND status='Active' LIMIT 1");
+$current_shift = mysqli_fetch_assoc($shift_q);
+$ward_assigned = $current_shift['ward_assigned'] ?? 'All Wards';
 
-// ── Active prescriptions (from doctor) ────────────────────
-$active_rx = dbSelect($conn,
-    "SELECT pr.id, pr.prescription_id AS rx_ref, pr.status, pr.prescription_date,
-            u.user_name AS patient_name, p.patient_id AS p_ref, ud.user_name AS doctor_name,
-            m.medicine_name, pi.dosage, pi.frequency, pi.instructions, pi.item_id
-     FROM prescriptions pr
-     JOIN patients p ON pr.patient_id=p.id JOIN users u ON p.user_id=u.id
-     JOIN doctors d ON pr.doctor_id=d.id JOIN users ud ON d.user_id=ud.id
-     LEFT JOIN prescription_items pi ON pi.prescription_id=pr.id
-     LEFT JOIN medicines m ON pi.medicine_id=m.id
-     WHERE pr.status IN('Pending','Active','Partially Dispensed')
-     ORDER BY pr.prescription_date DESC LIMIT 200");
+// ── FETCH MEDS FOR TODAY ─────────────────────────────────────
+// We fetch records from `medication_administration` for today 
+// matching patients in the nurse's ward.
+$meds = [];
+$q_str = "
+    SELECT 
+        ma.id AS admin_pk, ma.admin_id, ma.medicine_name, ma.dosage, ma.route, 
+        ma.scheduled_time, ma.administered_at, ma.status, ma.notes,
+        p.patient_id, u.name AS patient_name, u.gender, u.date_of_birth,
+        b.ward, b.bed_number,
+        COALESCE(u.profile_photo, '') AS profile_photo
+    FROM medication_administration ma
+    JOIN patients p ON ma.patient_id = p.id
+    JOIN users u ON p.user_id = u.id
+    LEFT JOIN bed_assignments ba ON p.id = ba.patient_id AND ba.status = 'Occupied'
+    LEFT JOIN beds b ON ba.bed_id = b.id
+    WHERE DATE(ma.scheduled_time) = '$today'
+";
+
+if ($ward_assigned !== 'All Wards' && $ward_assigned !== 'Not Assigned') {
+    $q_str .= " AND b.ward = '".mysqli_real_escape_string($conn, $ward_assigned)."'";
+}
+$q_str .= " ORDER BY ma.scheduled_time ASC";
+
+$q = mysqli_query($conn, $q_str);
+if ($q) {
+    while ($r = mysqli_fetch_assoc($q)) {
+        // Calculate age
+        $r['age'] = 'N/A';
+        if (!empty($r['date_of_birth'])) {
+            $dob = new DateTime($r['date_of_birth']);
+            $now = new DateTime();
+            $r['age'] = $now->diff($dob)->y;
+        }
+        
+        // Categorize overdueness
+        $sched = new DateTime($r['scheduled_time']);
+        $now = new DateTime();
+        $is_overdue = ($r['status'] == 'Pending' && $now > $sched);
+        $r['is_overdue'] = $is_overdue;
+        
+        $meds[] = $r;
+    }
+}
 ?>
-<div id="sec-medications" class="dash-section">
-  <div class="sec-header">
-    <h2><i class="fas fa-pills"></i> Medication Administration</h2>
-    <div style="display:flex;gap:.8rem;">
-      <button class="btn btn-primary" onclick="openModal('administerMedModal')"><i class="fas fa-syringe"></i> Administer Medication</button>
-    </div>
-  </div>
 
-  <!-- ── Filter Tabs ── -->
-  <div class="filter-tabs">
-    <span class="ftab active" onclick="filterMeds('all',this)">All Today</span>
-    <span class="ftab" onclick="filterMeds('Pending',this)">⏳ Pending</span>
-    <span class="ftab" onclick="filterMeds('Administered',this)">✅ Administered</span>
-    <span class="ftab" onclick="filterMeds('Missed',this)">❌ Missed</span>
-    <span class="ftab" onclick="filterMeds('Refused',this)">🚫 Refused</span>
-    <span class="ftab" onclick="filterMeds('Held',this)">⏸️ Held</span>
-  </div>
+<div class="tab-content" id="medications">
 
-  <!-- ── Today's Schedule Table ── -->
-  <div class="info-card" style="margin-bottom:1.5rem;">
-    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-calendar-day" style="color:var(--role-accent);"></i> Today's Medication Schedule</h3>
-    <div class="table-responsive">
-      <table class="adm-table" id="medTable">
-        <thead><tr>
-          <th>Time</th><th>Patient</th><th>Medicine</th><th>Dosage</th><th>Route</th><th>Status</th><th>Administered At</th><th>Actions</th>
-        </tr></thead>
-        <tbody>
-        <?php if(empty($med_schedule)):?>
-          <tr><td colspan="8" class="text-center text-muted" style="padding:3rem;">No medications scheduled for today</td></tr>
-        <?php else: foreach($med_schedule as $ms):
-          $stime = $ms['scheduled_time'] ? date('h:i A',strtotime($ms['scheduled_time'])) : '—';
-          $is_overdue = ($ms['status']==='Pending' && $ms['scheduled_time'] && strtotime($ms['scheduled_time']) < time());
-          $status_map = ['Pending'=>'badge-warning','Administered'=>'badge-success','Missed'=>'badge-danger','Refused'=>'badge-danger','Held'=>'badge-info','Late'=>'badge-warning'];
-          $badge_cls = $status_map[$ms['status']] ?? 'badge-secondary';
-        ?>
-          <tr data-med-status="<?=e($ms['status'])?>" <?=$is_overdue?'style="border-left:3px solid var(--danger);"':''?>>
-            <td><strong><?=$stime?></strong><?=$is_overdue?' <span class="badge badge-danger" style="font-size:.9rem;">OVERDUE</span>':''?></td>
-            <td><?=e($ms['patient_name'])?><br><small class="text-muted"><?=e($ms['p_ref']??'')?></small></td>
-            <td><strong><?=e($ms['medicine_name'])?></strong></td>
-            <td><?=e($ms['dosage']??'—')?></td>
-            <td><?=e($ms['route']??'Oral')?></td>
-            <td><span class="badge <?=$badge_cls?>"><?=e($ms['status'])?></span></td>
-            <td><?=$ms['administered_at']?date('h:i A',strtotime($ms['administered_at'])):'—'?></td>
-            <td class="action-btns">
-              <?php if($ms['status']==='Pending'):?>
-                <button class="btn btn-xs btn-success" onclick="confirmAdminister(<?=$ms['id']?>,'<?=e($ms['medicine_name'])?>','<?=e($ms['patient_name'])?>','<?=e($ms['dosage']??'')?>')" title="Administer"><i class="fas fa-check"></i></button>
-                <button class="btn btn-xs btn-warning" onclick="markMedStatus(<?=$ms['id']?>,'Held')" title="Hold"><i class="fas fa-pause"></i></button>
-                <button class="btn btn-xs btn-danger" onclick="markMedStatus(<?=$ms['id']?>,'Missed')" title="Mark Missed"><i class="fas fa-times"></i></button>
-              <?php endif;?>
-            </td>
-          </tr>
-        <?php endforeach; endif;?>
-        </tbody>
-      </table>
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h4 class="mb-0"><i class="fas fa-pills text-muted me-2"></i> Medication Schedule</h4>
+            <p class="text-muted mb-0">Today's schedule for patients in <strong><?= e($ward_assigned) ?></strong></p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <button class="btn btn-outline-primary" style="border-radius:20px;" onclick="location.reload();">
+                <i class="fas fa-sync-alt"></i> Refresh Schedule
+            </button>
+        </div>
     </div>
-  </div>
 
-  <!-- ── Active Prescriptions from Doctors ── -->
-  <div class="info-card">
-    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-prescription" style="color:var(--primary);"></i> Active Prescriptions</h3>
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead><tr><th>Rx ID</th><th>Patient</th><th>Doctor</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Date</th><th>Status</th></tr></thead>
-        <tbody>
-        <?php if(empty($active_rx)):?>
-          <tr><td colspan="8" class="text-center text-muted" style="padding:2rem;">No active prescriptions</td></tr>
-        <?php else: foreach($active_rx as $rx):?>
-          <tr>
-            <td><?=e($rx['rx_ref']??'')?></td>
-            <td><?=e($rx['patient_name'])?></td>
-            <td>Dr. <?=e($rx['doctor_name'])?></td>
-            <td><strong><?=e($rx['medicine_name']??'—')?></strong></td>
-            <td><?=e($rx['dosage']??'—')?></td>
-            <td><?=e($rx['frequency']??'—')?></td>
-            <td><?=$rx['prescription_date']?date('d M Y',strtotime($rx['prescription_date'])):'—'?></td>
-            <td><span class="badge badge-<?=$rx['status']==='Active'?'success':'warning'?>"><?=e($rx['status'])?></span></td>
-          </tr>
-        <?php endforeach; endif;?>
-        </tbody>
-      </table>
+    <!-- Stats Summary -->
+    <?php
+        $t_pending = array_reduce($meds, fn($c,$m) => $c + ($m['status']=='Pending'?1:0), 0);
+        $t_admin   = array_reduce($meds, fn($c,$m) => $c + ($m['status']=='Administered'?1:0), 0);
+        $t_missed  = array_reduce($meds, fn($c,$m) => $c + (in_array($m['status'],['Missed','Refused','Held'])?1:0), 0);
+    ?>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-light border-0 shadow-sm" style="border-radius:10px; border-left: 4px solid var(--primary-color) !important;">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">Pending</h6>
+                        <h3 class="mb-0 text-dark"><?= $t_pending ?></h3>
+                    </div>
+                    <div style="font-size:2rem; opacity:0.2;"><i class="fas fa-clock"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light border-0 shadow-sm" style="border-radius:10px; border-left: 4px solid #27ae60 !important;">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">Administered</h6>
+                        <h3 class="mb-0 text-success"><?= $t_admin ?></h3>
+                    </div>
+                    <div style="font-size:2rem; opacity:0.2;"><i class="fas fa-check-circle"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light border-0 shadow-sm" style="border-radius:10px; border-left: 4px solid #e74c3c !important;">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">Missed/Held</h6>
+                        <h3 class="mb-0 text-danger"><?= $t_missed ?></h3>
+                    </div>
+                    <div style="font-size:2rem; opacity:0.2;"><i class="fas fa-times-circle"></i></div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div><!-- /sec-medications -->
 
-<!-- ═══════ ADMINISTER / CONFIRM MODAL ═══════ -->
-<div class="modal-bg" id="administerMedModal">
-  <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-syringe" style="color:var(--role-accent);"></i> Administer Medication</h3><button class="modal-close" onclick="closeModal('administerMedModal')"><i class="fas fa-times"></i></button></div>
-    <div class="form-group"><label>Patient *</label>
-      <select id="am_patient" class="form-control">
-        <option value="">Select Patient</option>
-        <?php foreach($all_patients_for_vitals as $ap):?>
-          <option value="<?=$ap['id']?>"><?=e($ap['patient_name'])?> (<?=e($ap['p_ref'])?>)</option>
-        <?php endforeach;?>
-      </select>
+    <!-- Medication List -->
+    <div class="card" style="border-radius: 12px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="medsTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Time</th>
+                            <th>Patient</th>
+                            <th>Medication (Route)</th>
+                            <th>Dosage</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(empty($meds)): ?>
+                            <tr><td colspan="6" class="text-center py-5 text-muted">No medications scheduled for today in this ward.</td></tr>
+                        <?php else: foreach($meds as $m): ?>
+                            <tr class="<?= $m['is_overdue'] ? 'bg-danger bg-opacity-10' : '' ?>">
+                                <td class="ps-4">
+                                    <span class="fw-bold <?= $m['is_overdue']?'text-danger':($m['status']=='Administered'?'text-success':'text-dark') ?>">
+                                        <?= date('H:i', strtotime($m['scheduled_time'])) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-3 bg-<?= $m['gender']=='Male'?'primary':'danger' ?> text-white rounded-circle d-flex align-items-center justify-content-center" style="width:35px;height:35px;opacity:0.8;font-size:0.9rem;">
+                                            <?= strtoupper(substr($m['patient_name'],0,1)) ?>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold" style="font-size:0.95rem;"><?= e($m['patient_name']) ?></h6>
+                                            <small class="text-muted"><?= e($m['ward']) ?>-B<?= e($m['bed_number']) ?> (<?= e($m['patient_id']) ?>)</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold" style="color:var(--primary-dark);"><?= e($m['medicine_name']) ?></div>
+                                    <small class="text-muted"><i class="fas fa-route"></i> <?= e($m['route']) ?></small>
+                                </td>
+                                <td class="fw-bold text-dark"><?= e($m['dosage']) ?></td>
+                                <td>
+                                    <?php if($m['status'] == 'Pending'): ?>
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-clock"></i> Pending</span>
+                                    <?php elseif($m['status'] == 'Administered'): ?>
+                                        <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check"></i> Administered <br><small><?= date('H:i', strtotime($m['administered_at'])) ?></small></span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-times"></i> <?= e($m['status']) ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <?php if($m['status'] == 'Pending'): ?>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" onclick="openAdministerModal(<?= $m['admin_pk'] ?>, '<?= e(addslashes($m['patient_name'])) ?>', '<?= e(addslashes($m['medicine_name'])) ?>', '<?= e(addslashes($m['dosage'])) ?>', '<?= e(addslashes($m['route'])) ?>')">
+                                            <i class="fas fa-syringe"></i> Verify
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
+                                            <i class="fas fa-lock"></i> Locked
+                                        </button>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="form-group"><label>Medicine Name *</label><input id="am_medicine" class="form-control" placeholder="Medicine name"></div>
-    <div class="form-row">
-      <div class="form-group"><label>Dosage *</label><input id="am_dosage" class="form-control" placeholder="e.g. 500mg"></div>
-      <div class="form-group"><label>Route</label>
-        <select id="am_route" class="form-control">
-          <option value="Oral">Oral</option><option value="IV">IV</option><option value="IM">IM</option>
-          <option value="SC">Subcutaneous</option><option value="Topical">Topical</option>
-          <option value="Inhaled">Inhaled</option><option value="Rectal">Rectal</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group"><label>Verification Method</label>
-      <select id="am_verify" class="form-control"><option value="Manual">Manual Check</option><option value="Barcode">Barcode Scan</option><option value="Double-Check">Double Check</option></select>
-    </div>
-    <div class="form-group"><label>Notes</label><textarea id="am_notes" class="form-control" rows="2"></textarea></div>
-    <label style="display:flex;align-items:center;gap:.8rem;margin-bottom:1.4rem;font-size:1.2rem;cursor:pointer;">
-      <input type="checkbox" id="am_confirm_check"> <span>I confirm that the correct patient, medication, dosage, route, and time have been verified.</span>
-    </label>
-    <button class="btn btn-success" onclick="submitAdminister()" style="width:100%;"><i class="fas fa-check-circle"></i> Confirm Administration</button>
-  </div>
 </div>
 
-<!-- ═══════ CONFIRMATION MODAL FOR TABLE-ROW ADMIN ═══════ -->
-<div class="modal-bg" id="confirmAdminModal">
-  <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-shield-check" style="color:var(--success);"></i> Confirm Medication</h3><button class="modal-close" onclick="closeModal('confirmAdminModal')"><i class="fas fa-times"></i></button></div>
-    <div style="background:var(--warning-light);border:1px solid var(--warning);border-radius:var(--radius-sm);padding:1.2rem;margin-bottom:1.5rem;">
-      <p style="font-weight:700;font-size:1.3rem;"><i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> Medication Verification</p>
-      <p style="margin-top:.5rem;">Please verify the following details:</p>
-    </div>
-    <p style="font-size:1.3rem;margin:.5rem 0;"><strong>Patient:</strong> <span id="ca_patient_name"></span></p>
-    <p style="font-size:1.3rem;margin:.5rem 0;"><strong>Medicine:</strong> <span id="ca_medicine_name"></span></p>
-    <p style="font-size:1.3rem;margin:.5rem 0;"><strong>Dosage:</strong> <span id="ca_dosage"></span></p>
-    <input type="hidden" id="ca_med_id">
-    <label style="display:flex;align-items:center;gap:.8rem;margin:1.5rem 0;font-size:1.2rem;cursor:pointer;">
-      <input type="checkbox" id="ca_verify_check"> <span>I confirm all details above are correct</span>
-    </label>
-    <button class="btn btn-success" onclick="executeAdminister()" style="width:100%;"><i class="fas fa-check-circle"></i> Administer Now</button>
-  </div>
-</div>
+<!-- ========================================== -->
+<!-- MODAL: ADMINISTER MEDICATION               -->
+<!-- ========================================== -->
+<div class="modal fade" id="administerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white; border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-prescription-bottle-alt me-2"></i> Verify & Administer</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="administerForm">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="administer_med">
+                <input type="hidden" name="admin_id" id="med_admin_id">
+                
+                <div class="modal-body p-4">
+                    
+                    <div class="alert alert-warning mb-4" style="border-radius: 10px; border-left: 4px solid #f39c12;">
+                        <h6 class="fw-bold mb-1"><i class="fas fa-exclamation-triangle"></i> Complete the 5 Rights</h6>
+                        <small>Right Patient, Right Drug, Right Dose, Right Route, Right Time.</small>
+                    </div>
 
-<!-- ═══════ REASON MODAL (for Missed/Refused/Held) ═══════ -->
-<div class="modal-bg" id="medReasonModal">
-  <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-comment-medical" style="color:var(--warning);"></i> Reason Required</h3><button class="modal-close" onclick="closeModal('medReasonModal')"><i class="fas fa-times"></i></button></div>
-    <input type="hidden" id="mr_med_id"><input type="hidden" id="mr_new_status">
-    <div class="form-group"><label>Status: <span id="mr_status_label"></span></label></div>
-    <div class="form-group"><label>Reason *</label><textarea id="mr_reason" class="form-control" rows="3" placeholder="Explain why this medication was not administered..."></textarea></div>
-    <button class="btn btn-warning" onclick="submitMedReason()" style="width:100%;"><i class="fas fa-save"></i> Save</button>
-  </div>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Patient:</span>
+                            <span class="fw-bold" id="med_patient_name"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Drug:</span>
+                            <span class="fw-bold text-primary" id="med_drug_name"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Dosage:</span>
+                            <span class="fw-bold" id="med_dosage"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Route:</span>
+                            <span class="fw-bold" id="med_route"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold small text-uppercase">Outcome Status</label>
+                        <select class="form-select" name="med_status" id="med_status" required>
+                            <option value="Administered">Administered</option>
+                            <option value="Refused">Refused by Patient</option>
+                            <option value="Held">Held (Doctor's Orders/Contraindicated)</option>
+                            <option value="Missed">Missed/Unavailable</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold small text-uppercase">Verification Method</label>
+                        <select class="form-select" name="verification_method" required>
+                            <option value="Manual">Manual Verification</option>
+                            <option value="Barcode">Barcode Scanned</option>
+                            <option value="eMAR">Double eMAR Check</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2" id="med_notes_div">
+                        <label class="form-label text-muted fw-bold small text-uppercase">Clinical Notes</label>
+                        <textarea class="form-control" name="notes" id="med_notes" rows="2" placeholder="Required if refused or held..."></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer bg-light" style="border-radius: 0 0 15px 15px;">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnAdminSave">
+                        <i class="fas fa-check-circle me-1"></i> Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
-function filterMeds(status,el){
-  document.querySelectorAll('#sec-medications .ftab').forEach(f=>f.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('#medTable tbody tr').forEach(row=>{
-    if(status==='all') row.style.display='';
-    else row.style.display=(row.dataset.medStatus===status)?'':'none';
-  });
+function openAdministerModal(adminId, patientName, drugName, dosage, route) {
+    document.getElementById('med_admin_id').value = adminId;
+    document.getElementById('med_patient_name').textContent = patientName;
+    document.getElementById('med_drug_name').textContent = drugName;
+    document.getElementById('med_dosage').textContent = dosage;
+    document.getElementById('med_route').textContent = route;
+    
+    document.getElementById('administerForm').reset();
+    $('#med_status').trigger('change'); // trigger logic
+    
+    new bootstrap.Modal(document.getElementById('administerModal')).show();
 }
 
-function confirmAdminister(medId,medicine,patient,dosage){
-  document.getElementById('ca_med_id').value=medId;
-  document.getElementById('ca_patient_name').textContent=patient;
-  document.getElementById('ca_medicine_name').textContent=medicine;
-  document.getElementById('ca_dosage').textContent=dosage||'As prescribed';
-  document.getElementById('ca_verify_check').checked=false;
-  openModal('confirmAdminModal');
-}
+$(document).ready(function() {
+    $('#medsTable').DataTable({
+        "pageLength": 10,
+        "ordering": true,
+        "order": [[0, "asc"]], // Time
+        "language": { "search": "", "searchPlaceholder": "Search schedule..." }
+    });
 
-async function executeAdminister(){
-  if(!document.getElementById('ca_verify_check').checked){showToast('Please verify medication details first','error');return;}
-  const r=await nurseAction({action:'administer_medication',med_id:document.getElementById('ca_med_id').value});
-  showToast(r.message||'Done',r.success?'success':'error');
-  if(r.success){closeModal('confirmAdminModal');setTimeout(()=>location.reload(),1200);}
-}
+    // Make notes required if not Administered
+    $('#med_status').on('change', function() {
+        if($(this).val() !== 'Administered') {
+            $('#med_notes').prop('required', true);
+            $('#med_notes_div label').html('Clinical Notes <span class="text-danger">*</span>');
+        } else {
+            $('#med_notes').prop('required', false);
+            $('#med_notes_div label').html('Clinical Notes');
+        }
+    });
 
-function markMedStatus(medId,newStatus){
-  document.getElementById('mr_med_id').value=medId;
-  document.getElementById('mr_new_status').value=newStatus;
-  document.getElementById('mr_status_label').textContent=newStatus;
-  document.getElementById('mr_reason').value='';
-  openModal('medReasonModal');
-}
-
-async function submitMedReason(){
-  const reason=document.getElementById('mr_reason').value.trim();
-  if(!reason){showToast('Please provide a reason','error');return;}
-  const r=await nurseAction({action:'update_med_status',med_id:document.getElementById('mr_med_id').value,
-    new_status:document.getElementById('mr_new_status').value, reason:reason});
-  showToast(r.message||'Done',r.success?'success':'error');
-  if(r.success){closeModal('medReasonModal');setTimeout(()=>location.reload(),1200);}
-}
-
-async function submitAdminister(){
-  if(!validateForm({am_patient:'Patient',am_medicine:'Medicine',am_dosage:'Dosage'})) return;
-  if(!document.getElementById('am_confirm_check').checked){showToast('Please confirm verification checkbox','error');return;}
-  const r=await nurseAction({action:'administer_new_medication',
-    patient_id:document.getElementById('am_patient').value,
-    medicine_name:document.getElementById('am_medicine').value,
-    dosage:document.getElementById('am_dosage').value,
-    route:document.getElementById('am_route').value,
-    verified_by:document.getElementById('am_verify').value,
-    notes:document.getElementById('am_notes').value});
-  showToast(r.message||'Done',r.success?'success':'error');
-  if(r.success){closeModal('administerMedModal');setTimeout(()=>location.reload(),1200);}
-}
+    $('#administerForm').on('submit', function(e) {
+        e.preventDefault();
+        if(!confirm("Are you sure you want to commit this medication record? This action cannot be undone.")) return;
+        const btn = $('#btnAdminSave');
+        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+        
+        $.ajax({
+            url: '../nurse/process_medication.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                if(res.success) {
+                    $('#administerModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + res.message);
+                    btn.html('<i class="fas fa-check-circle me-1"></i> Confirm').prop('disabled', false);
+                }
+            },
+            error: function() {
+                alert('An error occurred.');
+                btn.html('<i class="fas fa-check-circle me-1"></i> Confirm').prop('disabled', false);
+            }
+        });
+    });
+});
 </script>
