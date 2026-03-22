@@ -49,6 +49,54 @@ function enforceLabTechRole() {
     return (int)$_SESSION['user_id'];
 }
 
+/**
+ * Phase 9: Record this device's session into lab_technician_sessions.
+ * Safe to call on every page load — uses REPLACE / upsert logic.
+ */
+function recordLabSession(int $user_id, $conn): void {
+    if (!$conn) return;
+    $ip       = $_SERVER['REMOTE_ADDR'] ?? '';
+    $ua       = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 250);
+    $sess_key = session_id();
+
+    // Detect simple browser label
+    $browser = 'Other';
+    if (stripos($ua, 'Chrome') !== false && stripos($ua, 'Edg') === false) $browser = 'Chrome';
+    elseif (stripos($ua, 'Firefox') !== false) $browser = 'Firefox';
+    elseif (stripos($ua, 'Safari') !== false) $browser = 'Safari';
+    elseif (stripos($ua, 'Edg') !== false) $browser = 'Edge';
+
+    // Mark all existing sessions for this user as non-current first
+    $u = $conn->prepare("UPDATE lab_technician_sessions lts
+        JOIN lab_technicians lt ON lt.id = lts.technician_id
+        SET lts.is_current = 0
+        WHERE lt.user_id = ?");
+    if ($u) { $u->bind_param('i', $user_id); $u->execute(); $u->close(); }
+
+    // Get the technician PK
+    $s = $conn->prepare("SELECT id FROM lab_technicians WHERE user_id = ? LIMIT 1");
+    if (!$s) return;
+    $s->bind_param('i', $user_id);
+    $s->execute();
+    $tk_row = $s->get_result()->fetch_assoc();
+    $s->close();
+    if (!$tk_row) return;
+    $tech_pk = (int)$tk_row['id'];
+
+    // Insert or update this session token row
+    $ins = $conn->prepare("
+        INSERT INTO lab_technician_sessions
+            (technician_id, session_token, device_info, browser, ip_address, login_time, last_active, is_current)
+        VALUES (?, ?, ?, ?, ?, NOW(), NOW(), 1)
+        ON DUPLICATE KEY UPDATE
+            last_active = NOW(), is_current = 1, ip_address = VALUES(ip_address)
+    ");
+    if (!$ins) return;
+    $ins->bind_param('issss', $tech_pk, $sess_key, $ua, $browser, $ip);
+    $ins->execute();
+    $ins->close();
+}
+
 function generateCsrfToken() {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

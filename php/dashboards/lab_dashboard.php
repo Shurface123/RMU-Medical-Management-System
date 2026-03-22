@@ -50,7 +50,53 @@ $profile_image_path = !empty($tech_row['profile_photo']) ? e($tech_row['profile_
 function qval($conn,$sql){$r=mysqli_query($conn,$sql);return $r?(mysqli_fetch_row($r)[0]??0):0;}
 
 $unread_notifs = qval($conn,"SELECT COUNT(*) FROM lab_notifications WHERE recipient_id=$user_id AND is_read=0");
-// $pending_orders = qval($conn,"SELECT COUNT(*) FROM lab_test_orders WHERE status='Pending'");
+
+// ── Phase 9: Record active session ─────────────────────────
+recordLabSession($user_id, $conn);
+
+// ── Phase 9: License expiry notification (once per day) ────
+// Check technician's license from professional_profile OR lab_technicians
+$lic_q = $conn->prepare("
+    SELECT COALESCE(pp.license_expiry_date, lt.license_expiry) AS lic_exp
+    FROM lab_technicians lt
+    LEFT JOIN lab_technician_professional_profile pp ON pp.technician_id = lt.id
+    WHERE lt.user_id = ? LIMIT 1");
+if ($lic_q) {
+    $lic_q->bind_param('i', $user_id);
+    $lic_q->execute();
+    $lic_row = $lic_q->get_result()->fetch_assoc();
+    $lic_q->close();
+    if (!empty($lic_row['lic_exp'])) {
+        $days_left = (int)ceil((strtotime($lic_row['lic_exp']) - time()) / 86400);
+        if ($days_left <= 60 && $days_left >= 0) {
+            // Guard against duplicate notifications on same day
+            $dup_chk = $conn->prepare("
+                SELECT id FROM notifications WHERE user_id=? AND type='license_expiry'
+                AND DATE(created_at)=CURDATE() LIMIT 1");
+            if ($dup_chk) {
+                $dup_chk->bind_param('i', $user_id);
+                $dup_chk->execute();
+                $has_notif = $dup_chk->get_result()->num_rows > 0;
+                $dup_chk->close();
+                if (!$has_notif) {
+                    $exp_date_fmt = date('d M Y', strtotime($lic_row['lic_exp']));
+                    $lic_msg = "Your lab technician license expires on {$exp_date_fmt} ({$days_left} days remaining). Please renew it.";
+                    // Notify the technician
+                    $n1 = $conn->prepare("INSERT INTO notifications (user_id, user_role, type, title, message, is_read, related_module, created_at) VALUES (?, 'lab_technician', 'license_expiry', 'License Expiring Soon', ?, 0, 'Profile', NOW())");
+                    if ($n1) { $n1->bind_param('is', $user_id, $lic_msg); $n1->execute(); $n1->close(); }
+                    // Notify admins
+                    $admin_ids_q = mysqli_query($conn, "SELECT id FROM users WHERE role='admin' LIMIT 5");
+                    while ($adm = mysqli_fetch_assoc($admin_ids_q)) {
+                        $adm_msg = "Lab technician {$tech_row['full_name']} (ID: {$tech_row['technician_id']}) license expires in {$days_left} days ({$exp_date_fmt}).";
+                        $n2 = $conn->prepare("INSERT INTO notifications (user_id, user_role, type, title, message, is_read, related_module, created_at) VALUES (?, 'admin', 'license_expiry', 'Staff License Alert', ?, 0, 'Lab Staff', NOW())");
+                        if ($n2) { $n2->bind_param('is', $adm['id'], $adm_msg); $n2->execute(); $n2->close(); }
+                    }
+                }
+            }
+        }
+    }
+}
+// ─────────────────────────────────────────────────────────────
 
 ?>
 <!DOCTYPE html>
