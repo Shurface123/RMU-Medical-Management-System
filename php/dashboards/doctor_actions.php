@@ -96,6 +96,57 @@ case 'add_record':
     if($pat_uid) notify($conn,$pat_uid,'patient','system','New Medical Record','A new medical record has been added after your consultation.','records',$rid);
     ok(['record_id'=>$rec_id]);
 
+// ── Request Lab Test ──────────────────────────────────────
+case 'request_lab_test':
+    $pat_id = (int)($post['patient_id']??0);
+    $cat_id = (int)($post['test_catalog_id']??0);
+    $priority = esc($conn, $post['priority']??'Routine');
+    $notes = esc($conn, $post['clinical_notes']??'');
+
+    if (!$pat_id || !$cat_id) fail('Missing required fields for lab test');
+
+    $dr2 = mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
+    $doc_name = $dr2['full_name'] ?? 'Doctor';
+
+    // Insert into lab_test_orders
+    $q = "INSERT INTO lab_test_orders (patient_id, doctor_id, test_catalog_id, priority, clinical_notes, status, created_at)
+          VALUES ($pat_id, $doc_pk, $cat_id, '$priority', '$notes', 'Pending', NOW())";
+    
+    if (mysqli_query($conn, $q)) {
+        $order_id = mysqli_insert_id($conn);
+        
+        // Notify all lab technicians
+        $techs = mysqli_query($conn, "SELECT user_id FROM lab_technicians");
+        if ($techs) {
+            while ($t = mysqli_fetch_assoc($techs)) {
+                $uid = (int)$t['user_id'];
+                notify($conn, $uid, 'lab_technician', 'lab', 'New Lab Request', "Dr. $doc_name has ordered a new lab test (ORD-$order_id) with $priority priority.", 'lab', $order_id);
+            }
+        }
+        ok(['message' => 'Lab request submitted']);
+    } else {
+        fail('Database error: ' . mysqli_error($conn));
+    }
+
+// ── Clarification from Doctor to Lab ────────────────────────
+case 'lab_clarification':
+    $order_id = (int)($post['order_id'] ?? 0);
+    $msg_txt  = esc($conn, $post['message'] ?? '');
+    if (!$order_id || !$msg_txt) fail('Missing required fields');
+
+    $dr2 = mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
+    $doc_name = $dr2['full_name'] ?? 'Doctor';
+
+    // Notify all lab technicians
+    $techs = mysqli_query($conn, "SELECT user_id FROM lab_technicians");
+    if ($techs) {
+        while ($t = mysqli_fetch_assoc($techs)) {
+            $uid = (int)$t['user_id'];
+            notify($conn, $uid, 'lab_technician', 'message', 'Doctor Clarification Request', "Dr. $doc_name asks about ORD-$order_id: $msg_txt", 'Messages', $order_id);
+        }
+    }
+    ok(['message' => 'Clarification request sent to Lab']);
+
 // ── Create Prescription ───────────────────────────────────
 case 'create_prescription':
     $pat_id=(int)($post['patient_id']??0); $med=esc($conn,$post['medicine_name']??'');

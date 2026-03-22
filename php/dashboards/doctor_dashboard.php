@@ -296,6 +296,7 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <a href="#" class="adm-nav-item <?=($active_tab==='records')?'active':''?>" onclick="showTab('records',this)"><i class="fas fa-file-medical"></i><span>Medical Records</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='prescriptions')?'active':''?>" onclick="showTab('prescriptions',this)"><i class="fas fa-prescription-bottle-medical"></i><span>Prescriptions</span></a>
     <div class="adm-nav-label" style="margin-top:1rem;">Clinical</div>
+    <a href="#" class="adm-nav-item <?=($active_tab==='lab_requests')?'active':''?>" onclick="showTab('lab_requests',this)"><i class="fas fa-flask"></i><span>Lab Requests</span></a>
 
     <a href="#" class="adm-nav-item <?=($active_tab==='patients')?'active':''?>" onclick="showTab('patients',this)"><i class="fas fa-users"></i><span>Patient Records</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='medicine')?'active':''?>" onclick="showTab('medicine',this)">
@@ -355,6 +356,7 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <?php include __DIR__.'/doc_tabs/tab_records.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_prescriptions.php'; ?>
 
+    <?php include __DIR__.'/doc_tabs/tab_lab_requests.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_patients.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_medicine.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_beds.php'; ?>
@@ -375,11 +377,11 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 <script>
 // ── Tab Navigation ─────────────────────────────────────────
 const TAB_TITLES={overview:'Overview',appointments:'Appointments',records:'Medical Records',
-  prescriptions:'Prescriptions',patients:'Patient Records',
+  prescriptions:'Prescriptions',lab_requests:'Lab Test Requests',patients:'Patient Records',
   medicine:'Medicine Inventory',beds:'Bed Management',staff:'Staff Directory',
   analytics:'Analytics',reports:'Reports',profile:'My Profile',settings:'Settings'};
 const TAB_ICONS={overview:'fa-house-medical',appointments:'fa-calendar-check',records:'fa-file-medical',
-  prescriptions:'fa-prescription-bottle-medical',patients:'fa-users',
+  prescriptions:'fa-prescription-bottle-medical',lab_requests:'fa-flask',patients:'fa-users',
   medicine:'fa-pills',beds:'fa-bed',staff:'fa-address-book',
   analytics:'fa-chart-bar',reports:'fa-file-export',profile:'fa-user-doctor',settings:'fa-gear'};
 
