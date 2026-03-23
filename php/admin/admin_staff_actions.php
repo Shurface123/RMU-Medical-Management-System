@@ -26,7 +26,7 @@ switch ($action) {
         $type = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $table = ($type === 'nurse') ? 'nurses' : 'staff';
+        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : 'staff');
         $sql = "UPDATE $table SET approval_status = 'approved', approved_by = ?, approved_at = NOW(), rejection_reason = NULL WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "ii", $admin_id, $staff_id);
@@ -34,8 +34,10 @@ switch ($action) {
         if (mysqli_stmt_execute($stmt)) {
             if ($type === 'staff') {
                 mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, actioned_at) VALUES ($staff_id, $admin_id, 'approved', NOW())");
+            } elseif ($type === 'lab_technician') {
+                 // Optional: Log lab technician specific approval if needed
             }
-            echo json_encode(['success' => true, 'message' => ucfirst($type) . ' member approved successfully.']);
+            echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_',' ',$type)) . ' member approved successfully.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Database error.']);
         }
@@ -48,7 +50,7 @@ switch ($action) {
         $type     = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $table = ($type === 'nurse') ? 'nurses' : 'staff';
+        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : 'staff');
         $sql = "UPDATE $table SET approval_status = 'rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "isi", $admin_id, $reason, $staff_id);
@@ -58,7 +60,7 @@ switch ($action) {
                 $safe_reason = mysqli_real_escape_string($conn, $reason);
                 mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, reason, actioned_at) VALUES ($staff_id, $admin_id, 'rejected', '$safe_reason', NOW())");
             }
-            echo json_encode(['success' => true, 'message' => ucfirst($type) . ' member rejected.']);
+            echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_',' ',$type)) . ' member rejected.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Database error.']);
         }

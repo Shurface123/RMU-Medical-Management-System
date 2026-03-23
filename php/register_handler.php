@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validate role
     $valid_roles = [
-        'patient', 'doctor', 'pharmacist', 'nurse',
+        'patient', 'doctor', 'pharmacist', 'nurse', 'lab_technician',
         // All staff sub-roles (registered directly — no generic 'staff' login)
         'ambulance_driver', 'cleaner', 'laundry_staff', 'maintenance', 'security', 'kitchen_staff'
     ];
@@ -58,9 +58,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // Normalise: any staff sub-role maps to the 'staff' group
     $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
-    $APPROVAL_ROLES  = ['doctor','pharmacist','nurse'];
+    $APPROVAL_ROLES  = ['doctor', 'pharmacist', 'nurse', 'lab_technician'];
     $needs_approval  = in_array($role, $APPROVAL_ROLES);
     $is_staff_role   = in_array($role, $STAFF_SUB_ROLES);
+
+    // FIX: Define $is_active based on approval requirements
+    $is_active = ($needs_approval || $is_staff_role) ? 0 : 1;
 
     // Check if username already exists
     $sql = "SELECT id FROM users WHERE user_name = ? LIMIT 1";
@@ -141,7 +144,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($nurse_stmt, "issss", $user_id, $nurse_id_val, $fullname, $email, $phone);
             mysqli_stmt_execute($nurse_stmt);
             mysqli_stmt_close($nurse_stmt);
-        } elseif ($is_staff_role || ($needs_approval && !in_array($role, ['doctor', 'nurse']))) {
+        } elseif ($role === 'lab_technician') {
+            // Generate unique technician_id
+            $last_lt_res = mysqli_query($conn, "SELECT COUNT(*) FROM lab_technicians");
+            $last_lt = ($last_lt_res) ? (mysqli_fetch_row($last_lt_res)[0] ?? 0) : 0;
+            $tech_id_val = 'LT-' . str_pad($last_lt + 1, 4, '0', STR_PAD_LEFT);
+
+            $lt_sql = "INSERT INTO lab_technicians (user_id, technician_id, full_name, email, phone, status, approval_status, created_at) VALUES (?, ?, ?, ?, ?, 'Active', 'pending', NOW())";
+            $lt_stmt = mysqli_prepare($conn, $lt_sql);
+            mysqli_stmt_bind_param($lt_stmt, "issss", $user_id, $tech_id_val, $fullname, $email, $phone);
+            mysqli_stmt_execute($lt_stmt);
+            mysqli_stmt_close($lt_stmt);
+        } elseif ($is_staff_role || ($needs_approval && !in_array($role, ['doctor', 'nurse', 'lab_technician']))) {
             // Generate unique employee_id — retry until unique
             $attempt = 0;
             do {

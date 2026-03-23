@@ -462,6 +462,7 @@
                         <optgroup label="─── Clinical Staff (requires admin approval) ───">
                             <option value="pharmacist">Pharmacist</option>
                             <option value="nurse">Nurse</option>
+                            <option value="lab_technician">Lab Technician</option>
                         </optgroup>
                         <optgroup label="─── Support Staff (requires admin approval) ───">
                             <option value="ambulance_driver">Ambulance Driver</option>

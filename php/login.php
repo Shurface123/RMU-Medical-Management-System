@@ -131,6 +131,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                // ── Lab Technician approval gate ───────────────────────
+                if ($role === 'lab_technician') {
+                    $app_q = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM lab_technicians WHERE user_id=? LIMIT 1");
+                    mysqli_stmt_bind_param($app_q, "i", $row['id']);
+                    mysqli_stmt_execute($app_q);
+                    $app_res = mysqli_stmt_get_result($app_q);
+                    if (mysqli_num_rows($app_res) > 0) {
+                        $lab_row = mysqli_fetch_assoc($app_res);
+                        $approval = $lab_row['approval_status'] ?? 'pending';
+                        $reason   = $lab_row['rejection_reason'] ?? 'Contact administration for details.';
+
+                        if ($approval === 'pending') {
+                            header("Location: index.php?error=" . urlencode("Your lab technician account is pending admin approval. You will be notified once approved."));
+                            exit();
+                        }
+
+                        if ($approval === 'rejected') {
+                            header("Location: index.php?error=" . urlencode("Lab technician account rejected: $reason"));
+                            exit();
+                        }
+                    }
+                }
+
                 // Route by role
                 switch ($role) {
                     case 'admin':          header("Location: home.php"); break;
@@ -138,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     case 'patient':        header("Location: dashboards/patient_dashboard.php"); break;
                     case 'pharmacist':     header("Location: dashboards/pharmacy_dashboard.php"); break;
                     case 'nurse':          header("Location: dashboards/nurse_dashboard.php"); break;
+                    case 'lab_technician': header("Location: dashboards/lab_dashboard.php"); break;
                     case 'ambulance_driver':
                     case 'cleaner':
                     case 'laundry_staff':

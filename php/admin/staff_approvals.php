@@ -22,6 +22,13 @@ $q_pending = mysqli_query($conn, "
     JOIN users u ON n.user_id = u.id
     WHERE n.approval_status = 'pending'
     
+    UNION ALL
+    
+    SELECT lt.id as staff_id, lt.technician_id as employee_id, 'lab_technician' as role, u.name, u.email, u.phone, u.created_at, 'lab_technician' as source_table
+    FROM lab_technicians lt
+    JOIN users u ON lt.user_id = u.id
+    WHERE lt.approval_status = 'pending'
+    
     ORDER BY created_at DESC
 ");
 if ($q_pending) while ($row = mysqli_fetch_assoc($q_pending)) $pending[] = $row;
@@ -46,6 +53,16 @@ $q_recent = mysqli_query($conn, "
     LEFT JOIN users ua ON n.approved_by = ua.id
     WHERE n.approval_status IN ('approved','rejected')
       AND n.approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      
+    UNION ALL
+    
+    SELECT lt.id as staff_id, lt.technician_id as employee_id, 'lab_technician' as role, lt.approval_status, lt.rejection_reason, lt.approved_at,
+           u.name as staff_name, ua.name as admin_name, 'lab_technician' as source_table
+    FROM lab_technicians lt
+    JOIN users u ON lt.user_id = u.id
+    LEFT JOIN users ua ON lt.approved_by = ua.id
+    WHERE lt.approval_status IN ('approved','rejected')
+      AND lt.approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
       
     ORDER BY approved_at DESC LIMIT 15
 ");
@@ -102,7 +119,7 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                     <tbody>
                         <?php foreach ($pending as $p): 
                             $role_lbl = ucfirst(str_replace('_',' ',$p['role']));
-                            $role_colors = ['ambulance_driver'=>'primary','cleaner'=>'info','laundry_staff'=>'warning','maintenance'=>'success','security'=>'danger','kitchen_staff'=>'warning'];
+                            $role_colors = ['ambulance_driver'=>'primary','cleaner'=>'info','laundry_staff'=>'warning','maintenance'=>'success','security'=>'danger','kitchen_staff'=>'warning','lab_technician'=>'teal'];
                             $rc = $role_colors[$p['role']] ?? 'secondary';
                         ?>
                         <tr id="row_<?php echo $p['staff_id']; ?>">
