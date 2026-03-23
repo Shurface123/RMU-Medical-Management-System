@@ -110,7 +110,7 @@ case 'update_professional':
                   VALUES($user_id,'doctor','system','License Expiring Soon','Your medical license expires on $licexp. Please renew it promptly.',0,'profile',NOW())");
             }
             // Notify admins
-            $admins=mysqli_query($conn,"SELECT id FROM users WHERE role='admin' LIMIT 5");
+            $admins=mysqli_query($conn,"SELECT id FROM users WHERE user_role='admin' LIMIT 5");
             if($admins) while($a=mysqli_fetch_assoc($admins)){
                 $aex=(int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifications WHERE user_id={$a['id']} AND title LIKE 'Doctor License%{$docName}%' AND DATE(created_at)=CURDATE()"))[0]??0);
                 if(!$aex) mysqli_query($conn,"INSERT INTO notifications(user_id,user_role,type,title,message,is_read,related_module,created_at)
@@ -310,7 +310,7 @@ case 'update_email':
 case 'request_deactivation':
     $reason=esc($conn,$post['reason']??'');
     // Notify all admins
-    $admins=mysqli_query($conn,"SELECT id FROM users WHERE role='admin' LIMIT 5");
+    $admins=mysqli_query($conn,"SELECT id FROM users WHERE user_role='admin' LIMIT 5");
     $docName=mysqli_fetch_assoc(mysqli_query($conn,"SELECT name FROM users WHERE id=$user_id"))['name']??'Doctor';
     if($admins) while($a=mysqli_fetch_assoc($admins)){
         mysqli_query($conn,"INSERT INTO notifications(user_id,user_role,type,title,message,is_read,related_module,created_at)

@@ -70,73 +70,76 @@ if ($qa)
         </div>
 
         <?php if (!empty($alerts)): ?>
-        <div class="adm-card" style="border:1px solid var(--danger);background:#fff1f0;margin-bottom:2rem;">
+        <div class="adm-card" style="border:1px solid var(--danger); background:rgba(231,76,60,0.05); margin-bottom:2rem;">
             <div class="adm-card-header" style="border-bottom:1px solid rgba(231,76,60,0.2);">
                 <h3 style="color:var(--danger);"><i class="fas fa-biohazard"></i> Active Contamination Alerts</h3>
             </div>
-            <div class="adm-card-body" style="padding:1rem 1.5rem;">
+            <div class="adm-card-body" style="padding:1rem;">
                 <?php foreach ($alerts as $al): ?>
-                <div style="background:#fff;padding:1rem;border-radius:8px;border-left:4px solid var(--danger);margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                <div class="adm-alert-item" style="background:var(--bg-surface); padding:1rem; border-radius:8px; border-left:4px solid var(--danger); margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--shadow-sm);">
                     <div>
-                        <strong style="color:var(--danger);font-size:1.1rem;"><?php echo htmlspecialchars($al['location']); ?>: <?php echo ucfirst($al['contamination_type']); ?></strong>
-                        <div style="font-size:.85rem;color:var(--text-muted);margin-top:.3rem;"><?php echo htmlspecialchars($al['description']); ?></div>
-                        <div style="font-size:.75rem;margin-top:.5rem;">Reported by <?php echo htmlspecialchars($al['reporter_name']); ?> at <?php echo date('g:i A', strtotime($al['reported_at'])); ?></div>
+                        <strong style="color:var(--danger); font-size:1.1rem;"><?php echo htmlspecialchars($al['location']); ?>: <?php echo ucfirst($al['contamination_type']); ?></strong>
+                        <div style="font-size:.85rem; color:var(--text-muted); margin-top:.3rem;"><?php echo htmlspecialchars($al['description']); ?></div>
+                        <div style="font-size:.75rem; margin-top:.5rem; opacity:0.8;">Reported by <?php echo htmlspecialchars($al['reporter_name']); ?> at <?php echo date('g:i A', strtotime($al['reported_at'])); ?></div>
                     </div>
-                    <div>
+                    <div style="text-align:right;">
                         <span class="adm-badge adm-badge-danger" style="animation:pulse 2s infinite;"><i class="fas fa-exclamation-triangle"></i> <?php echo strtoupper($al['severity']); ?> SEVERITY</span>
-                        <!-- Quick assign drop-down in a real scenario would go here -->
                     </div>
                 </div>
-                <?php
-    endforeach; ?>
+                <?php endforeach; ?>
             </div>
         </div>
-        <?php
-endif; ?>
+        <?php endif; ?>
 
         <?php if (isset($_GET['success'])): ?>
-            <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Cleaning task dispatched successfully.</div>
-        <?php
-endif; ?>
+            <div class="adm-alert adm-alert-success" style="margin-bottom:2rem;"><i class="fas fa-check-circle"></i> Cleaning task dispatched successfully.</div>
+        <?php endif; ?>
 
         <div class="adm-card">
             <div class="adm-card-header">
                 <h3><i class="fas fa-clipboard-check"></i> Cleaning & Sanitization Log</h3>
             </div>
-            <div class="adm-table-wrap" style="overflow-x: auto; width: 100%;">
-                <table class="adm-table" style="width: 100%; min-width: 900px;">
-                    <thead><tr><th>Task Issued</th><th>Location / Ward</th><th>Type & PPE</th><th>Assigned Cleaner</th><th>Status</th></tr></thead>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>Task Issued</th>
+                            <th>Location / Ward</th>
+                            <th>Type & Protocol</th>
+                            <th>Assigned Cleaner</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <?php if (empty($schedules)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No active schedules.</td></tr>
-                        <?php
-else:
-    foreach ($schedules as $cs):
-        $sc = $cs['status'] === 'Completed' || $cs['status'] === 'Inspected' ? 'success' : ($cs['status'] === 'In Progress' ? 'warning' : 'info');
-        $is_overdue = ($cs['status'] === 'Dispatched' || $cs['status'] === 'Scheduled') && strtotime($cs['scheduled_time']) < (time() - 3600); // 1 hour past
-        $row_bg = $is_overdue ? 'background-color:#ffeaea !important;' : ($cs['cleaning_type'] === 'Biohazard Clean' || $cs['cleaning_type'] === 'Infectious Disease' ? 'background-color:#fff3e0 !important;' : '');
-        $ppe = json_decode($cs['required_ppe'], true) ?? [];
-?>
-                        <tr style="<?php echo $row_bg; ?>" class="<?php echo $is_overdue ? 'row-overdue' : ''; ?>">
+                        <?php if (empty($schedules)): ?>
+                            <tr><td colspan="5" style="text-align:center;padding:4rem;color:var(--text-muted);">No active cleaning schedules.</td></tr>
+                        <?php else:
+                            foreach ($schedules as $cs):
+                                $sc = ($cs['status'] === 'Completed' || $cs['status'] === 'Inspected') ? 'success' : ($cs['status'] === 'In Progress' ? 'warning' : 'info');
+                                $is_overdue = ($cs['status'] === 'Dispatched' || $cs['status'] === 'Scheduled') && strtotime($cs['scheduled_time']) < (time() - 3600);
+                                $is_hazard = $cs['cleaning_type'] === 'Biohazard Clean' || ($cs['contamination_level'] ?? '') === 'Biohazard';
+                                $ppe = json_decode($cs['required_ppe'], true) ?? [];
+                        ?>
+                        <tr <?php if($is_overdue) echo 'style="background-color: var(--warning-light);"'; ?> <?php if($is_hazard) echo 'style="background-color: rgba(231,76,60,0.05);"'; ?>>
                             <td style="white-space:nowrap;">
-                                <?php echo date('d M Y, g:i A', strtotime($cs['scheduled_time'])); ?>
+                                <strong><?php echo date('d M, g:i A', strtotime($cs['scheduled_time'])); ?></strong>
                                 <?php if($cs['recurrence_pattern']): ?><br><span class="adm-badge adm-badge-secondary" style="margin-top:4px;"><i class="fas fa-redo-alt"></i> <?php echo htmlspecialchars($cs['recurrence_pattern']); ?></span><?php endif; ?>
                             </td>
                             <td>
-                                <strong><?php echo htmlspecialchars($cs['ward_area']); ?></strong>
+                                <strong><?php echo htmlspecialchars($cs['ward_area'] ?? 'General Area'); ?></strong>
                                 <?php if($cs['specific_room']) echo " - " . htmlspecialchars($cs['specific_room']); ?>
-                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-building"></i> <?php echo htmlspecialchars($cs['location_type']); ?> <?php echo $cs['floor_building'] ? " (Layer: {$cs['floor_building']})" : ''; ?></div>
+                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-building"></i> <?php echo htmlspecialchars($cs['location_type']); ?> <?php echo $cs['floor_building'] ? "({$cs['floor_building']})" : ''; ?></div>
                             </td>
                             <td>
                                 <strong><?php echo htmlspecialchars($cs['cleaning_type']); ?></strong>
                                 <?php 
                                 $lvl = strtolower($cs['contamination_level'] ?? 'none');
-                                if($lvl === 'biohazard') echo '<span class="adm-badge badge-biohazard"><i class="fas fa-biohazard"></i> BIOHAZARD</span>';
-                                elseif($lvl === 'high') echo '<span class="adm-badge badge-high">High</span>';
-                                elseif($lvl === 'medium') echo '<span class="adm-badge badge-medium">Medium</span>';
-                                elseif($lvl === 'low') echo '<span class="adm-badge badge-low">Low</span>';
+                                if($lvl === 'biohazard') echo '<span class="adm-badge adm-badge-danger" style="animation:pulse 2s infinite;"><i class="fas fa-biohazard"></i> BIOHAZARD</span>';
+                                elseif($lvl === 'high') echo '<span class="adm-badge adm-badge-warning">High Risk</span>';
+                                elseif($lvl === 'medium') echo '<span class="adm-badge adm-badge-info">Medium Risk</span>';
                                 ?>
                                 <?php if(!empty($ppe)): ?>
-                                    <div style="margin-top:4px;">
+                                    <div style="margin-top:6px; display:flex; gap:4px;">
                                         <?php foreach($ppe as $p): 
                                             $icon = 'fa-shield-virus';
                                             if(stripos($p, 'glove') !== false) $icon = 'fa-hands-wash';
@@ -149,17 +152,15 @@ else:
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php echo htmlspecialchars($cs['primary_cleaner'] ?? 'Unassigned'); ?>
-                                <?php if($cs['backup_cleaner']): ?><div style="font-size:0.75rem; color:var(--text-muted);">(Backup: <?php echo htmlspecialchars($cs['backup_cleaner']); ?>)</div><?php endif; ?>
+                                <strong><?php echo htmlspecialchars($cs['primary_cleaner'] ?? 'Unassigned'); ?></strong>
+                                <?php if($cs['backup_cleaner']): ?><div style="font-size:0.75rem; color:var(--text-muted);">Backup: <?php echo htmlspecialchars($cs['backup_cleaner']); ?></div><?php endif; ?>
                             </td>
                             <td>
                                 <span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($cs['status']); ?></span>
-                                <?php if($is_overdue): ?><span class="adm-badge badge-overdue" style="margin-top:4px;">OVERDUE</span><?php endif; ?>
+                                <?php if($is_overdue): ?><br><span class="adm-badge adm-badge-danger" style="margin-top:4px; font-size:0.75rem;">OVERDUE</span><?php endif; ?>
                             </td>
                         </tr>
-                        <?php
-    endforeach;
-endif; ?>
+                        <?php endforeach; endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -167,173 +168,192 @@ endif; ?>
     </div>
 </main>
 
+<!-- Dispatch Modal -->
 <div class="adm-modal" id="cleanModal">
-    <div class="adm-modal-content" style="max-width: 950px; width: 95%;">
-        <div class="adm-modal-header">
-            <h3><i class="fas fa-broom"></i> Dispatch Cleaner</h3>
-            <button class="adm-modal-close" type="button" onclick="document.getElementById('cleanModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+    <div class="adm-modal-content" style="max-width: 1000px; transform: translateY(-20px); transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);">
+        <div class="adm-modal-header" style="background: var(--primary); color: #fff; padding: 1.5rem 2rem; border-radius: 16px 16px 0 0;">
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <div style="width:48px; height:48px; background:rgba(255,255,255,0.2); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                    <i class="fas fa-broom"></i>
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size:1.5rem;">Dispatch Command Hub</h3>
+                    <p style="margin:0; opacity:0.8; font-size:0.85rem;">Initiate infection control and cleaning protocols.</p>
+                </div>
+            </div>
+            <button class="adm-modal-close" onclick="document.getElementById('cleanModal').classList.remove('active')" style="color:#fff; opacity:0.7; transition:opacity 0.3s;">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <div class="adm-modal-body">
+        <div class="adm-modal-body" style="padding: 2rem;">
             <form id="cleaningDispatchForm" onsubmit="submitCleaningDispatch(event)">
                 <input type="hidden" name="action" value="dispatch_cleaner">
                 <input type="hidden" id="csrf_token" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
 
-                <!-- SECTION: Location -->
-                <h4 style="margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; color:var(--primary);"><i class="fas fa-map-marker-alt"></i> Cleaning Location & Scope</h4>
-                <div class="row" style="margin-bottom:1.5rem;">
-                    <div class="col-md-12 adm-form-group">
-                        <label>Location Type *</label>
-                        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:5px;">
-                            <?php foreach(['Ward', 'Room', 'Common Area', 'Theatre', 'Laboratory', 'Pharmacy', 'Kitchen', 'Laundry', 'Outdoor', 'Entire Floor'] as $loc): ?>
-                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="location_type" value="<?php echo $loc; ?>" required> <?php echo $loc; ?></label>
-                            <?php endforeach; ?>
-                        </div>
+                <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap: 2rem;">
+                    <!-- LEFT COLUMN: Logistics -->
+                    <div style="display:flex; flex-direction:column; gap:2rem;">
+                        <section>
+                            <h4 class="adm-section-title"><i class="fas fa-map-marker-alt"></i> Deployment Location</h4>
+                            <div class="adm-form-grid">
+                                <div class="adm-form-group" style="grid-column: span 2;">
+                                    <label>Facility Zone Type *</label>
+                                    <div class="adm-radio-group" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border);">
+                                        <?php foreach(['Ward', 'Room', 'Common Area', 'Theatre', 'Laboratory', 'Pharmacy', 'Kitchen', 'Laundry', 'Outdoor'] as $loc): ?>
+                                            <label class="adm-radio-label" style="padding: 0.5rem; border-radius: 6px; transition: background 0.3s; border: 1px solid transparent;">
+                                                <input type="radio" name="location_type" value="<?php echo $loc; ?>" required> <?php echo $loc; ?>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                                <div class="adm-form-group">
+                                    <label><i class="fas fa-hospital-user"></i> Ward / Area *</label>
+                                    <select name="ward_area" id="ward_area" class="adm-form-input" required style="height: 48px; border-radius: 10px;">
+                                        <option value="">Select Target Area</option>
+                                        <?php foreach($wards as $w): ?>
+                                            <option value="<?php echo htmlspecialchars($w['ward_name']); ?>"><?php echo htmlspecialchars($w['ward_name']); ?></option>
+                                        <?php endforeach; ?>
+                                        <option value="Hallways">General Hallways</option>
+                                        <option value="Exterior">Exterior Facility</option>
+                                    </select>
+                                </div>
+                                <div class="adm-form-group">
+                                    <label><i class="fas fa-door-open"></i> Specific Room / Bin</label>
+                                    <input type="text" name="specific_room" class="adm-form-input" placeholder="e.g. ICU Bed 4" style="height: 48px; border-radius: 10px;">
+                                </div>
+                                <div class="adm-form-group" style="grid-column: span 2;">
+                                    <label><i class="fas fa-layer-group"></i> Floor & Building Assignment</label>
+                                    <select name="floor_building" class="adm-form-input" style="height: 48px; border-radius: 10px;">
+                                        <option value="">Not Applicable</option>
+                                        <optgroup label="Main Block">
+                                            <option value="Ground Floor">Ground Floor</option>
+                                            <option value="First Floor">First Floor</option>
+                                            <option value="Second Floor">Second Floor</option>
+                                            <option value="Basement">Basement</option>
+                                        </optgroup>
+                                        <optgroup label="Wings">
+                                            <option value="East Wing">East Wing</option>
+                                            <option value="West Wing">West Wing</option>
+                                            <option value="Annex">Annex Building</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h4 class="adm-section-title"><i class="fas fa-user-clock"></i> Assignment Matrix</h4>
+                            <div class="adm-form-grid">
+                                <div class="adm-form-group">
+                                    <label><i class="fas fa-user-check"></i> Primary Responder *</label>
+                                    <select name="assigned_cleaner_id" class="adm-form-input" required style="height: 48px; border-radius: 10px;">
+                                        <option value="">-- Choose Staff --</option>
+                                        <?php foreach ($cleaners as $c): ?>
+                                            <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="adm-form-group">
+                                    <label><i class="fas fa-user-shield"></i> Backup Responder</label>
+                                    <select name="backup_cleaner_id" class="adm-form-input" style="height: 48px; border-radius: 10px;">
+                                        <option value="">-- Standby Staff --</option>
+                                        <?php foreach ($cleaners as $c): ?>
+                                            <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="adm-form-group">
+                                    <label><i class="fas fa-tachometer-alt"></i> Execution Priority *</label>
+                                    <select name="priority" class="adm-form-input" required style="height: 48px; border-radius: 10px;">
+                                        <option value="Routine">🟢 Routine (Low)</option>
+                                        <option value="Urgent">🟠 Urgent (Medium)</option>
+                                        <option value="Emergency">🔴 Emergency (High)</option>
+                                    </select>
+                                </div>
+                                <div class="adm-form-group">
+                                    <label><i class="fas fa-history"></i> Est. Duration (Min)</label>
+                                    <input type="number" name="estimated_duration" class="adm-form-input" value="30" min="5" style="height: 48px; border-radius: 10px;">
+                                </div>
+                            </div>
+                        </section>
                     </div>
-                    <div class="col-md-6 col-lg-4 adm-form-group">
-                        <label>Ward / General Area *</label>
-                        <select name="ward_area" id="ward_area" class="adm-search-input" required>
-                            <option value="">Select Target Area</option>
-                            <?php foreach($wards as $w): ?>
-                                <option value="<?php echo htmlspecialchars($w['ward_name']); ?>"><?php echo htmlspecialchars($w['ward_name']); ?></option>
-                            <?php endforeach; ?>
-                            <option value="Hallways">Hallways</option>
-                            <option value="Exterior">Exterior</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 col-lg-4 adm-form-group">
-                        <label>Specific Room / Bed / Zone</label>
-                        <input type="text" name="specific_room" class="adm-search-input" placeholder="e.g. ICU Bed 4, or Male Restroom">
-                    </div>
-                    <div class="col-md-6 col-lg-4 adm-form-group">
-                        <label>Floor / Building / Wing</label>
-                        <select name="floor_building" class="adm-search-input">
-                            <option value="">N/A</option>
-                            <option value="Ground Floor">Ground Floor</option>
-                            <option value="First Floor">First Floor</option>
-                            <option value="Second Floor">Second Floor</option>
-                            <option value="Basement">Basement</option>
-                            <option value="East Wing">East Wing</option>
-                            <option value="West Wing">West Wing</option>
-                        </select>
+
+                    <!-- RIGHT COLUMN: Protocols & Safety -->
+                    <div style="display:flex; flex-direction:column; gap:2rem;">
+                        <section id="hazardPanelBox" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-surface); position: relative; overflow: hidden;">
+                            <h4 class="adm-section-title" style="margin-top:0;"><i class="fas fa-biohazard"></i> Risk Assessment</h4>
+                            
+                            <div class="adm-form-group" style="margin-bottom:1.2rem;">
+                                <label>Protocol Type *</label>
+                                <select name="cleaning_type" class="adm-form-input" required style="height: 42px; border-radius: 8px;">
+                                    <option value="Routine Clean">Routine Maintenance</option>
+                                    <option value="Deep Clean">Full Deep Clean</option>
+                                    <option value="Biohazard Clean">Biohazard Protocol</option>
+                                    <option value="Post-Discharge Clean">Post-Discharge Sanitize</option>
+                                    <option value="Infection Control Clean">Infection Control</option>
+                                </select>
+                            </div>
+
+                            <div class="adm-form-group" style="margin-bottom:1.2rem;">
+                                <label>Contamination Level *</label>
+                                <select name="contamination_level" class="adm-form-input" required onchange="handleContaminationChange(this)" style="height: 42px; border-radius: 8px;">
+                                    <option value="None">Safe / None</option>
+                                    <option value="Low" data-color="#27ae60">L1 - Low Risk</option>
+                                    <option value="Medium" data-color="#f39c12">L2 - Medium Risk</option>
+                                    <option value="High" data-color="#e67e22">L3 - High Risk</option>
+                                    <option value="Biohazard" data-color="#c0392b">L4 - BIOHAZARD</option>
+                                </select>
+                            </div>
+
+                            <div class="adm-form-group">
+                                <label style="color:var(--danger); font-weight:bold; font-size: 0.8rem; text-transform:uppercase;">Hazard Flags</label>
+                                <div class="adm-checkbox-group" id="hazardCheckboxes" style="display: grid; grid-template-columns: 1fr; gap: 0.4rem; border: none; background: transparent; padding: 0;">
+                                    <?php foreach(['Bloodborne Pathogen', 'Chemical Spill', 'Infectious Disease', 'Sharps / Needles', 'Radiation'] as $row): ?>
+                                        <label class="adm-checkbox-label" style="font-size: 0.85rem; padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px;">
+                                            <input type="checkbox" name="hazard_flags[]" value="<?php echo $row; ?>"> <?php echo $row; ?>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h4 class="adm-section-title"><i class="fas fa-shield-alt"></i> Mandatory PPE</h4>
+                            <div class="adm-checkbox-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <?php foreach(['Gloves', 'Mask', 'Apron', 'Full Suit', 'Eye Pro', 'Respirator'] as $row): ?>
+                                    <label class="adm-checkbox-label" style="font-size: 0.85rem;">
+                                        <input type="checkbox" name="required_ppe[]" value="<?php echo $row; ?>"> <?php echo $row; ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h4 class="adm-section-title"><i class="fas fa-calendar-alt"></i> Timing Control</h4>
+                            <div class="adm-radio-group" style="margin-bottom:1rem;">
+                                <label class="adm-radio-label"><input type="radio" name="dispatch_type" value="immediate" checked onchange="toggleScheduleOptions()"> Immediate</label>
+                                <label class="adm-radio-label"><input type="radio" name="dispatch_type" value="scheduled" onchange="toggleScheduleOptions()"> Scheduled</label>
+                            </div>
+                            <div id="schedDateBox" style="display:none; margin-bottom:0.5rem;">
+                                <input type="date" name="scheduled_date" class="adm-form-input" value="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                            <div id="schedTimeBox" style="display:none;">
+                                <input type="time" name="scheduled_time" class="adm-form-input" value="<?php echo date('H:i'); ?>">
+                            </div>
+                        </section>
                     </div>
                 </div>
 
-                <!-- SECTION: Hazard -->
-                <h4 style="margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; color:var(--primary);"><i class="fas fa-shield-virus"></i> Hazard & Contamination Protocol</h4>
-                <div class="row" style="margin-bottom:1.5rem; padding: 10px; border-radius: 8px; background:var(--surface-2);" id="hazardPanelBox">
-                    <div class="col-md-6 adm-form-group">
-                        <label>Cleaning Type *</label>
-                        <select name="cleaning_type" class="adm-search-input" required>
-                            <option value="Routine Clean">Routine Clean</option>
-                            <option value="Deep Clean">Deep Clean</option>
-                            <option value="Biohazard Clean">Biohazard Clean</option>
-                            <option value="Post-Discharge Clean">Post-Discharge Clean</option>
-                            <option value="Emergency Sanitization">Emergency Sanitization</option>
-                            <option value="Pre-Theatre Clean">Pre-Theatre Clean</option>
-                            <option value="Infection Control Clean">Infection Control Clean</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 adm-form-group">
-                        <label>Contamination Level *</label>
-                        <select name="contamination_level" class="adm-search-input" required onchange="this.style.backgroundColor = this.options[this.selectedIndex].style.backgroundColor; this.style.color = '#fff'; if(this.value==='None'){ this.style.color='inherit'; this.style.backgroundColor=''; }">
-                            <option value="None" style="background:#e2e8f0; color:#000;">None</option>
-                            <option value="Low" style="background:#27ae60;">Low Risk</option>
-                            <option value="Medium" style="background:#f39c12;">Medium Risk</option>
-                            <option value="High" style="background:#e67e22;">High Risk</option>
-                            <option value="Biohazard" style="background:#c0392b;">BIOHAZARD</option>
-                        </select>
-                    </div>
-                    <div class="col-md-12 adm-form-group">
-                        <label style="color:var(--danger); font-weight:bold;">Special Hazard Flags (Select all that apply)</label>
-                        <div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:5px;" id="hazardCheckboxes">
-                            <?php foreach(['Bloodborne Pathogen', 'Chemical Spill', 'Infectious Disease', 'Sharps / Needles', 'Radiation'] as $row): ?>
-                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" name="hazard_flags[]" value="<?php echo $row; ?>"> <?php echo $row; ?></label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SECTION: Scheduling -->
-                <h4 style="margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; color:var(--primary);"><i class="fas fa-clock"></i> Scheduling</h4>
-                <div class="row" style="margin-bottom:1.5rem;">
-                    <div class="col-md-6 adm-form-group">
-                        <label>Dispatch Type *</label>
-                        <div style="display:flex; gap:15px; margin-top:5px;">
-                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="dispatch_type" value="immediate" checked onchange="toggleScheduleOptions()"> Immediate Dispatch</label>
-                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="dispatch_type" value="scheduled" onchange="toggleScheduleOptions()"> Scheduled Dispatch</label>
-                        </div>
-                    </div>
-                    <div class="col-md-6 adm-form-group">
-                        <label>Estimated Duration (Minutes) *</label>
-                        <input type="number" name="estimated_duration" class="adm-search-input" value="30" min="5" required>
-                    </div>
-                    <div class="col-md-6 adm-form-group" id="schedDateBox" style="display:none;">
-                        <label>Scheduled Date</label>
-                        <input type="date" name="scheduled_date" class="adm-search-input" value="<?php echo date('Y-m-d'); ?>">
-                    </div>
-                    <div class="col-md-6 adm-form-group" id="schedTimeBox" style="display:none;">
-                        <label>Scheduled Time</label>
-                        <input type="time" name="scheduled_time" class="adm-search-input" value="<?php echo date('H:i'); ?>">
-                    </div>
-                    <div class="col-md-12 adm-form-group">
-                        <label>Recurrence (Optional)</label>
-                        <select name="recurrence_pattern" class="adm-search-input">
-                            <option value="">One-Time Only</option>
-                            <option value="Daily">Daily</option>
-                            <option value="Weekly">Weekly</option>
-                            <option value="Mon-Fri">Weekdays (Mon-Fri)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- SECTION: Assignment -->
-                <h4 style="margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; color:var(--primary);"><i class="fas fa-user-tag"></i> Cleaner Assignment</h4>
-                <div class="row" style="margin-bottom:1.5rem;">
-                    <div class="col-md-6 adm-form-group">
-                        <label>Assign To (Primary Cleaner) *</label>
-                        <select name="assigned_cleaner_id" class="adm-search-input" required>
-                            <option value="">-- Choose Staff --</option>
-                            <?php foreach ($cleaners as $c): ?>
-                                <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['name']); ?> (Cleaner)</option>
-                            <?php endforeach; ?>
-                        </select>
-                        <?php if(empty($cleaners)): ?><small style="color:var(--danger); font-weight:bold;">No cleaners currently available. Dispatch will log as unassigned.</small><?php endif; ?>
-                    </div>
-                    <div class="col-md-6 adm-form-group">
-                        <label>Assign Backup (Optional)</label>
-                        <select name="backup_cleaner_id" class="adm-search-input">
-                            <option value="">-- Standby Staff --</option>
-                            <?php foreach ($cleaners as $c): ?>
-                                <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-6 adm-form-group">
-                        <label>Priority Level *</label>
-                        <select name="priority" class="adm-search-input" required onchange="this.style.backgroundColor = this.options[this.selectedIndex].style.backgroundColor; this.style.color = '#fff';">
-                            <option value="Routine" style="background:#27ae60;">Routine</option>
-                            <option value="Urgent" style="background:#f39c12;">Urgent</option>
-                            <option value="Emergency" style="background:#c0392b;">Emergency</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 adm-form-group">
-                        <label>Required PPE</label>
-                        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:5px;">
-                            <?php foreach(['Gloves', 'Mask', 'Apron', 'Full PPE', 'Eye Protection', 'Hazmat Suit'] as $row): ?>
-                                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" name="required_ppe[]" value="<?php echo $row; ?>"> <?php echo $row; ?></label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="adm-form-group" style="margin-bottom:1.5rem;">
-                    <label>Special Instructions</label>
-                    <textarea name="special_instructions" class="adm-search-input" rows="2" placeholder="Specific guidance for the cleaner..."></textarea>
+                <div class="adm-form-group" style="margin-top:2rem;">
+                    <label><i class="fas fa-comment-medical"></i> Special Dispatch Notes</label>
+                    <textarea name="special_instructions" class="adm-form-input" rows="3" placeholder="Provide specialized guidance for this deployment..." style="border-radius: 12px;"></textarea>
                 </div>
                 
-                <div style="display:flex; justify-content:flex-end; gap:1rem; border-top:1px solid var(--border); padding-top:1.5rem;">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('cleanModal').classList.remove('active')">Cancel</button>
-                    <button type="button" id="submitDispatchBtn" class="adm-btn adm-btn-primary" onclick="validateAndOpenConfirm()"><i class="fas fa-paper-plane"></i> Dispatch Task</button>
+                <div class="adm-modal-footer" style="padding-top: 2rem; border-top: 1px solid var(--border); margin-top: 2rem; gap: 1rem;">
+                    <button type="button" class="adm-btn" onclick="document.getElementById('cleanModal').classList.remove('active')" style="padding: 0.8rem 2rem;">Dismiss</button>
+                    <button type="button" id="submitDispatchBtn" class="adm-btn adm-btn-primary" onclick="validateAndOpenConfirm()" style="padding: 0.8rem 3rem; font-weight: 600;">
+                        <i class="fas fa-paper-plane"></i> Execute Dispatch
+                    </button>
                 </div>
             </form>
         </div>
@@ -341,22 +361,40 @@ endif; ?>
 </div>
 
 <!-- Modal: Biohazard Override -->
-<div class="adm-modal" id="biohazardConfirmModal">
-    <div class="adm-modal-content" style="max-width: 500px; border-left: 5px solid var(--danger);">
-        <div class="adm-modal-header" style="color:var(--danger);">
-            <h3><i class="fas fa-exclamation-triangle"></i> Biohazard Confirmation</h3>
-            <button class="adm-modal-close" type="button" onclick="document.getElementById('biohazardConfirmModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+<div class="adm-modal" id="biohazardConfirmModal" style="z-index: 1100;">
+    <div class="adm-modal-content" style="max-width: 550px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(231, 76, 60, 0.5);">
+        <div class="adm-modal-header" style="background: var(--danger); color: #fff; padding: 1.5rem 2rem; border-radius: 20px 20px 0 0;">
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <i class="fas fa-radiation-alt fa-2x fa-spin" style="animation-duration: 4s;"></i>
+                <div>
+                    <h3 style="margin:0;">L4 Biohazard Protocol</h3>
+                    <p style="margin:0; opacity:0.8; font-size:0.85rem;">Emergency authorization required.</p>
+                </div>
+            </div>
         </div>
-        <div class="adm-modal-body">
-            <p><strong>Warning:</strong> This dispatch involves biohazardous materials or infectious hazards. This will automatically trigger alerts to the entire infection control team and shift supervisors.</p>
-            <p style="margin-top:1rem; font-size:1.1rem;">Ensure the cleaner has been issued appropriate PPE. Do you want to proceed?</p>
-            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
-                <button type="button" class="adm-btn" onclick="document.getElementById('biohazardConfirmModal').classList.remove('active')">Cancel</button>
-                <button type="button" class="adm-btn" style="background:var(--danger);color:#fff;" onclick="executeDispatchPost()"><i class="fas fa-check"></i> Acknowledge & Dispatch</button>
+        <div class="adm-modal-body" style="padding: 2rem;">
+            <div style="background: rgba(231,76,60,0.1); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display:flex; gap:1rem; align-items:center; border: 1px solid rgba(231,76,60,0.2);">
+                <i class="fas fa-info-circle fa-2x" style="color:var(--danger);"></i>
+                <p style="margin:0; font-size:0.95rem; color: #721c24;">Critical: This action will notify the **Infection Control Lead** and **Chief Medical Officer** immediately.</p>
+            </div>
+            <p style="font-size:1.1rem; line-height:1.6;">Are you certain you want to initiate this high-risk dispatch?</p>
+            <div class="adm-modal-footer" style="padding: 0; border: none; margin-top: 2rem;">
+                <button type="button" class="adm-btn" onclick="document.getElementById('biohazardConfirmModal').classList.remove('active')" style="flex:1;">Abort</button>
+                <button type="button" class="adm-btn adm-btn-danger" onclick="executeDispatchPost()" style="flex:2; padding: 1rem;">Confirm & Execute</button>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.adm-section-title { margin-bottom: 1.2rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; color: var(--primary); font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.8rem; }
+.adm-modal-content { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: none; border-radius: 20px; }
+.adm-radio-label:hover { background: var(--bg-body) !important; border-color: var(--primary) !important; }
+.adm-radio-label input:checked + label { color: var(--primary); }
+.adm-form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1); }
+@media (max-width: 900px) { .adm-modal-body > form > div { grid-template-columns: 1fr !important; } }
+</style>
+
 <script>
 function toggleScheduleOptions() {
     const isImmediate = document.querySelector('input[name="dispatch_type"]:checked').value === 'immediate';
@@ -364,29 +402,39 @@ function toggleScheduleOptions() {
     document.getElementById('schedTimeBox').style.display = isImmediate ? 'none' : 'block';
 }
 
+function handleContaminationChange(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    if(opt.dataset.color) {
+        sel.style.backgroundColor = opt.dataset.color;
+        sel.style.color = '#fff';
+    } else {
+        sel.style.backgroundColor = '';
+        sel.style.color = '';
+    }
+    updateHazardUI();
+}
+
 function checkBiohazard() {
     let checked = false;
     document.querySelectorAll('#hazardCheckboxes input[type="checkbox"]:checked').forEach(cb => checked = true);
-    
     const clvl = document.querySelector('select[name="contamination_level"]').value;
     const ctype = document.querySelector('select[name="cleaning_type"]').value;
-    
-    if (checked || clvl === 'Biohazard' || ctype === 'Biohazard Clean') return true;
-    return false;
+    return (checked || clvl === 'Biohazard' || ctype === 'Biohazard Clean');
 }
 
-// Visual cue mapping for hazards
+function updateHazardUI() {
+    const box = document.getElementById('hazardPanelBox');
+    if (checkBiohazard()) {
+        box.style.border = '2px solid var(--danger)';
+        box.style.backgroundColor = 'rgba(231,76,60,0.05)';
+    } else {
+        box.style.border = '1px solid var(--border)';
+        box.style.backgroundColor = '';
+    }
+}
+
 document.querySelectorAll('#hazardCheckboxes input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', () => {
-        const box = document.getElementById('hazardPanelBox');
-        if (checkBiohazard()) {
-            box.style.border = '2px solid var(--danger)';
-            box.style.backgroundColor = '#fff1f0';
-        } else {
-            box.style.border = '';
-            box.style.backgroundColor = 'var(--surface-2)';
-        }
-    });
+    cb.addEventListener('change', updateHazardUI);
 });
 
 function validateAndOpenConfirm() {
@@ -395,7 +443,6 @@ function validateAndOpenConfirm() {
         form.reportValidity();
         return;
     }
-    
     if (checkBiohazard()) {
         document.getElementById('biohazardConfirmModal').classList.add('active');
     } else {
@@ -405,10 +452,8 @@ function validateAndOpenConfirm() {
 
 function executeDispatchPost() {
     document.getElementById('biohazardConfirmModal').classList.remove('active');
-    
     const form = document.getElementById('cleaningDispatchForm');
     const fd = new FormData(form);
-    
     const btn = document.getElementById('submitDispatchBtn');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dispatching...';
     btn.disabled = true;
@@ -436,22 +481,20 @@ function executeDispatchPost() {
     });
 }
 
-function submitCleaningDispatch(e) {
-    e.preventDefault();
-}
+function submitCleaningDispatch(e) { e.preventDefault(); }
 
-const sidebar  = document.getElementById('admSidebar');
-const overlay  = document.getElementById('admOverlay');
-document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
-overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
-const themeIcon = document.getElementById('themeIcon');
-document.getElementById('themeToggle')?.addEventListener('click', () => {
+const sidebar = document.getElementById('admSidebar');
+const overlay = document.getElementById('admOverlay');
+document.getElementById('menuToggle').onclick = () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); };
+overlay.onclick = () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); };
+
+document.getElementById('themeToggle').onclick = () => {
     const html = document.documentElement;
     const t = html.getAttribute('data-theme')==='dark'?'light':'dark';
     html.setAttribute('data-theme', t);
     localStorage.setItem('rmu_theme', t);
-    themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
-});
+    document.getElementById('themeIcon').className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+};
 </script>
 </body>
 </html>

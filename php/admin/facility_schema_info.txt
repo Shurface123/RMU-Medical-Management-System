@@ -1,0 +1,51 @@
+--- Table: patients ---
+Column: id | Type: int
+Column: user_id | Type: int
+Column: patient_id | Type: varchar(50)
+Column: student_id | Type: varchar(50)
+Column: is_student | Type: tinyint(1)
+Column: blood_group | Type: enum('A+','A-','B+','B-','AB+','AB-','O+','O-')
+Column: allergies | Type: text
+Column: chronic_conditions | Type: text
+Column: emergency_contact_name | Type: varchar(200)
+Column: emergency_contact_phone | Type: varchar(20)
+Column: emergency_contact_relationship | Type: varchar(100)
+Column: insurance_provider | Type: varchar(200)
+Column: insurance_number | Type: varchar(100)
+Column: profile_photo | Type: varchar(500)
+Column: registration_status | Type: enum('Active','Inactive','Suspended')
+Column: nationality | Type: varchar(100)
+Column: religion | Type: varchar(100)
+Column: marital_status | Type: varchar(50)
+Column: occupation | Type: varchar(200)
+Column: national_id | Type: varchar(60)
+Column: secondary_phone | Type: varchar(20)
+Column: personal_email | Type: varchar(200)
+Column: street_address | Type: varchar(300)
+Column: city | Type: varchar(100)
+Column: region | Type: varchar(100)
+Column: country | Type: varchar(100)
+Column: postal_code | Type: varchar(20)
+Column: created_at | Type: timestamp
+Column: updated_at | Type: timestamp
+Column: last_login_at | Type: datetime
+Column: is_online | Type: tinyint(1)
+Column: profile_completion | Type: tinyint unsigned
+Column: account_status | Type: enum('active','deactivation_requested','deactivated')
+Column: full_name | Type: varchar(150)
+Column: gender | Type: enum('Male','Female','Others')
+Column: age | Type: int
+Column: patient_type | Type: enum('Student','Teacher','Staff','Other')
+Column: admit_date | Type: date
+
+--- Table: cleaning_schedules ---
+Column: schedule_id | Type: int
+Column: assigned_to | Type: int
+Column: ward_room_area | Type: varchar(255)
+Column: schedule_date | Type: date
+Column: start_time | Type: time
+Column: end_time | Type: time
+Column: cleaning_type | Type: enum('routine','deep clean','biohazard','post-discharge')
+Column: status | Type: enum('scheduled','in progress','completed','missed')
+Column: created_at | Type: timestamp
+

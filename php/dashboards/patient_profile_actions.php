@@ -179,7 +179,7 @@ case 'request_deactivation':
     $reason=esc($conn,$post['reason']??'');
     mysqli_query($conn,"UPDATE patients SET account_status='deactivation_requested',updated_at=NOW() WHERE id=$pat_pk");
     // Notify admin
-    $admins=mysqli_query($conn,"SELECT id FROM users WHERE role='admin' LIMIT 5");
+    $admins=mysqli_query($conn,"SELECT id FROM users WHERE user_role='admin' LIMIT 5");
     if($admins) while($a=mysqli_fetch_assoc($admins)){
         $aid=(int)$a['id'];
         $pname=esc($conn,$_SESSION['user_name']??$_SESSION['name']??'Patient');

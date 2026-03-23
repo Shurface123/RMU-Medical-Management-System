@@ -10,21 +10,21 @@ include '../includes/_sidebar.php';
 // Fetch pending registrations
 $pending = [];
 $q_pending = mysqli_query($conn, "
-    SELECT s.id as staff_id, s.employee_id, s.role, u.name, u.email, u.phone, u.created_at, 'staff' as source_table
+    SELECT s.id as staff_id, s.employee_id, s.role, u.name, u.email, u.phone, u.created_at, CAST('staff' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
     FROM staff s
     JOIN users u ON s.user_id = u.id
     WHERE s.approval_status = 'pending'
     
     UNION ALL
     
-    SELECT n.id as staff_id, n.nurse_id as employee_id, 'nurse' as role, u.name, u.email, u.phone, u.created_at, 'nurse' as source_table
+    SELECT n.id as staff_id, n.nurse_id as employee_id, CAST('nurse' AS CHAR) COLLATE utf8mb4_unicode_ci as role, u.name, u.email, u.phone, u.created_at, CAST('nurse' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
     FROM nurses n
     JOIN users u ON n.user_id = u.id
     WHERE n.approval_status = 'pending'
     
     UNION ALL
     
-    SELECT lt.id as staff_id, lt.technician_id as employee_id, 'lab_technician' as role, u.name, u.email, u.phone, u.created_at, 'lab_technician' as source_table
+    SELECT lt.id as staff_id, lt.technician_id as employee_id, CAST('lab_technician' AS CHAR) COLLATE utf8mb4_unicode_ci as role, u.name, u.email, u.phone, u.created_at, CAST('lab_technician' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
     FROM lab_technicians lt
     JOIN users u ON lt.user_id = u.id
     WHERE lt.approval_status = 'pending'
@@ -37,7 +37,7 @@ if ($q_pending) while ($row = mysqli_fetch_assoc($q_pending)) $pending[] = $row;
 $recent = [];
 $q_recent = mysqli_query($conn, "
     SELECT s.id as staff_id, s.employee_id, s.role, s.approval_status, s.rejection_reason, s.approved_at,
-           u.name as staff_name, ua.name as admin_name, 'staff' as source_table
+           u.name as staff_name, ua.name as admin_name, CAST('staff' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
     FROM staff s
     JOIN users u ON s.user_id = u.id
     LEFT JOIN users ua ON s.approved_by = ua.id
@@ -46,8 +46,8 @@ $q_recent = mysqli_query($conn, "
       
     UNION ALL
     
-    SELECT n.id as staff_id, n.nurse_id as employee_id, 'nurse' as role, n.approval_status, n.rejection_reason, n.approved_at,
-           u.name as staff_name, ua.name as admin_name, 'nurse' as source_table
+    SELECT n.id as staff_id, n.nurse_id as employee_id, CAST('nurse' AS CHAR) COLLATE utf8mb4_unicode_ci as role, n.approval_status, n.rejection_reason, n.approved_at,
+           u.name as staff_name, ua.name as admin_name, CAST('nurse' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
     FROM nurses n
     JOIN users u ON n.user_id = u.id
     LEFT JOIN users ua ON n.approved_by = ua.id
@@ -56,8 +56,8 @@ $q_recent = mysqli_query($conn, "
       
     UNION ALL
     
-    SELECT lt.id as staff_id, lt.technician_id as employee_id, 'lab_technician' as role, lt.approval_status, lt.rejection_reason, lt.approved_at,
-           u.name as staff_name, ua.name as admin_name, 'lab_technician' as source_table
+    SELECT lt.id as staff_id, lt.technician_id as employee_id, CAST('lab_technician' AS CHAR) COLLATE utf8mb4_unicode_ci as role, lt.approval_status, lt.rejection_reason, lt.approved_at,
+           u.name as staff_name, ua.name as admin_name, CAST('lab_technician' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
     FROM lab_technicians lt
     JOIN users u ON lt.user_id = u.id
     LEFT JOIN users ua ON lt.approved_by = ua.id
@@ -125,12 +125,12 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                         <tr id="row_<?php echo $p['staff_id']; ?>">
                             <td>
                                 <strong><?php echo htmlspecialchars($p['name']); ?></strong>
-                                <br><small style="color:var(--text-muted);"><?php echo htmlspecialchars($p['employee_id']); ?></small>
+                                <br><small style="color:var(--text-muted);"><?php echo htmlspecialchars($p['employee_id'] ?? ''); ?></small>
                             </td>
                             <td><span class="adm-badge adm-badge-<?php echo $rc; ?>"><?php echo $role_lbl; ?></span></td>
                             <td>
-                                <div><i class="fas fa-envelope" style="color:var(--text-muted);width:16px;"></i> <?php echo htmlspecialchars($p['email']); ?></div>
-                                <div><i class="fas fa-phone" style="color:var(--text-muted);width:16px;"></i> <?php echo htmlspecialchars($p['phone']); ?></div>
+                                <div><i class="fas fa-envelope" style="color:var(--text-muted);width:16px;"></i> <?php echo htmlspecialchars($p['email'] ?? ''); ?></div>
+                                <div><i class="fas fa-phone" style="color:var(--text-muted);width:16px;"></i> <?php echo htmlspecialchars($p['phone'] ?? ''); ?></div>
                             </td>
                             <td><?php echo date('M d, Y g:i A', strtotime($p['created_at'])); ?></td>
                             <td style="text-align:right;">
@@ -175,7 +175,7 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                         <tr>
                             <td>
                                 <strong><?php echo htmlspecialchars($r['staff_name']); ?></strong><br>
-                                <small style="color:var(--text-muted);"><?php echo htmlspecialchars($r['employee_id']); ?></small>
+                                <small style="color:var(--text-muted);"><?php echo htmlspecialchars($r['employee_id'] ?? ''); ?></small>
                             </td>
                             <td><?php echo ucfirst(str_replace('_',' ',$r['role'])); ?></td>
                             <td>

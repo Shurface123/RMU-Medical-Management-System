@@ -56,10 +56,23 @@ $pending_lt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM lab_tes
         </div>
 
         <!-- Tabs -->
-        <div class="adm-tabs" id="testTabs">
-            <button class="adm-tab adm-tab-active" data-tab="orders">Patient Test Orders</button>
-            <button class="adm-tab" data-tab="services">Service Catalogue</button>
+        <div class="adm-tabs" id="testTabs" style="margin-bottom:2rem;display:flex;gap:1rem;border-bottom:2px solid var(--border);padding-bottom:.5rem;">
+            <button class="adm-tab adm-tab-active" data-tab="orders" style="background:none;border:none;padding:.8rem 1.5rem;font-weight:600;color:var(--text-secondary);cursor:pointer;position:relative;transition:var(--transition);">
+                <i class="fas fa-clipboard-list"></i> Patient Test Orders
+            </button>
+            <button class="adm-tab" data-tab="services" style="background:none;border:none;padding:.8rem 1.5rem;font-weight:600;color:var(--text-secondary);cursor:pointer;position:relative;transition:var(--transition);">
+                <i class="fas fa-list"></i> Service Catalogue
+            </button>
         </div>
+
+        <style>
+            .adm-tab-active { color: var(--primary) !important; }
+            .adm-tab-active::after { content:''; position:absolute; bottom:-7px; left:0; width:100%; height:3px; background:var(--primary); border-radius:10px; }
+            .adm-tab:hover { color: var(--primary); }
+            .adm-table tbody tr:hover td { background: var(--primary-light); }
+            .adm-card { transition: var(--transition); }
+            .adm-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        </style>
 
         <!-- Patient Test Orders -->
         <div class="adm-tab-panel" id="tab-orders">
@@ -126,8 +139,8 @@ $pending_lt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM lab_tes
                 <div class="adm-card-header">
                     <h3><i class="fas fa-list"></i> Service Catalogue</h3>
                 </div>
-                <div class="adm-table-wrap table-container">
-                    <table class="adm-table" style="width: 100%; min-width: 900px;">
+                <div class="adm-table-wrap table-container" style="border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <table class="adm-table" style="width: 100%; min-width: 900px;border-collapse:collapse;">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -153,8 +166,8 @@ $pending_lt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM lab_tes
                                 <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($s['service_id']); ?></span></td>
                                 <td><strong><?php echo htmlspecialchars($s['service_name']); ?></strong></td>
                                 <td><?php echo htmlspecialchars($s['category']); ?></td>
-                                <td><?php echo number_format($s['price'], 2); ?></td>
-                                <td><?php echo $s['is_free_for_students'] ? '<span class="adm-badge adm-badge-success">Yes</span>' : '<span class="adm-badge adm-badge-warning">No</span>'; ?></td>
+                                <td><strong style="color:var(--primary);font-size:1.1rem;">GH₵ <?php echo number_format($s['price'], 2); ?></strong></td>
+                                <td><?php echo $s['is_free_for_students'] ? '<span class="adm-badge" style="background:#edfaf1;color:#27ae60;border:1px solid #27ae60;"><i class="fas fa-check-circle"></i> Yes</span>' : '<span class="adm-badge" style="background:#fef5f5;color:#e74c3c;border:1px solid #e74c3c;"><i class="fas fa-times-circle"></i> No</span>'; ?></td>
                                 <td><?php echo $s['is_active'] ? '<span class="adm-badge adm-badge-success">Active</span>' : '<span class="adm-badge adm-badge-danger">Inactive</span>'; ?></td>
                             </tr>
                             <?php endwhile; } ?>

@@ -1413,3 +1413,116 @@ body { overflow-x: hidden; }
 .fw-700 {
     font-weight: 700;
 }
+
+/* ════════════════════════════════════════════════════
+   25. MODAL SYSTEM
+   ════════════════════════════════════════════════════ */
+.adm-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 22, 40, 0.75);
+    backdrop-filter: blur(5px);
+    z-index: 1200;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    animation: admFadeIn 0.3s ease;
+}
+
+.adm-modal.active {
+    display: flex;
+}
+
+.adm-modal-content {
+    background: var(--surface);
+    width: 100%;
+    max-width: 750px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    position: relative;
+    animation: admSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.adm-modal-header {
+    padding: 2.2rem 2.8rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.adm-modal-header h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.adm-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.adm-modal-close:hover {
+    background: var(--danger);
+    color: #fff;
+    transform: rotate(90deg);
+}
+
+.adm-modal-body {
+    padding: 2.8rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.adm-modal-footer {
+    padding: 1.8rem 2.8rem;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.2rem;
+}
+
+@keyframes admFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes admSlideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Form field improvements for premium look */
+.adm-form-group {
+    margin-bottom: 2rem;
+}
+
+.adm-form-group label {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+}
+
+.adm-form-group .adm-search-input {
+    border-radius: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 1.2rem 1.5rem;
+}
+
+.adm-form-group .adm-search-input:focus {
+    background: var(--surface);
+    border-color: var(--primary);
+}

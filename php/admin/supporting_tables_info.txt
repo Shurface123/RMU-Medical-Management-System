@@ -1,0 +1,3 @@
+Table wards exists.
+Table contamination_reports exists.
+Table kitchen_tasks exists.

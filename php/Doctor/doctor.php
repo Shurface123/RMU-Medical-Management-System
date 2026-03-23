@@ -108,8 +108,8 @@ $avail_doc = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors 
                             <td><?php echo $n++; ?></td>
                             <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($doc['doctor_id']); ?></span></td>
                             <td><strong><i class="fas fa-user-md" style="color:var(--primary);margin-right:.4rem;"></i><?php echo htmlspecialchars($doc['name']); ?></strong></td>
-                            <td><?php echo htmlspecialchars($doc['gender']); ?></td>
-                            <td><span class="adm-badge adm-badge-info"><?php echo htmlspecialchars($doc['specialization']); ?></span></td>
+                            <td><?php echo htmlspecialchars($doc['gender'] ?? ''); ?></td>
+                            <td><span class="adm-badge adm-badge-info"><?php echo htmlspecialchars($doc['specialization'] ?? ''); ?></span></td>
                             <td><?php echo $doc['experience_years'] ? $doc['experience_years'].' yrs' : 'N/A'; ?></td>
                             <td><?php echo htmlspecialchars($doc['phone'] ?? 'N/A'); ?></td>
                             <td><?php echo htmlspecialchars($doc['email'] ?? 'N/A'); ?></td>

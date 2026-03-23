@@ -131,8 +131,8 @@ $students    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM patien
                         <tr class="<?php echo $row_cls; ?>">
                             <td><?php echo $n++; ?></td>
                             <td><span class="adm-badge adm-badge-primary"><?php echo htmlspecialchars($pat['patient_id']); ?></span></td>
-                            <td><strong><?php echo htmlspecialchars($pat['name']); ?></strong></td>
-                            <td><?php echo htmlspecialchars($pat['gender']); ?></td>
+                            <td><strong><?php echo htmlspecialchars($pat['name'] ?? ''); ?></strong></td>
+                            <td><?php echo htmlspecialchars($pat['gender'] ?? ''); ?></td>
                             <td><?php echo $pat['blood_group'] ? '<span class="adm-badge adm-badge-danger">'.htmlspecialchars($pat['blood_group']).'</span>' : 'N/A'; ?></td>
                             <td><?php echo htmlspecialchars($pat['phone'] ?? 'N/A'); ?></td>
                             <td><?php echo $type_badge; ?></td>

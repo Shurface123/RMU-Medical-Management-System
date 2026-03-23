@@ -85,7 +85,7 @@ if ($lic_q) {
                     $n1 = $conn->prepare("INSERT INTO notifications (user_id, user_role, type, title, message, is_read, related_module, created_at) VALUES (?, 'lab_technician', 'license_expiry', 'License Expiring Soon', ?, 0, 'Profile', NOW())");
                     if ($n1) { $n1->bind_param('is', $user_id, $lic_msg); $n1->execute(); $n1->close(); }
                     // Notify admins
-                    $admin_ids_q = mysqli_query($conn, "SELECT id FROM users WHERE role='admin' LIMIT 5");
+                    $admin_ids_q = mysqli_query($conn, "SELECT id FROM users WHERE user_role='admin' LIMIT 5");
                     while ($adm = mysqli_fetch_assoc($admin_ids_q)) {
                         $adm_msg = "Lab technician {$tech_row['full_name']} (ID: {$tech_row['technician_id']}) license expires in {$days_left} days ({$exp_date_fmt}).";
                         $n2 = $conn->prepare("INSERT INTO notifications (user_id, user_role, type, title, message, is_read, related_module, created_at) VALUES (?, 'admin', 'license_expiry', 'Staff License Alert', ?, 0, 'Lab Staff', NOW())");

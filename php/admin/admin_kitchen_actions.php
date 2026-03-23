@@ -149,7 +149,7 @@ try {
         mysqli_stmt_execute($ns);
     } else {
         // Broadcast
-        $kq = mysqli_query($conn, "SELECT id FROM users WHERE role='kitchen_staff' AND account_status='active'");
+        $kq = mysqli_query($conn, "SELECT id FROM users WHERE user_role='kitchen_staff' AND is_active=1");
         if ($kq) {
             while ($k = mysqli_fetch_assoc($kq)) {
                 mysqli_stmt_bind_param($ns, "is", $k['id'], $kitchen_msg);
@@ -170,7 +170,7 @@ try {
     // The instructions say: "Notify the nurse assigned to the patient's ward that a dietary order has been created"
     // Since we don't know the table mapping nurses strictly to wards unless there's a ward_assignments table...
     // Let's notify ANY nurse... or just the general nurses.
-    $nq = mysqli_query($conn, "SELECT id FROM users WHERE role='nurse' AND account_status='active'");
+    $nq = mysqli_query($conn, "SELECT id FROM users WHERE user_role='nurse' AND is_active=1");
     if ($nq) {
         $nurse_msg = "Patient $patient_name ($ward) has a new active dietary order: $diet_type.";
         while ($n = mysqli_fetch_assoc($nq)) {

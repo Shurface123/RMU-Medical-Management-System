@@ -1,0 +1,130 @@
+--- Table: staff ---
+Column: id | Collation: 
+Column: user_id | Collation: 
+Column: staff_id | Collation: utf8mb4_unicode_ci
+Column: department | Collation: utf8mb4_unicode_ci
+Column: position | Collation: utf8mb4_unicode_ci
+Column: hire_date | Collation: 
+Column: salary | Collation: 
+Column: shift | Collation: utf8mb4_unicode_ci
+Column: created_at | Collation: 
+Column: updated_at | Collation: 
+Column: full_name | Collation: utf8mb4_unicode_ci
+Column: date_of_birth | Collation: 
+Column: gender | Collation: utf8mb4_unicode_ci
+Column: nationality | Collation: utf8mb4_unicode_ci
+Column: phone | Collation: utf8mb4_unicode_ci
+Column: email | Collation: utf8mb4_unicode_ci
+Column: address | Collation: utf8mb4_unicode_ci
+Column: profile_photo | Collation: utf8mb4_unicode_ci
+Column: role | Collation: utf8mb4_unicode_ci
+Column: department_id | Collation: 
+Column: designation | Collation: utf8mb4_unicode_ci
+Column: employee_id | Collation: utf8mb4_unicode_ci
+Column: employment_type | Collation: utf8mb4_unicode_ci
+Column: shift_type | Collation: utf8mb4_unicode_ci
+Column: status | Collation: utf8mb4_unicode_ci
+Column: approval_status | Collation: utf8mb4_unicode_ci
+Column: approved_by | Collation: 
+Column: approved_at | Collation: 
+Column: rejection_reason | Collation: utf8mb4_unicode_ci
+Column: date_joined | Collation: 
+Column: emergency_contact_name | Collation: utf8mb4_unicode_ci
+Column: emergency_contact_phone | Collation: utf8mb4_unicode_ci
+Column: profile_completeness | Collation: 
+
+--- Table: nurses ---
+Column: id | Collation: 
+Column: nurse_id | Collation: utf8mb4_unicode_ci
+Column: user_id | Collation: 
+Column: full_name | Collation: utf8mb4_unicode_ci
+Column: date_of_birth | Collation: 
+Column: gender | Collation: utf8mb4_unicode_ci
+Column: nationality | Collation: utf8mb4_unicode_ci
+Column: phone | Collation: utf8mb4_unicode_ci
+Column: email | Collation: utf8mb4_unicode_ci
+Column: address | Collation: utf8mb4_unicode_ci
+Column: profile_photo | Collation: utf8mb4_unicode_ci
+Column: license_number | Collation: utf8mb4_unicode_ci
+Column: license_expiry | Collation: 
+Column: specialization | Collation: utf8mb4_unicode_ci
+Column: department_id | Collation: 
+Column: designation | Collation: utf8mb4_unicode_ci
+Column: years_of_experience | Collation: 
+Column: shift_type | Collation: utf8mb4_unicode_ci
+Column: status | Collation: utf8mb4_unicode_ci
+Column: created_at | Collation: 
+Column: updated_at | Collation: 
+Column: approval_status | Collation: utf8mb4_unicode_ci
+Column: rejection_reason | Collation: utf8mb4_unicode_ci
+Column: approved_by | Collation: 
+Column: approved_at | Collation: 
+
+--- Table: lab_technicians ---
+Column: id | Collation: 
+Column: user_id | Collation: 
+Column: technician_id | Collation: utf8mb4_unicode_ci
+Column: full_name | Collation: utf8mb4_unicode_ci
+Column: date_of_birth | Collation: 
+Column: gender | Collation: utf8mb4_unicode_ci
+Column: nationality | Collation: utf8mb4_unicode_ci
+Column: phone | Collation: utf8mb4_unicode_ci
+Column: email | Collation: utf8mb4_unicode_ci
+Column: secondary_phone | Collation: utf8mb4_unicode_ci
+Column: personal_email | Collation: utf8mb4_unicode_ci
+Column: street_address | Collation: utf8mb4_unicode_ci
+Column: city | Collation: utf8mb4_unicode_ci
+Column: region | Collation: utf8mb4_unicode_ci
+Column: country | Collation: utf8mb4_unicode_ci
+Column: postal_code | Collation: utf8mb4_unicode_ci
+Column: profile_photo | Collation: utf8mb4_unicode_ci
+Column: license_number | Collation: utf8mb4_unicode_ci
+Column: license_issuing_body | Collation: utf8mb4_unicode_ci
+Column: license_expiry | Collation: 
+Column: specialization | Collation: utf8mb4_unicode_ci
+Column: sub_specialization | Collation: utf8mb4_unicode_ci
+Column: department_id | Collation: 
+Column: designation | Collation: utf8mb4_unicode_ci
+Column: years_of_experience | Collation: 
+Column: bio | Collation: utf8mb4_unicode_ci
+Column: languages_spoken | Collation: 
+Column: marital_status | Collation: utf8mb4_unicode_ci
+Column: religion | Collation: utf8mb4_unicode_ci
+Column: national_id | Collation: utf8mb4_unicode_ci
+Column: office_location | Collation: utf8mb4_unicode_ci
+Column: availability_status | Collation: utf8mb4_unicode_ci
+Column: two_fa_enabled | Collation: 
+Column: shift_preference_notes | Collation: utf8mb4_unicode_ci
+Column: status | Collation: utf8mb4_unicode_ci
+Column: approval_status | Collation: utf8mb4_unicode_ci
+Column: approved_by | Collation: 
+Column: approved_at | Collation: 
+Column: rejection_reason | Collation: utf8mb4_unicode_ci
+Column: member_since | Collation: 
+Column: last_login | Collation: 
+Column: created_at | Collation: 
+Column: updated_at | Collation: 
+Column: institution_attended | Collation: utf8mb4_unicode_ci
+Column: graduation_year | Collation: 
+Column: postgraduate_details | Collation: utf8mb4_unicode_ci
+
+--- Table: users ---
+Column: id | Collation: 
+Column: user_name | Collation: utf8mb4_unicode_ci
+Column: email | Collation: utf8mb4_unicode_ci
+Column: password | Collation: utf8mb4_unicode_ci
+Column: user_role | Collation: utf8mb4_unicode_ci
+Column: name | Collation: utf8mb4_unicode_ci
+Column: phone | Collation: utf8mb4_unicode_ci
+Column: gender | Collation: utf8mb4_unicode_ci
+Column: date_of_birth | Collation: 
+Column: profile_image | Collation: utf8mb4_unicode_ci
+Column: is_active | Collation: 
+Column: is_verified | Collation: 
+Column: created_at | Collation: 
+Column: updated_at | Collation: 
+Column: last_login | Collation: 
+Column: last_active_at | Collation: 
+Column: last_login_at | Collation: 
+Column: locked_until | Collation: 
+
