@@ -28,3 +28,33 @@ $emailConfig = [
     'from_email'    => 'sickbay.text@st.rmu.edu.gh',
     'from_name'     => 'RMU Medical Sickbay',
 ];
+
+// ── New: Load Dynamic System Settings ──────────────────────────────────────
+$sys_settings = [];
+$res = mysqli_query($conn, "SELECT config_key, config_value FROM system_config");
+if ($res) {
+    while($row = mysqli_fetch_assoc($res)) {
+        $sys_settings[$row['config_key']] = $row['config_value'];
+    }
+}
+
+/**
+ * Helper to fetch a system setting with a default value.
+ */
+if (!function_exists('get_setting')) {
+    function get_setting($key, $default = '') {
+        global $sys_settings;
+        return $sys_settings[$key] ?? $default;
+    }
+}
+
+// ── New: Load Hospital Profile ─────────────────────────────────────────────
+$h_res = mysqli_query($conn, "SELECT * FROM hospital_settings WHERE id = 1");
+$hospital_profile = mysqli_fetch_assoc($h_res) ?: [];
+
+// Apply Timezone immediately
+if (isset($sys_settings['timezone'])) {
+    date_default_timezone_set($sys_settings['timezone']);
+} else {
+    date_default_timezone_set('Africa/Accra'); // Default
+}

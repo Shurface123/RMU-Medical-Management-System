@@ -1,0 +1,91 @@
+--- TABLE: lab_technician_settings ---
+id - int
+technician_id - int
+notification_preferences - json
+theme_preference - varchar(20)
+language - varchar(10)
+alert_sound_enabled - tinyint(1)
+notif_new_order - tinyint(1)
+notif_critical_result - tinyint(1)
+notif_equipment_alert - tinyint(1)
+notif_reagent_alert - tinyint(1)
+notif_qc_reminder - tinyint(1)
+notif_doctor_msg - tinyint(1)
+notif_system - tinyint(1)
+updated_at - timestamp
+notif_stat_order - tinyint(1)
+notif_reagent_expiry - tinyint(1)
+notif_result_amend - tinyint(1)
+notif_license_expiry - tinyint(1)
+notif_shift_reminder - tinyint(1)
+preferred_channel - varchar(50)
+
+--- TABLE: lab_technicians ---
+id - int
+user_id - int
+technician_id - varchar(30)
+full_name - varchar(150)
+date_of_birth - date
+gender - enum('Male','Female','Other')
+nationality - varchar(80)
+phone - varchar(20)
+email - varchar(150)
+secondary_phone - varchar(20)
+personal_email - varchar(150)
+street_address - varchar(255)
+city - varchar(100)
+region - varchar(100)
+country - varchar(100)
+postal_code - varchar(20)
+profile_photo - varchar(400)
+license_number - varchar(100)
+license_issuing_body - varchar(200)
+license_expiry - date
+specialization - varchar(150)
+sub_specialization - varchar(200)
+department_id - int
+designation - varchar(100)
+years_of_experience - int
+bio - text
+languages_spoken - json
+marital_status - varchar(30)
+religion - varchar(50)
+national_id - varchar(50)
+office_location - varchar(100)
+availability_status - enum('Available','Busy','On Break','Off Duty')
+two_fa_enabled - tinyint(1)
+shift_preference_notes - text
+status - enum('Active','Inactive','On Leave','Suspended')
+approval_status - enum('pending','approved','rejected')
+approved_by - int
+approved_at - datetime
+rejection_reason - text
+member_since - date
+last_login - datetime
+created_at - timestamp
+updated_at - timestamp
+institution_attended - varchar(200)
+graduation_year - int
+postgraduate_details - text
+
+--- TABLE: lab_samples ---
+id - int
+sample_id - varchar(30)
+order_id - int
+patient_id - int
+technician_id - int
+sample_type - enum('Blood','Urine','Stool','Swab','Tissue','CSF','Sputum','Other')
+sample_code - varchar(50)
+collection_date - date
+collection_time - time
+collected_by - int
+container_type - varchar(100)
+volume_collected - varchar(50)
+storage_location - varchar(100)
+condition_on_receipt - enum('Good','Haemolysed','Clotted','Insufficient','Contaminated','Lipemic')
+status - enum('Collected','Received','Processing','Stored','Disposed','Rejected')
+rejection_reason - text
+notes - text
+barcode_image_path - varchar(500)
+created_at - timestamp
+

@@ -149,7 +149,8 @@ if ($lic_q) {
         [data-theme="dark"] { --role-accent-light: #134e4a; }
 
         /* ── Hero Banner ── */
-        .staff-hero { background:linear-gradient(135deg,#1C3A6B 0%,#2F80ED 55%,#0d9488 100%);color:#fff;border-radius:var(--radius-lg);padding:2.2rem 2.8rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.8rem;flex-wrap:wrap;position:relative;overflow:hidden; box-shadow: var(--shadow-md); }
+        .staff-hero { background:linear-gradient(135deg,#1C3A6B 0%,#2F80ED 55%,#0d9488 100%);color:#fff;border-radius:var(--radius-lg);padding:2.2rem 2.8rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.8rem;flex-wrap:wrap;position:relative;overflow:hidden; box-shadow: var(--shadow-md); transition: transform 0.3s ease; }
+        .staff-hero:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
         .staff-hero-avatar { width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;font-size:2.6rem;border:3px solid rgba(255,255,255,.35);flex-shrink:0; }
         .staff-hero-info h2 { font-size:2rem;font-weight:700;margin:0 0 .3rem; }
         .staff-hero-info p { margin:0;opacity:.85;font-size:.9rem; }
@@ -176,15 +177,24 @@ if ($lic_q) {
         /* ── Tab Sections ── */
         .tab-content { display:none;animation:fadeIn .3s ease; }
         .tab-content.active { display:block; }
+        .dash-section { display:none;animation:fadeIn .3s ease; }
+        .dash-section.active { display:block; }
         @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
         .sec-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.8rem;flex-wrap:wrap;gap:1rem; }
         .sec-header h2 { font-size:2rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:.8rem; }
         .sec-header h2 i { color:var(--role-accent); }
 
-        .filter-tabs { display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem; }
-        .ftab { padding:.55rem 1.2rem;border-radius:20px;font-size:1.2rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text-secondary);transition:var(--transition); }
-        .ftab.active,.ftab:hover { background:var(--role-accent);color:#fff;border-color:var(--role-accent); }
+        /* ── Filter Tabs & Sub-navigation (Premium) ── */
+        .adm-tab-group { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.8rem; border-bottom:1px solid var(--border); padding-bottom:1rem; }
+        .ftab { 
+            padding:.6rem 1.4rem; border-radius:20px; font-size:1.25rem; font-weight:600; 
+            border:1.5px solid var(--border); background:var(--surface); color:var(--text-secondary);
+            cursor:pointer; transition:var(--transition); display:flex; align-items:center; gap:.6rem;
+        }
+        .ftab i { font-size:1.3rem; opacity:0.8; }
+        .ftab:hover { border-color:var(--role-accent); color:var(--role-accent); background:var(--primary-light); }
+        .ftab.active { background:var(--role-accent); color:#fff; border-color:var(--role-accent); box-shadow:0 4px 12px color-mix(in srgb, var(--role-accent) 25%, transparent); }
 
         /* ── Table Aesthetics ── */
         .adm-table-wrap { overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border); }
@@ -195,17 +205,18 @@ if ($lic_q) {
         .adm-table tr:hover td { background:var(--surface-2); }
         .adm-table .action-btns { display:flex;gap:.5rem;flex-wrap:wrap; }
 
+        /* ── Standard CSS Grids (Replacing Bootstrap cols) ── */
         .cards-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem; }
         .info-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.6rem;box-shadow:var(--shadow-sm);transition:var(--transition); }
         .info-card:hover { box-shadow:var(--shadow-md);transform:translateY(-2px); }
         .info-card-head { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem; }
         .info-card-icon { width:44px;height:44px;border-radius:12px;background:var(--role-accent-light);color:var(--role-accent);display:flex;align-items:center;justify-content:center;font-size:1.6rem; }
-
+        
         .charts-grid { display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem; }
         .chart-wrap { position:relative;height:280px;width:100%;transition:var(--transition); }
+        .chart-wrap:hover { transform: scale(1.01); }
 
-        .adm-tab-group { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.8rem; border-bottom:1px solid var(--border); padding-bottom:1rem; }
-        
+        /* ── Form Grids ── */
         .form-row { display:grid;grid-template-columns:1fr 1fr;gap:1.2rem; margin-bottom: 1.5rem; }
         .form-group { margin-bottom:1.4rem; }
         .form-group label { display:block;font-size:1.2rem;font-weight:600;color:var(--text-secondary);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em; }
@@ -213,13 +224,16 @@ if ($lic_q) {
         .form-control:focus { border-color:var(--role-accent);box-shadow:0 0 0 3px color-mix(in srgb, var(--role-accent) 15%, transparent 85%); }
         .form-control select, .form-select { appearance:none; }
 
+        /* ── Activity Feed ── */
         .activity-item { display:flex;align-items:flex-start;gap:1rem;padding:1.4rem 0;border-bottom:1px solid var(--border);transition:var(--transition); }
         .activity-item:last-child { border:none; }
         .activity-item:hover { transform: translateX(5px); }
         .activity-dot { width:10px;height:10px;border-radius:50%;background:var(--role-accent);flex-shrink:0;margin-top:.5rem;box-shadow:0 0 0 3px color-mix(in srgb, var(--role-accent) 10%, transparent); }
 
-        .adm-badge-teal { background:var(--role-accent-light); color:var(--role-accent); border: 1px solid var(--role-accent); border-radius: 4px; padding: 2px 6px; font-size: 0.9em; font-weight: 500;}
+        /* Missing Badges / Adjustments */
+        .adm-badge-teal { background:var(--role-accent-light); color:var(--role-accent); }
         
+        /* Ensure DataTables integrates */
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: var(--role-accent) !important; color: white !important; border: 1px solid var(--role-accent) !important; }
         [data-theme="dark"] .form-control, [data-theme="dark"] .form-select { background-color: var(--surface); color: var(--text-primary); border-color: var(--border); }
         
@@ -371,7 +385,14 @@ if ($lic_q) {
 </main>
 
 <!-- ── GLOBAL SCRIPTS ────────────────────────────────────── -->
+<script src="/RMU-Medical-Management-System/php/includes/BroadcastReceiver.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BroadcastReceiver !== 'undefined') {
+        window.rmuBroadcasts = new BroadcastReceiver(<?= $_SESSION['user_id'] ?>);
+    }
+});
+
 // Configure global AJAX CSRF injection
 $.ajaxSetup({
     beforeSend: function(xhr, settings) {

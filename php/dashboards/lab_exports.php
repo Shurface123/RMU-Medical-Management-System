@@ -46,7 +46,7 @@ if ($aud_q) {
             $row['full_name'] ?: 'N/A',
             $row['action_type'],
             $row['module_affected'],
-            $row['record_id_affected'],
+            $row['record_id'],
             $row['old_value'],
             $row['new_value'],
             $row['ip_address'],

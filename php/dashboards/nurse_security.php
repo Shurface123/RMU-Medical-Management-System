@@ -163,6 +163,30 @@ function validateRequired($data, $fields) {
     return $missing;
 }
 
+function validateEmail($email) {
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+function validateInt($value, $min = null, $max = null) {
+    $v = filter_var($value, FILTER_VALIDATE_INT);
+    if ($v === false) return false;
+    if ($min !== null && $v < $min) return false;
+    if ($max !== null && $v > $max) return false;
+    return $v;
+}
+
+function validateFloat($value, $min = null) {
+    $v = filter_var($value, FILTER_VALIDATE_FLOAT);
+    if ($v === false) return false;
+    if ($min !== null && $v < $min) return false;
+    return $v;
+}
+
+function validateDate($date) {
+    $d = \DateTime::createFromFormat('Y-m-d', $date);
+    return $d && $d->format('Y-m-d') === $date;
+}
+
 // ── 6. File Upload Validation ─────────────────────────────
 function validateUpload($file, $allowedTypes = ['image/jpeg','image/png'], $maxSize = 2097152) {
     if ($file['error'] !== UPLOAD_ERR_OK) {

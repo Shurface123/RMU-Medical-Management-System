@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role']??$_SESSION['role']??
     header('Location: /RMU-Medical-Management-System/php/login.php'); exit;
 }
 require_once '../db_conn.php';
+require_once '../includes/maintenance_guard.php';
 date_default_timezone_set('Africa/Accra');
 
 $user_id = (int)$_SESSION['user_id'];
@@ -201,10 +202,18 @@ input:checked+.notif-slider::before{transform:translateX(18px);}
 </main>
 </div>
 
-<!-- ════════════════ GLOBAL TOAST ════════════════ -->
+<!-- ════════════════ GLOBAL TOAST & BROADCASTS ════════════════ -->
 <div id="toastWrap" style="position:fixed;bottom:2rem;right:2rem;z-index:9999;display:flex;flex-direction:column;gap:.7rem;"></div>
+<script src="/RMU-Medical-Management-System/php/includes/BroadcastReceiver.js"></script>
 
 <script>
+// Initialize Broadcast Receiver
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BroadcastReceiver !== 'undefined') {
+        window.rmuBroadcasts = new BroadcastReceiver(<?= $_SESSION['user_id'] ?>);
+    }
+});
+
 // ── Toast ──────────────────────────────────────────────────
 function toast(msg,type='success'){
   const t=document.createElement('div');

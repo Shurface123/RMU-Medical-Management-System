@@ -1,0 +1,203 @@
+--- lab_results ---
+result_id                 int                 
+patient_id                int                 
+test_id                   int                 
+doctor_id                 int                 
+test_date                 date                
+result_date               date                
+status                    enum('Pending','In Progress','Completed','Cancelled')
+results                   json                
+normal_range              json                
+interpretation            text                
+technician_notes          text                
+submitted_by              int                 
+doctor_reviewed           tinyint(1)          
+patient_accessible        tinyint(1)          
+patient_notified          tinyint(1)          
+patient_viewed_at         datetime            
+result_file_path          varchar(500)        
+doctor_notes              text                
+created_at                timestamp           
+updated_at                timestamp           
+validated_by              int                 
+validated_at              datetime            
+result_interpretation     enum('Normal','Abnormal','Critical','Inconclusive')
+amended_reason            text                
+reference_range_min       decimal(10,4)       
+reference_range_max       decimal(10,4)       
+order_id                  int                 
+sample_id                 int                 
+technician_id             int                 
+unit_of_measurement       varchar(50)         
+result_status             enum('Draft','Pending Validation','Validated','Released','Amended')
+released_to_doctor        tinyint(1)          
+released_at               datetime            
+released_to_patient       tinyint(1)          
+patient_release_approved_by int                 
+report_file_path          varchar(255)        
+
+--- lab_test_orders ---
+id                        int                 
+order_id                  varchar(30)         
+request_id                int                 
+patient_id                int                 
+doctor_id                 int                 
+technician_id             int                 
+test_catalog_id           int                 
+test_name                 varchar(200)        
+urgency                   enum('Routine','Urgent','STAT','Critical')
+order_date                date                
+required_by_date          date                
+clinical_notes            text                
+diagnosis                 varchar(500)        
+order_status              enum('Pending','Accepted','Rejected','Sample Collected','Processing','Completed','Cancelled')
+rejection_reason          text                
+created_at                timestamp           
+updated_at                timestamp           
+
+--- lab_tests ---
+id                        int                 
+test_id                   varchar(50)         
+request_id                int                 
+patient_id                int                 
+doctor_id                 int                 
+technician_id_assigned    int                 
+test_catalog_id           int                 
+technician_id             int                 
+urgency_level             enum('Routine','Urgent','Critical')
+test_name                 varchar(200)        
+urgency                   enum('Routine','Urgent','STAT','Critical')
+test_category             varchar(100)        
+test_date                 date                
+required_by_date          date                
+results                   text                
+clinical_notes            text                
+diagnosis                 text                
+result_file_path          varchar(500)        
+request_notes             text                
+status                    enum('Pending','Accepted','Rejected','Sample Collected','Processing','Completed','Cancelled')
+rejection_reason          text                
+cost                      decimal(10,2)       
+technician_name           varchar(200)        
+created_at                timestamp           
+updated_at                timestamp           
+
+--- lab_test_catalog ---
+id                        int                 
+test_name                 varchar(200)        
+test_code                 varchar(50)         
+category                  enum('Hematology','Biochemistry','Microbiology','Immunology','Urinalysis','Histology','Radiology','Parasitology','Serology','Other')
+sample_type               enum('Blood','Urine','Stool','Swab','Tissue','CSF','Sputum','Other')
+container_type            varchar(100)        
+collection_instructions   text                
+processing_time_hours     decimal(5,1)        
+normal_turnaround_hours   decimal(5,1)        
+price                     decimal(10,2)       
+requires_fasting          tinyint(1)          
+is_active                 tinyint(1)          
+created_at                timestamp           
+updated_at                timestamp           
+
+--- lab_samples ---
+id                        int                 
+sample_id                 varchar(30)         
+order_id                  int                 
+patient_id                int                 
+technician_id             int                 
+sample_type               enum('Blood','Urine','Stool','Swab','Tissue','CSF','Sputum','Other')
+sample_code               varchar(50)         
+collection_date           date                
+collection_time           time                
+collected_by              int                 
+container_type            varchar(100)        
+volume_collected          varchar(50)         
+storage_location          varchar(100)        
+condition_on_receipt      enum('Good','Haemolysed','Clotted','Insufficient','Contaminated','Lipemic')
+status                    enum('Collected','Received','Processing','Stored','Disposed','Rejected')
+rejection_reason          text                
+notes                     text                
+barcode_image_path        varchar(500)        
+created_at                timestamp           
+
+--- lab_audit_trail ---
+id                        int                 
+technician_id             int                 
+user_id                   int                 
+action_type               varchar(100)        
+module_affected           varchar(100)        
+record_id                 int                 
+old_value                 text                
+new_value                 text                
+ip_address                varchar(45)         
+device_info               varchar(255)        
+created_at                timestamp           
+
+--- lab_notifications ---
+id                        int                 
+recipient_id              int                 
+recipient_role            varchar(30)         
+sender_id                 int                 
+sender_role               varchar(30)         
+message                   text                
+type                      enum('New Order','Result Ready','Critical Value','Equipment Alert','Reagent Alert','System','Message','Quality Control')
+is_read                   tinyint(1)          
+related_module            varchar(50)         
+related_record_id         int                 
+created_at                timestamp           
+
+--- lab_equipment ---
+id                        int                 
+name                      varchar(200)        
+model                     varchar(200)        
+serial_number             varchar(100)        
+manufacturer              varchar(200)        
+category                  varchar(100)        
+department                varchar(100)        
+location                  varchar(150)        
+purchase_date             date                
+warranty_expiry           date                
+status                    enum('Operational','Maintenance','Calibration Due','Out of Service','Decommissioned')
+last_calibration_date     date                
+next_calibration_date     date                
+last_maintenance_date     date                
+next_maintenance_date     date                
+assigned_technician_id    int                 
+notes                     text                
+created_at                timestamp           
+updated_at                timestamp           
+
+--- reagent_inventory ---
+id                        int                 
+name                      varchar(200)        
+catalog_number            varchar(100)        
+manufacturer              varchar(200)        
+category                  varchar(100)        
+unit                      varchar(50)         
+quantity_in_stock         int                 
+reorder_level             int                 
+unit_cost                 decimal(10,2)       
+expiry_date               date                
+storage_conditions        varchar(200)        
+linked_equipment_id       int                 
+status                    enum('In Stock','Low Stock','Out of Stock','Expired','Expiring Soon')
+batch_number              varchar(100)        
+date_received             date                
+supplier_name             varchar(200)        
+created_at                timestamp           
+updated_at                timestamp           
+
+--- lab_reference_ranges ---
+id                        int                 
+test_catalog_id           int                 
+parameter_name            varchar(150)        
+gender                    enum('Male','Female','Both')
+age_min_years             int                 
+age_max_years             int                 
+normal_min                decimal(10,4)       
+normal_max                decimal(10,4)       
+critical_low              decimal(10,4)       
+critical_high             decimal(10,4)       
+unit                      varchar(50)         
+updated_by                int                 
+updated_at                timestamp           
+

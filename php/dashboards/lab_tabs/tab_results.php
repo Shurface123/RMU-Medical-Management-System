@@ -12,7 +12,7 @@ $ready_for_entry_q = mysqli_query($conn, "SELECT o.id, o.urgency, o.patient_id, 
                                           FROM lab_test_orders o 
                                           JOIN lab_test_catalog c ON o.test_catalog_id = c.id
                                           JOIN patients p ON o.patient_id = p.id
-                                          WHERE o.status = 'Processing' AND 
+                                          WHERE o.order_status = 'Processing' AND 
                                                 o.id NOT IN (SELECT order_id FROM lab_results WHERE result_status != 'Draft')");
 
 $results_q = mysqli_query($conn, "SELECT r.*, o.urgency, c.test_name, p.full_name AS patient_name 
@@ -43,22 +43,24 @@ function getResultStatusBadge($s) {
     <!-- Queue: Ready for Entry -->
     <div class="info-card" style="border-left: 4px solid var(--primary);">
         <h3 style="margin-bottom: 1rem;"><i class="fas fa-flask"></i> Awaiting Result Entry</h3>
-        <table class="adm-table" style="font-size: 1.1rem;">
-            <thead><tr><th>Order ID</th><th>Test</th><th>Patient</th><th>Action</th></tr></thead>
-            <tbody>
-                <?php while($r = mysqli_fetch_assoc($ready_for_entry_q)): ?>
-                    <tr>
-                        <td>#ORD-<?= str_pad($r['id'], 5, '0', STR_PAD_LEFT) ?></td>
-                        <td><?= e($r['test_name']) ?></td>
-                        <td><?= e($r['patient_name']) ?></td>
-                        <td><button class="adm-btn adm-btn-primary adm-btn-sm" onclick="enterResult(<?= $r['id'] ?>, '<?= e($r['test_name']) ?>', <?= $r['patient_id'] ?>)">Enter</button></td>
-                    </tr>
-                <?php endwhile; ?>
-                <?php if(mysqli_num_rows($ready_for_entry_q) === 0): ?>
-                    <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No orders ready for result entry.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+        <div class="adm-table-wrap">
+            <table class="adm-table" style="font-size: 1.1rem;">
+                <thead><tr><th>Order ID</th><th>Test</th><th>Patient</th><th>Action</th></tr></thead>
+                <tbody>
+                    <?php while($r = mysqli_fetch_assoc($ready_for_entry_q)): ?>
+                        <tr>
+                            <td><strong>#ORD-<?= str_pad($r['id'], 5, '0', STR_PAD_LEFT) ?></strong></td>
+                            <td><span style="font-weight:600; color:var(--text-primary);"><?= e($r['test_name']) ?></span></td>
+                            <td><?= e($r['patient_name']) ?></td>
+                            <td><button class="adm-btn adm-btn-primary adm-btn-sm" onclick="enterResult(<?= $r['id'] ?>, '<?= e($r['test_name']) ?>', <?= $r['patient_id'] ?>)"><i class="fas fa-edit"></i> Enter</button></td>
+                        </tr>
+                    <?php endwhile; ?>
+                    <?php if(mysqli_num_rows($ready_for_entry_q) === 0): ?>
+                        <tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--text-muted);"><i class="fas fa-check-circle" style="font-size:2rem; margin-bottom:1rem; display:block; color:var(--success);"></i>No orders ready for result entry.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Active Results -->
@@ -115,67 +117,67 @@ function getResultStatusBadge($s) {
 
 <!-- Enter Result Modal Placeholder -->
 <div class="modal fade" id="enterResultModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="background:var(--surface); color:var(--text-primary); border-radius:var(--radius-lg);">
-            <div class="modal-header" style="border-bottom:1px solid var(--border);">
-                <h5 class="modal-title"><i class="fas fa-microscope" style="color:var(--role-accent);"></i> Enter Results: <span id="modal_test_name"></span></h5>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background:var(--surface); color:var(--text-primary); border-radius:var(--radius-lg); border:none; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="border-bottom:1px solid var(--border); padding:1.5rem 2rem;">
+                <h5 class="modal-title" style="font-weight:700; font-size:1.4rem;"><i class="fas fa-microscope" style="color:var(--role-accent); margin-right:.5rem;"></i> Enter Results: <span id="modal_test_name" style="color:var(--primary);"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: var(--btn-close-filter);"></button>
             </div>
-            <div class="modal-body">
-                <p style="color:var(--text-muted); font-size: 0.9em; margin-bottom: 1.5rem;">The system will automatically flag Normal/Low/High/Critical Low/Critical High values based on configured reference ranges.</p>
+            <div class="modal-body" style="padding:2rem;">
+                <p style="color:var(--text-primary); font-size: 1rem; margin-bottom: 2rem; padding:1.2rem; background:var(--role-accent-light); border-radius:8px; border-left:4px solid var(--role-accent);"><i class="fas fa-info-circle" style="color:var(--role-accent); margin-right:.5rem;"></i> The system will automatically flag Normal/Low/High/Critical Low/Critical High values based on configured reference ranges.</p>
                 <input type="hidden" id="entry_order_id">
                 
                 <!-- Dynamic Parameter Form (Mocked for UI purposes) -->
                 <div id="dynamic_parameters_container">
-                    <div class="form-row" style="align-items: center; background: var(--surface-2); padding: 1rem; border-radius: 8px;">
+                    <div class="form-row" style="align-items: center; background: var(--surface-2); padding: 1.5rem; border-radius: 8px;">
                         <div style="flex: 1;">
-                            <label style="font-size: 0.95em; font-weight:600; color:var(--text-primary);">Hemoglobin (Hb)</label>
-                            <small style="display:block; color:var(--text-muted);">Ref: 13.0 - 17.0 g/dL</small>
+                            <label style="font-size: 1.1rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:.3rem;">Hemoglobin (Hb)</label>
+                            <small style="display:block; color:var(--text-muted); font-size:0.9rem;">Ref: 13.0 - 17.0 g/dL</small>
                         </div>
                         <div style="flex: 1;">
-                            <input type="number" step="0.1" class="form-control" placeholder="Value" oninput="checkFlag(this, 13.0, 17.0, 'Hemoglobin (Hb)')">
+                            <input type="number" step="0.1" class="form-control" style="font-size:1.2rem; padding:1rem;" placeholder="Value" oninput="checkFlag(this, 13.0, 17.0, 'Hemoglobin (Hb)')">
                         </div>
                         <div style="flex: 1; text-align: center;">
-                            <span class="flag-badge" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); color:var(--text-muted);">No Flag</span>
+                            <span class="flag-badge" style="padding: 6px 12px; font-weight:600; border-radius: 6px; border: 1px solid var(--border); color:var(--text-muted); background:var(--surface);">No Flag</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Phase 8: Statistical Anomaly Acknowledgment Gate -->
-                <div id="anomaly_ack_container" style="display:none; margin-top:1.5rem; padding: 1rem; background: rgba(241,196,15,0.1); border-left: 4px solid var(--warning); border-radius: 4px;">
-                    <div style="color:var(--warning); font-weight:600; margin-bottom: 0.5rem;"><i class="fas fa-brain"></i> AI ANOMALY DETECTED</div>
-                    <p style="font-size:0.9em; margin-bottom:0.5rem;" id="anomaly_message"></p>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="anomaly_ack_check">
-                        <label class="form-check-label" for="anomaly_ack_check" style="font-weight:500; font-size: 0.9em;">
+                <div id="anomaly_ack_container" style="display:none; margin-top:1.5rem; padding: 1.5rem; background: rgba(241,196,15,0.08); border-left: 4px solid var(--warning); border-radius: 8px;">
+                    <div style="color:var(--warning); font-weight:700; font-size:1.1rem; margin-bottom: 0.8rem;"><i class="fas fa-brain"></i> AI ANOMALY DETECTED</div>
+                    <p style="font-size:1rem; margin-bottom:1rem; color:var(--text-primary);" id="anomaly_message"></p>
+                    <div class="form-check" style="display:flex; align-items:center; gap:0.5rem;">
+                        <input class="form-check-input" type="checkbox" id="anomaly_ack_check" style="width:1.2em; height:1.2em; border-color:var(--warning);">
+                        <label class="form-check-label" for="anomaly_ack_check" style="font-weight:600; font-size: 1rem; color:var(--text-primary); margin-top:0.2rem;">
                             I verify this statistical deviation is medically accurate and not a processing error.
                         </label>
                     </div>
                 </div>
 
                 <!-- Phase 5: Critical Value Acknowledgment Gate -->
-                <div id="crit_ack_container" style="display:none; margin-top:1.5rem; padding: 1rem; background: rgba(231,76,60,0.1); border-left: 4px solid var(--danger); border-radius: 4px;">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="crit_ack_check">
-                        <label class="form-check-label" for="crit_ack_check" style="color:var(--danger); font-weight:600; font-size: 0.9em; text-transform:none;">
+                <div id="crit_ack_container" style="display:none; margin-top:1.5rem; padding: 1.5rem; background: rgba(231,76,60,0.08); border-left: 4px solid var(--danger); border-radius: 8px;">
+                    <div class="form-check" style="display:flex; align-items:center; gap:0.5rem;">
+                        <input class="form-check-input" type="checkbox" id="crit_ack_check" style="width:1.2em; height:1.2em; border-color:var(--danger);">
+                        <label class="form-check-label" for="crit_ack_check" style="color:var(--danger); font-weight:700; font-size: 1rem; text-transform:none; margin-top:0.2rem;">
                             <i class="fas fa-exclamation-triangle"></i> CRITICAL VALUE DETECTED: I verify that I have notified the prescribing doctor.
                         </label>
                     </div>
                 </div>
 
                 <div class="form-group mt-4">
-                    <label>Technician Comments</label>
-                    <textarea class="form-control" rows="3" placeholder="Optional comments, interpretation notes, or methodology..."></textarea>
+                    <label style="font-size:1.1rem; color:var(--text-secondary); margin-bottom:.8rem; display:block;">Technician Comments</label>
+                    <textarea class="form-control" rows="3" placeholder="Optional comments, interpretation notes, or methodology..." style="font-size:1.2rem; padding:1.2rem; resize:none;"></textarea>
                 </div>
                 
-                <div class="form-group mt-3">
-                    <label>Upload Instrument PDF (Optional)</label>
-                    <input type="file" class="form-control" accept=".pdf">
+                <div class="form-group mt-4 mb-0">
+                    <label style="font-size:1.1rem; color:var(--text-secondary); margin-bottom:.8rem; display:block;"><i class="fas fa-file-pdf"></i> Upload Instrument PDF (Optional)</label>
+                    <input type="file" class="form-control" accept=".pdf" style="font-size:1.1rem; padding:1rem;">
                 </div>
             </div>
-            <div class="modal-footer" style="border-top:1px solid var(--border);">
-                <button type="button" class="adm-btn adm-btn-sm" style="background:var(--surface-2);" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-primary adm-btn-sm" onclick="saveResult('Draft')">Save as Draft</button>
+            <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
+                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="adm-btn adm-btn-primary" onclick="saveResult('Draft')"><i class="fas fa-save"></i> Save as Draft</button>
             </div>
         </div>
     </div>

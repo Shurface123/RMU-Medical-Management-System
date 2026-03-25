@@ -413,8 +413,16 @@ select.form-control { cursor:pointer; }
 </main>
 </div><!-- /adm-layout -->
 
-<!-- ══ TOAST ══ -->
+<!-- ══ TOAST & BROADCASTS ══ -->
 <div id="toastWrap"></div>
+<script src="/RMU-Medical-Management-System/php/includes/BroadcastReceiver.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BroadcastReceiver !== 'undefined') {
+        window.rmuBroadcasts = new BroadcastReceiver(<?= $_SESSION['user_id'] ?>);
+    }
+});
+</script>
 
 <!-- ══ GLOBAL SCRIPTS ══ -->
 <script>

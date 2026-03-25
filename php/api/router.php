@@ -58,7 +58,7 @@ try {
         // User profile
         case 'profile':
             require_once 'endpoints/profile.php';
-            handleProfile($method, $userId);
+            handleProfile($method, $userId, $userRole ?? null, $pathParts[1] ?? '');
             break;
             
         // Appointments
@@ -91,6 +91,31 @@ try {
             handleDoctors($method);
             break;
             
+        // Analytics
+        case 'analytics':
+            require_once 'endpoints/analytics.php';
+            handleAnalytics($method, $userId, $userRole, $pathParts[1] ?? '');
+            break;
+            
+        // Pharmacy [NEW]
+        case 'pharmacy':
+            require_once 'endpoints/pharmacy.php';
+            handlePharmacy($method, $userId, $userRole, $pathParts[1] ?? '');
+            break;
+            
+        // HR [NEW]
+        case 'hr':
+            require_once 'endpoints/hr.php';
+            handleHR($method, $userId, $userRole, $pathParts[1] ?? '');
+            break;
+            
+        // Reports [NEW]
+        case 'reports':
+            require_once 'endpoints/reports.php';
+            handleReports($method, $userId, $userRole, $pathParts[1] ?? '');
+            break;
+            
+
         default:
             ApiResponse::error('Endpoint not found', 404);
     }

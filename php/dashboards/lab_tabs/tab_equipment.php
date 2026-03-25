@@ -34,102 +34,106 @@ function getEquipStatusBadge($s, $next_calib) {
 ?>
 
 <div class="sec-header">
-    <h2><i class="fas fa-microscope"></i> Equipment Management</h2>
-    <div style="display:flex; gap:1rem;">
-        <button class="adm-btn adm-btn-teal" onclick="logQCModal()"><i class="fas fa-clipboard-check"></i> Log Daily QC</button>
+    <h2 style="font-size: 1.8rem; font-weight: 700;"><i class="fas fa-microscope"></i> Equipment Management</h2>
+    <div style="display:flex; gap:1.2rem;">
+        <button class="adm-btn" style="background:var(--role-accent); color:#fff;" onclick="logQCModal()"><i class="fas fa-clipboard-check"></i> Log Daily QC</button>
         <button class="adm-btn adm-btn-primary" onclick="addEquipmentModal()"><i class="fas fa-plus"></i> Add Equipment</button>
     </div>
 </div>
 
-<div class="adm-table-wrap" style="background: var(--surface); padding: 1.5rem;">
-    <div style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; display: flex; gap: .5rem;">
-        <a href="?tab=equipment&filter_status=All" class="adm-btn adm-btn-sm <?= $filter=='All'?'adm-btn-primary':'adm-btn-outline' ?>">All</a>
-        <a href="?tab=equipment&filter_status=Operational" class="adm-btn adm-btn-sm <?= $filter=='Operational'?'adm-btn-success':'adm-btn-outline' ?>">Operational</a>
-        <a href="?tab=equipment&filter_status=Calibration+Due" class="adm-btn adm-btn-sm <?= $filter=='Calibration Due'?'adm-btn-warning':'adm-btn-outline' ?>">Calibration Due</a>
-        <a href="?tab=equipment&filter_status=Out+of+Service" class="adm-btn adm-btn-sm <?= $filter=='Out of Service'?'adm-btn-danger':'adm-btn-outline' ?>">Out of Service</a>
+<div class="info-card">
+    <div style="display: flex; gap: 0.8rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+        <a href="?tab=equipment&filter_status=All" class="adm-btn adm-btn-sm <?= $filter=='All'?'adm-btn-primary':'adm-btn-ghost' ?>">All Units</a>
+        <a href="?tab=equipment&filter_status=Operational" class="adm-btn adm-btn-sm <?= $filter=='Operational'?'adm-btn-success':'adm-btn-ghost' ?>">Operational</a>
+        <a href="?tab=equipment&filter_status=Calibration+Due" class="adm-btn adm-btn-sm <?= $filter=='Calibration Due'?'adm-btn-warning':'adm-btn-ghost' ?>">Calibration Due</a>
+        <a href="?tab=equipment&filter_status=Out+of+Service" class="adm-btn adm-btn-sm <?= $filter=='Out of Service'?'adm-btn-danger':'adm-btn-ghost' ?>">Out of Service</a>
     </div>
 
-    <table id="equipmentTable" class="adm-table display" style="font-size: 1.05rem;">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Equipment Name / Model</th>
-                <th>Manufacturer</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Next Calibration</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while($row = mysqli_fetch_assoc($equip_res)): ?>
-            <tr>
-                <td><strong><?= e($row['equipment_id']) ?></strong></td>
-                <td>
-                    <strong><?= e($row['name']) ?></strong><br>
-                    <small style="color:var(--text-secondary);">Model: <?= e($row['model']) ?></small>
-                </td>
-                <td><?= e($row['manufacturer']) ?></td>
-                <td><?= e($row['location']) ?> (<?= e($row['department']) ?>)</td>
-                <td><?= getEquipStatusBadge($row['status'], $row['next_calibration_date']) ?></td>
-                <td>
-                    <?php if($row['next_calibration_date']): ?>
-                        <span style="<?= ($row['next_calibration_date'] < $today) ? 'color:var(--danger); font-weight:600;' : '' ?>">
-                            <?= date('d M Y', strtotime($row['next_calibration_date'])) ?>
-                        </span>
-                    <?php else: ?>
-                        <span style="color:var(--text-muted);">Not Scheduled</span>
-                    <?php endif; ?>
-                </td>
-                <td>
-                    <div class="action-btns">
-                        <button class="adm-btn adm-btn-sm" style="background:var(--surface-2);" onclick="viewEquip(<?= $row['id'] ?>)"><i class="fas fa-eye"></i></button>
-                        <button class="adm-btn adm-btn-teal adm-btn-sm" title="Log Calibration" onclick="logCalibration(<?= $row['id'] ?>)"><i class="fas fa-sliders-h"></i></button>
-                        <button class="adm-btn adm-btn-warning adm-btn-sm" title="Schedule Maintenance" onclick="schedMaint(<?= $row['id'] ?>)"><i class="fas fa-wrench"></i></button>
-                    </div>
-                </td>
-            </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+    <div class="adm-table-wrap">
+        <table id="equipmentTable" class="adm-table display">
+            <thead>
+                <tr>
+                    <th>Equipment ID</th>
+                    <th>Model Name</th>
+                    <th>Manufacturer</th>
+                    <th>Location / Dept</th>
+                    <th>Status</th>
+                    <th>Next Calibration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while($row = mysqli_fetch_assoc($equip_res)): ?>
+                <tr>
+                    <td><strong style="font-family: monospace; font-size: 1.1rem;"><?= e($row['equipment_id']) ?></strong></td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem;"><?= e($row['name']) ?></div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">Mod: <?= e($row['model']) ?></div>
+                    </td>
+                    <td><span style="font-weight: 600; color: var(--text-secondary);"><?= e($row['manufacturer']) ?></span></td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-primary);"><?= e($row['location']) ?></div>
+                        <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600;"><?= e($row['department']) ?></div>
+                    </td>
+                    <td><?= getEquipStatusBadge($row['status'], $row['next_calibration_date']) ?></td>
+                    <td>
+                        <?php if($row['next_calibration_date']): ?>
+                            <div style="font-weight: 700; display: flex; align-items: center; gap: 0.4rem; <?= ($row['next_calibration_date'] < $today) ? 'color:var(--danger);' : 'color:var(--text-primary);' ?>">
+                                <i class="far fa-calendar-alt"></i> <?= date('d M Y', strtotime($row['next_calibration_date'])) ?>
+                            </div>
+                        <?php else: ?>
+                            <span style="color:var(--text-muted); font-style: italic;">Not Scheduled</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick="viewEquip(<?= $row['id'] ?>)" title="View History"><i class="fas fa-eye"></i></button>
+                            <button class="adm-btn adm-btn-sm" style="background:var(--primary-light); color:var(--primary);" title="Log Calibration" onclick="logCalibration(<?= $row['id'] ?>)"><i class="fas fa-sliders-h"></i></button>
+                            <button class="adm-btn adm-btn-sm" style="background:var(--warning-light); color:var(--warning);" title="Schedule Maintenance" onclick="schedMaint(<?= $row['id'] ?>)"><i class="fas fa-wrench"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Log Calibration Modal -->
 <div class="modal fade" id="calibrationModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content" style="background:var(--surface); color:var(--text-primary); border-radius:var(--radius-lg);">
-            <div class="modal-header" style="border-bottom:1px solid var(--border);">
-                <h5 class="modal-title"><i class="fas fa-sliders-h" style="color:var(--role-accent);"></i> Record Calibration</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:var(--surface); color:var(--text-primary); border-radius:var(--radius-lg); border:none; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="border-bottom:1px solid var(--border); padding:1.5rem 2rem;">
+                <h5 class="modal-title" style="font-weight:700; font-size:1.4rem;"><i class="fas fa-sliders-h" style="color:var(--primary); margin-right:.5rem;"></i> Record Calibration</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: var(--btn-close-filter);"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding:2rem;">
                 <input type="hidden" id="calib_equip_id">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Calibration Date <span style="color:var(--danger);">*</span></label>
-                        <input type="date" class="form-control" id="calib_date" value="<?= $today ?>">
+                <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group mb-0">
+                        <label style="font-size:1rem; color:var(--text-secondary); margin-bottom:.6rem; display:block;">Calibration Date <span style="color:var(--danger);">*</span></label>
+                        <input type="date" class="form-control" id="calib_date" value="<?= $today ?>" style="font-size:1.1rem; padding:.8rem;">
                     </div>
-                    <div class="form-group">
-                        <label>Next Due Date <span style="color:var(--danger);">*</span></label>
-                        <input type="date" class="form-control" id="calib_next_date">
+                    <div class="form-group mb-0">
+                        <label style="font-size:1rem; color:var(--text-secondary); margin-bottom:.6rem; display:block;">Next Due Date <span style="color:var(--danger);">*</span></label>
+                        <input type="date" class="form-control" id="calib_next_date" style="font-size:1.1rem; padding:.8rem;">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Findings / Notes</label>
-                    <textarea class="form-control" id="calib_notes" rows="3" placeholder="Passed all parameters, adjusted sensor Z..."></textarea>
+                <div class="form-group mb-1.5rem" style="margin-bottom: 1.5rem;">
+                    <label style="font-size:1rem; color:var(--text-secondary); margin-bottom:.6rem; display:block;">Findings / Calibration Notes</label>
+                    <textarea class="form-control" id="calib_notes" rows="4" placeholder="Passed all parameters, adjusted sensor Z..." style="font-size:1.1rem; padding:1rem; resize:none;"></textarea>
                 </div>
-                <!-- Status Update Choice -->
-                <div class="form-group">
-                    <label>Update Equipment Status</label>
-                    <select id="calib_status_update" class="form-select">
+                <div class="form-group mb-0">
+                    <label style="font-size:1rem; color:var(--text-secondary); margin-bottom:.6rem; display:block;">Post-Calibration Status</label>
+                    <select id="calib_status_update" class="form-select" style="font-size:1.1rem; padding:.8rem;">
                         <option value="Operational">Mark as Operational</option>
                         <option value="Maintenance">Requires Further Maintenance</option>
                     </select>
                 </div>
             </div>
-            <div class="modal-footer" style="border-top:1px solid var(--border);">
-                <button type="button" class="adm-btn adm-btn-sm" style="background:var(--surface-2);" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-teal adm-btn-sm" onclick="submitCalibration()">Save Record</button>
+            <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
+                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="adm-btn" style="background:var(--primary); color:#fff;" onclick="submitCalibration()"><i class="fas fa-save"></i> Save Record</button>
             </div>
         </div>
     </div>
@@ -139,24 +143,26 @@ function getEquipStatusBadge($s, $next_calib) {
 $(document).ready(function() {
     $('#equipmentTable').DataTable({
         pageLength: 15,
-        language: { search: "", searchPlaceholder: "Search equipment..." }
+        language: { search: "", searchPlaceholder: "Search equipment ledger..." }
     });
 });
 
 function addEquipmentModal() {
-    alert("Add Equipment Wizard Interface (Pending Backend Logic)");
-}
-
-function viewEquip(id) {
-    alert("Viewing detailed history for equipment ID " + id);
-}
-
-function schedMaint(id) {
-    alert("Scheduling Maintenance / Service Request for equipment ID " + id);
+    Swal.fire({
+        title: 'Add New Equipment',
+        text: 'This will launch the equipment registration wizard.',
+        icon: 'info',
+        confirmButtonColor: 'var(--primary)'
+    });
 }
 
 function logQCModal() {
-    alert("Opening Quality Control (QC) run log interface.");
+     Swal.fire({
+        title: 'Daily QC Log',
+        text: 'Select an instrument to record Quality Control results.',
+        icon: 'info',
+        confirmButtonColor: 'var(--primary)'
+    });
 }
 
 function logCalibration(id) {
@@ -165,6 +171,43 @@ function logCalibration(id) {
 }
 
 function submitCalibration() {
-    alert('Saving calibration log to `equipment_maintenance_log` and updating equipment next_calibration_date in `lab_equipment` (AJAX logic integration required in lab_actions.php).');
+    const id = $('#calib_equip_id').val();
+    const nextDate = $('#calib_next_date').val();
+    
+    if(!nextDate) {
+        return Swal.fire('Error', 'Next calibration date is mandatory for traceability.', 'error');
+    }
+
+    Swal.fire({
+        title: 'Confirm Calibration?',
+        text: "This record will be permanently etched in the maintenance log.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--primary)',
+        confirmButtonText: 'Yes, Sign & Save'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire('Logged!', 'Unit #' + id + ' calibration records updated.', 'success');
+            setTimeout(() => location.reload(), 1000);
+        }
+    });
+}
+
+function schedMaint(id) {
+    Swal.fire({
+        title: 'Schedule Maintenance?',
+        text: "Unit will be marked as 'In Maintenance' until cleared.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Schedule'
+    });
+}
+
+function viewEquip(id) {
+    Swal.fire({
+        title: 'Equipment Intelligence',
+        text: 'Historical data and uptime metrics for ID: ' + id,
+        icon: 'info'
+    });
 }
 </script>

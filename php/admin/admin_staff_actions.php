@@ -32,12 +32,17 @@ switch ($action) {
         mysqli_stmt_bind_param($stmt, "ii", $admin_id, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
+            // ── Sync with users table ──
+            $get_uid = mysqli_query($conn, "SELECT user_id FROM $table WHERE id = $staff_id LIMIT 1");
+            if ($u_row = mysqli_fetch_assoc($get_uid)) {
+                $uid = (int)$u_row['user_id'];
+                mysqli_query($conn, "UPDATE users SET is_active = 1, is_verified = 1 WHERE id = $uid");
+            }
+
             if ($type === 'staff') {
                 mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, actioned_at) VALUES ($staff_id, $admin_id, 'approved', NOW())");
-            } elseif ($type === 'lab_technician') {
-                 // Optional: Log lab technician specific approval if needed
             }
-            echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_',' ',$type)) . ' member approved successfully.']);
+            echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_',' ',$type)) . ' member approved and account activated.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Database error.']);
         }
@@ -56,11 +61,18 @@ switch ($action) {
         mysqli_stmt_bind_param($stmt, "isi", $admin_id, $reason, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
+            // ── Sync with users table ──
+            $get_uid = mysqli_query($conn, "SELECT user_id FROM $table WHERE id = $staff_id LIMIT 1");
+            if ($u_row = mysqli_fetch_assoc($get_uid)) {
+                $uid = (int)$u_row['user_id'];
+                mysqli_query($conn, "UPDATE users SET is_active = 0 WHERE id = $uid");
+            }
+
             if ($type === 'staff') {
                 $safe_reason = mysqli_real_escape_string($conn, $reason);
                 mysqli_query($conn, "INSERT INTO staff_approval_log (staff_id, admin_user_id, action, reason, actioned_at) VALUES ($staff_id, $admin_id, 'rejected', '$safe_reason', NOW())");
             }
-            echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_',' ',$type)) . ' member rejected.']);
+            echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_',' ',$type)) . ' member rejected and account disabled.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Database error.']);
         }

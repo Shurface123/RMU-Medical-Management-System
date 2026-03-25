@@ -17,7 +17,7 @@ $critical_count = (int)qv8($conn, "SELECT COUNT(*) FROM lab_results WHERE result
 // Workload distribution per technician
 $workload_q = mysqli_query($conn, "
     SELECT lt.full_name, lt.user_id,
-           COUNT(CASE WHEN o.status IN ('Pending','Processing','Accepted') THEN 1 END) AS active_orders,
+           COUNT(CASE WHEN o.order_status IN ('Pending','Processing','Accepted') THEN 1 END) AS active_orders,
            COUNT(r.result_id) AS total_results
     FROM lab_technicians lt
     LEFT JOIN lab_test_orders o ON o.technician_id = lt.user_id
@@ -46,7 +46,7 @@ $qc_m2sd    = round($qc_mean - 2*$qc_sd, 1);
 </div>
 
 <!-- Live KPI Strip -->
-<div class="adm-summary-strip" style="margin-bottom:2rem;">
+<div class="adm-summary-strip" style="margin-bottom:2.5rem;">
     <div class="adm-mini-card">
         <div class="adm-mini-card-num teal"><?= number_format($total_tests) ?></div>
         <div class="adm-mini-card-label">Tests Validated</div>
@@ -66,63 +66,68 @@ $qc_m2sd    = round($qc_mean - 2*$qc_sd, 1);
 </div>
 
 <!-- Charts Row -->
-<div class="charts-grid" style="grid-template-columns:1fr 1fr; margin-bottom:2rem;">
+<div class="charts-grid" style="grid-template-columns: 380px 1fr; gap: 2rem; margin-bottom:2.5rem;">
 
     <!-- Category Doughnut -->
     <div class="info-card">
-        <h3 style="margin-bottom:1rem; font-size:1.1rem;">Test Volume by Category</h3>
-        <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+        <h4 style="margin-bottom:1.5rem; color:var(--text-primary); font-weight:700;"><i class="fas fa-chart-pie" style="color:var(--primary); margin-right:.5rem;"></i> Volume Distribution</h4>
+        <div class="chart-wrap" style="height:350px;"><canvas id="categoryChart"></canvas></div>
     </div>
 
     <!-- QC Levey-Jennings Chart -->
-    <div class="info-card" style="border-top:3px solid var(--role-accent);">
-        <h3 style="margin-bottom:.2rem; font-size:1.1rem;"><i class="fas fa-microscope"></i> QC Control Chart: Glucose (Mindray BS-240)</h3>
-        <p style="font-size:0.8em; color:var(--text-muted); margin-bottom:1rem;">
-            Levey-Jennings Chart &mdash; Mean: <?= $qc_mean ?> &nbsp;|&nbsp; SD: <?= $qc_sd ?>
-        </p>
-        <div class="chart-wrap"><canvas id="qcChart"></canvas></div>
+    <div class="info-card" style="border-top:4px solid var(--role-accent);">
+        <h4 style="margin-bottom:.5rem; color:var(--text-primary); font-weight:700;"><i class="fas fa-microscope" style="color:var(--role-accent); margin-right:.5rem;"></i> QC Control: Glucose (Mindray BS-240)</h4>
+        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem; font-weight:600; background:var(--surface-2); padding:0.5rem 1rem; border-radius:30px; display:inline-block;">
+            Levey-Jennings Delta Analyst &mdash; Mean: <?= $qc_mean ?> | SD: <?= $qc_sd ?>
+        </div>
+        <div class="chart-wrap" style="height:350px;"><canvas id="qcChart"></canvas></div>
     </div>
 </div>
 
 <!-- Workload Balancing Table -->
-<div class="info-card" style="border-left:4px solid var(--role-accent); margin-bottom:2rem;">
-    <h3 style="margin-bottom:1rem;"><i class="fas fa-balance-scale"></i> Technician Workload Distribution</h3>
+<div class="info-card" style="border-left:5px solid var(--role-accent); margin-bottom:2.5rem;">
+    <h4 style="margin-bottom:2rem; color:var(--text-primary); font-weight:700;"><i class="fas fa-balance-scale" style="color:var(--role-accent); margin-right:.5rem;"></i> Faculty Workload Equalizer</h4>
     <?php
     $wl_rows = $workload_q ? mysqli_num_rows($workload_q) : 0;
     if ($wl_rows > 0): ?>
-    <table class="adm-table" style="font-size:1.05rem; width:100%;">
-        <thead>
-            <tr>
-                <th>Technician</th>
-                <th>Current Active Orders</th>
-                <th>Total Results Logged</th>
-                <th>Load Level</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php while($wl = mysqli_fetch_assoc($workload_q)):
-            $load = (int)$wl['active_orders'];
-            $load_color = $load >= 10 ? 'var(--danger)' : ($load >= 5 ? 'var(--warning)' : 'var(--success)');
-            $load_label = $load >= 10 ? 'Overloaded' : ($load >= 5 ? 'Heavy' : 'Normal');
-        ?>
-            <tr>
-                <td><strong><?= e($wl['full_name']) ?></strong></td>
-                <td>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:120px; background:var(--surface-2); border-radius:4px; height:8px; overflow:hidden;">
-                            <div style="width:<?= min(100, $load*10) ?>%; height:100%; background:<?= $load_color ?>; border-radius:4px;"></div>
+    <div class="adm-table-wrap">
+        <table class="adm-table display" style="width:100%;">
+            <thead>
+                <tr>
+                    <th>Technician Personnel</th>
+                    <th>Current Operation Load</th>
+                    <th>Signed Certificates</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php while($wl = mysqli_fetch_assoc($workload_q)):
+                $load = (int)$wl['active_orders'];
+                $load_color = $load >= 10 ? 'var(--danger)' : ($load >= 5 ? 'var(--warning)' : 'var(--success)');
+                $load_label = $load >= 10 ? 'Overloaded' : ($load >= 5 ? 'Near Capacity' : 'Available');
+            ?>
+                <tr>
+                    <td>
+                        <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);"><?= e($wl['full_name']) ?></div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight:600;">System ID: USR-<?= $wl['user_id'] ?></div>
+                    </td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:160px; background:var(--surface-2); border-radius:30px; height:10px; overflow:hidden; border:1px solid var(--border);">
+                                <div style="width:<?= min(100, $load*10) ?>%; height:100%; background:<?= $load_color ?>; border-radius:30px; box-shadow:0 0 8px <?= $load_color ?>55;"></div>
+                            </div>
+                            <span style="font-weight:800; color:<?= $load_color ?>;"><?= $load ?></span>
                         </div>
-                        <span style="font-weight:600;"><?= $load ?></span>
-                    </div>
-                </td>
-                <td><?= (int)$wl['total_results'] ?></td>
-                <td><span class="adm-badge" style="background:<?= $load_color ?>; color:white;"><?= $load_label ?></span></td>
-            </tr>
-        <?php endwhile; ?>
-        </tbody>
-    </table>
+                    </td>
+                    <td><strong style="font-size:1.15rem;"><?= (int)$wl['total_results'] ?></strong></td>
+                    <td><span class="adm-badge" style="background:<?= $load_color ?>22; color:<?= $load_color ?>; border:1px solid <?= $load_color ?>44; font-weight:700;"><?= $load_label ?></span></td>
+                </tr>
+            <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
     <?php else: ?>
-        <p style="color:var(--text-muted);">No technician workload data available yet.</p>
+        <p style="color:var(--text-muted); text-align:center; padding:2rem; font-style:italic;">Synchronizing workforce telemetry...</p>
     <?php endif; ?>
 </div>
 

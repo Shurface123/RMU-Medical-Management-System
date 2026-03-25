@@ -6,6 +6,7 @@
  * Usage: <?php $active_page = 'doctors'; include '../includes/_sidebar.php'; ?>
  */
 $active_page = $active_page ?? '';
+require_once 'maintenance_guard.php';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -13,10 +14,10 @@ $active_page = $active_page ?? '';
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo ($page_title ?? 'Admin') . ' — RMU Medical Sickbay'; ?></title>
-    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <title><?php echo ($page_title ?? 'Admin') . ' — ' . ($hospital_profile['hospital_name'] ?? 'RMU Medical Sickbay'); ?></title>
+    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/<?= $hospital_profile['logo_path'] ?? 'image/logo-ju-small.png' ?>">
+    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/<?= $hospital_profile['logo_path'] ?? 'image/logo-ju-small.png' ?>">
+    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/<?= $hospital_profile['logo_path'] ?? 'image/logo-ju-small.png' ?>">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,13 +39,13 @@ $active_page = $active_page ?? '';
 <aside class="adm-sidebar" id="admSidebar">
 
     <!-- Brand -->
-    <div class="adm-sidebar-brand">
-        <div class="adm-sidebar-brand-icon">
-            <i class="fas fa-hospital-user"></i>
+    <div class="adm-sidebar-brand" style="padding: 1.5rem 1rem;">
+        <div class="adm-sidebar-brand-icon" style="flex: 0 0 50px; height: 50px; overflow: hidden; border-radius: 8px;">
+            <img src="/RMU-Medical-Management-System/<?= $hospital_profile['logo_path'] ?? 'image/logo-ju-small.png' ?>" style="width: 100%; height: 100%; object-fit: contain;">
         </div>
         <div class="adm-sidebar-brand-text">
-            <h2>RMU SICKBAY</h2>
-            <span>Admin Panel</span>
+            <h2 style="font-size: 0.95rem; white-space: normal; line-height: 1.2;"><?= strtoupper($hospital_profile['hospital_name'] ?? 'RMU SICKBAY') ?></h2>
+            <span style="font-size: 0.75rem; color: var(--text-muted);"><?= $hospital_profile['facility_type'] ?? 'Admin Panel' ?></span>
         </div>
     </div>
 
@@ -79,10 +80,10 @@ $active_page = $active_page ?? '';
             <span>Pending Approvals</span>
         </a>
         
-        <a href="/RMU-Medical-Management-System/php/admin/staff_performance.php"
-           class="adm-nav-item <?php echo $active_page === 'staff_performance' ? 'active' : ''; ?>">
-            <i class="fas fa-chart-line"></i>
-            <span>Performance & KPIs</span>
+        <a href="/RMU-Medical-Management-System/php/admin/staff_hub.php"
+           class="adm-nav-item <?php echo $active_page === 'staff_hub' ? 'active' : ''; ?>">
+            <i class="fas fa-id-card-alt"></i>
+            <span>Staff & HR Hub</span>
         </a>
 
         <a href="/RMU-Medical-Management-System/php/admin/staff_audit_logs.php"
@@ -117,16 +118,24 @@ $active_page = $active_page ?? '';
             <span>Bed Management</span>
         </a>
 
-        <a href="/RMU-Medical-Management-System/php/medicine/medicine.php"
-           class="adm-nav-item <?php echo $active_page === 'medicine' ? 'active' : ''; ?>">
-            <i class="fas fa-pills"></i>
-            <span>Medicine Inventory</span>
-        </a>
-
         <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php"
            class="adm-nav-item <?php echo $active_page === 'ambulance' ? 'active' : ''; ?>">
             <i class="fas fa-ambulance"></i>
             <span>Ambulance</span>
+        </a>
+
+        <span class="adm-nav-section-label">Pharmacy & Store</span>
+
+        <a href="/RMU-Medical-Management-System/php/admin/inventory_management.php"
+           class="adm-nav-item <?php echo $active_page === 'inventory' ? 'active' : ''; ?>">
+            <i class="fas fa-boxes"></i>
+            <span>Inventory Hub</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/procurement_center.php"
+           class="adm-nav-item <?php echo $active_page === 'procurement' ? 'active' : ''; ?>">
+            <i class="fas fa-truck-loading"></i>
+            <span>Procurement Center</span>
         </a>
 
         <a href="/RMU-Medical-Management-System/php/payment/payment.php"
@@ -197,7 +206,19 @@ $active_page = $active_page ?? '';
             <span>Analytics</span>
         </a>
 
-        <a href="/RMU-Medical-Management-System/php/admin/system_settings.php"
+        <a href="/RMU-Medical-Management-System/php/admin/reporting_center.php"
+           class="adm-nav-item <?php echo $active_page === 'reporting_center' ? 'active' : ''; ?>">
+            <i class="fas fa-file-invoice"></i>
+            <span>Reporting Center</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/admin_profile.php"
+           class="adm-nav-item <?php echo $active_page === 'admin_profile' ? 'active' : ''; ?>">
+            <i class="fas fa-user-tie"></i>
+            <span>Professional Profile</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/settings_v2.php"
            class="adm-nav-item <?php echo $active_page === 'settings' ? 'active' : ''; ?>">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
@@ -226,4 +247,45 @@ $active_page = $active_page ?? '';
     var t = localStorage.getItem('rmu_theme') || 'light';
     document.documentElement.setAttribute('data-theme', t);
 })();
+</script>
+
+<!-- ── GLOBAL SCRIPTS ────────────────────────────────────── -->
+<script src="/RMU-Medical-Management-System/php/includes/BroadcastReceiver.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Broadcast Receiver for Admin
+    if (typeof BroadcastReceiver !== 'undefined') {
+        window.rmuBroadcasts = new BroadcastReceiver(<?= $_SESSION['user_id'] ?>);
+    }
+
+    const sidebar  = document.getElementById('admSidebar');
+    const overlay  = document.getElementById('admOverlay');
+    document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
+    overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+});
+</script>
+
+<script>
+function showToast(message, type = 'success') {
+    let container = document.querySelector('.adm-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'adm-toast-container';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `adm-toast ${type}`;
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation';
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(25px)';
+        toast.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        setTimeout(() => toast.remove(), 400);
+    }, 4000);
+}
 </script>

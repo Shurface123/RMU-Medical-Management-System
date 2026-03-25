@@ -84,37 +84,43 @@ function getSampleStageColor($status) {
         </div>
     </div>
     <?php endwhile; ?>
+    <?php if(mysqli_num_rows($samples_res) === 0): ?>
+        <div class="info-card" style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+            <i class="fas fa-vial" style="font-size: 3rem; color: var(--border); margin-bottom: 1rem;"></i>
+            <p style="color: var(--text-muted);">No samples currently tracked in this category.</p>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- Receive Sample Modal -->
 <div class="modal fade" id="receiveSampleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content" style="background:var(--surface); color:var(--text-primary); border-radius:var(--radius-lg);">
-            <div class="modal-header" style="border-bottom:1px solid var(--border);">
-                <h5 class="modal-title"><i class="fas fa-boxes"></i> Receive Sample in Lab</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:var(--surface); color:var(--text-primary); border-radius:var(--radius-lg); border:none; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="border-bottom:1px solid var(--border); padding:1.5rem 2rem;">
+                <h5 class="modal-title" style="font-weight:700; font-size:1.4rem;"><i class="fas fa-boxes" style="color:var(--primary); margin-right:.5rem;"></i> Receive Sample in Lab</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: var(--btn-close-filter);"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding:2rem;">
                 <input type="hidden" id="rec_sample_id">
-                <div class="form-group">
-                    <label>Condition on Receipt <span style="color:var(--danger);">*</span></label>
-                    <select id="rec_condition" class="form-select" required>
+                <div class="form-group mb-3">
+                    <label style="font-size:1.1rem; color:var(--text-secondary); margin-bottom:.8rem; display:block;">Condition on Receipt <span style="color:var(--danger);">*</span></label>
+                    <select id="rec_condition" class="form-select" required style="font-size:1.2rem; padding:1.2rem;">
                         <option value="Good">Good</option>
                         <option value="Haemolysed">Haemolysed</option>
                         <option value="Clotted">Clotted</option>
                         <option value="Insufficient">Insufficient</option>
                         <option value="Contaminated">Contaminated</option>
                     </select>
-                    <small style="color:var(--text-muted);">If marked as anything other than 'Good', the sample will be rejected and the doctor notified.</small>
+                    <small style="color:var(--text-muted); display:block; margin-top:.5rem;">If marked as anything other than 'Good', the sample will be rejected and the doctor notified.</small>
                 </div>
-                <div class="form-group mt-3">
-                    <label>Storage Location</label>
-                    <input type="text" id="rec_location" class="form-control" placeholder="e.g., Rack A, Shelf 2">
+                <div class="form-group mb-0">
+                    <label style="font-size:1.1rem; color:var(--text-secondary); margin-bottom:.8rem; display:block;">Storage Location</label>
+                    <input type="text" id="rec_location" class="form-control" placeholder="e.g., Rack A, Shelf 2" style="font-size:1.2rem; padding:1.2rem;">
                 </div>
             </div>
-            <div class="modal-footer" style="border-top:1px solid var(--border);">
-                <button type="button" class="adm-btn adm-btn-sm" style="background:var(--surface-2);" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-primary adm-btn-sm" onclick="submitReceiveSample()">Update Status</button>
+            <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
+                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="adm-btn adm-btn-primary" onclick="submitReceiveSample()"><i class="fas fa-check"></i> Update Status</button>
             </div>
         </div>
     </div>

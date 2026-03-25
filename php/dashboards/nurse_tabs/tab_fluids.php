@@ -432,7 +432,7 @@ if ($q_io) {
 <script>
 function switchFluidSubTab(tab) {
     $('.tab-link').removeClass('active').css({'color': 'var(--text-muted)', 'border-bottom-color': 'transparent', 'font-weight': '700'});
-    $('#btn-'+tab+'-tab').addClass('active').css({'color': 'var(--primary)', 'border-bottom-color': 'var(--primary)', 'font-weight': '800'});
+    $('#btn-'+tab+'-tab').addClass('active').css({'color': 'var(--role-accent)', 'border-bottom-color': 'var(--role-accent)', 'font-weight': '800'});
     
     if(tab === 'iv') {
         $('#iv-content').show();

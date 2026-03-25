@@ -47,7 +47,7 @@ if ($action === 'fetch_dashboard_stats') {
         ];
 
         // Pending Test Orders
-        $q1 = mysqli_query($conn, "SELECT COUNT(*) FROM lab_test_orders WHERE status = 'Pending'");
+        $q1 = mysqli_query($conn, "SELECT COUNT(*) FROM lab_test_orders WHERE order_status = 'Pending'");
         if($q1) $stats['pending_orders'] = (int)mysqli_fetch_row($q1)[0];
 
         // Samples Awaiting Collection (Assuming status 'Collected' means waiting for lab to receive)
@@ -55,7 +55,7 @@ if ($action === 'fetch_dashboard_stats') {
         if($q1b) $stats['samples_awaiting'] = (int)mysqli_fetch_row($q1b)[0];
 
         // Tests Processing
-        $q2 = mysqli_query($conn, "SELECT COUNT(*) FROM lab_test_orders WHERE status = 'Processing'");
+        $q2 = mysqli_query($conn, "SELECT COUNT(*) FROM lab_test_orders WHERE order_status = 'Processing'");
         if($q2) $stats['processing_tests'] = (int)mysqli_fetch_row($q2)[0];
 
         // Results Awaiting Validation
@@ -83,7 +83,7 @@ if ($action === 'fetch_dashboard_stats') {
             FROM lab_test_orders o
             JOIN lab_test_catalog c ON o.test_catalog_id = c.id
             JOIN patients p ON o.patient_id = p.id
-            WHERE o.status IN ('Pending', 'Processing', 'Accepted')
+            WHERE o.order_status IN ('Pending', 'Processing', 'Accepted')
               AND TIMESTAMPDIFF(HOUR, o.created_at, NOW()) > c.normal_turnaround_time_hours
             ORDER BY hours_elapsed DESC
             LIMIT 5
@@ -120,22 +120,22 @@ if ($action === 'update_order_status') {
             mysqli_begin_transaction($conn);
             
             // Get original order data for audit trail using Prepared Statement
-            $stmt = $conn->prepare("SELECT status, doctor_id, patient_id FROM lab_test_orders WHERE id = ?");
+            $stmt = $conn->prepare("SELECT order_status, doctor_id, patient_id FROM lab_test_orders WHERE id = ?");
             $stmt->bind_param("i", $order_id);
             $stmt->execute();
             $orig_data = $stmt->get_result()->fetch_assoc();
             $stmt->close();
-            $old_val = json_encode(['status' => $orig_data['status']]);
+            $old_val = json_encode(['status' => $orig_data['order_status']]);
             
             if ($status === 'Rejected') {
                 $reason = $_POST['rejection_reason'] ?? 'No reason provided';
-                $stmt = $conn->prepare("UPDATE lab_test_orders SET status = ?, rejection_reason = ? WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE lab_test_orders SET order_status = ?, rejection_reason = ? WHERE id = ?");
                 $stmt->bind_param("ssi", $status, $reason, $order_id);
             } else if ($status === 'Accepted') {
-                $stmt = $conn->prepare("UPDATE lab_test_orders SET status = ?, technician_id_assigned = ? WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE lab_test_orders SET order_status = ?, technician_id_assigned = ? WHERE id = ?");
                 $stmt->bind_param("sii", $status, $user_id, $order_id);
             } else {
-                $stmt = $conn->prepare("UPDATE lab_test_orders SET status = ? WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE lab_test_orders SET order_status = ? WHERE id = ?");
                 $stmt->bind_param("si", $status, $order_id);
             }
             
@@ -146,7 +146,7 @@ if ($action === 'update_order_status') {
                 $ip = $_SERVER['REMOTE_ADDR'];
                 $ua = $_SERVER['HTTP_USER_AGENT'];
                 
-                $stmt = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id_affected, old_value, new_value, ip_address, device_info)
+                $stmt = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id, old_value, new_value, ip_address, device_info)
                                      VALUES (?, 'Update Order Status', 'Test Order Management', ?, ?, ?, ?, ?)");
                 $stmt->bind_param("iissss", $user_id, $order_id, $old_val, $new_val, $ip, $ua);
                 $stmt->execute();
@@ -235,12 +235,12 @@ if ($action === 'update_sample_status') {
                 $stmt->close();
                 
                 if ($status === 'Received') {
-                    $stmt = $conn->prepare("UPDATE lab_test_orders SET status = 'Sample Collected' WHERE id = ? AND status != 'Processing'");
+                    $stmt = $conn->prepare("UPDATE lab_test_orders SET order_status = 'Sample Collected' WHERE id = ? AND order_status != 'Processing'");
                     $stmt->bind_param("i", $order_id);
                     $stmt->execute();
                     $stmt->close();
                 } else if ($status === 'Processing') {
-                    $stmt = $conn->prepare("UPDATE lab_test_orders SET status = 'Processing' WHERE id = ?");
+                    $stmt = $conn->prepare("UPDATE lab_test_orders SET order_status = 'Processing' WHERE id = ?");
                     $stmt->bind_param("i", $order_id);
                     $stmt->execute();
                     $stmt->close();
@@ -271,7 +271,7 @@ if ($action === 'update_sample_status') {
                 $ip = $_SERVER['REMOTE_ADDR'];
                 $ua = $_SERVER['HTTP_USER_AGENT'];
                 
-                $stmt = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id_affected, old_value, new_value, ip_address, device_info)
+                $stmt = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id, old_value, new_value, ip_address, device_info)
                                      VALUES (?, 'Update Sample Status', 'Sample Tracking', ?, ?, ?, ?, ?)");
                 $stmt->bind_param("iissss", $user_id, $sample_id, $old_val, $new_val, $ip, $ua);
                 $stmt->execute();
@@ -340,7 +340,7 @@ if ($action === 'update_result_status') {
                 
                 // If Released, update order status
                 if ($status === 'Released') {
-                    $stmt = $conn->prepare("UPDATE lab_test_orders SET status = 'Completed' WHERE id = ?");
+                    $stmt = $conn->prepare("UPDATE lab_test_orders SET order_status = 'Completed' WHERE id = ?");
                     $stmt->bind_param("i", $order_id);
                     $stmt->execute();
                     $stmt->close();
@@ -415,7 +415,7 @@ if ($action === 'update_result_status') {
                 $ip = $_SERVER['REMOTE_ADDR'];
                 $ua = $_SERVER['HTTP_USER_AGENT'];
                 
-                $stmt = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id_affected, old_value, new_value, ip_address, device_info)
+                $stmt = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id, old_value, new_value, ip_address, device_info)
                                      VALUES (?, 'Update Result Status', 'Result Entry', ?, ?, ?, ?, ?)");
                 $stmt->bind_param("iissss", $user_id, $result_id, $old_val, $new_val, $ip, $ua);
                 $stmt->execute();

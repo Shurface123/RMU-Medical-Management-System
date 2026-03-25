@@ -343,7 +343,14 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
 </main>
 
 <!-- ── GLOBAL SCRIPTS ────────────────────────────────────── -->
+<script src="/RMU-Medical-Management-System/php/includes/BroadcastReceiver.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BroadcastReceiver !== 'undefined') {
+        window.rmuBroadcasts = new BroadcastReceiver(<?= $_SESSION['user_id'] ?>);
+    }
+});
+
 // Sidebar Toggle Logic
 const sidebar  = document.getElementById('admSidebar');
 const overlay  = document.getElementById('admOverlay');

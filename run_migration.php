@@ -1,20 +1,12 @@
 <?php
 require_once 'php/db_conn.php';
-
-$sql = file_get_contents('Database/migrations/phase6_security.sql');
-$queries = explode(';', $sql);
-$success = 0;
-$failed = 0;
-
-foreach ($queries as $query) {
-    if (trim($query)) {
-        if (mysqli_query($conn, $query)) {
-            $success++;
-        } else {
-            echo "Failed: " . mysqli_error($conn) . "\n";
-            $failed++;
-        }
-    }
+$sql = file_get_contents('database/migrations/fix_lab_sessions_schema.sql');
+if ($conn->multi_query($sql)) {
+    do {
+        if ($res = $conn->store_result()) { $res->free(); }
+    } while ($conn->next_result());
+    echo "Migration successful.\n";
+} else {
+    echo "Migration failed: " . $conn->error . "\n";
 }
-echo "Migration complete. Success: $success, Failed: $failed\n";
 ?>

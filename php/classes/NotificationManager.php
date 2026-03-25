@@ -182,7 +182,7 @@ class NotificationManager {
      */
     public function broadcastToRole($role, $title, $message, $priority = 'normal') {
         // Get all users with this role
-        $query = "SELECT id FROM users WHERE role = ?";
+        $query = "SELECT id FROM users WHERE user_role = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("s", $role);
         $stmt->execute();
