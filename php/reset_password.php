@@ -1,0 +1,232 @@
+<?php
+/**
+ * reset_password.php — Password Reset Form (Phase 3)
+ * Validates token, shows strength-metered form, checks password history.
+ */
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+require_once __DIR__ . '/db_conn.php';
+
+$plain_token = trim($_GET['token'] ?? '');
+$token_hash  = hash('sha256', $plain_token);
+$token_err   = '';
+$token_ok    = false;
+$uid         = 0;
+$user_name   = '';
+
+if ($plain_token === '') {
+    $token_err = 'Invalid or missing reset token.';
+} else {
+    $st = mysqli_prepare($conn,
+        "SELECT pr.id, pr.user_id, pr.expires_at, pr.is_used, u.user_name
+         FROM password_resets pr
+         JOIN users u ON u.id = pr.user_id
+         WHERE pr.token_hash = ? LIMIT 1");
+    mysqli_stmt_bind_param($st, 's', $token_hash);
+    mysqli_stmt_execute($st);
+    $row = mysqli_fetch_assoc(mysqli_stmt_get_result($st));
+
+    if (!$row)                   $token_err = 'This reset link is invalid.';
+    elseif ($row['is_used'])     $token_err = 'This reset link has already been used.';
+    elseif (strtotime($row['expires_at']) < time())
+                                 $token_err = 'This reset link has expired. Please request a new one.';
+    else {
+        $token_ok  = true;
+        $uid       = (int)$row['user_id'];
+        $user_name = $row['user_name'];
+        $_SESSION['_reset_uid']   = $uid;
+        $_SESSION['_reset_token'] = $token_hash;
+        if (empty($_SESSION['_rp_csrf'])) {
+            $_SESSION['_rp_csrf'] = bin2hex(random_bytes(32));
+        }
+    }
+}
+$csrf = $_SESSION['_rp_csrf'] ?? '';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Reset Password — RMU Medical Sickbay</title>
+<link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--primary:#2F80ED;--success:#27ae60;--danger:#e74c3c;--text-dark:#2c3e50;--text-muted:#7f8c8d;--border:#e0e0e0;--white:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2F80ED 0%,#56CCF2 50%,#2F80ED 100%);padding:2rem 1rem;position:relative;overflow-x:hidden;}
+body::before{content:'';position:absolute;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,.1) 1px,transparent 1px);background-size:50px 50px;animation:bgMove 20s linear infinite;pointer-events:none;}
+@keyframes bgMove{0%{transform:translate(0,0)}100%{transform:translate(50px,50px)}}
+.card{position:relative;z-index:10;background:var(--white);padding:3rem 2.5rem;border-radius:24px;box-shadow:0 15px 40px rgba(47,128,237,.15);width:90%;max-width:440px;animation:slideIn .4s ease-out;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.hdr{text-align:center;margin-bottom:2rem;}
+.logo-icon{width:72px;height:72px;background:linear-gradient(135deg,#2F80ED,#56CCF2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;box-shadow:0 8px 24px rgba(47,128,237,.25);}
+.logo-icon i{font-size:2.8rem;color:#fff;}
+.hdr h1{font-size:1.7rem;font-weight:700;color:var(--text-dark);margin-bottom:.3rem;}
+.hdr p{font-size:.95rem;color:var(--text-muted);}
+.msg-box{border-radius:8px;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;display:flex;gap:.6rem;border-left:4px solid;}
+.msg-err{background:#FDEDEC;color:#c0392b;border-color:var(--danger);}
+.form-group{margin-bottom:1.4rem;}
+.form-group label{display:block;font-size:.95rem;font-weight:600;color:var(--text-dark);margin-bottom:.5rem;}
+.input-wrapper{position:relative;}
+.fi{position:absolute;left:1.2rem;top:50%;transform:translateY(-50%);font-size:1.15rem;color:var(--text-muted);pointer-events:none;}
+.form-control{width:100%;padding:.8rem 3rem .8rem 3rem;font-size:.95rem;border:2px solid var(--border);border-radius:12px;font-family:'Poppins',sans-serif;transition:all .2s;}
+.form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,128,237,.1);}
+.form-control.valid{border-color:var(--success);}
+.form-control.invalid{border-color:var(--danger);}
+.pw-toggle{position:absolute;right:1.2rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.15rem;color:var(--text-muted);}
+.pw-toggle:hover{color:var(--primary);}
+/* Strength meter */
+.pw-meter{height:5px;background:#e0e0e0;border-radius:3px;margin-top:.6rem;overflow:hidden;}
+.pw-bar{height:100%;width:0;border-radius:3px;transition:all .35s;}
+.pw-bar.s1{width:20%;background:#e74c3c;}.pw-bar.s2{width:40%;background:#e67e22;}
+.pw-bar.s3{width:60%;background:#f39c12;}.pw-bar.s4{width:80%;background:#7dcea0;}.pw-bar.s5{width:100%;background:#27ae60;}
+.pw-label{font-size:.85rem;color:var(--text-muted);margin-top:.3rem;}
+.pw-checks{display:grid;grid-template-columns:1fr 1fr;gap:.3rem;margin-top:.5rem;}
+.pw-check{font-size:.85rem;color:#aaa;display:flex;align-items:center;gap:.3rem;}
+.pw-check.met{color:var(--success);}
+.match-msg{font-size:.85rem;margin-top:.3rem;}
+.match-msg.ok{color:var(--success);}.match-msg.err{color:var(--danger);}
+.btn-submit{width:100%;padding:1rem;font-size:1rem;font-weight:600;background:linear-gradient(135deg,#2F80ED,#56CCF2);color:#fff;border:none;border-radius:12px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1px;box-shadow:0 8px 20px rgba(47,128,237,.25);display:flex;align-items:center;justify-content:center;gap:.6rem;}
+.btn-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 24px rgba(47,128,237,.3);}
+.btn-submit:disabled{opacity:.7;cursor:not-allowed;transform:none;}
+.back-link{text-align:center;margin-top:1.2rem;font-size:.95rem;}
+.back-link a{color:var(--primary);font-weight:600;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="hdr">
+        <div class="logo-icon"><i class="fas fa-lock-open"></i></div>
+        <h1>Reset Password</h1>
+        <p><?= $token_ok ? 'Create a strong new password' : 'Reset link issue' ?></p>
+    </div>
+
+    <?php if ($token_err): ?>
+    <div class="msg-box msg-err"><i class="fas fa-exclamation-circle"></i><span><?= htmlspecialchars($token_err) ?></span></div>
+    <div class="back-link"><a href="forgot_password.php"><i class="fas fa-redo"></i> Request a new reset link</a></div>
+    <?php else: ?>
+
+    <div id="formErr" class="msg-box msg-err" style="display:none;"><i class="fas fa-exclamation-circle"></i><span id="formErrMsg"></span></div>
+
+    <form method="POST" action="password_handler.php" id="resetForm" novalidate>
+        <input type="hidden" name="_csrf"  value="<?= htmlspecialchars($csrf) ?>">
+        <input type="hidden" name="_token" value="<?= htmlspecialchars($plain_token) ?>">
+        <input type="hidden" name="action" value="reset_password">
+
+        <div class="form-group">
+            <label for="new_password">New Password</label>
+            <div class="input-wrapper">
+                <input type="password" id="new_password" name="new_password" class="form-control"
+                       placeholder="Minimum 8 characters" autocomplete="new-password" required>
+                <i class="fas fa-lock fi"></i>
+                <button type="button" class="pw-toggle" onclick="togglePw('new_password','eye1')">
+                    <i class="fas fa-eye" id="eye1"></i>
+                </button>
+            </div>
+            <div class="pw-meter"><div class="pw-bar" id="pwBar"></div></div>
+            <div class="pw-label" id="pwLabel">Enter a password</div>
+            <div class="pw-checks">
+                <span class="pw-check" id="chk-len"><i class="fas fa-times"></i> 8+ characters</span>
+                <span class="pw-check" id="chk-upper"><i class="fas fa-times"></i> Uppercase letter</span>
+                <span class="pw-check" id="chk-lower"><i class="fas fa-times"></i> Lowercase letter</span>
+                <span class="pw-check" id="chk-num"><i class="fas fa-times"></i> Number</span>
+                <span class="pw-check" id="chk-sym"><i class="fas fa-times"></i> Special character</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirm_password">Confirm New Password</label>
+            <div class="input-wrapper">
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                       placeholder="Re-enter your new password" autocomplete="new-password" required>
+                <i class="fas fa-lock fi"></i>
+                <button type="button" class="pw-toggle" onclick="togglePw('confirm_password','eye2')">
+                    <i class="fas fa-eye" id="eye2"></i>
+                </button>
+            </div>
+            <div class="match-msg" id="matchMsg"></div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn" disabled>
+            <i class="fas fa-save"></i> Set New Password
+        </button>
+    </form>
+    <?php endif; ?>
+</div>
+<script>
+function togglePw(id, iconId) {
+    const f = document.getElementById(id);
+    const i = document.getElementById(iconId);
+    f.type = f.type === 'password' ? 'text' : 'password';
+    i.className = f.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+
+const pwField   = document.getElementById('new_password');
+const cfField   = document.getElementById('confirm_password');
+const submitBtn = document.getElementById('submitBtn');
+
+const labels   = ['Very Weak','Weak','Fair','Strong','Very Strong'];
+const barCls   = ['s1','s2','s3','s4','s5'];
+const barColors= ['#e74c3c','#e67e22','#f39c12','#7dcea0','#27ae60'];
+
+function calcStrength(v) {
+    let s = 0;
+    if (v.length >= 8)      s++;
+    if (/[A-Z]/.test(v))    s++;
+    if (/[a-z]/.test(v))    s++;
+    if (/[0-9]/.test(v))    s++;
+    if (/[^A-Za-z0-9]/.test(v)) s++;
+    return s;
+}
+
+function setCheck(id, met) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('met', met);
+    el.querySelector('i').className = met ? 'fas fa-check' : 'fas fa-times';
+}
+
+let pwValid = false, cfValid = false;
+
+pwField?.addEventListener('input', () => {
+    const v = pwField.value;
+    const s = calcStrength(v);
+    const bar = document.getElementById('pwBar');
+    const lbl = document.getElementById('pwLabel');
+    bar.className = 'pw-bar ' + (s > 0 ? barCls[s-1] : '');
+    lbl.textContent = s > 0 ? labels[s-1] : 'Enter a password';
+    lbl.style.color = s > 0 ? barColors[s-1] : 'var(--text-muted)';
+    setCheck('chk-len',   v.length >= 8);
+    setCheck('chk-upper', /[A-Z]/.test(v));
+    setCheck('chk-lower', /[a-z]/.test(v));
+    setCheck('chk-num',   /[0-9]/.test(v));
+    setCheck('chk-sym',   /[^A-Za-z0-9]/.test(v));
+    pwValid = s >= 4;
+    pwField.classList.toggle('valid', pwValid);
+    pwField.classList.toggle('invalid', !pwValid && v.length > 0);
+    checkMatch();
+});
+
+cfField?.addEventListener('input', checkMatch);
+
+function checkMatch() {
+    const mm = document.getElementById('matchMsg');
+    const match = pwField.value && cfField.value && pwField.value === cfField.value;
+    cfValid = match;
+    if (cfField.value === '') { mm.textContent = ''; mm.className = 'match-msg'; }
+    else if (match) { mm.textContent = '✓ Passwords match'; mm.className = 'match-msg ok'; }
+    else { mm.textContent = '✗ Passwords do not match'; mm.className = 'match-msg err'; }
+    cfField.classList.toggle('valid', cfValid);
+    cfField.classList.toggle('invalid', !cfValid && cfField.value.length > 0);
+    submitBtn.disabled = !(pwValid && cfValid);
+}
+
+document.getElementById('resetForm')?.addEventListener('submit', function(e) {
+    if (!pwValid || !cfValid) { e.preventDefault(); return; }
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+});
+</script>
+</body>
+</html>

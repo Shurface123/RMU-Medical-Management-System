@@ -3,10 +3,9 @@
 // PATIENT DASHBOARD — RMU Medical Sickbay
 // Tabbed SPA mirroring doctor dashboard architecture
 // ============================================================
-session_start();
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role']??$_SESSION['role']??'') !== 'patient') {
-    header('Location: /RMU-Medical-Management-System/php/login.php'); exit;
-}
+require_once '../includes/auth_middleware.php';
+enforceSingleDashboard('patient');
+
 require_once '../db_conn.php';
 require_once '../includes/maintenance_guard.php';
 date_default_timezone_set('Africa/Accra');
@@ -20,6 +19,7 @@ $pat_row = mysqli_fetch_assoc(mysqli_query($conn,
             u.profile_image, u.created_at AS member_since, u.last_login_at
      FROM patients p JOIN users u ON p.user_id=u.id
      WHERE p.user_id=$user_id LIMIT 1")) ?? [];
+$pat_row['two_fa_enabled'] = (int)($pat_row['two_fa_enabled'] ?? 0);
 $pat_pk = (int)($pat_row['id'] ?? 0);
 $pat_ref = $pat_row['patient_id'] ?? 'N/A';
 

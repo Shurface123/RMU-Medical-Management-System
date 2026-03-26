@@ -1,223 +1,361 @@
-<?php 
-require_once 'db_conn.php';
-require_once 'classes/SessionManager.php';
+<?php
+/**
+ * login.php — Advanced Login Handler (Phase 3)
+ * Handles CSRF, auto role detection, brute-force, IP rate-limit,
+ * account status checks, Remember Me, 2FA branch, force_password_change.
+ */
+require_once __DIR__ . '/db_conn.php';
+require_once __DIR__ . '/classes/SessionManager.php';
+require_once __DIR__ . '/login_router.php';
+require_once __DIR__ . '/includes/reg_mailer.php';
+require_once __DIR__ . '/classes/AuditLogger.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// ── Only process POST ────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: index.php'); exit;
+}
 
-    if (isset($_POST['uname']) && isset($_POST['password']) && isset($_POST['role'])) {
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
-        function validate($data){
-            $data = trim($data);
-            $data = stripslashes($data);
-            $data = htmlspecialchars($data);
-            return $data;
+// ── Security helpers ─────────────────────────────────────────────────────────
+function h(string $v): string {
+    return htmlspecialchars(stripslashes(trim($v)), ENT_QUOTES, 'UTF-8');
+}
+function redirect_err(string $msg, array $extra = []): never {
+    $q = http_build_query(array_merge(['error' => $msg], $extra));
+    header("Location: index.php?$q"); exit;
+}
+function get_ip(): string {
+    foreach (['HTTP_CLIENT_IP','HTTP_X_FORWARDED_FOR','REMOTE_ADDR'] as $k) {
+        if (!empty($_SERVER[$k])) return $_SERVER[$k];
+    }
+    return '0.0.0.0';
+}
+
+// ── 1. CSRF Validation ───────────────────────────────────────────────────────
+$posted_csrf = $_POST['_csrf'] ?? '';
+if (empty($_SESSION['_login_csrf']) || !hash_equals($_SESSION['_login_csrf'], $posted_csrf)) {
+    redirect_err('Invalid security token. Please try again.');
+}
+// Rotate CSRF after validation
+$_SESSION['_login_csrf'] = bin2hex(random_bytes(32));
+
+// ── 2. Read & sanitise inputs ────────────────────────────────────────────────
+$uname  = h($_POST['uname'] ?? '');
+$pass   = $_POST['password'] ?? '';   // No htmlspecialchars on password
+$remMe  = isset($_POST['remember_me']) && $_POST['remember_me'] === '1';
+
+if ($uname === '' || $pass === '') {
+    redirect_err('Username and password are required.');
+}
+
+// ── 3. Load security config ──────────────────────────────────────────────────
+$cfg_res = mysqli_query($conn, "SELECT * FROM login_security_config WHERE id=1 LIMIT 1");
+$cfg     = mysqli_fetch_assoc($cfg_res) ?: [];
+$MAX_ATTEMPTS = (int)($cfg['max_attempts']        ?? 5);
+$LOCK_MINS    = (int)($cfg['lockout_minutes']      ?? 15);
+$IP_MAX       = (int)($cfg['ip_max_attempts']      ?? 20);
+$IP_WINDOW    = (int)($cfg['ip_window_minutes']    ?? 60);
+$REM_DAYS     = (int)($cfg['remember_me_days']     ?? 30);
+
+$ip = get_ip();
+$ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
+
+// ── 4. IP-based Rate Limit ───────────────────────────────────────────────────
+$ip_check = mysqli_prepare($conn,
+    "SELECT COUNT(*) AS fails FROM login_attempts
+     WHERE ip_address=? AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
+mysqli_stmt_bind_param($ip_check, 'si', $ip, $IP_WINDOW);
+mysqli_stmt_execute($ip_check);
+$ip_fails = (int)(mysqli_fetch_assoc(mysqli_stmt_get_result($ip_check))['fails'] ?? 0);
+if ($ip_fails >= $IP_MAX) {
+    redirect_err("Too many login attempts from your network. Please try again later.");
+}
+
+// ── 5. Fetch user by username OR email ──────────────────────────────────────
+$stmt = mysqli_prepare($conn,
+    "SELECT * FROM users WHERE (user_name=? OR email=?) LIMIT 1");
+mysqli_stmt_bind_param($stmt, 'ss', $uname, $uname);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$row    = mysqli_fetch_assoc($result);
+
+// Helper: log failed attempt and possibly lock account
+function log_failure(
+    $conn, string $uname, string $ip, string $ua,
+    string $reason, ?int $uid,
+    int $MAX_ATTEMPTS, int $LOCK_MINS
+): void {
+    $st = mysqli_prepare($conn,
+        "INSERT INTO login_attempts (username,user_id,ip_address,user_agent,failure_reason) VALUES (?,?,?,?,?)");
+    mysqli_stmt_bind_param($st, 'sisss', $uname, $uid, $ip, $ua, $reason);
+    mysqli_stmt_execute($st);
+
+    if ($uid) {
+        $audit = new AuditLogger($conn);
+        $audit->logLogin($uid, false);
+        // Count recent fails for THIS user
+        $cf = mysqli_prepare($conn,
+            "SELECT COUNT(*) AS c FROM login_attempts
+             WHERE user_id=? AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)
+               AND failure_reason NOT LIKE '%locked%'");
+        mysqli_stmt_bind_param($cf, 'ii', $uid, $LOCK_MINS);
+        mysqli_stmt_execute($cf);
+        $fails = (int)(mysqli_fetch_assoc(mysqli_stmt_get_result($cf))['c'] ?? 0);
+
+        if ($fails >= $MAX_ATTEMPTS) {
+            // Lock account
+            $lu = mysqli_prepare($conn,
+                "UPDATE users SET locked_until=DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id=?");
+            mysqli_stmt_bind_param($lu, 'ii', $LOCK_MINS, $uid);
+            mysqli_stmt_execute($lu);
+
+            // Notify admins
+            $msg = "Security Alert: Account '$uname' locked due to $fails failed login attempts from $ip.";
+            $ni  = mysqli_prepare($conn,
+                "INSERT INTO notifications (user_id,user_role,title,message,type,related_module,created_at)
+                 SELECT id,user_role,'Security Alert',?,?,?,NOW() FROM users WHERE user_role='admin'");
+            $type = 'Security Alert'; $mod = 'users';
+            mysqli_stmt_bind_param($ni, 'sss', $msg, $type, $mod);
+            @mysqli_stmt_execute($ni);
         }
+    }
+}
 
-        $uname = validate($_POST['uname']);
-        $pass  = validate($_POST['password']);
-        $role  = validate($_POST['role']);
+// ── 6. User not found ────────────────────────────────────────────────────────
+if (!$row) {
+    log_failure($conn, $uname, $ip, $ua, 'user_not_found', null, $MAX_ATTEMPTS, $LOCK_MINS);
+    redirect_err('Incorrect username or password.');
+}
 
-        if (empty($uname)) {
-            header("Location: index.php?error=Username is required"); exit();
-        } elseif (empty($pass)) {
-            header("Location: index.php?error=Password is required"); exit();
-        } elseif (empty($role)) {
-            header("Location: index.php?error=Please select a role"); exit();
-        }
+$uid  = (int)$row['id'];
+$role = $row['user_role'];
 
-        // Query user
-        $stmt = mysqli_prepare($conn, "SELECT * FROM users WHERE user_name = ? LIMIT 1");
-        mysqli_stmt_bind_param($stmt, "s", $uname);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
+// ── 7. Account Status Checks BEFORE password ────────────────────────────────
 
-        if (mysqli_num_rows($result) === 1) {
-            $row = mysqli_fetch_assoc($result);
+// a) is_active
+if (!$row['is_active']) {
+    redirect_err('Your account is inactive. Please contact the administrator.');
+}
 
-            // ── Global Brute-Force & Lockout Check ───
-            if (isset($row['is_active']) && !$row['is_active']) {
-                header("Location: index.php?error=" . urlencode('Account disabled. Contact administration.'));
-                exit();
-            }
-            if (!empty($row['locked_until']) && strtotime($row['locked_until']) > time()) {
-                $rem = ceil((strtotime($row['locked_until']) - time()) / 60);
-                header("Location: index.php?error=" . urlencode("Account locked due to multiple failed attempts. Try again in $rem minutes."));
-                exit();
-            }
+// b) Email verification (if column exists)
+if (isset($row['is_verified']) && !(int)$row['is_verified']) {
+    redirect_err('Please verify your email before logging in. Check your inbox for the verification email.');
+}
 
-            // ── Password verification (bcrypt first, fall back to MD5 legacy) ──
-            $password_valid = false;
-            if (password_verify($pass, $row['password'])) {
-                $password_valid = true;
-            } elseif (md5($pass) === $row['password']) {
-                // Legacy MD5 — silently upgrade hash to bcrypt
-                $password_valid = true;
-                $new_hash = password_hash($pass, PASSWORD_BCRYPT);
-                $upd = mysqli_prepare($conn, "UPDATE users SET password=? WHERE id=?");
-                mysqli_stmt_bind_param($upd, "si", $new_hash, $row['id']);
-                mysqli_stmt_execute($upd);
-            }
+// c) locked_until
+if (!empty($row['locked_until']) && strtotime($row['locked_until']) > time()) {
+    $remaining_epoch = strtotime($row['locked_until']);
+    $rem_mins = ceil(($remaining_epoch - time()) / 60);
+    header("Location: index.php?error=" . urlencode("Account locked due to multiple failed attempts. Try again in {$rem_mins} minute(s).")
+         . "&locked_until={$remaining_epoch}");
+    exit;
+}
 
-            if ($password_valid && $row['user_role'] === $role) {
-                // Clear any previous locks and log success globally
-                $upd_lock = mysqli_prepare($conn, "UPDATE users SET locked_until=NULL WHERE id=?");
-                mysqli_stmt_bind_param($upd_lock, "i", $row['id']);
-                mysqli_stmt_execute($upd_lock);
-                
-                $log_suc = mysqli_prepare($conn, "INSERT INTO global_login_attempts (user_id, action_type, ip_address) VALUES (?, 'login_success', ?)");
-                $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-                mysqli_stmt_bind_param($log_suc, "is", $row['id'], $ip);
-                mysqli_stmt_execute($log_suc);
+// Auto-clear expired lockout
+if (!empty($row['locked_until']) && strtotime($row['locked_until']) <= time()) {
+    mysqli_query($conn, "UPDATE users SET locked_until=NULL WHERE id={$uid}");
+}
 
-                // Start session
-                $sessionManager = new SessionManager($conn);
-                $sessionManager->startSession($row['id'], $role);
+// d) account_status checks
+$status = $row['account_status'] ?? 'active';
+switch ($status) {
+    case 'pending':
+        redirect_err('Your account is pending administrator approval. You will be notified by email once approved.');
+    case 'suspended':
+        redirect_err('Your account has been suspended. Please contact the administrator.');
+    case 'inactive':
+        redirect_err('Your account is currently inactive. Please contact the administrator.');
+    case 'rejected':
+        $reason = ($row['rejection_reason'] ?? '') ?: 'Contact administration for details.';
+        redirect_err("Your account was rejected: $reason");
+}
 
-                $_SESSION['user_id']   = $row['id'];
-                $_SESSION['user_name'] = $row['user_name'];
-                $_SESSION['name']      = $row['name'];
-                $_SESSION['role']      = $role;
-                $_SESSION['user_role'] = $role;
+// ── 8. Password verification ─────────────────────────────────────────────────
+$password_valid = false;
+if (password_verify($pass, $row['password'])) {
+    $password_valid = true;
+} elseif (strlen($row['password']) === 32 && md5($pass) === $row['password']) {
+    // Legacy MD5 — upgrade silently
+    $password_valid = true;
+    $new_hash = password_hash($pass, PASSWORD_BCRYPT);
+    $upd = mysqli_prepare($conn, "UPDATE users SET password=? WHERE id=?");
+    mysqli_stmt_bind_param($upd, 'si', $new_hash, $uid);
+    mysqli_stmt_execute($upd);
+}
 
+if (!$password_valid) {
+    log_failure($conn, $uname, $ip, $ua, 'wrong_password', $uid, $MAX_ATTEMPTS, $LOCK_MINS);
 
+    // Check if NOW locked after this failure
+    $check = mysqli_prepare($conn, "SELECT locked_until FROM users WHERE id=?");
+    mysqli_stmt_bind_param($check, 'i', $uid);
+    mysqli_stmt_execute($check);
+    $ck = mysqli_fetch_assoc(mysqli_stmt_get_result($check));
+    if (!empty($ck['locked_until']) && strtotime($ck['locked_until']) > time()) {
+        $ep = strtotime($ck['locked_until']);
+        header("Location: index.php?error=" . urlencode("Account locked due to multiple failed attempts. Try again later.") . "&locked_until=$ep");
+        exit;
+    }
+    redirect_err('Incorrect username or password.');
+}
 
-                // ── Staff sub-role approval gate ───────────────────────
-                $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
-                if (in_array($role, $STAFF_SUB_ROLES)) {
-                    // Quick check directly instead of requiring external helper
-                    $app_q = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM staff WHERE user_id=? LIMIT 1");
-                    mysqli_stmt_bind_param($app_q, "i", $row['id']);
-                    mysqli_stmt_execute($app_q);
-                    $app_res = mysqli_stmt_get_result($app_q);
-                    $staff_row = mysqli_fetch_assoc($app_res);
-                    $approval = $staff_row['approval_status'] ?? 'pending';
-                    $reason   = $staff_row['rejection_reason'] ?? 'Contact administration for details.';
+// ── 9. Role-specific approval checks ─────────────────────────────────────────
+$APPROVAL_ROLES = ['nurse', 'lab_technician', 'doctor', 'pharmacist'];
+$STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
 
-                    if ($approval === 'pending') {
-                        // Log attempt in audit trail
-                        @mysqli_query($conn, "INSERT INTO staff_audit_trail (user_id,action_type,module,description,created_at)
-                            VALUES ({$row['id']},'login_blocked','security','Account pending admin approval',NOW())");
-                        header("Location: index.php?error=" . urlencode("Your account is pending admin approval. You will be notified once approved."));
-                        exit();
-                    }
+if (in_array($role, $STAFF_SUB_ROLES)) {
+    $aq = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM staff WHERE user_id=? LIMIT 1");
+    mysqli_stmt_bind_param($aq, 'i', $uid);
+    mysqli_stmt_execute($aq);
+    $arow = mysqli_fetch_assoc(mysqli_stmt_get_result($aq));
+    $appr = $arow['approval_status'] ?? 'pending';
+    if ($appr === 'pending')  redirect_err('Your account is pending admin approval. You will be notified once approved.');
+    if ($appr === 'rejected') redirect_err('Account rejected: ' . ($arow['rejection_reason'] ?? 'Contact administration.'));
+}
 
-                    if ($approval === 'rejected') {
-                        header("Location: index.php?error=" . urlencode("Account rejected: $reason"));
-                        exit();
-                    }
-                    // $approval === 'approved' → fall through to routing
-                }
+if ($role === 'nurse') {
+    $aq = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM nurses WHERE user_id=? LIMIT 1");
+    mysqli_stmt_bind_param($aq, 'i', $uid);
+    mysqli_stmt_execute($aq);
+    $arow = mysqli_fetch_assoc(mysqli_stmt_get_result($aq));
+    if ($arow) {
+        if ($arow['approval_status'] === 'pending')  redirect_err('Your nursing account is pending admin approval.');
+        if ($arow['approval_status'] === 'rejected') redirect_err('Nursing account rejected: ' . ($arow['rejection_reason'] ?? 'Contact administration.'));
+    }
+}
 
-                // ── Nurse approval gate ───────────────────────
-                if ($role === 'nurse') {
-                    $app_q = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM nurses WHERE user_id=? LIMIT 1");
-                    mysqli_stmt_bind_param($app_q, "i", $row['id']);
-                    mysqli_stmt_execute($app_q);
-                    $app_res = mysqli_stmt_get_result($app_q);
-                    if (mysqli_num_rows($app_res) > 0) {
-                        $nurse_row = mysqli_fetch_assoc($app_res);
-                        $approval = $nurse_row['approval_status'] ?? 'pending';
-                        $reason   = $nurse_row['rejection_reason'] ?? 'Contact administration for details.';
+if ($role === 'lab_technician') {
+    $aq = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM lab_technicians WHERE user_id=? LIMIT 1");
+    mysqli_stmt_bind_param($aq, 'i', $uid);
+    mysqli_stmt_execute($aq);
+    $arow = mysqli_fetch_assoc(mysqli_stmt_get_result($aq));
+    if ($arow) {
+        if ($arow['approval_status'] === 'pending')  redirect_err('Your lab technician account is pending admin approval.');
+        if ($arow['approval_status'] === 'rejected') redirect_err('Lab technician account rejected: ' . ($arow['rejection_reason'] ?? 'Contact administration.'));
+    }
+}
 
-                        if ($approval === 'pending') {
-                            header("Location: index.php?error=" . urlencode("Your nursing account is pending admin approval. You will be notified once approved."));
-                            exit();
-                        }
+if ($role === 'doctor') {
+    $aq = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM doctors WHERE user_id=? LIMIT 1");
+    mysqli_stmt_bind_param($aq, 'i', $uid);
+    mysqli_stmt_execute($aq);
+    $arow = mysqli_fetch_assoc(mysqli_stmt_get_result($aq));
+    if ($arow) {
+        if ($arow['approval_status'] === 'pending')  redirect_err('Your doctor account is pending admin approval.');
+        if ($arow['approval_status'] === 'rejected') redirect_err('Doctor account rejected: ' . ($arow['rejection_reason'] ?? 'Contact administration.'));
+    }
+}
 
-                        if ($approval === 'rejected') {
-                            header("Location: index.php?error=" . urlencode("Nursing account rejected: $reason"));
-                            exit();
-                        }
-                    }
-                }
+if ($role === 'pharmacist') {
+    $aq = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM pharmacist_profile WHERE user_id=? LIMIT 1");
+    mysqli_stmt_bind_param($aq, 'i', $uid);
+    mysqli_stmt_execute($aq);
+    $arow = mysqli_fetch_assoc(mysqli_stmt_get_result($aq));
+    if ($arow) {
+        if ($arow['approval_status'] === 'pending')  redirect_err('Your pharmacist account is pending admin approval.');
+        if ($arow['approval_status'] === 'rejected') redirect_err('Pharmacist account rejected: ' . ($arow['rejection_reason'] ?? 'Contact administration.'));
+    }
+}
 
-                // ── Lab Technician approval gate ───────────────────────
-                if ($role === 'lab_technician') {
-                    $app_q = mysqli_prepare($conn, "SELECT approval_status, rejection_reason FROM lab_technicians WHERE user_id=? LIMIT 1");
-                    mysqli_stmt_bind_param($app_q, "i", $row['id']);
-                    mysqli_stmt_execute($app_q);
-                    $app_res = mysqli_stmt_get_result($app_q);
-                    if (mysqli_num_rows($app_res) > 0) {
-                        $lab_row = mysqli_fetch_assoc($app_res);
-                        $approval = $lab_row['approval_status'] ?? 'pending';
-                        $reason   = $lab_row['rejection_reason'] ?? 'Contact administration for details.';
+// ── 10. Password correct — start session & set variables ─────────────────────
+$sessionManager = new SessionManager($conn);
+$sessionManager->startSession($uid, $role);
 
-                        if ($approval === 'pending') {
-                            header("Location: index.php?error=" . urlencode("Your lab technician account is pending admin approval. You will be notified once approved."));
-                            exit();
-                        }
+session_regenerate_id(true); // Session fixation protection
 
-                        if ($approval === 'rejected') {
-                            header("Location: index.php?error=" . urlencode("Lab technician account rejected: $reason"));
-                            exit();
-                        }
-                    }
-                }
+$_SESSION['user_id']       = $uid;
+$_SESSION['user_name']     = $row['user_name'];
+$_SESSION['name']          = $row['name'];
+$_SESSION['role']          = $role;
+$_SESSION['user_role']     = $role;
+$_SESSION['profile_image'] = $row['profile_image'] ?? 'default-avatar.png';
+$_SESSION['email']         = $row['email'];
+$_SESSION['login_ip']      = $ip;
 
-                // Route by role
-                switch ($role) {
-                    case 'admin':          header("Location: home.php"); break;
-                    case 'doctor':         header("Location: dashboards/doctor_dashboard.php"); break;
-                    case 'patient':        header("Location: dashboards/patient_dashboard.php"); break;
-                    case 'pharmacist':     header("Location: dashboards/pharmacy_dashboard.php"); break;
-                    case 'nurse':          header("Location: dashboards/nurse_dashboard.php"); break;
-                    case 'lab_technician': header("Location: dashboards/lab_dashboard.php"); break;
-                    case 'ambulance_driver':
-                    case 'cleaner':
-                    case 'laundry_staff':
-                    case 'maintenance':
-                    case 'security':
-                    case 'kitchen_staff':  header("Location: dashboards/staff_dashboard.php"); break;
-                    default:               header("Location: index.php?error=Invalid role"); break;
-                }
-                exit();
+// Update last login info
+$upd = mysqli_prepare($conn,
+    "UPDATE users SET locked_until=NULL, last_login_at=NOW(), last_login_ip=? WHERE id=?");
+mysqli_stmt_bind_param($upd, 'si', $ip, $uid);
+@mysqli_stmt_execute($upd);
 
+// Log success
+$audit = new AuditLogger($conn);
+$audit->logLogin($uid, true);
 
-            } else {
-                // Failed login — log globally
-                if (isset($row['id'])) {
-                    $log_fail = mysqli_prepare($conn, "INSERT INTO global_login_attempts (user_id, action_type, ip_address) VALUES (?, 'login_failed', ?)");
-                    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-                    mysqli_stmt_bind_param($log_fail, "is", $row['id'], $ip);
-                    mysqli_stmt_execute($log_fail);
+$log_suc = mysqli_prepare($conn,
+    "INSERT INTO login_attempts (username,user_id,ip_address,user_agent,failure_reason) VALUES (?,?,'".
+    mysqli_real_escape_string($conn, $ip)."',?,'login_success')");
+mysqli_stmt_bind_param($log_suc, 'sis', $row['user_name'], $uid, $ua);
+mysqli_stmt_execute($log_suc);
 
-                    // Check if should lock
-                    $check_fails = mysqli_prepare($conn, "SELECT COUNT(*) as fails FROM global_login_attempts WHERE user_id=? AND action_type='login_failed' AND created_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
-                    mysqli_stmt_bind_param($check_fails, "i", $row['id']);
-                    mysqli_stmt_execute($check_fails);
-                    $c_res = mysqli_stmt_get_result($check_fails);
-                    $fails = mysqli_fetch_assoc($c_res)['fails'] ?? 0;
+// Log to active_sessions
+$sid = session_id();
+$ains = mysqli_prepare($conn,
+    "INSERT INTO active_sessions (session_id,user_id,user_role,ip_address,user_agent,logged_in_at)
+     VALUES (?,?,?,?,?,NOW())
+     ON DUPLICATE KEY UPDATE last_active=NOW()");
+mysqli_stmt_bind_param($ains, 'sisss', $sid, $uid, $role, $ip, $ua);
+@mysqli_stmt_execute($ains);
 
-                        if ($fails >= 5) {
-                            $lock_upd = mysqli_prepare($conn, "UPDATE users SET locked_until=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?");
-                            mysqli_stmt_bind_param($lock_upd, "i", $row['id']);
-                            mysqli_stmt_execute($lock_upd);
+// ── 11. Remember Me Token ────────────────────────────────────────────────────
+if ($remMe) {
+    $plainToken = bin2hex(random_bytes(32));
+    $tokenHash  = hash('sha256', $plainToken);
+    $expires    = date('Y-m-d H:i:s', strtotime("+{$REM_DAYS} days"));
 
-                            // Notify Admins of brute-force attack
-                            $msg = "Security Alert: Account '{$row['user_name']}' has been locked due to multiple failed login attempts from IP $ip.";
-                            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notifications (user_id, message, type, related_module, created_at) SELECT id, ?, 'Security Alert', 'users', NOW() FROM users WHERE user_role='admin'");
-                            mysqli_stmt_bind_param($notif_stmt, "s", $msg);
-                            mysqli_stmt_execute($notif_stmt);
+    // Clear old tokens for this user
+    $del = mysqli_prepare($conn, "DELETE FROM remember_me_tokens WHERE user_id=?");
+    mysqli_stmt_bind_param($del, 'i', $uid);
+    mysqli_stmt_execute($del);
 
-                            header("Location: index.php?error=" . urlencode('Account locked due to multiple failed attempts. Try again in 15 minutes.'));
-                            exit();
-                        }
-                }
-                header("Location: index.php?error=Incorrect username, password, or role");
-                exit();
-            }
+    $ins = mysqli_prepare($conn,
+        "INSERT INTO remember_me_tokens (user_id,token_hash,expires_at) VALUES (?,?,?)");
+    mysqli_stmt_bind_param($ins, 'iss', $uid, $tokenHash, $expires);
+    mysqli_stmt_execute($ins);
 
-        } else {
-            header("Location: index.php?error=Incorrect username, password, or role");
-            exit();
-        }
+    setcookie('rmumss_remember', $plainToken, [
+        'expires'  => strtotime("+{$REM_DAYS} days"),
+        'path'     => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
 
-    } else {
-        header("Location: index.php?error=All fields are required");
-        exit();
+// ── 12. 2FA Check ────────────────────────────────────────────────────────────
+if (!empty($row['two_fa_enabled'])) {
+    // Store minimal state for 2FA screen; clear full session role until verified
+    $_SESSION['2fa_pending_uid']  = $uid;
+    $_SESSION['2fa_pending_role'] = $role;
+    $_SESSION['2fa_remember']     = $remMe;
+    unset($_SESSION['user_id'], $_SESSION['role'], $_SESSION['user_role']);
+
+    // Generate and send OTP
+    $otp        = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $otp_hash   = password_hash($otp, PASSWORD_BCRYPT);
+    $otp_expiry = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
+    // Invalidate old attempts
+    mysqli_query($conn, "UPDATE two_factor_attempts SET is_used=1 WHERE user_id=$uid AND is_used=0");
+    $oi = mysqli_prepare($conn,
+        "INSERT INTO two_factor_attempts (user_id,otp_hash,expires_at,ip_address) VALUES (?,?,?,?)");
+    mysqli_stmt_bind_param($oi, 'isss', $uid, $otp_hash, $otp_expiry, $ip);
+    mysqli_stmt_execute($oi);
+
+    // Send OTP email
+    if (function_exists('reg_send_2fa_email')) {
+        @reg_send_2fa_email($conn, $row['email'], $row['name'], $otp);
     }
 
-} else {
-    header("Location: index.php");
-    exit();
+    header('Location: two_factor_verify.php');
+    exit;
 }
+
+// ── 13. Force Password Change ─────────────────────────────────────────────────
+if (!empty($row['force_password_change'])) {
+    header('Location: change_password.php?forced=1');
+    exit;
+}
+
+// ── 14. Route to dashboard ────────────────────────────────────────────────────
+login_route($role);

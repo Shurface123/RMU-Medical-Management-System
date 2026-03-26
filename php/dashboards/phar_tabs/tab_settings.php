@@ -74,14 +74,27 @@
       </div>
 
       <div class="adm-card" style="padding:1.8rem;margin-bottom:1.5rem;">
-        <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:1.5rem;"><i class="fas fa-shield-alt" style="color:var(--warning);margin-right:.5rem;"></i>Security</h3>
+        <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:1.5rem;"><i class="fas fa-key" style="color:var(--warning);margin-right:.5rem;"></i>Security & 2FA</h3>
         <form onsubmit="changePassword(event)">
           <div class="form-group"><label>Current Password</label><input type="password" class="form-control" name="current_password" required></div>
           <div class="form-group"><label>New Password</label><input type="password" class="form-control" name="new_password" required minlength="6"></div>
           <div class="form-group"><label>Confirm New Password</label><input type="password" class="form-control" name="confirm_password" required></div>
-          <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-key"></i> Change Password</button>
+          <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-lock"></i> Change Password</button>
         </form>
+        <hr style="margin:1.5rem 0;border:none;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:600;font-size:1.3rem;">2FA Authentication</div>
+            <div style="font-size:1.1rem;color:var(--text-muted);">Protect your account with OTP</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:48px;height:26px;cursor:pointer;">
+            <input type="checkbox" id="twoFaToggle" <?=!empty($pharm_row['two_fa_enabled'])?'checked':''?> onchange="toggle2FA(this)" style="opacity:0;width:0;height:0;">
+            <span style="position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:26px;transition:.3s;"></span>
+            <span style="position:absolute;content:'';height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;"></span>
+          </label>
+        </div>
       </div>
+      <style>#twoFaToggle:checked + span{background:var(--success)!important;}#twoFaToggle:checked + span + span{transform:translateX(22px)!important;}</style>
 
       <div class="adm-card" style="padding:1.8rem;">
         <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-laptop" style="color:var(--info);margin-right:.5rem;"></i>Active Sessions</h3>
@@ -139,5 +152,12 @@ async function revokeSession(id){
   const r=await pharmAction({action:'revoke_session',session_id:id});
   if(r.success){toast('Session revoked');setTimeout(()=>location.reload(),600);}
   else toast(r.message||'Error','danger');
+}
+
+async function toggle2FA(cb){
+  const enable = cb.checked ? 1 : 0;
+  const res = await pharmAction({action:'toggle_2fa', enable:enable});
+  if(res.success) toast('2FA ' + (enable ? 'enabled':'disabled'));
+  else { toast(res.message||'Error','danger'); cb.checked = !cb.checked; }
 }
 </script>

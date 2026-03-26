@@ -251,6 +251,16 @@ case 'save_settings':
       ON DUPLICATE KEY UPDATE $setStr,updated_at=NOW()");
     ok(['message'=>'Settings saved']);
 
+case 'toggle_2fa':
+    $enable = (int)($post['enable'] ?? 0);
+    mysqli_query($conn, "UPDATE users SET two_fa_enabled=$enable, updated_at=NOW() WHERE id=$user_id");
+    
+    require_once '../classes/AuditLogger.php';
+    $audit = new AuditLogger($conn);
+    $audit->log2FAChange($user_id, $enable);
+    
+    ok(['message' => '2FA ' . ($enable ? 'enabled' : 'disabled')]);
+
 default:
     fail('Unknown action: '.$action);
 }

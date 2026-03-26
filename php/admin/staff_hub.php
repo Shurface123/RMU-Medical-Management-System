@@ -75,7 +75,7 @@ $pendingApprovals = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c
             </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 400px; gap:2.5rem;">
+        <div class="staff-hub-grid">
             <!-- Performance Section -->
             <div>
                 <div class="adm-card shadow-sm" style="border-radius:20px;">
@@ -137,6 +137,8 @@ $pendingApprovals = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c
 </main>
 
 <style>
+.staff-hub-grid { display: grid; grid-template-columns: 1fr 400px; gap: 2.5rem; }
+@media (max-width: 1100px) { .staff-hub-grid { grid-template-columns: 1fr; } }
 .perf-card { padding: 1.5rem; border-radius: 16px; background: var(--bg-surface); border: 1px solid var(--border); text-align: center; transition: 0.2s; }
 .perf-card:hover { transform: translateY(-3px); border-color: var(--primary); background: var(--surface); box-shadow: var(--shadow-sm); }
 .perf-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.2rem; font-size: 1.2rem; background: var(--primary-light); color: var(--primary); }

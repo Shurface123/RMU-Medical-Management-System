@@ -73,6 +73,7 @@ $active_tab = $_GET['tab'] ?? 'hospital';
                 'notifs'     => ['icon' => 'bell', 'label' => 'Notifications'],
                 'appearance' => ['icon' => 'palette', 'label' => 'Appearance'],
                 'security'   => ['icon' => 'shield-alt', 'label' => 'Security'],
+                'integrations'=>['icon' => 'plug', 'label' => 'Integrations & APIs'],
                 'system'     => ['icon' => 'server', 'label' => 'Maintenance']
             ];
 

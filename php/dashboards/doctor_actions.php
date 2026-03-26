@@ -283,6 +283,19 @@ case 'create_prescription_with_schedule':
     $pat_uid=getPatientUserId($conn,$pat_id);
     if($pat_uid) notify($conn,$pat_uid,'patient','prescription','New Prescription','A new prescription has been issued: '.$med,'prescriptions',$rxid);
     ok(['prescription_id'=>$rx_id]);
+    break;
+
+// ── Toggle 2FA ───────────────────────────────────────────
+case 'toggle_2fa':
+    $enable = (int)($post['enable'] ?? 0);
+    mysqli_query($conn, "UPDATE users SET two_fa_enabled=$enable, updated_at=NOW() WHERE id=$user_id");
+    
+    require_once '../classes/AuditLogger.php';
+    $audit = new AuditLogger($conn);
+    $audit->log2FAChange($user_id, $enable);
+    
+    ok(['message' => '2FA ' . ($enable ? 'enabled' : 'disabled')]);
+    break;
 
 default:
     fail('Unknown action: '.$action);

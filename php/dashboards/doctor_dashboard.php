@@ -2,10 +2,9 @@
 // ============================================================
 // DOCTOR DASHBOARD — RMU Medical Sickbay
 // ============================================================
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'doctor') {
-    header('Location: /RMU-Medical-Management-System/php/login.php'); exit;
-}
+require_once '../includes/auth_middleware.php';
+enforceSingleDashboard('doctor');
+
 require_once '../db_conn.php';
 date_default_timezone_set('Africa/Accra');
 $user_id = (int)$_SESSION['user_id'];
@@ -16,7 +15,7 @@ $month_start = date('Y-m-01');
 $doc_row = mysqli_fetch_assoc(mysqli_query($conn,
     "SELECT d.id AS doc_pk, d.doctor_id, d.specialization, d.experience_years,
             d.available_days, d.available_hours, d.is_available, d.bio, d.license_number,
-            u.name, u.email, u.phone, u.gender, u.profile_image, u.date_of_birth
+            u.name, u.email, u.phone, u.gender, u.profile_image, u.date_of_birth, u.two_fa_enabled
      FROM doctors d JOIN users u ON d.user_id=u.id
      WHERE d.user_id=$user_id LIMIT 1"));
 if (!$doc_row) {

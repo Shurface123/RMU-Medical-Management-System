@@ -160,6 +160,16 @@ case 'save_settings':
     }
     json_ok('Settings saved.');
 
+case 'toggle_2fa':
+    $enable = (int)($_POST['enable'] ?? 0);
+    dbExecute($conn, "UPDATE users SET two_fa_enabled=?, updated_at=NOW() WHERE id=?", "ii", [$enable, $user_id]);
+    
+    require_once '../classes/AuditLogger.php';
+    $audit = new AuditLogger($conn);
+    $audit->log2FAChange($user_id, $enable);
+    
+    json_ok('2FA ' . ($enable ? 'enabled' : 'disabled'));
+
 // ════════════════════════════════════════════════════════════
 // MODULE: SETTINGS — Active Sessions
 // ════════════════════════════════════════════════════════════

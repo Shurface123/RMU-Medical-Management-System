@@ -800,6 +800,17 @@ case 'save_system_settings':
     echo json_encode(['success'=>true,'message'=>"$count settings saved"]);
     break;
 
+case 'toggle_2fa':
+    $enable = (int)($input['enable'] ?? 0);
+    dbExecute($conn, "UPDATE users SET two_fa_enabled=?, updated_at=NOW() WHERE id=?", "ii", [$enable, $user_id]);
+    
+    require_once '../classes/AuditLogger.php';
+    $audit = new AuditLogger($conn);
+    $audit->log2FAChange($user_id, $enable);
+    
+    echo json_encode(['success'=>true, 'message' => '2FA ' . ($enable ? 'enabled':'disabled')]);
+    exit;
+
 default:
     echo json_encode(['success'=>false,'message'=>'Unknown action']);
 }

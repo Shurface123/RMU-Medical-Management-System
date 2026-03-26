@@ -45,7 +45,9 @@ function verify_csrf_token($token) {
  * @return bool
  */
 function isAuthenticated() {
-    return isset($_SESSION['user_id']) && isset($_SESSION['role']);
+    require_once __DIR__ . '/../auth/auth_helper.php';
+    validateSession();
+    return true; // We reach here if session is fully validated, validateSession halts execution otherwise.
 }
 
 /**

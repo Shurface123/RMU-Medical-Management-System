@@ -127,6 +127,30 @@ if($q) while($r=mysqli_fetch_assoc($q)) $activity_log[]=$r;
     </div>
   </div>
 
+  <!-- Security & 2FA -->
+  <div class="adm-card" style="margin-top:1.5rem;">
+    <div class="adm-card-header"><h3><i class="fas fa-shield-halved" style="color:var(--success);"></i> Security & 2FA</h3></div>
+    <div style="padding:2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;max-width:600px;">
+        <div>
+          <div style="font-weight:600;font-size:1.35rem;">Two-Factor Authentication (2FA)</div>
+          <div style="font-size:1.1rem;color:var(--text-muted);margin-top:.2rem;">Adds an extra layer of security by requiring an email code at login.</div>
+        </div>
+        <label style="position:relative;width:50px;height:26px;cursor:pointer;flex-shrink:0;">
+          <input type="checkbox" id="twoFaToggle" <?=!empty($pat_row['two_fa_enabled'])?'checked':''?> onchange="toggle2FA(this)" style="opacity:0;width:0;height:0;position:absolute;">
+          <span class="tfa-slider"></span>
+        </label>
+      </div>
+      <p style="margin-top:1.2rem;font-size:1.1rem;color:var(--text-muted);"><i class="fas fa-info-circle"></i> OTP codes will be sent to <strong><?=htmlspecialchars($pat_row['email']??'')?></strong>.</p>
+      <style>
+        .tfa-slider{position:absolute;inset:0;background:var(--border);border-radius:14px;transition:.3s;cursor:pointer;}
+        .tfa-slider::before{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;bottom:3px;left:3px;transition:.3s;}
+        input:checked+.tfa-slider{background:var(--success);}
+        input:checked+.tfa-slider::before{transform:translateX(24px);}
+      </style>
+    </div>
+  </div>
+
   <!-- Activity Log -->
   <div class="adm-card" style="margin-top:1.5rem;">
     <div class="adm-card-header"><h3><i class="fas fa-clipboard-list" style="color:var(--info);"></i> Account Activity Log</h3></div>
@@ -187,5 +211,11 @@ async function saveSettings(e){
   data.language_preference=fd.get('language_preference');
   const r=await patAction(data);
   if(r.success) toast('Settings saved!'); else toast(r.message||'Error','danger');
+}
+async function toggle2FA(cb){
+  const enable = cb.checked ? 1 : 0;
+  const res = await patAction({action:'toggle_2fa', enable:enable});
+  if(res.success) toast('2FA ' + (enable ? 'enabled':'disabled'));
+  else { toast(res.message||'Error','danger'); cb.checked = !cb.checked; }
 }
 </script>

@@ -26,17 +26,26 @@ switch ($action) {
         $type = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : 'staff');
+        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : (($type === 'doctor') ? 'doctors' : (($type === 'pharmacist' || $type === 'pharmacist_profile') ? 'pharmacist_profile' : 'staff')));
         $sql = "UPDATE $table SET approval_status = 'approved', approved_by = ?, approved_at = NOW(), rejection_reason = NULL WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "ii", $admin_id, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
-            // ── Sync with users table ──
-            $get_uid = mysqli_query($conn, "SELECT user_id FROM $table WHERE id = $staff_id LIMIT 1");
+            // ── Sync with users table and Send Email ──
+            $get_uid = mysqli_query($conn, "SELECT u.id, u.email, u.name, u.user_role FROM $table t JOIN users u ON t.user_id = u.id WHERE t.id = $staff_id LIMIT 1");
             if ($u_row = mysqli_fetch_assoc($get_uid)) {
-                $uid = (int)$u_row['user_id'];
-                mysqli_query($conn, "UPDATE users SET is_active = 1, is_verified = 1 WHERE id = $uid");
+                $uid = (int)$u_row['id'];
+                mysqli_query($conn, "UPDATE users SET is_active = 1, account_status = 'active', is_verified = 1 WHERE id = $uid");
+
+                // Log to Audit Trail
+                $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+                $audit_id = 'URA-' . uniqid();
+                mysqli_query($conn, "INSERT INTO user_registration_audit (audit_id, user_id, action, performed_by, ip_address, notes) VALUES ('$audit_id', $uid, 'approved', '$admin_id', '$ip', 'Approved via Admin Dashboard')");
+
+                // Send Welcome/Activation Email
+                require_once '../includes/reg_mailer.php';
+                @reg_send_welcome_email($conn, $u_row['email'], $u_row['name'], $u_row['user_role'], false);
             }
 
             if ($type === 'staff') {
@@ -55,17 +64,27 @@ switch ($action) {
         $type     = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : 'staff');
+        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : (($type === 'doctor') ? 'doctors' : (($type === 'pharmacist' || $type === 'pharmacist_profile') ? 'pharmacist_profile' : 'staff')));
         $sql = "UPDATE $table SET approval_status = 'rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "isi", $admin_id, $reason, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
-            // ── Sync with users table ──
-            $get_uid = mysqli_query($conn, "SELECT user_id FROM $table WHERE id = $staff_id LIMIT 1");
+            // ── Sync with users table and Send Email ──
+            $get_uid = mysqli_query($conn, "SELECT u.id, u.email, u.name, u.user_role FROM $table t JOIN users u ON t.user_id = u.id WHERE t.id = $staff_id LIMIT 1");
             if ($u_row = mysqli_fetch_assoc($get_uid)) {
-                $uid = (int)$u_row['user_id'];
-                mysqli_query($conn, "UPDATE users SET is_active = 0 WHERE id = $uid");
+                $uid = (int)$u_row['id'];
+                mysqli_query($conn, "UPDATE users SET is_active = 0, account_status = 'inactive' WHERE id = $uid");
+
+                // Log to Audit Trail
+                $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+                $audit_id = 'URA-' . uniqid();
+                $safe_reason = mysqli_real_escape_string($conn, $reason);
+                mysqli_query($conn, "INSERT INTO user_registration_audit (audit_id, user_id, action, performed_by, ip_address, notes) VALUES ('$audit_id', $uid, 'rejected', '$admin_id', '$ip', '$safe_reason')");
+
+                // Send Rejection Email
+                require_once '../includes/reg_mailer.php';
+                @reg_send_rejection_email($conn, $u_row['email'], $u_row['name'], $u_row['user_role'], $reason);
             }
 
             if ($type === 'staff') {

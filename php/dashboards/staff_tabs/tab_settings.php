@@ -43,6 +43,25 @@ $notif_prefs = is_string($settings['notification_preferences']??'')
             </div>
         </div>
 
+        <!-- Security & 2FA -->
+        <div class="card">
+            <div class="card-header"><h3><i class="fas fa-shield-halved"></i> Security & 2FA</h3></div>
+            <div class="card-body">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 0;">
+                    <div>
+                        <p style="font-weight:600;font-size:1.4rem;margin:0;">Two-Factor Authentication (2FA)</p>
+                        <p style="font-size:1.1rem;color:var(--text-muted);margin:.3rem 0 0;">Requires an email OTP code at login</p>
+                    </div>
+                    <label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0;">
+                        <input type="checkbox" id="twoFaToggle" <?=!empty($staff['two_fa_enabled'])?'checked':''?> style="opacity:0;width:0;height:0;" onchange="toggle2FA(this)">
+                        <span style="position:absolute;cursor:pointer;inset:0;background:<?=!empty($staff['two_fa_enabled'])?'var(--success)':'var(--border)'?>;border-radius:24px;transition:.3s;">
+                            <span style="position:absolute;content:'';height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;transform:<?=!empty($staff['two_fa_enabled'])?'translateX(22px)':'translateX(0)'?>"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <!-- Notification Preferences -->
         <div class="card">
             <div class="card-header"><h3><i class="fas fa-bell"></i> Notification Preferences</h3></div>
@@ -111,5 +130,14 @@ async function saveNotifPref(key, val){
 async function clearNotifs(){
     if(!confirmAction('Clear read notifications older than 30 days?')) return;
     const res = await doAction({action:'clear_old_notifications'},'Old notifications cleared.');
+}
+async function toggle2FA(cb){
+    const enable = cb.checked ? 1 : 0;
+    const res = await doAction({action:'toggle_2fa', enable:enable});
+    if(res.success){
+        toast('2FA ' + (enable ? 'enabled':'disabled'));
+    } else {
+        cb.checked = !cb.checked;
+    }
 }
 </script>

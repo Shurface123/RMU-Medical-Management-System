@@ -108,10 +108,38 @@
         </div>
       </div>
 
+      <!-- Security Settings -->
+      <div class="adm-card" style="margin:0;">
+        <div class="adm-card-header"><h3><i class="fas fa-shield-halved"></i> Security & 2FA</h3></div>
+        <div style="padding:2rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:600;font-size:1.3rem;">Two-Factor Authentication (2FA)</div>
+              <div style="font-size:1.1rem;color:var(--text-muted);">Secure your account with an email OTP at login</div>
+            </div>
+            <label style="position:relative;width:48px;height:26px;cursor:pointer;">
+              <input type="checkbox" id="twoFaToggle" <?=!empty($doc_row['two_fa_enabled'])?'checked':''?> onchange="toggle2FA(this)" style="opacity:0;width:0;height:0;position:absolute;">
+              <span style="position:absolute;inset:0;background:var(--border);border-radius:14px;transition:.3s;" class="tfa-slider"></span>
+            </label>
+          </div>
+          <p style="margin-top:1rem;font-size:1rem;color:var(--text-muted);"><i class="fas fa-circle-info"></i> When enabled, we'll send a 6-digit code to <strong><?=htmlspecialchars($doc_row['email'])?></strong> each time you sign in.</p>
+          <style>.tfa-slider{cursor:pointer;}.tfa-slider::before{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;bottom:3px;left:3px;transition:.3s;}input:checked+.tfa-slider{background:var(--success);}input:checked+.tfa-slider::before{transform:translateX(22px);}</style>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 <script>
+async function toggle2FA(cb){
+  const enable = cb.checked ? 1 : 0;
+  const res = await docAction({action:'toggle_2fa', enable:enable});
+  if(res.success) toast('2FA ' + (enable ? 'enabled':'disabled'));
+  else {
+    toast(res.message||'Error','danger');
+    cb.checked = !cb.checked;
+  }
+}
 async function saveProfile(e){
   e.preventDefault();
   const fd=new FormData(e.target), data={action:'update_profile'};

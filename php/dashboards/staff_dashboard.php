@@ -3,7 +3,8 @@
  * staff_dashboard.php — RMU Medical Sickbay
  * Complete Staff Dashboard — Single unified shell, role-based content.
  */
-require_once 'staff_security.php';
+require_once '../includes/auth_middleware.php';
+enforceSingleDashboard('staff');
 
 $user_id   = (int)$_SESSION['user_id'];
 $staffRole = $_SESSION['user_role'] ?? 'staff';
@@ -26,8 +27,10 @@ $staff = dbRow($conn,
             sc.security_setup_complete,
             COALESCE(ST.theme_preference, 'light')    AS theme,
             COALESCE(ST.language, 'en')               AS language,
-            COALESCE(ST.alert_sound_enabled, 1)       AS alert_sound_enabled
+            COALESCE(ST.alert_sound_enabled, 1)       AS alert_sound_enabled,
+            u.two_fa_enabled
      FROM staff s
+     LEFT JOIN users u                      ON s.user_id      = u.id
      LEFT JOIN staff_roles r                ON r.role_slug    = s.role
      LEFT JOIN staff_departments d          ON d.department_id = s.department_id
      LEFT JOIN staff_profile_completeness sc ON sc.staff_id   = s.id

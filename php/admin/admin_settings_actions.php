@@ -225,6 +225,52 @@ switch ($action) {
         echo json_encode(['success' => true, 'message' => 'Shift configurations updated.']);
         break;
 
+    case 'save_smtp_config':
+        $host = $_POST['smtp_host'] ?? '';
+        $port = $_POST['smtp_port'] ?? '587';
+        $user = $_POST['smtp_username'] ?? '';
+        $pass = $_POST['smtp_password'] ?? '';
+        $from = $_POST['from_email'] ?? '';
+        $name = $_POST['from_name'] ?? '';
+        $enc  = $_POST['encryption'] ?? 'tls';
+
+        if ($pass !== '') {
+            $q = "INSERT INTO system_email_config (id, smtp_host, smtp_port, smtp_username, smtp_password, encryption, from_email, from_name, is_active) 
+                  VALUES (1, ?, ?, ?, AES_ENCRYPT(?, SHA2('RMU_SICKBAY_2025_SECRET',256)), ?, ?, ?, 1) 
+                  ON DUPLICATE KEY UPDATE smtp_host=?, smtp_port=?, smtp_username=?, smtp_password=AES_ENCRYPT(?, SHA2('RMU_SICKBAY_2025_SECRET',256)), encryption=?, from_email=?, from_name=?";
+            $st = $conn->prepare($q);
+            $st->bind_param("sissssssissssss", $host, $port, $user, $pass, $enc, $from, $name, $host, $port, $user, $pass, $enc, $from, $name);
+        } else {
+            // Keep existing password if blank
+            $q = "UPDATE system_email_config SET smtp_host=?, smtp_port=?, smtp_username=?, encryption=?, from_email=?, from_name=? WHERE id=1";
+            $st = $conn->prepare($q);
+            $st->bind_param("sissss", $host, $port, $user, $enc, $from, $name);
+        }
+        
+        if ($st->execute()) {
+            $auditLogger->log($user_id, 'config_update', 'system_email_config', 1, null, 'Updated SMTP configurations');
+            echo json_encode(['success' => true, 'message' => 'SMTP Configuration saved successfully.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to save SMTP settings.']);
+        }
+        break;
+
+    case 'save_recaptcha_config':
+        $keys = ['recaptcha_site_key', 'recaptcha_secret_key', 'recaptcha_score_threshold'];
+        foreach ($keys as $key) {
+            if (isset($_POST[$key])) {
+                $val = $_POST[$key];
+                $q = "INSERT INTO system_config (config_key, config_value, updated_by) VALUES (?, ?, ?) 
+                      ON DUPLICATE KEY UPDATE config_value=?, updated_by=?, updated_at=NOW()";
+                $st = $conn->prepare($q);
+                $st->bind_param("ssisi", $key, $val, $user_id, $val, $user_id);
+                $st->execute();
+            }
+        }
+        $auditLogger->log($user_id, 'config_update', 'system_config', null, null, 'Updated reCAPTCHA configurations');
+        echo json_encode(['success' => true, 'message' => 'reCAPTCHA Configuration saved successfully.']);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Unknown action: ' . $action]);
         break;

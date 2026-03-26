@@ -1,220 +1,249 @@
 <?php
+// register_handler.php — Advanced Registration Handler (Phase 3)
+// ============================================================
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
 require_once 'db_conn.php';
+require_once 'includes/reg_config.php';
+require_once 'includes/reg_mailer.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    // Validate all required fields
-    $required_fields = ['fullname', 'email', 'phone', 'username', 'password', 'confirm_password', 'role'];
-    foreach ($required_fields as $field) {
-        if (!isset($_POST[$field]) || empty(trim($_POST[$field]))) {
-            header("Location: register.php?error=All fields are required");
-            exit();
-        }
-    }
-
-    // Sanitize inputs
-    function validate($data) {
-        $data = trim($data);
-        $data = stripslashes($data);
-        $data = htmlspecialchars($data);
-        return $data;
-    }
-
-    $fullname = validate($_POST['fullname']);
-    $email = validate($_POST['email']);
-    $phone = validate($_POST['phone']);
-    $username = validate($_POST['username']);
-    $password = validate($_POST['password']);
-    $confirm_password = validate($_POST['confirm_password']);
-    $role = validate($_POST['role']);
-
-    // Validate email format
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        header("Location: register.php?error=Invalid email format");
-        exit();
-    }
-
-    // Validate password length
-    if (strlen($password) < 8) {
-        header("Location: register.php?error=Password must be at least 8 characters");
-        exit();
-    }
-
-    // Check if passwords match
-    if ($password !== $confirm_password) {
-        header("Location: register.php?error=Passwords do not match");
-        exit();
-    }
-
-    // Validate role
-    $valid_roles = [
-        'patient', 'doctor', 'pharmacist', 'nurse', 'lab_technician',
-        // All staff sub-roles (registered directly — no generic 'staff' login)
-        'ambulance_driver', 'cleaner', 'laundry_staff', 'maintenance', 'security', 'kitchen_staff'
-    ];
-    if (!in_array($role, $valid_roles)) {
-        header("Location: register.php?error=Invalid role selected");
-        exit();
-    }
-    // Normalise: any staff sub-role maps to the 'staff' group
-    $STAFF_SUB_ROLES = ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'];
-    $APPROVAL_ROLES  = ['doctor', 'pharmacist', 'nurse', 'lab_technician'];
-    $needs_approval  = in_array($role, $APPROVAL_ROLES);
-    $is_staff_role   = in_array($role, $STAFF_SUB_ROLES);
-
-    // FIX: Define $is_active based on approval requirements
-    $is_active = ($needs_approval || $is_staff_role) ? 0 : 1;
-
-    // Check if username already exists
-    $sql = "SELECT id FROM users WHERE user_name = ? LIMIT 1";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "s", $username);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    
-    if (mysqli_num_rows($result) > 0) {
-        mysqli_stmt_close($stmt);
-        header("Location: register.php?error=Username already exists");
-        exit();
-    }
-    mysqli_stmt_close($stmt);
-
-    // Check if email already exists
-    $sql = "SELECT id FROM users WHERE email = ? LIMIT 1";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "s", $email);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    
-    if (mysqli_num_rows($result) > 0) {
-        mysqli_stmt_close($stmt);
-        header("Location: register.php?error=Email already registered");
-        exit();
-    }
-    mysqli_stmt_close($stmt);
-
-    // Hash the password
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-    // Normalize role for users table enum
-    $user_table_role = $role;
-    if (in_array($role, $STAFF_SUB_ROLES)) {
-        $user_table_role = 'staff';
-    }
-
-    // Insert new user
-    $sql = "INSERT INTO users (name, email, phone, user_name, password, user_role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "ssssssi", $fullname, $email, $phone, $username, $hashed_password, $user_table_role, $is_active);
-    
-    if (mysqli_stmt_execute($stmt)) {
-        $user_id = mysqli_insert_id($conn);
-        
-        // Create role-specific record based on user type
-        if ($role === 'patient') {
-            // Generate unique patient_id
-            $last_p_res = mysqli_query($conn, "SELECT COUNT(*) FROM patients");
-            $last_p = mysqli_fetch_row($last_p_res)[0] ?? 0;
-            $patient_id_val = 'PAT-' . str_pad($last_p + 1, 5, '0', STR_PAD_LEFT);
-
-            $patient_sql = "INSERT INTO patients (user_id, patient_id, full_name, created_at) VALUES (?, ?, ?, NOW())";
-            $patient_stmt = mysqli_prepare($conn, $patient_sql);
-            mysqli_stmt_bind_param($patient_stmt, "iss", $user_id, $patient_id_val, $fullname);
-            mysqli_stmt_execute($patient_stmt);
-            mysqli_stmt_close($patient_stmt);
-        } elseif ($role === 'doctor') {
-            // Generate unique doctor_id
-            $last_d_res = mysqli_query($conn, "SELECT COUNT(*) FROM doctors");
-            $last_d = mysqli_fetch_row($last_d_res)[0] ?? 0;
-            $doctor_id_val = 'DOC-' . str_pad($last_d + 1, 4, '0', STR_PAD_LEFT);
-
-            $doctor_sql = "INSERT INTO doctors (user_id, doctor_id, specialization, full_name, created_at) VALUES (?, ?, '', ?, NOW())";
-            $doctor_stmt = mysqli_prepare($conn, $doctor_sql);
-            mysqli_stmt_bind_param($doctor_stmt, "iss", $user_id, $doctor_id_val, $fullname);
-            mysqli_stmt_execute($doctor_stmt);
-            mysqli_stmt_close($doctor_stmt);
-        } elseif ($role === 'nurse') {
-            // Generate unique nurse_id
-            $last_n_res = mysqli_query($conn, "SELECT COUNT(*) FROM nurses");
-            $last_n = ($last_n_res) ? (mysqli_fetch_row($last_n_res)[0] ?? 0) : 0;
-            $nurse_id_val = 'NRS-' . str_pad($last_n + 1, 4, '0', STR_PAD_LEFT);
-
-            $nurse_sql = "INSERT INTO nurses (user_id, nurse_id, full_name, email, phone, status, years_of_experience, created_at) VALUES (?, ?, ?, ?, ?, 'Active', 0, NOW())";
-            $nurse_stmt = mysqli_prepare($conn, $nurse_sql);
-            mysqli_stmt_bind_param($nurse_stmt, "issss", $user_id, $nurse_id_val, $fullname, $email, $phone);
-            mysqli_stmt_execute($nurse_stmt);
-            mysqli_stmt_close($nurse_stmt);
-        } elseif ($role === 'lab_technician') {
-            // Generate unique technician_id
-            $last_lt_res = mysqli_query($conn, "SELECT COUNT(*) FROM lab_technicians");
-            $last_lt = ($last_lt_res) ? (mysqli_fetch_row($last_lt_res)[0] ?? 0) : 0;
-            $tech_id_val = 'LT-' . str_pad($last_lt + 1, 4, '0', STR_PAD_LEFT);
-
-            $lt_sql = "INSERT INTO lab_technicians (user_id, technician_id, full_name, email, phone, status, approval_status, created_at) VALUES (?, ?, ?, ?, ?, 'Active', 'pending', NOW())";
-            $lt_stmt = mysqli_prepare($conn, $lt_sql);
-            mysqli_stmt_bind_param($lt_stmt, "issss", $user_id, $tech_id_val, $fullname, $email, $phone);
-            mysqli_stmt_execute($lt_stmt);
-            mysqli_stmt_close($lt_stmt);
-        } elseif ($is_staff_role || ($needs_approval && !in_array($role, ['doctor', 'nurse', 'lab_technician']))) {
-            // Generate unique employee_id — retry until unique
-            $attempt = 0;
-            do {
-                $emp_id = 'STF-' . date('Y') . '-' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-                $chk = mysqli_prepare($conn, "SELECT id FROM staff WHERE staff_id = ? LIMIT 1"); // Note: schema matches staff_id better
-                // Actually staff table might have staff_id but maybe not employee_id in old schema
-                // But register_handler.php used both. I'll stick to a safe set.
-                mysqli_stmt_bind_param($chk, "s", $emp_id);
-                mysqli_stmt_execute($chk);
-                mysqli_stmt_store_result($chk);
-                $emp_exists = mysqli_stmt_num_rows($chk) > 0;
-                mysqli_stmt_close($chk);
-                $attempt++;
-            } while ($emp_exists && $attempt < 10);
-
-            // Generate unique staff_id — satisfies the UNIQUE constraint on staff.staff_id
-            $attempt2 = 0;
-            do {
-                $staff_id_val = 'STF' . strtoupper(substr(md5($user_id . microtime() . rand()), 0, 8));
-                $chk2 = mysqli_prepare($conn, "SELECT id FROM staff WHERE staff_id = ? LIMIT 1");
-                mysqli_stmt_bind_param($chk2, "s", $staff_id_val);
-                mysqli_stmt_execute($chk2);
-                mysqli_stmt_store_result($chk2);
-                $sid_exists = mysqli_stmt_num_rows($chk2) > 0;
-                mysqli_stmt_close($chk2);
-                $attempt2++;
-            } while ($sid_exists && $attempt2 < 10);
-
-            // Insert staff record - removing full_name, email, phone as they belong in users
-            $staff_sql = "INSERT INTO staff (user_id, staff_id, role, created_at, department, position)
-                          VALUES (?, ?, ?, NOW(), 'General', 'Staff')";
-            $staff_stmt = mysqli_prepare($conn, $staff_sql);
-            mysqli_stmt_bind_param($staff_stmt, "iss", $user_id, $staff_id_val, $role);
-            if (!mysqli_stmt_execute($staff_stmt)) {
-                mysqli_stmt_close($staff_stmt);
-                mysqli_stmt_close($stmt);
-                header("Location: register.php?error=" . urlencode("Staff registration failed. Please try again."));
-                exit();
-            }
-            mysqli_stmt_close($staff_stmt);
-        }
-        
-        mysqli_stmt_close($stmt);
-
-        // Redirect with appropriate message
-        if ($is_staff_role || $needs_approval) {
-            header("Location: index.php?info=" . urlencode("Registration successful! Your account is pending admin approval. You will be notified once approved."));
-        } else {
-            header("Location: index.php?success=Registration successful! Please login");
-        }
-        exit();
-    } else {
-        mysqli_stmt_close($stmt);
-        header("Location: register.php?error=Registration failed. Please try again");
-        exit();
-    }
-
-} else {
-    header("Location: register.php");
-    exit();
+// Only accept POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: register.php'); exit;
 }
-?>
+
+// ── CSRF ─────────────────────────────────────────────────────
+$csrf_ok = isset($_POST['_csrf'], $_SESSION['_reg_csrf'])
+        && hash_equals($_SESSION['_reg_csrf'], $_POST['_csrf']);
+if (!$csrf_ok) bail('Invalid security token. Please reload and try again.', 'register.php');
+
+// ── Helpers ──────────────────────────────────────────────────
+function bail($msg, $dest = 'register.php') {
+    header('Location: ' . $dest . '?error=' . urlencode($msg)); exit;
+}
+function clean($v) {
+    return htmlspecialchars(stripslashes(trim($v ?? '')), ENT_QUOTES, 'UTF-8');
+}
+function log_reg_audit($conn, $uid, $action, $ip, $ua, $notes = '') {
+    $audit_id = 'URA-' . uniqid();
+    $s = mysqli_prepare($conn,
+        "INSERT INTO user_registration_audit
+         (audit_id,user_id,action,performed_by,ip_address,device_info,notes)
+         VALUES (?,?,?,'self',?,?,?)");
+    mysqli_stmt_bind_param($s,'sisssss', $audit_id,$uid,$action,$ip,$ua,$notes);
+    mysqli_stmt_execute($s);
+}
+
+$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+$ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
+
+// ── IP Rate limiting ─────────────────────────────────────────
+$rl = mysqli_query($conn,
+    "SELECT COUNT(*) AS n FROM user_registration_audit
+     WHERE ip_address='$ip' AND action='registered'
+     AND created_at > DATE_SUB(NOW(), INTERVAL ".REG_LOCKOUT_MINUTES." MINUTE)");
+if ($rl && (int)mysqli_fetch_assoc($rl)['n'] >= REG_MAX_ATTEMPTS_PER_HOUR) {
+    bail('Too many registration attempts from your IP. Please wait 1 hour before trying again.');
+}
+
+// ── Collect & sanitise inputs ─────────────────────────────────
+$role         = clean($_POST['selected_role'] ?? '');
+$patient_type = clean($_POST['patient_type'] ?? '');
+$first_name   = clean($_POST['first_name'] ?? '');
+$last_name    = clean($_POST['last_name']  ?? '');
+$email        = strtolower(clean($_POST['email'] ?? ''));
+$phone        = clean($_POST['phone'] ?? '');
+$dob          = clean($_POST['dob']   ?? '');
+$gender       = clean($_POST['gender'] ?? '');
+$username     = clean($_POST['username'] ?? '');
+$password     = $_POST['password']         ?? '';
+$confirm_pw   = $_POST['confirm_password'] ?? '';
+$department   = clean($_POST['department']    ?? '');
+$specialization = clean($_POST['specialization'] ?? '');
+$license_number = clean($_POST['license_number'] ?? '');
+$experience_years = (int)($_POST['experience_years'] ?? 0);
+$patient_id_number = clean($_POST['patient_id_number'] ?? '');
+$blood_type   = clean($_POST['blood_type']     ?? '');
+$emerg_name   = clean($_POST['emergency_name'] ?? '');
+$emerg_phone  = clean($_POST['emergency_phone']?? '');
+$recaptcha_token = clean($_POST['recaptcha_token'] ?? '');
+$full_name    = "$first_name $last_name";
+
+// ── Validate role ─────────────────────────────────────────────
+$valid_roles = array_keys(REGISTERABLE_ROLES);
+if (!in_array($role, $valid_roles)) bail('Invalid role selected.');
+
+if ($role === 'patient' && !in_array($patient_type, ['student','staff']))
+    bail('Please select a patient type (Student or Staff/Lecturer).');
+
+// ── Required fields ───────────────────────────────────────────
+if (!$first_name || !$last_name) bail('Full name is required.');
+if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) bail('Invalid email address.');
+if (!$phone || strlen(preg_replace('/\D/','',$phone)) < 10) bail('Invalid phone number.');
+if (!$dob) bail('Date of birth is required.');
+if (!$gender) bail('Gender is required.');
+if (!$username || strlen($username) < 3) bail('Username must be at least 3 characters.');
+
+// ── Email domain rules ─────────────────────────────────────────
+$domain_rules = EMAIL_DOMAIN_RULES;
+if ($role === 'patient') {
+    $key = 'patient_' . $patient_type;
+    if (isset($domain_rules[$key])) {
+        $req_domain = $domain_rules[$key]['domain'];
+        if (!str_ends_with($email, strtolower($req_domain)))
+            bail($domain_rules[$key]['message']);
+    }
+}
+
+// ── Password validation ───────────────────────────────────────
+if (strlen($password) < PASSWORD_MIN_LENGTH)
+    bail('Password must be at least ' . PASSWORD_MIN_LENGTH . ' characters.');
+if (PASSWORD_REQUIRE_UPPER && !preg_match('/[A-Z]/', $password))
+    bail('Password must contain at least one uppercase letter.');
+if (PASSWORD_REQUIRE_LOWER && !preg_match('/[a-z]/', $password))
+    bail('Password must contain at least one lowercase letter.');
+if (PASSWORD_REQUIRE_NUMBER && !preg_match('/[0-9]/', $password))
+    bail('Password must contain at least one number.');
+if (PASSWORD_REQUIRE_SYMBOL && !preg_match('/[!@#$%^&*()\-_=+\[\]{}|;:\'",.\\/<>?`~]/', $password))
+    bail('Password must contain at least one special character.');
+if ($password !== $confirm_pw)
+    bail('Passwords do not match.');
+if (stripos($password, $first_name) !== false || stripos($password, $last_name) !== false ||
+    stripos($password, explode('@',$email)[0]) !== false)
+    bail('Password must not contain your name or email address.');
+
+// ── Duplicate email / username check ─────────────────────────
+$s = mysqli_prepare($conn, 'SELECT id FROM users WHERE email=? LIMIT 1');
+mysqli_stmt_bind_param($s,'s',$email);
+mysqli_stmt_execute($s); mysqli_stmt_store_result($s);
+if (mysqli_stmt_num_rows($s) > 0) bail('This email address is already registered.');
+
+$s = mysqli_prepare($conn, 'SELECT id FROM users WHERE user_name=? LIMIT 1');
+mysqli_stmt_bind_param($s,'s',$username);
+mysqli_stmt_execute($s); mysqli_stmt_store_result($s);
+if (mysqli_stmt_num_rows($s) > 0) bail('This username is already taken. Please choose another.');
+
+// ── Duplicate license check (for clinical roles) ─────────────
+if ($license_number && in_array($role, APPROVAL_REQUIRED_ROLES)) {
+    $tbl_map = [
+        'doctor'=>'doctors','nurse'=>'nurses',
+        'lab_technician'=>'lab_technicians','pharmacist'=>'pharmacists'
+    ];
+    if (isset($tbl_map[$role])) {
+        $t = $tbl_map[$role];
+        $col = 'license_number';
+        $chk = @mysqli_query($conn,
+            "SELECT id FROM `$t` WHERE `$col`='" .
+            mysqli_real_escape_string($conn,$license_number) . "' LIMIT 1");
+        if ($chk && mysqli_num_rows($chk) > 0)
+            bail('This license number is already registered in our system.');
+    }
+}
+
+// ── reCAPTCHA v3 verification ─────────────────────────────────
+$recaptcha_passed = false;
+$recap_score = null;
+if ($recaptcha_token) {
+    $resp = @file_get_contents(
+        'https://www.google.com/recaptcha/api/siteverify?secret='
+        . RECAPTCHA_SECRET_KEY . '&response=' . urlencode($recaptcha_token)
+        . '&remoteip=' . urlencode($ip));
+    $recap_data = $resp ? json_decode($resp, true) : null;
+    if ($recap_data && $recap_data['success']) {
+        $recap_score = (float)($recap_data['score'] ?? 0);
+        $recaptcha_passed = ($recap_score >= RECAPTCHA_THRESHOLD);
+    }
+}
+// Log reCAPTCHA result
+$s = mysqli_prepare($conn,
+    "INSERT INTO recaptcha_logs (email,ip_address,recaptcha_score,action,passed)
+     VALUES (?,?,?,?,?)");
+$rc_action = RECAPTCHA_ACTION;
+$rc_passed = $recaptcha_passed ? 1 : 0;
+mysqli_stmt_bind_param($s,'ssdsi', $email,$ip,$recap_score,$rc_action,$rc_passed);
+mysqli_stmt_execute($s);
+
+if (!$recaptcha_passed)
+    bail('We could not verify that you are human. Please try again.');
+
+// ── Profile photo upload ──────────────────────────────────────
+$profile_image = null;
+if (!empty($_FILES['profile_photo']['tmp_name'])) {
+    $file = $_FILES['profile_photo'];
+    if ($file['size'] > UPLOAD_MAX_SIZE)  bail('Profile photo must be under 2MB.');
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime  = $finfo->file($file['tmp_name']);
+    if (!in_array($mime, UPLOAD_ALLOWED_TYPES)) bail('Only JPG, PNG, or WebP images are allowed.');
+    if (!is_dir(UPLOAD_DIR)) @mkdir(UPLOAD_DIR, 0755, true);
+    $ext  = match($mime) { 'image/png'=>'png','image/webp'=>'webp', default=>'jpg' };
+    $fname = bin2hex(random_bytes(12)) . '.' . $ext;
+    if (!move_uploaded_file($file['tmp_name'], UPLOAD_DIR . $fname))
+        bail('Failed to upload profile photo. Please try again.');
+    $profile_image = UPLOAD_URL_PATH . $fname;
+}
+
+// ── Hash password & store registration session ────────────────
+$hash = password_hash($password, PASSWORD_BCRYPT);
+
+// Determine activation state
+$needs_approval = in_array($role, APPROVAL_REQUIRED_ROLES);
+$is_active      = $needs_approval ? 0 : 1;
+$account_status = $needs_approval ? 'pending_verification' : 'pending_verification';
+// Both wait for OTP first; approval is a secondary gate for clinical roles.
+$actual_user_role = in_array($role, ['ambulance_driver','cleaner','laundry_staff',
+                                      'maintenance','security','kitchen_staff'])
+                     ? 'staff' : $role;
+
+// Store temp data in registration_sessions
+$session_token = bin2hex(random_bytes(32));
+$expires_at    = date('Y-m-d H:i:s', time() + REG_SESSION_EXPIRY_MINUTES * 60);
+$temp_data     = json_encode([
+    'first_name'=>$first_name,'last_name'=>$last_name,'full_name'=>$full_name,
+    'email'=>$email,'phone'=>$phone,'dob'=>$dob,'gender'=>$gender,
+    'username'=>$username,'password_hash'=>$hash,
+    'role'=>$role,'actual_user_role'=>$actual_user_role,
+    'patient_type'=>$patient_type,'department'=>$department,
+    'specialization'=>$specialization,'license_number'=>$license_number,
+    'experience_years'=>$experience_years,'patient_id_number'=>$patient_id_number,
+    'blood_type'=>$blood_type,'emerg_name'=>$emerg_name,'emerg_phone'=>$emerg_phone,
+    'profile_image'=>$profile_image,'needs_approval'=>$needs_approval,
+    'is_active'=>$is_active,'ip'=>$ip,'ua'=>$ua,
+]);
+
+$s = mysqli_prepare($conn,
+    "INSERT INTO registration_sessions
+     (session_token,email,role,step_reached,temp_data,expires_at)
+     VALUES (?,?,?,2,?,?)");
+mysqli_stmt_bind_param($s,'ssiss', $session_token,$email,$role,$temp_data,$expires_at);
+if (!mysqli_stmt_execute($s)) bail('Session creation failed. Please try again.');
+
+// ── Generate & send OTP ───────────────────────────────────────
+$otp_plain  = str_pad((string)random_int(0, 999999), OTP_LENGTH, '0', STR_PAD_LEFT);
+$otp_hash   = password_hash($otp_plain, PASSWORD_BCRYPT);
+$otp_expiry = date('Y-m-d H:i:s', time() + OTP_EXPIRY_MINUTES * 60);
+$ver_id     = bin2hex(random_bytes(32));
+
+$s = mysqli_prepare($conn,
+    "INSERT INTO email_verifications
+     (verification_id,user_id,email,otp_code,otp_expires_at,verification_type)
+     VALUES (?,NULL,?,?,?,'registration')");
+mysqli_stmt_bind_param($s,'ssss', $ver_id,$email,$otp_hash,$otp_expiry);
+if (!mysqli_stmt_execute($s)) bail('Could not create verification record. Please try again.');
+
+$mail_result = reg_send_otp_email($conn, $email, $full_name, $otp_plain);
+if (!$mail_result['success']) {
+    // Don't block registration if email fails — let user request resend on OTP screen
+    error_log('OTP email failed for ' . $email . ': ' . ($mail_result['error'] ?? 'unknown'));
+}
+
+// Store session info for OTP page
+$_SESSION['reg_session_token'] = $session_token;
+$_SESSION['reg_ver_id']        = $ver_id;
+$_SESSION['reg_email']         = $email;
+$_SESSION['reg_name']          = $full_name;
+// Rotate CSRF
+$_SESSION['_reg_csrf'] = bin2hex(random_bytes(32));
+
+// Redirect to OTP verification
+header('Location: verify_otp.php' . ($mail_result['success'] ? '' : '?warn=email'));
+exit;

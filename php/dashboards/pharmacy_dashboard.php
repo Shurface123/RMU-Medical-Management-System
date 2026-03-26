@@ -3,10 +3,9 @@
 // PHARMACY DASHBOARD — RMU Medical Sickbay
 // Mirrors admin/doctor/patient dashboard architecture
 // ============================================================
-require_once 'pharmacy_security.php';
-initSecureSession();
-setSecurityHeaders();
-$user_id = enforcePharmacistRole();
+require_once '../includes/auth_middleware.php';
+enforceSingleDashboard('pharmacist');
+
 require_once '../db_conn.php';
 date_default_timezone_set('Africa/Accra');
 $csrf_token = generateCsrfToken();
@@ -21,7 +20,7 @@ function qv($c,$s){ $r=mysqli_query($c,$s); return $r?(mysqli_fetch_row($r)[0]??
 
 // ── Pharmacist Profile ────────────────────────────────────
 $pharm_row = mysqli_fetch_assoc(mysqli_query($conn,
-    "SELECT pp.*, u.name, u.email, u.phone, u.profile_image, u.date_of_birth
+    "SELECT pp.*, u.name, u.email, u.phone, u.profile_image, u.date_of_birth, u.two_fa_enabled
      FROM pharmacist_profile pp JOIN users u ON pp.user_id=u.id
      WHERE pp.user_id=$user_id LIMIT 1"));
 if (!$pharm_row) {
