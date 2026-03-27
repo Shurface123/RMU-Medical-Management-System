@@ -115,7 +115,7 @@
           <?php else:?><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="revokeSession(<?=$sess['id']?>)"><i class="fas fa-times"></i></button><?php endif;?>
         </div>
         <?php endforeach; endif;?>
-      </div>
+      <?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
     </div>
   </div>
 </div>

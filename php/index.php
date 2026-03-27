@@ -144,8 +144,8 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
             box-shadow: 0 8px 24px rgba(47,128,237,.25);
         }
         .logo-icon i { font-size: 2.8rem; color: var(--white); }
-        .login-header h1 { font-size: 1.7rem; color: var(--text-dark); font-weight: 700; margin-bottom: .3rem; }
-        .login-header p  { font-size: 0.95rem; color: var(--text-muted); }
+        .login-header h1 { font-size: 2.1rem; color: var(--text-dark); font-weight: 700; margin-bottom: .3rem; }
+        .login-header p  { font-size: 1.05rem; color: var(--text-muted); }
         /* Alert banners */
         .msg-box {
             border-radius: 8px; padding: 0.8rem 1rem;
@@ -165,22 +165,22 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
         }
 
         /* Form */
-        .form-group { margin-bottom: 1.4rem; position: relative; }
+        .form-group { margin-bottom: 1.6rem; position: relative; }
         .form-group label {
-            display: block; font-size: 0.95rem; font-weight: 600;
-            color: var(--text-dark); margin-bottom: .5rem;
+            display: block; font-size: 1.15rem; font-weight: 600;
+            color: var(--text-dark); margin-bottom: .6rem;
         }
         .input-wrapper { position: relative; }
         .input-wrapper .fi {
-            position: absolute; left: 1.2rem; top: 50%;
+            position: absolute; left: 1.25rem; top: 50%;
             transform: translateY(-50%);
-            font-size: 1.15rem; color: var(--text-muted);
+            font-size: 1.25rem; color: var(--text-muted);
             transition: color .3s; pointer-events: none;
         }
         .form-control {
             width: 100%;
-            padding: 0.8rem 1rem 0.8rem 3rem;
-            font-size: 0.95rem;
+            padding: 0.9rem 1rem 0.9rem 3.4rem;
+            font-size: 1.15rem;
             border: 2px solid var(--border);
             border-radius: 12px;
             transition: all .2s;
@@ -244,9 +244,19 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
             box-shadow: 0 10px 24px rgba(47,128,237,.3);
         }
         .btn-login:disabled { opacity: .7; cursor: not-allowed; transform: none; }
-        .btn-login .spinner { display: none; }
+        .btn-login .spinner { display: none; align-items: center; justify-content: center; gap: .6rem; }
         .btn-login.loading .btn-text { display: none; }
-        .btn-login.loading .spinner { display: inline-block; }
+        .btn-login.loading .spinner { display: flex; }
+
+        /* Premium CSS Spinner */
+        .custom-loader {
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Lockout countdown */
         .lockout-box {
@@ -354,7 +364,7 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
 
             <button type="submit" class="btn-login" id="loginBtn">
                 <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Login</span>
-                <span class="spinner"><i class="fas fa-spinner fa-spin"></i> Verifying...</span>
+                <span class="spinner"><div class="custom-loader"></div> Verifying...</span>
             </button>
         </form>
 

@@ -261,8 +261,9 @@ if ($role === 'pharmacist') {
 // ── 10. Password correct — start session & set variables ─────────────────────
 $sessionManager = new SessionManager($conn);
 $sessionManager->startSession($uid, $role);
-
-session_regenerate_id(true); // Session fixation protection
+// NOTE: session_regenerate_id(true) is called inside startSession() above.
+// Do NOT call it again here — it would change the PHP session ID after startSession
+// has already recorded the correct ID in active_sessions and $_SESSION['session_id'].
 
 $_SESSION['user_id']       = $uid;
 $_SESSION['user_name']     = $row['user_name'];
@@ -289,14 +290,8 @@ $log_suc = mysqli_prepare($conn,
 mysqli_stmt_bind_param($log_suc, 'sis', $row['user_name'], $uid, $ua);
 mysqli_stmt_execute($log_suc);
 
-// Log to active_sessions
-$sid = session_id();
-$ains = mysqli_prepare($conn,
-    "INSERT INTO active_sessions (session_id,user_id,user_role,ip_address,user_agent,logged_in_at)
-     VALUES (?,?,?,?,?,NOW())
-     ON DUPLICATE KEY UPDATE last_active=NOW()");
-mysqli_stmt_bind_param($ains, 'sisss', $sid, $uid, $role, $ip, $ua);
-@mysqli_stmt_execute($ains);
+// NOTE: active_sessions INSERT is handled inside SessionManager::startSession() above.
+// Removed duplicate INSERT to prevent conflicting session_id rows in the database.
 
 // ── 11. Remember Me Token ────────────────────────────────────────────────────
 if ($remMe) {

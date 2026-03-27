@@ -298,5 +298,7 @@ function openCancel(id,doc){document.getElementById('cancelApptIdLegacy').value=
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 </script>
 <script src="/RMU-Medical-Management-System/js/notifications.js"></script>
+
+
 </body>
 </html>

@@ -127,7 +127,7 @@
         </div>
       </div>
 
-    </div>
+    <?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
   </div>
 </div>
 <script>

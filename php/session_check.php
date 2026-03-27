@@ -38,7 +38,30 @@ if (!$sessionManager->validateSession()) {
 
 // Session is valid - continue with page
 $currentUser = $sessionManager->getCurrentUser();
-$currentRole = getCurrentRole();
-$currentUserId = getCurrentUserId();
+if (!$currentUser) {
+    $sessionManager->destroyCurrentSession();
+    header("Location: /RMU-Medical-Management-System/php/index.php?error=account_not_found");
+    exit();
+}
+
+// ── 1. ACCOUNT STATUS CHECK ──────────────────────────────────────────────────
+$status = $currentUser['account_status'] ?? 'active';
+if ($status !== 'active' || !$currentUser['is_active']) {
+    $sessionManager->destroyCurrentSession();
+    $msg = "Your account is currently " . ($status === 'pending' ? "pending approval" : $status) . ".";
+    header("Location: /RMU-Medical-Management-System/php/index.php?error=" . urlencode($msg));
+    exit();
+}
+
+// ── 2. LOCKOUT CHECK ─────────────────────────────────────────────────────────
+if (!empty($currentUser['locked_until']) && strtotime($currentUser['locked_until']) > time()) {
+    $sessionManager->destroyCurrentSession();
+    header("Location: /RMU-Medical-Management-System/php/index.php?error=account_security_lock");
+    exit();
+}
+
+$currentRole   = $currentUser['user_role'] ?? null;
+$currentUserId = $currentUser['id'] ?? null;
+$currentName   = $currentUser['name'] ?? 'User';
 
 ?>

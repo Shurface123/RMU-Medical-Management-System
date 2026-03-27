@@ -276,7 +276,7 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
 
     <!-- Footer / Logout -->
     <div class="adm-sidebar-footer">
-        <a href="../logout.php" class="adm-logout-btn">
+        <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn">
             <i class="fas fa-sign-out-alt"></i><span>Logout</span>
         </a>
     </div>
@@ -391,6 +391,8 @@ setTimeout(() => {
     setTimeout(() => toasts.forEach(t => t.style.display = 'none'), 500);
 }, 5000);
 </script>
+
+
 
 </body>
 </html>

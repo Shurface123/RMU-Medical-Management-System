@@ -39,7 +39,7 @@ $site_key = RECAPTCHA_SITE_KEY;
     --bg-gradient: linear-gradient(135deg, #1C3A6B 0%, #2F80ED 55%, #56CCF2 100%);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Poppins',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg-gradient);padding:2rem 1rem;position:relative;overflow-x:hidden;}
+body{font-family:'Poppins',sans-serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;background:var(--bg-gradient);padding:4rem 1.5rem;position:relative;overflow-x:hidden;}
 body::before{content:'';position:absolute;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:50px 50px;animation:bgMove 25s linear infinite;pointer-events:none;}
 @keyframes bgMove{0%{transform:translate(0,0)}100%{transform:translate(50px,50px)}}
 
@@ -159,7 +159,7 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .btn-sm{padding:0.6rem 1rem;font-size:0.9rem;}
 
 /* ── Footer ── */
-.reg-footer{text-align:center;padding:1.5rem 2.5rem 2rem;border-top:1px solid #f0f0f0;font-size:0.95rem;color:var(--text-muted);}
+.reg-footer{text-align:center;padding:1.2rem 2.5rem 1.4rem;border-top:1px solid #f0f0f0;font-size:0.95rem;color:var(--text-muted);}
 .reg-footer a{color:var(--primary);font-weight:600;text-decoration:none;}
 
 /* ── Back to home ── */

@@ -218,6 +218,12 @@ require_once 'maintenance_guard.php';
             <span>Professional Profile</span>
         </a>
 
+        <a href="/RMU-Medical-Management-System/php/admin/session_management.php"
+           class="adm-nav-item <?php echo $active_page === 'session_management' ? 'active' : ''; ?>">
+            <i class="fas fa-network-wired"></i>
+            <span>Session Control</span>
+        </a>
+
         <a href="/RMU-Medical-Management-System/php/admin/settings_v2.php"
            class="adm-nav-item <?php echo $active_page === 'settings' ? 'active' : ''; ?>">
             <i class="fas fa-cog"></i>
@@ -289,3 +295,4 @@ function showToast(message, type = 'success') {
     }, 4000);
 }
 </script>
+

@@ -555,5 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showTab(urlTab, document.querySelector(`.adm-nav-item[onclick*="${urlTab}"]`));
 });
 </script>
+
+
 </body>
 </html>

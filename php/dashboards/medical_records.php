@@ -254,5 +254,7 @@ document.querySelectorAll('.upload-zone').forEach(z=>{
 function filterRecs(q){q=q.toLowerCase();document.querySelectorAll('.rec-card').forEach(c=>{c.style.display=c.dataset.text.includes(q)?'':'none';});}
 </script>
 <script src="/RMU-Medical-Management-System/js/notifications.js"></script>
+
+
 </body>
 </html>

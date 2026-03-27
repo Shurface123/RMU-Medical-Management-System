@@ -140,6 +140,7 @@ input:checked + .adm-slider:before { transform: translateX(24px); }
 .adm-slider.round:before { border-radius: 50%; }
 </style>
 
+<?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Load existing settings

@@ -53,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $role_pat = 'patient';
                 $is_act = 1;
 
-                $stmt_user = mysqli_prepare($conn, "INSERT INTO users (name, email, phone, gender, password, role, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt_user, "ssssssi", $full_name, $email, $phone, $gender, $default_pass, $role_pat, $is_act);
+                $stmt_user = mysqli_prepare($conn, "INSERT INTO users (user_name, name, email, phone, gender, password, user_role, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt_user, "sssssssi", $email, $full_name, $email, $phone, $gender, $default_pass, $role_pat, $is_act);
                 if (mysqli_stmt_execute($stmt_user)) {
                     $user_id = mysqli_insert_id($conn);
                 }
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         empty($emg_name) ? $emg_name = null : null;
         empty($emg_phone) ? $emg_phone = null : null;
 
-        $stmt = mysqli_prepare($conn, "INSERT INTO patients (user_id, patient_id, full_name, gender, age, date_of_birth, blood_group, address, patient_type, emergency_contact_name, emergency_contact_phone, admit_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = mysqli_prepare($conn, "INSERT INTO patients (user_id, patient_id, full_name, gender, age, date_of_birth, blood_group, street_address, patient_type, emergency_contact_name, emergency_contact_phone, admit_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         mysqli_stmt_bind_param($stmt, "isssisssssss", $user_id, $patient_id, $full_name, $gender, $age_val, $dob, $blood_group, $address, $patient_type, $emg_name, $emg_phone, $admit_date);
         
         if (mysqli_stmt_execute($stmt)) {

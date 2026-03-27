@@ -121,6 +121,7 @@ $active_tab = $_GET['tab'] ?? 'hospital';
 @media (max-width: 992px) { .grid-2 { grid-template-columns: 1fr; } }
 </style>
 
+<?php include __DIR__.'/../includes/active_sessions_panel.php'; ?>
 <script>
 // Unified AJAX handler for settings
 async function saveSettings(formId, action) {

@@ -3,113 +3,109 @@ require_once '../includes/auth_middleware.php';
 enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 
+// Handle Add/Edit/Delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'add' || $action === 'edit') {
+        $msg_text = trim($_POST['message_text']);
+        $category = $_POST['category'] ?? 'wellness';
+        $role = empty($_POST['target_role']) ? null : $_POST['target_role'];
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        
+        if ($action === 'add') {
+            $stmt = mysqli_prepare($conn, "INSERT INTO health_messages (message_text, message_category, target_role, is_active, created_by) VALUES (?, ?, ?, ?, ?)");
+            $uid = $_SESSION['user_id'];
+            mysqli_stmt_bind_param($stmt, 'sssii', $msg_text, $category, $role, $is_active, $uid);
+            mysqli_stmt_execute($stmt);
+        } else {
+            $id = (int)$_POST['id'];
+            $stmt = mysqli_prepare($conn, "UPDATE health_messages SET message_text=?, message_category=?, target_role=?, is_active=? WHERE id=?");
+            mysqli_stmt_bind_param($stmt, 'sssii', $msg_text, $category, $role, $is_active, $id);
+            mysqli_stmt_execute($stmt);
+        }
+        header("Location: settings_health_messages.php?success=1");
+        exit;
+    }
+    
+    if ($action === 'delete') {
+        $id = (int)$_POST['id'];
+        mysqli_query($conn, "DELETE FROM health_messages WHERE id=$id");
+        header("Location: settings_health_messages.php?success=1");
+        exit;
+    }
+}
+
+// Fetch all
+$query = mysqli_query($conn, "SELECT * FROM health_messages ORDER BY created_at DESC");
+$messages = [];
+if ($query) {
+    while($row = mysqli_fetch_assoc($query)) $messages[] = $row;
+}
+
 $active_page = 'health_messages';
-$page_title  = 'Broadcast Management Panel';
+$page_title = 'Broadcast & Health Messages';
 include '../includes/_sidebar.php';
-
-// Fetch existing broadcasts for the table
-$broadcasts = [];
-$q = mysqli_query($conn, "SELECT b.*, u.user_name as sender_name FROM broadcasts b JOIN users u ON b.sender_id = u.id ORDER BY b.created_at DESC LIMIT 100");
-if ($q) while ($r = mysqli_fetch_assoc($q)) $broadcasts[] = $r;
-
-// Fetch Departments & Wards for targeting
-$depts = [];
-$res = mysqli_query($conn, "SELECT name FROM departments WHERE is_active = 1");
-if ($res) while ($r = mysqli_fetch_assoc($res)) $depts[] = $r['name'];
-
-$wards = [];
-$res = mysqli_query($conn, "SELECT ward_name FROM wards");
-if ($res) while ($r = mysqli_fetch_assoc($res)) $wards[] = $r['ward_name'];
 ?>
-
-<!-- Quill Rich Text Editor -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
             <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-            <span class="adm-page-title"><i class="fas fa-bullhorn"></i> Broadcast Hub</span>
+            <span class="adm-page-title">Broadcast & Health Messages</span>
+        </div>
+        <div class="adm-topbar-right">
+            <div class="adm-avatar"><i class="fas fa-user-tie"></i></div>
         </div>
     </div>
 
     <div class="adm-content">
-        <div class="adm-page-header">
+        <div class="adm-welcome" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <h1>Broadcast & Communication Center</h1>
-                <p>Advanced system-wide messaging with real-time delivery and targeting layers.</p>
+                <h2><i class="fas fa-bullhorn" style="margin-right:.5rem;"></i> Message CMS</h2>
+                <p>Manage dynamic health, wellness, and safety prompts displayed during the logout countdown sequence.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="openComposer()">
-                <i class="fas fa-plus"></i> New Broadcast
-            </button>
+            <button class="adm-btn adm-btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> New Message</button>
         </div>
 
         <div class="adm-card">
-            <div class="adm-card-header">
-                <h3><i class="fas fa-history"></i> Global Transmission History</h3>
-            </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table responsive-cards">
+            <div class="adm-card-body" style="padding:0;">
+                <table class="adm-table">
                     <thead>
                         <tr>
-                            <th>Status / Release</th>
-                            <th>Subject & Sender</th>
-                            <th>Audience Matrix</th>
-                            <th>Priority Tier</th>
-                            <th>Metrics</th>
-                            <th>Operations</th>
+                            <th>Message</th>
+                            <th>Category</th>
+                            <th>Target Role</th>
+                            <th>Status</th>
+                            <th align="right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($broadcasts)): ?>
-                            <tr><td colspan="6">
-                                <div class="adm-empty-state">
-                                    <i class="fas fa-bullhorn"></i>
-                                    <h3>No transmissions recorded</h3>
-                                    <p>Start a new system-wide broadcast to communicate with staff and patients.</p>
-                                </div>
-                            </td></tr>
-                        <?php else: foreach ($broadcasts as $b): 
-                            $status_class = strtolower($b['status']);
-                            $p_class = strtolower($b['priority']);
-                            $priority_badge = 'adm-badge-info';
-                            if ($p_class === 'urgent') $priority_badge = 'adm-badge-warning';
-                            if ($p_class === 'critical') $priority_badge = 'adm-badge-danger';
-                            
-                            $status_badge = 'adm-badge-success';
-                            if ($status_class === 'scheduled') $status_badge = 'adm-badge-warning';
-                        ?>
-                            <tr>
-                                <td data-label="Status / Release">
-                                    <span class="adm-badge <?= $status_badge ?>"><?= strtoupper($b['status']) ?></span><br>
-                                    <small class="text-muted" style="font-size:1.1rem;"><?= date('M d, H:i', strtotime($b['created_at'])) ?></small>
-                                </td>
-                                <td data-label="Subject & Sender">
-                                    <strong style="color:var(--text-primary);"><?= htmlspecialchars($b['subject']) ?></strong><br>
-                                    <small class="text-muted" style="font-size:1.1rem;"><?= $b['sender_name'] ?></small>
-                                </td>
-                                <td data-label="Audience Matrix">
-                                    <span class="adm-badge adm-badge-info"><?= $b['audience_type'] ?></span>
-                                    <?php if ($b['audience_type'] !== 'Everyone'): ?>
-                                        <div style="font-size:1rem; color:var(--text-muted); max-width:180px; overflow:hidden; text-overflow:ellipsis;">
-                                            <?= implode(', ', json_decode($b['audience_ids'], true)) ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                                <td data-label="Priority Tier"><span class="adm-badge <?= $priority_badge ?>"><?= strtoupper($b['priority']) ?></span></td>
-                                <td data-label="Metrics">
-                                    <button class="adm-btn adm-btn-outline sm" onclick="viewStats(<?= $b['id'] ?>)">
-                                        <i class="fas fa-chart-line"></i> Analysis
-                                    </button>
-                                </td>
-                                <td data-label="Operations">
-                                    <?php if ($b['status'] === 'Scheduled'): ?>
-                                        <button class="adm-btn adm-btn-danger sm" onclick="cancelBroadcast(<?= $b['id'] ?>)">Revoke</button>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; endif; ?>
+                        <?php foreach($messages as $msg): ?>
+                        <tr>
+                            <td><strong><?= htmlspecialchars(substr($msg['message_text'], 0, 80)) . (strlen($msg['message_text']) > 80 ? '...' : '') ?></strong></td>
+                            <td><span class="adm-badge adm-badge-info"><?= ucfirst($msg['message_category']) ?></span></td>
+                            <td><?= $msg['target_role'] ? ucfirst($msg['target_role']) : '<em>All Roles</em>' ?></td>
+                            <td>
+                                <?php if($msg['is_active']): ?>
+                                    <span class="adm-badge adm-badge-success">Active</span>
+                                <?php else: ?>
+                                    <span class="adm-badge adm-badge-danger">Inactive</span>
+                                <?php endif; ?>
+                            </td>
+                            <td align="right">
+                                <button class="adm-btn adm-btn-sm" onclick='editModal(<?= json_encode($msg) ?>)' style="background:var(--primary);color:#fff;"><i class="fas fa-edit"></i></button>
+                                <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this message?');">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="<?= $msg['id'] ?>">
+                                    <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php if (empty($messages)): ?>
+                        <tr><td colspan="5" align="center">No messages found.</td></tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -117,224 +113,81 @@ if ($res) while ($r = mysqli_fetch_assoc($res)) $wards[] = $r['ward_name'];
     </div>
 </main>
 
-<!-- Composer Modal -->
-<div class="adm-modal" id="composerModal">
-    <div class="adm-modal-content" style="max-width:800px;">
-        <div class="adm-modal-header">
-            <h3><i class="fas fa-bullhorn"></i> New Broadcast Composer</h3>
-            <button class="adm-modal-close" onclick="closeComposer()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="adm-modal-body">
-            <form id="broadcastForm">
-                <input type="hidden" name="action" value="create">
-                
-                <div class="adm-form-group">
-                    <label>Broadcast Subject</label>
-                    <input type="text" name="subject" class="adm-search-input" required placeholder="Main heading for the notification...">
-                </div>
-
-                <div class="adm-grid-2">
-                    <div class="adm-form-group">
-                        <label>Audience Targeting Layer</label>
-                        <select name="audience_type" id="audienceType" class="adm-search-input" onchange="toggleAudienceOptions()">
-                            <option value="Everyone">Everyone (System-wide)</option>
-                            <option value="Role">Role-Specific</option>
-                            <option value="Department">Department/Ward Specific</option>
-                            <option value="Individual">Individual User</option>
-                        </select>
-                    </div>
-                    <div class="adm-form-group">
-                        <label>Priority Level</label>
-                        <select name="priority" class="adm-search-input">
-                            <option value="Informational">Informational (Standard)</option>
-                            <option value="Important">Important (Badge Highlighting)</option>
-                            <option value="Urgent">Urgent (Red Banner + Alert)</option>
-                            <option value="Critical">Critical (Full Modal + Audio)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Contextual Audience Options -->
-                <div id="roleOptions" class="audience-sub-options" style="display:none;">
-                    <label>Select Roles</label>
-                    <div class="chk-grid">
-                        <label><input type="checkbox" value="doctor" class="role-chk"> Doctors</label>
-                        <label><input type="checkbox" value="nurse" class="role-chk"> Nurses</label>
-                        <label><input type="checkbox" value="pharmacist" class="role-chk"> Pharmacists</label>
-                        <label><input type="checkbox" value="lab_tech" class="role-chk"> Lab Techs</label>
-                        <label><input type="checkbox" value="patient" class="role-chk"> Patients</label>
-                        <label><input type="checkbox" value="ambulance_driver" class="role-chk"> Ambulance</label>
-                    </div>
-                </div>
-
-                <div id="deptOptions" class="audience-sub-options" style="display:none;">
-                    <label>Select Department/Ward</label>
-                    <div class="chk-grid">
-                        <?php foreach (array_merge($depts, $wards) as $dw): ?>
-                            <label><input type="checkbox" value="<?= $dw ?>" class="dept-chk"> <?= $dw ?></label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div id="individualOptions" class="audience-sub-options" style="display:none;">
-                    <label>User ID(s) <small>(Comma separated)</small></label>
-                    <input type="text" id="individualIds" class="adm-search-input" placeholder="e.g. 101, 102, 105">
-                </div>
-
-                <div class="adm-form-group">
-                    <label>Message Body (Rich Text)</label>
-                    <div id="editor" style="height: 200px;"></div>
-                    <textarea name="body" id="bodyInput" style="display:none;"></textarea>
-                </div>
-
-                <div class="adm-grid-2">
-                    <div class="adm-form-group">
-                        <label>Schedule Send (Release Date/Time)</label>
-                        <input type="datetime-local" name="scheduled_at" class="adm-search-input" value="<?= date('Y-m-d\TH:i') ?>">
-                    </div>
-                    <div class="adm-form-group">
-                        <label>Auto-Expiry (Optional)</label>
-                        <input type="datetime-local" name="expires_at" class="adm-search-input">
-                    </div>
-                </div>
-
-                <div class="adm-form-group">
-                    <label><input type="checkbox" name="requires_acknowledgement"> Require Acknowledgement (Recipients must click 'Read & Understood')</label>
-                </div>
-
-                <div class="adm-form-group">
-                    <label>Attach File (PDF/Images)</label>
-                    <input type="file" name="attachment" class="adm-search-input">
-                </div>
-
-                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%; padding:1rem;">
-                    <i class="fas fa-paper-plane" style="margin-right:0.5rem;"></i> Send Broadcast Now
-                </button>
-            </form>
-        </div>
+<!-- Modal -->
+<div id="msgModal" class="adm-overlay" style="z-index:9999; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.5);">
+    <div style="background:#fff; padding:2rem; border-radius:12px; width:90%; max-width:500px; box-shadow:0 15px 40px rgba(0,0,0,0.2);">
+        <h3 id="modalTitle" style="margin-bottom:1rem; color:var(--text-dark);">Add Message</h3>
+        <form method="POST">
+            <input type="hidden" name="action" id="formAction" value="add">
+            <input type="hidden" name="id" id="msgId" value="">
+            
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:.5rem; font-weight:500; font-size:.9rem;">Message Text</label>
+                <textarea name="message_text" id="msgText" required class="adm-input" rows="4" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px; font-family:inherit;"></textarea>
+            </div>
+            
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:.5rem; font-weight:500; font-size:.9rem;">Category</label>
+                <select name="category" id="msgCat" class="adm-input" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px;">
+                    <option value="wellness">Wellness</option>
+                    <option value="safety">Safety</option>
+                    <option value="reminder">Reminder</option>
+                    <option value="motivational">Motivational</option>
+                    <option value="health tip">Health Tip</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:.5rem; font-weight:500; font-size:.9rem;">Target Role</label>
+                <select name="target_role" id="msgRole" class="adm-input" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px;">
+                    <option value="">All Roles (Global)</option>
+                    <option value="doctor">Doctor</option>
+                    <option value="patient">Patient</option>
+                    <option value="nurse">Nurse</option>
+                    <option value="pharmacist">Pharmacist</option>
+                    <option value="lab_technician">Lab Technician</option>
+                    <option value="staff">Staff</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom:1.5rem;">
+                <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer;">
+                    <input type="checkbox" name="is_active" id="msgActive" value="1" checked>
+                    <span style="font-size:.9rem; font-weight:500;">Active (Displayed in UI)</span>
+                </label>
+            </div>
+            
+            <div style="display:flex; gap:1rem; justify-content:flex-end;">
+                <button type="button" class="adm-btn" onclick="closeModal()" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                <button type="submit" class="adm-btn adm-btn-primary">Save Message</button>
+            </div>
+        </form>
     </div>
 </div>
-
-<!-- Stats Modal -->
-<div class="adm-modal" id="statsModal">
-    <div class="adm-modal-content">
-        <div class="adm-modal-header">
-            <h3><i class="fas fa-chart-pie"></i> Delivery Intelligence</h3>
-            <button class="adm-modal-close" onclick="document.getElementById('statsModal').classList.remove('active')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="adm-modal-body" id="statsBody">
-            <!-- Loaded via AJAX -->
-        </div>
-    </div>
-</div>
-
-<style>
-.audience-sub-options { margin-bottom: 1.5rem; background: var(--bg-secondary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
-.chk-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
-.chk-grid label { font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
-.status-sent { background: #e6ffed; color: #28a745; }
-.status-scheduled { background: #fff8e1; color: #fbc02d; }
-.priority-critical { background: #ffebee; color: #d32f2f; font-weight: bold; }
-.priority-urgent { background: #fff3e0; color: #f57c00; }
-</style>
 
 <script>
-// Initialize Quill
-var quill = new Quill('#editor', {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            ['bold', 'italic', 'underline'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link', 'clean']
-        ]
-    }
-});
-
-function openComposer() { document.getElementById('composerModal').classList.add('active'); }
-function closeComposer() { document.getElementById('composerModal').classList.remove('active'); }
-
-function toggleAudienceOptions() {
-    const type = document.getElementById('audienceType').value;
-    document.querySelectorAll('.audience-sub-options').forEach(el => el.style.display = 'none');
-    if (type === 'Role') document.getElementById('roleOptions').style.display = 'block';
-    if (type === 'Department') document.getElementById('deptOptions').style.display = 'block';
-    if (type === 'Individual') document.getElementById('individualOptions').style.display = 'block';
+function openModal() {
+    document.getElementById('modalTitle').innerText = 'Add Health Message';
+    document.getElementById('formAction').value = 'add';
+    document.getElementById('msgId').value = '';
+    document.getElementById('msgText').value = '';
+    document.getElementById('msgCat').value = 'wellness';
+    document.getElementById('msgRole').value = '';
+    document.getElementById('msgActive').checked = true;
+    document.getElementById('msgModal').style.display = 'flex';
 }
-
-document.getElementById('broadcastForm').onsubmit = function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    
-    // Get rich text content
-    document.getElementById('bodyInput').value = quill.root.innerHTML;
-    formData.set('body', quill.root.innerHTML);
-
-    // Resolve audience IDs
-    let audienceIds = [];
-    const type = document.getElementById('audienceType').value;
-    if (type === 'Role') {
-        document.querySelectorAll('.role-chk:checked').forEach(c => audienceIds.push(c.value));
-    } else if (type === 'Department') {
-        document.querySelectorAll('.dept-chk:checked').forEach(c => audienceIds.push(c.value));
-    } else if (type === 'Individual') {
-        audienceIds = document.getElementById('individualIds').value.split(',').map(s => s.trim());
-    }
-    formData.append('audience_ids', JSON.stringify(audienceIds));
-
-    fetch('broadcast_actions.php', { method: 'POST', body: formData })
-    .then(r => r.json())
-    .then(res => {
-        if (res.success) {
-            location.reload();
-        } else {
-            alert('Error: ' + res.message);
-        }
-    });
-};
-
-function cancelBroadcast(id) {
-    if (!confirm('Cancel this scheduled broadcast?')) return;
-    const fd = new FormData();
-    fd.append('action', 'cancel');
-    fd.append('id', id);
-    fetch('broadcast_actions.php', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(res => location.reload());
+function editModal(msg) {
+    document.getElementById('modalTitle').innerText = 'Edit Health Message';
+    document.getElementById('formAction').value = 'edit';
+    document.getElementById('msgId').value = msg.id;
+    document.getElementById('msgText').value = msg.message_text;
+    document.getElementById('msgCat').value = msg.message_category;
+    document.getElementById('msgRole').value = msg.target_role || '';
+    document.getElementById('msgActive').checked = msg.is_active == 1;
+    document.getElementById('msgModal').style.display = 'flex';
 }
-
-function viewStats(id) {
-    document.getElementById('statsModal').classList.add('active');
-    document.getElementById('statsBody').innerHTML = 'Loading intelligence...';
-    fetch('broadcast_actions.php?action=get_stats&id=' + id)
-    .then(r => r.json())
-    .then(res => {
-        const s = res.stats;
-        document.getElementById('statsBody').innerHTML = `
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; text-align:center;">
-                <div class="adm-card" style="padding:1rem;"><h1>${s.total}</h1><small>Recipients</small></div>
-                <div class="adm-card" style="padding:1rem;"><h1>${s.delivered}</h1><small>Delivered</small></div>
-                <div class="adm-card" style="padding:1rem;"><h1>${s.read_count}</h1><small>Read</small></div>
-                <div class="adm-card" style="padding:1rem;"><h1>${s.ack_count}</h1><small>Acknowledged</small></div>
-            </div>
-            <hr style="margin:2rem 0;">
-            <button class="adm-btn adm-btn-outline" style="width:100%;" onclick="viewRecipientList(${id})">View Detailed Recipient Log</button>
-        `;
-    });
-}
-
-function viewRecipientList(id) {
-    fetch('broadcast_actions.php?action=get_recipients&id=' + id)
-    .then(r => r.json())
-    .then(res => {
-        let html = '<table class="adm-table sm"><thead><tr><th>User</th><th>Role</th><th>Status</th></tr></thead><tbody>';
-        res.recipients.forEach(r => {
-            const status = r.acknowledged_at ? 'Acked' : (r.read_at ? 'Read' : (r.delivered_at ? 'Delivered' : 'Pending'));
-            html += `<tr><td>${r.name}</td><td>${r.recipient_role}</td><td>${status}</td></tr>`;
-        });
-        html += '</tbody></table>';
-        document.getElementById('statsBody').innerHTML = html;
-    });
+function closeModal() {
+    document.getElementById('msgModal').style.display = 'none';
 }
 </script>
 </body>

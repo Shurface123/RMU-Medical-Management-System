@@ -140,6 +140,7 @@ $default_view = $settings['default_view'] ?? 'overview';
 .prof-toggle input:checked + .prof-toggle-slider:before { transform:translateX(22px); }
 </style>
 
+<?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
 <script>
 function checkSetPassStrength(v) {
     let s=0; if(v.length>=8)s++; if(/[A-Z]/.test(v))s++; if(/[0-9]/.test(v))s++; if(/[^A-Za-z0-9]/.test(v))s++;

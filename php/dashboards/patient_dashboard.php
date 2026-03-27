@@ -286,5 +286,7 @@ document.addEventListener('click',e=>{if(e.target.classList.contains('modal-bg')
 // ── Responsive menu toggle ──────────────────────────────
 (function(){const mq=window.matchMedia('(max-width:900px)');function h(e){document.getElementById('menuToggle').style.display=e.matches?'flex':'none';}mq.addListener(h);h(mq);})();
 </script>
+
+
 </body>
 </html>

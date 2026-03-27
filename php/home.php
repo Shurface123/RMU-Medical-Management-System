@@ -87,6 +87,24 @@ for ($i = 5; $i >= 0; $i--) {
     $q = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM patients WHERE DATE_FORMAT(admit_date,'%Y-%m') = '$month_num'");
     $monthly_patients[] = $q ? (mysqli_fetch_assoc($q)['cnt'] ?? 0) : 0;
 }
+// ── Logout Analytics (Phase 3) ─────────────────
+$logout_stats = [
+    'today' => 0,
+    'forced_week' => 0,
+    'top_role' => 'N/A',
+    'peak_hour' => 'N/A'
+];
+$q_today = mysqli_query($conn, "SELECT COUNT(*) as c FROM logout_logs WHERE DATE(created_at) = CURDATE()");
+if ($q_today) $logout_stats['today'] = mysqli_fetch_assoc($q_today)['c'] ?? 0;
+
+$q_forced = mysqli_query($conn, "SELECT COUNT(*) as c FROM logout_logs WHERE logout_type='forced' AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+if ($q_forced) $logout_stats['forced_week'] = mysqli_fetch_assoc($q_forced)['c'] ?? 0;
+
+$q_role = mysqli_query($conn, "SELECT role, COUNT(*) as c FROM logout_logs GROUP BY role ORDER BY c DESC LIMIT 1");
+if ($q_role && $r = mysqli_fetch_assoc($q_role)) $logout_stats['top_role'] = ucfirst($r['role']);
+
+$q_hour = mysqli_query($conn, "SELECT HOUR(created_at) as h, COUNT(*) as c FROM logout_logs WHERE DATE(created_at) = CURDATE() GROUP BY h ORDER BY c DESC LIMIT 1");
+if ($q_hour && $h = mysqli_fetch_assoc($q_hour)) $logout_stats['peak_hour'] = str_pad($h['h'], 2, '0', STR_PAD_LEFT) . ':00';
 
 $active_page = 'dashboard';
 $page_title  = 'Admin Dashboard';
@@ -250,6 +268,35 @@ include 'includes/_sidebar.php';
             <div class="adm-chart-card">
                 <h3><i class="fas fa-chart-doughnut"></i> Medicine Stock Overview</h3>
                 <canvas id="chartMedicine" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- ── Security & Logout Analytics Panel (Phase 3) ── -->
+        <h3 style="margin-bottom: 1rem; margin-top: 2rem; color: var(--text-dark);"><i class="fas fa-shield-alt" style="color: #2F80ED;"></i> Security &amp; Logout Analytics</h3>
+        <div class="adm-stats-grid" style="margin-bottom: 2.8rem;">
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(47, 128, 237, 0.1); color: #2F80ED;"><i class="fas fa-sign-out-alt"></i></div>
+                <div class="adm-stat-label">Total Logouts Today</div>
+                <div class="adm-stat-value"><?php echo $logout_stats['today']; ?></div>
+                <div class="adm-stat-footer" style="color:var(--text-muted);"><i class="fas fa-chart-pie"></i> Validated manual &amp; timeout</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(231, 76, 60, 0.1); color: #e74c3c;"><i class="fas fa-ban"></i></div>
+                <div class="adm-stat-label">Forced Logouts (7 Days)</div>
+                <div class="adm-stat-value"><?php echo $logout_stats['forced_week']; ?></div>
+                <div class="adm-stat-footer" style="color:#e74c3c;"><i class="fas fa-exclamation-circle"></i> Security actions</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(39, 174, 96, 0.1); color: #27ae60;"><i class="fas fa-users"></i></div>
+                <div class="adm-stat-label">Most Active Role</div>
+                <div class="adm-stat-value" style="font-size: 1.6rem; margin-top:0.3rem;"><?php echo $logout_stats['top_role']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-user-tag"></i> Based on volume</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(230, 126, 34, 0.1); color: #E67E22;"><i class="fas fa-clock"></i></div>
+                <div class="adm-stat-label">Peak Logout Hour</div>
+                <div class="adm-stat-value" style="font-size: 1.6rem; margin-top:0.3rem;"><?php echo $logout_stats['peak_hour']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-history"></i> Highest volume hour</div>
             </div>
         </div>
 

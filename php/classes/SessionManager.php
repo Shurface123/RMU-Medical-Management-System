@@ -20,13 +20,14 @@ class SessionManager {
         // Destroy any existing active sessions for this user
         $this->destroyUserSessions($userId);
         
-        // Generate unique session ID
-        $sessionId = $this->generateSessionId();
-        
-        // Start PHP session
+        // Regenerate session ID to prevent session fixation, then use PHP's native session_id()
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+        session_regenerate_id(true);
+        
+        // Use PHP's native session_id() as the single source of truth
+        $sessionId = session_id();
         
         // Set session variables
         $_SESSION['session_id'] = $sessionId;
@@ -35,7 +36,7 @@ class SessionManager {
         $_SESSION['login_time'] = time();
         $_SESSION['last_activity'] = time();
         
-        // Store session in database
+        // Store session in database using the real PHP session ID
         $this->storeSessionInDB($sessionId, $userId, $userRole);
         
         // Update last login time
@@ -62,7 +63,7 @@ class SessionManager {
         $userId = $_SESSION['user_id'];
         
         // Check if session exists in database and is active
-        $query = "SELECT * FROM user_sessions WHERE session_id = ? AND user_id = ? AND is_active = TRUE";
+        $query = "SELECT * FROM active_sessions WHERE session_id = ? AND user_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("si", $sessionId, $userId);
         $stmt->execute();
@@ -76,12 +77,12 @@ class SessionManager {
         
         $session = $result->fetch_assoc();
         
-        // Check for session timeout
-        $lastActivity = strtotime($session['last_activity']);
+        // Check for session timeout (column is 'last_active' in active_sessions table)
+        $lastActivity = strtotime($session['last_active'] ?? $session['last_activity'] ?? '0');
         $currentTime = time();
         
-        if (($currentTime - $lastActivity) > $this->session_timeout) {
-            // Session timed out
+        if ($lastActivity === 0 || ($currentTime - $lastActivity) > $this->session_timeout) {
+            // Session timed out or column unreadable
             $this->destroyCurrentSession();
             return false;
         }
@@ -97,7 +98,7 @@ class SessionManager {
      * Destroy all active sessions for a specific user
      */
     public function destroyUserSessions($userId) {
-        $query = "UPDATE user_sessions SET is_active = FALSE, logout_time = NOW() WHERE user_id = ? AND is_active = TRUE";
+        $query = "DELETE FROM active_sessions WHERE user_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -106,29 +107,41 @@ class SessionManager {
     /**
      * Destroy current session
      */
-    public function destroyCurrentSession() {
+    public function destroyCurrentSession($user_id = null, $session_id = null, $type = 'manual', $dashboard = 'unknown') {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        if (isset($_SESSION['session_id'])) {
-            $sessionId = $_SESSION['session_id'];
-            
-            // Mark session as inactive in database
-            $query = "UPDATE user_sessions SET is_active = FALSE, logout_time = NOW() WHERE session_id = ?";
+        $sid = $session_id ?? session_id();
+        $uid = $user_id ?? ($_SESSION['user_id'] ?? null);
+        
+        if ($sid) {
+            // Delete from active_sessions
+            $query = "DELETE FROM active_sessions WHERE session_id = ?";
             $stmt = $this->conn->prepare($query);
-            $stmt->bind_param("s", $sessionId);
+            $stmt->bind_param("s", $sid);
             $stmt->execute();
         }
         
         // Destroy PHP session
         $_SESSION = array();
-        
         if (isset($_COOKIE[session_name()])) {
             setcookie(session_name(), '', time() - 3600, '/');
         }
-        
         session_destroy();
+
+        // Return redirect URL from config if available
+        $redir = '/RMU-Medical-Management-System/php/index.php';
+        $cfgQ = mysqli_query($this->conn, "SELECT redirect_url FROM logout_config LIMIT 1");
+        if ($cfgQ && $row = mysqli_fetch_assoc($cfgQ)) {
+            if (!empty($row['redirect_url'])) {
+                $redir = $row['redirect_url'];
+                if (strpos($redir, '/') !== 0 && strpos($redir, 'http') !== 0) {
+                    $redir = '/RMU-Medical-Management-System/php/' . ltrim($redir, '/');
+                }
+            }
+        }
+        return $redir;
     }
     
     /**
@@ -188,7 +201,7 @@ class SessionManager {
      * Get active sessions count for a user
      */
     public function getActiveSessionsCount($userId) {
-        $query = "SELECT COUNT(*) as count FROM user_sessions WHERE user_id = ? AND is_active = TRUE";
+        $query = "SELECT COUNT(*) as count FROM active_sessions WHERE user_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -210,22 +223,22 @@ class SessionManager {
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         
-        $query = "INSERT INTO user_sessions (session_id, user_id, user_role, login_time, last_activity, ip_address, user_agent, is_active) 
-                  VALUES (?, ?, ?, NOW(), NOW(), ?, ?, TRUE)";
+        $query = "INSERT INTO active_sessions (session_id, user_id, user_role, logged_in_at, last_active, ip_address, user_agent) 
+                  VALUES (?, ?, ?, NOW(), NOW(), ?, ?)";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("sisss", $sessionId, $userId, $userRole, $ipAddress, $userAgent);
         $stmt->execute();
     }
     
     private function updateLastActivity($sessionId) {
-        $query = "UPDATE user_sessions SET last_activity = NOW() WHERE session_id = ?";
+        $query = "UPDATE active_sessions SET last_active = NOW() WHERE session_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("s", $sessionId);
         $stmt->execute();
     }
     
     private function updateLastLogin($userId) {
-        $query = "UPDATE users SET last_login = NOW() WHERE id = ?";
+        $query = "UPDATE users SET last_login_at = NOW() WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -236,10 +249,8 @@ class SessionManager {
      */
     public function cleanupExpiredSessions() {
         $timeout = $this->session_timeout;
-        $query = "UPDATE user_sessions 
-                  SET is_active = FALSE, logout_time = NOW() 
-                  WHERE is_active = TRUE 
-                  AND TIMESTAMPDIFF(SECOND, last_activity, NOW()) > ?";
+        $query = "DELETE FROM active_sessions 
+                  WHERE TIMESTAMPDIFF(SECOND, last_active, NOW()) > ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $timeout);
         $stmt->execute();
