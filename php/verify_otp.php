@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
             } else {
                 $needs_approval = (bool)($td['needs_approval'] ?? false);
                 $is_active      = $needs_approval ? 0 : 1;
-                $account_status = $needs_approval ? 'inactive' : 'active';
+                $account_status = $needs_approval ? 'pending' : 'active';
 
                 // Insert into users
                 $s_ins = mysqli_prepare($conn,

@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $name           = trim($_POST['name'] ?? '');
     $email          = trim($_POST['email'] ?? '');
+    $user_name      = trim($_POST['user_name'] ?? '');
     $phone          = trim($_POST['phone'] ?? '');
     $gender         = $_POST['gender'] ?? '';
     $specialization = trim($_POST['specialization'] ?? '');
@@ -28,21 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $schedule       = trim($_POST['schedule_notes'] ?? '');
     $is_available   = isset($_POST['is_available']) ? 1 : 0;
 
-    if (!$name || !$email || !$specialization) {
-        $error = 'Name, Email, and Specialization are required.';
+    if (!$name || !$email || !$specialization || !$user_name) {
+        $error = 'Name, Email, Specialization, and Username are required.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid email address.';
     } else {
-        // Check email uniqueness using prepared statement
-        $stmt_check = mysqli_prepare($conn, "SELECT id FROM users WHERE email=?");
-        mysqli_stmt_bind_param($stmt_check, "s", $email);
+        // Check email uniqueness
+        $stmt_check = mysqli_prepare($conn, "SELECT id FROM users WHERE email=? OR user_name=?");
+        mysqli_stmt_bind_param($stmt_check, "ss", $email, $user_name);
         mysqli_stmt_execute($stmt_check);
         mysqli_stmt_store_result($stmt_check);
-        $count_email = mysqli_stmt_num_rows($stmt_check);
+        $count_dup = mysqli_stmt_num_rows($stmt_check);
         mysqli_stmt_close($stmt_check);
 
-        if ($count_email > 0) {
-            $error = 'A user with this email already exists.';
+        if ($count_dup > 0) {
+            $error = 'A user with this email or username already exists.';
         } else {
             // Generate doctor_id
             $last_doc = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors"))[0] ?? 0;
@@ -54,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_act = 1;
 
             // Insert into users table
-            $stmt_user = mysqli_prepare($conn, "INSERT INTO users (name, email, phone, gender, password, role, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt_user, "ssssssi", $name, $email, $phone, $gender, $default_pass, $role_doc, $is_act);
+            $stmt_user = mysqli_prepare($conn, "INSERT INTO users (user_name, name, email, phone, gender, password, role, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt_user, "sssssssi", $user_name, $name, $email, $phone, $gender, $default_pass, $role_doc, $is_act);
             
             if (mysqli_stmt_execute($stmt_user)) {
                 $user_id = mysqli_insert_id($conn);
@@ -155,11 +156,19 @@ include '../includes/_sidebar.php';
                             
                             <div style="display:flex;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
                                 <div class="adm-form-group" style="flex:1;min-width:250px;">
+                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Username <span style="color:var(--danger);">*</span></label>
+                                    <input type="text" name="user_name" id="usernameField" class="adm-search-input" required
+                                           placeholder="e.g. drsmith"
+                                           value="<?php echo htmlspecialchars($_POST['user_name'] ?? ''); ?>">
+                                    <div id="usernameMsg" style="font-size: 0.85rem; margin-top: 5px;"></div>
+                                </div>
+                                <div class="adm-form-group" style="flex:1;min-width:250px;">
                                     <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Phone Number</label>
                                     <input type="tel" name="phone" class="adm-search-input"
                                            placeholder="0XXXXXXXXX"
                                            value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
                                 </div>
+                            </div>
                                 <div class="adm-form-group" style="flex:1;min-width:250px;">
                                     <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Gender <span style="color:var(--danger);">*</span></label>
                                     <select name="gender" class="adm-search-input" required>
@@ -265,7 +274,7 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 
 // Serialize checkboxes on submit
 function handleFormSubmit(form) {
-    if(!form.checkValidity()) return true;
+    if(!form.checkValidity()) return false;
     const checked = [...document.querySelectorAll('input[name="available_day[]"]:checked')].map(cb => cb.value);
     document.getElementById('availableDaysHidden').value = checked.join(', ');
     const btn = form.querySelector('button[type="submit"]');
@@ -273,6 +282,38 @@ function handleFormSubmit(form) {
     btn.style.pointerEvents = 'none';
     return true;
 }
+
+// AJAX Username Check
+const usernameField = document.getElementById('usernameField');
+const usernameMsg   = document.getElementById('usernameMsg');
+let usernameTimer;
+
+usernameField?.addEventListener('input', () => {
+    clearTimeout(usernameTimer);
+    const val = usernameField.value.trim();
+    if (val.length < 3) {
+        usernameMsg.innerHTML = '<span style="color:var(--text-muted);">Too short...</span>';
+        return;
+    }
+
+    usernameMsg.innerHTML = '<span style="color:var(--primary);"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
+    usernameTimer = setTimeout(() => {
+        const fd = new FormData();
+        fd.append('username', val);
+        fetch('/RMU-Medical-Management-System/php/ajax/check_username.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) {
+                    usernameMsg.innerHTML = '<span style="color:var(--success);"><i class="fas fa-check-circle"></i> ' + d.msg + '</span>';
+                } else {
+                    usernameMsg.innerHTML = '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> ' + d.msg + '</span>';
+                }
+            })
+            .catch(() => {
+                usernameMsg.innerHTML = '<span style="color:var(--danger);">Error checking username.</span>';
+            });
+    }, 500);
+});
 </script>
 </body>
 </html>

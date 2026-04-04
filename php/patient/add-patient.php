@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $full_name    = trim($_POST['full_name'] ?? '');
     $email        = trim($_POST['email'] ?? '');
+    $user_name    = trim($_POST['user_name'] ?? '');
     $phone        = trim($_POST['phone'] ?? '');
     $dob          = $_POST['date_of_birth'] ?? '';
     $gender       = $_POST['gender'] ?? '';
@@ -30,17 +31,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emg_phone    = trim($_POST['emergency_contact_phone'] ?? '');
     $admit_date   = $_POST['admit_date'] ?? date('Y-m-d');
 
-    if (!$full_name || !$gender) {
-        $error = 'Full name and gender are required.';
+    if (!$full_name || !$gender || !$email || !$user_name) {
+        $error = 'Full name, gender, email, and username are required.';
     } else {
         // Build patient_id securely without concurrency issue: use transaction or basic auto-increment fallback
         $last_p = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM patients"))[0] ?? 0;
         $patient_id = 'PAT-' . str_pad($last_p + 1, 5, '0', STR_PAD_LEFT);
 
         $user_id = null;
-        if ($email) {
-            $stmt_check = mysqli_prepare($conn, "SELECT id FROM users WHERE email=?");
-            mysqli_stmt_bind_param($stmt_check, "s", $email);
+        if ($email && $user_name) {
+            $stmt_check = mysqli_prepare($conn, "SELECT id FROM users WHERE email=? OR user_name=?");
+            mysqli_stmt_bind_param($stmt_check, "ss", $email, $user_name);
             mysqli_stmt_execute($stmt_check);
             $res = mysqli_stmt_get_result($stmt_check);
             if ($row = mysqli_fetch_assoc($res)) {
@@ -54,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $is_act = 1;
 
                 $stmt_user = mysqli_prepare($conn, "INSERT INTO users (user_name, name, email, phone, gender, password, user_role, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt_user, "sssssssi", $email, $full_name, $email, $phone, $gender, $default_pass, $role_pat, $is_act);
+                mysqli_stmt_bind_param($stmt_user, "sssssssi", $user_name, $full_name, $email, $phone, $gender, $default_pass, $role_pat, $is_act);
                 if (mysqli_stmt_execute($stmt_user)) {
                     $user_id = mysqli_insert_id($conn);
                 }
@@ -172,11 +173,19 @@ include '../includes/_sidebar.php';
                                     <input type="tel" name="phone" class="adm-search-input" placeholder="0XXXXXXXXX"
                                            value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
                                 </div>
+                            <div style="display:flex;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
                                 <div class="adm-form-group" style="flex:1;min-width:250px;">
-                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Email Address</label>
-                                    <input type="email" name="email" class="adm-search-input" placeholder="patient@email.com (optional)"
+                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Username <span style="color:var(--danger);">*</span></label>
+                                    <input type="text" name="user_name" id="usernameField" class="adm-search-input" required placeholder="Choose a username"
+                                           value="<?php echo htmlspecialchars($_POST['user_name'] ?? ''); ?>">
+                                    <div id="usernameMsg" style="font-size: 0.85rem; margin-top: 5px;"></div>
+                                </div>
+                                <div class="adm-form-group" style="flex:1;min-width:250px;">
+                                    <label style="display:block;margin-bottom:.5rem;color:var(--text-secondary);font-weight:600;">Email Address <span style="color:var(--danger);">*</span></label>
+                                    <input type="email" name="email" class="adm-search-input" required placeholder="patient@email.com"
                                            value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                                 </div>
+                            </div>
                             </div>
                             
                             <div class="adm-form-group" style="margin-bottom:1.5rem;">
@@ -235,7 +244,7 @@ include '../includes/_sidebar.php';
                             <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                                 <i class="fas fa-user-injured" style="color:#fff;font-size:2rem;"></i>
                             </div>
-                            <p style="font-size:1.2rem;color:var(--text-secondary);line-height:1.6;">If an email is provided, a <strong>patient</strong> login account will be created with default password <code style="background:var(--surface);padding:.2rem .6rem;border-radius:6px;color:var(--text-primary);">rmu@123</code>.</p>
+                            <p style="font-size:1.2rem;color:var(--text-secondary);line-height:1.6;">A <strong>patient</strong> login account will be created with default password <code style="background:var(--surface);padding:.2rem .6rem;border-radius:6px;color:var(--text-primary);">rmu@123</code>.</p>
                         </div>
                     </div>
 
@@ -267,12 +276,44 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 });
 
 function handleFormSubmit(form) {
-    if(!form.checkValidity()) return true;
+    if(!form.checkValidity()) return false;
     const btn = form.querySelector('button[type="submit"]');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     btn.style.pointerEvents = 'none';
     return true;
 }
+
+// AJAX Username Check
+const usernameField = document.getElementById('usernameField');
+const usernameMsg   = document.getElementById('usernameMsg');
+let usernameTimer;
+
+usernameField?.addEventListener('input', () => {
+    clearTimeout(usernameTimer);
+    const val = usernameField.value.trim();
+    if (val.length < 3) {
+        usernameMsg.innerHTML = '<span style="color:var(--text-muted);">Too short...</span>';
+        return;
+    }
+
+    usernameMsg.innerHTML = '<span style="color:var(--primary);"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
+    usernameTimer = setTimeout(() => {
+        const fd = new FormData();
+        fd.append('username', val);
+        fetch('/RMU-Medical-Management-System/php/ajax/check_username.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) {
+                    usernameMsg.innerHTML = '<span style="color:var(--success);"><i class="fas fa-check-circle"></i> ' + d.msg + '</span>';
+                } else {
+                    usernameMsg.innerHTML = '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> ' + d.msg + '</span>';
+                }
+            })
+            .catch(() => {
+                usernameMsg.innerHTML = '<span style="color:var(--danger);">Error checking username.</span>';
+            });
+    }, 500);
+});
 </script>
 </body>
 </html>

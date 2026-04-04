@@ -144,8 +144,8 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
             box-shadow: 0 8px 24px rgba(47,128,237,.25);
         }
         .logo-icon i { font-size: 2.8rem; color: var(--white); }
-        .login-header h1 { font-size: 2.1rem; color: var(--text-dark); font-weight: 700; margin-bottom: .3rem; }
-        .login-header p  { font-size: 1.05rem; color: var(--text-muted); }
+        .login-header h1 { font-size: 2.8rem; color: var(--text-dark); font-weight: 700; margin-bottom: .3rem; }
+        .login-header p  { font-size: 1.6rem; color: var(--text-muted); }
         /* Alert banners */
         .msg-box {
             border-radius: 8px; padding: 0.8rem 1rem;
@@ -167,7 +167,7 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
         /* Form */
         .form-group { margin-bottom: 1.6rem; position: relative; }
         .form-group label {
-            display: block; font-size: 1.15rem; font-weight: 600;
+            display: block; font-size: 1.6rem; font-weight: 600;
             color: var(--text-dark); margin-bottom: .6rem;
         }
         .input-wrapper { position: relative; }
@@ -179,8 +179,8 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
         }
         .form-control {
             width: 100%;
-            padding: 0.9rem 1rem 0.9rem 3.4rem;
-            font-size: 1.15rem;
+            padding: 1.2rem 1.2rem 1.2rem 3.8rem;
+            font-size: 1.6rem;
             border: 2px solid var(--border);
             border-radius: 12px;
             transition: all .2s;
@@ -200,7 +200,7 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
             position: absolute; right: 1.2rem; top: 50%;
             transform: translateY(-50%);
             cursor: pointer; color: var(--text-muted);
-            font-size: 1.15rem; transition: color .2s;
+            font-size: 1.6rem; transition: color .2s;
             background: none; border: none; padding: 0;
         }
         .pw-toggle:hover { color: var(--primary-color); }
@@ -213,7 +213,7 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
         /* Remember Me row */
         .remember-row {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1.4rem; font-size: 0.9rem; color: var(--text-muted);
+            margin-bottom: 1.4rem; font-size: 1.4rem; color: var(--text-muted);
         }
         .remember-row label {
             display: flex; align-items: center; gap: .4rem; cursor: pointer;
@@ -228,12 +228,12 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
 
         /* Submit button */
         .btn-login {
-            width: 100%; padding: 1rem;
-            font-size: 1rem; font-weight: 600;
+            width: 100%; padding: 1.2rem;
+            font-size: 1.6rem; font-weight: 600;
             background: linear-gradient(135deg,#2F80ED,#56CCF2);
             color: var(--white);
             border: none; border-radius: 12px;
-            cursor: pointer; transition: all .2s;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-transform: uppercase; letter-spacing: 1px;
             box-shadow: 0 8px 20px rgba(47,128,237,.25);
             display: flex; align-items: center; justify-content: center; gap: .6rem;
@@ -245,6 +245,14 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
         }
         .btn-login:disabled { opacity: .7; cursor: not-allowed; transform: none; }
         .btn-login .spinner { display: none; align-items: center; justify-content: center; gap: .6rem; }
+        .btn-login.loading {
+            animation: advancedRotate 0.8s ease-in-out forwards;
+        }
+        @keyframes advancedRotate {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(0.9) rotate(45deg); }
+            100% { transform: scale(1) rotate(90deg); opacity: 0.8; }
+        }
         .btn-login.loading .btn-text { display: none; }
         .btn-login.loading .spinner { display: flex; }
 
@@ -273,7 +281,7 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
             text-align: center; margin-top: 2rem;
             padding-top: 1.8rem; border-top: 1px solid var(--border);
         }
-        .login-footer p { font-size: 1.3rem; color: var(--text-muted); margin-bottom: .8rem; }
+        .login-footer p { font-size: 1.5rem; color: var(--text-muted); margin-bottom: .8rem; }
         .login-footer a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
         .login-footer a:hover { text-decoration: underline; }
 
@@ -284,7 +292,7 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
             padding: 1rem 2rem;
             background: rgba(255,255,255,.95);
             color: var(--primary-color); text-decoration: none;
-            border-radius: 50px; font-size: 1.4rem; font-weight: 600;
+            border-radius: 50px; font-size: 1.6rem; font-weight: 600;
             box-shadow: 0 10px 30px rgba(47,128,237,.2); transition: all .3s;
         }
         .back-home a:hover { background: var(--white); transform: translateY(-2px); }

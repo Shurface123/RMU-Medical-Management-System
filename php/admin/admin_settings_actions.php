@@ -186,12 +186,28 @@ switch ($action) {
         $name  = $_POST['fullname'] ?? '';
         $pass  = password_hash($_POST['password'] ?? 'Sickbay@2026', PASSWORD_DEFAULT);
         
+        if (empty($uname) || empty($email) || empty($_POST['password'])) {
+            echo json_encode(['success' => false, 'message' => 'Username, Email and Password are required.']);
+            exit();
+        }
+
+        // Check uniqueness
+        $check = $conn->prepare("SELECT id FROM users WHERE user_name = ? OR email = ?");
+        $check->bind_param("ss", $uname, $email);
+        $check->execute();
+        if ($check->get_result()->num_rows > 0) {
+            echo json_encode(['success' => false, 'message' => 'Username or Email already taken.']);
+            exit();
+        }
+
         $q = "INSERT INTO users (user_name, email, password, user_role, name, is_active, is_verified) 
               VALUES (?, ?, ?, ?, ?, 1, 1)";
         $st = $conn->prepare($q);
         $st->bind_param("sssss", $uname, $email, $pass, $role, $name);
         if ($st->execute()) {
-            echo json_encode(['success' => true, 'message' => 'User account created.']);
+            echo json_encode(['success' => true, 'message' => 'User account created successfully.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]);
         }
         break;
 

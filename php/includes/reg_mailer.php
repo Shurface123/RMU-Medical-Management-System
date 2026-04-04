@@ -193,7 +193,7 @@ function reg_send_2fa_email($conn, string $to_email, string $to_name, string $ot
             $mail->SMTPAuth   = true;
             $mail->Username   = $cfg['smtp_username'];
             $mail->Password   = $cfg['smtp_password_plain'];
-            $mail->SMTPSecure = ($cfg['encryption'] ?? 'tls') === 'ssl' ? 'ssl' : 'tls';
+            $mail->SMTPSecure = (($cfg['encryption'] ?? 'tls') === 'ssl') ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = (int)($cfg['smtp_port'] ?? 587);
             $mail->setFrom($cfg['from_email'], $cfg['from_name']);
             $mail->addAddress($to_email, $to_name);
@@ -203,34 +203,142 @@ function reg_send_2fa_email($conn, string $to_email, string $to_name, string $ot
                 "<!DOCTYPE html><html><body style='font-family:Poppins,sans-serif;background:#F4F8FF;'>".                "<div style='max-width:560px;margin:40px auto;background:#fff;border-radius:24px;overflow:hidden;'>".                "<div style='background:linear-gradient(135deg,#1C3A6B,#2F80ED,#56CCF2);padding:32px;text-align:center;'>".                "<h1 style='color:#fff;margin:0;'>&#x1F510; Two-Factor Authentication</h1></div>".                "<div style='padding:32px;'>".                "<h2 style='color:#1A2035;'>Hello, {$to_name}!</h2>".                "<p style='color:#5A6A85;'>Your one-time verification code is:</p>".                "<div style='text-align:center;margin:24px 0;'>".                "<span style='font-size:3rem;font-weight:700;letter-spacing:12px;color:#2F80ED;'>{$otp}</span></div>".                "<p style='color:#e74c3c;'><strong>This code expires in 5 minutes.</strong></p>".                "<p style='color:#5A6A85;'>If you did not attempt to log in, please change your password immediately.</p>".                "</div></div></body></html>";
             $mail->send();
         } catch (Exception $e) {
-            error_log('2FA email failed: ' . $mail->ErrorInfo);
+            error_log('[RMU-Sickbay] 2FA email failed to ' . $to_email . ': ' . $mail->ErrorInfo);
         }
 }
 
 /**
  * Send password reset link email.
  */
-function reg_send_password_reset_email($conn, string $to_email, string $to_name, string $reset_link): void {
-        $cfg  = reg_get_smtp_config($conn);
-        $mail = new PHPMailer(true);
-        try {
-            $mail->isSMTP();
-            $mail->Host       = $cfg['smtp_host'];
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $cfg['smtp_username'];
-            $mail->Password   = $cfg['smtp_password_plain'];
-            $mail->SMTPSecure = ($cfg['encryption'] ?? 'tls') === 'ssl' ? 'ssl' : 'tls';
-            $mail->Port       = (int)($cfg['smtp_port'] ?? 587);
-            $mail->setFrom($cfg['from_email'], $cfg['from_name']);
-            $mail->addAddress($to_email, $to_name);
-            $mail->isHTML(true);
-            $mail->Subject = 'Password Reset Request — RMU Medical Sickbay';
-            $mail->Body    =
-                "<!DOCTYPE html><html><body style='font-family:Poppins,sans-serif;background:#F4F8FF;'>".                "<div style='max-width:560px;margin:40px auto;background:#fff;border-radius:24px;overflow:hidden;'>".                "<div style='background:linear-gradient(135deg,#1C3A6B,#2F80ED,#56CCF2);padding:32px;text-align:center;'>".                "<h1 style='color:#fff;margin:0;'>&#x1F511; Password Reset Request</h1></div>".                "<div style='padding:32px;'>".                "<h2 style='color:#1A2035;'>Hello, {$to_name}!</h2>".                "<p style='color:#5A6A85;'>Click the button below to reset your password. This link expires in 30 minutes.</p>".                "<div style='text-align:center;margin:28px 0;'>".                "<a href='{$reset_link}' style='background:linear-gradient(135deg,#2F80ED,#56CCF2);color:#fff;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:600;'>Reset My Password</a></div>".                "<p style='color:#5A6A85;'>If you did not request this, you can safely ignore this email.</p>".                "<p style='color:#aaa;font-size:.8rem;word-break:break-all;'>Direct link: {$reset_link}</p>".                "</div></div></body></html>";
-            $mail->send();
-        } catch (Exception $e) {
-            error_log('Password reset email failed: ' . $mail->ErrorInfo);
-        }
+function reg_send_password_reset_email($conn, string $to_email, string $to_name, string $reset_link): array {
+    $cfg  = reg_get_smtp_config($conn);
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->SMTPDebug  = 0; // Set to SMTP::DEBUG_SERVER for troubleshooting
+        $mail->Host       = $cfg['smtp_host'] ?? 'smtp.gmail.com';
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $cfg['smtp_username'] ?? '';
+        $mail->Password   = $cfg['smtp_password_plain'] ?? '';
+        $mail->SMTPSecure = (($cfg['encryption'] ?? 'tls') === 'ssl')
+                            ? PHPMailer::ENCRYPTION_SMTPS
+                            : PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = (int)($cfg['smtp_port'] ?? 587);
+        $mail->Timeout    = 15;
+        $mail->setFrom($cfg['from_email'] ?? 'sickbay.text@st.rmu.edu.gh',
+                       $cfg['from_name']  ?? 'RMU Medical Sickbay');
+        $mail->addAddress($to_email, $to_name);
+        $mail->isHTML(true);
+        $mail->CharSet = 'UTF-8';
+        $mail->Subject = 'Password Reset Request — RMU Medical Sickbay';
+
+        // ── Rich HTML Email Body ──────────────────────────────
+        $year = date('Y');
+        $mail->Body = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F4F8FF;font-family:Poppins,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr><td align="center" style="padding:40px 16px;">
+    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(47,128,237,.15);">
+      <!-- Header -->
+      <tr><td style="background:linear-gradient(135deg,#1C3A6B,#2F80ED,#56CCF2);padding:36px 32px;text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:8px;">🔑</div>
+        <h1 style="color:#fff;margin:0;font-size:22px;font-weight:700;">Password Reset Request</h1>
+        <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:14px;">RMU Medical Sickbay System</p>
+      </td></tr>
+      <!-- Body -->
+      <tr><td style="padding:36px 32px;">
+        <p style="color:#2c3e50;font-size:16px;font-weight:600;margin:0 0 8px;">Hello, {$to_name}!</p>
+        <p style="color:#5A6A85;font-size:14px;line-height:1.7;margin:0 0 24px;">
+          We received a request to reset the password for your RMU Medical Sickbay account.
+          Click the button below to set a new password. This link is valid for <strong>30 minutes</strong>.
+        </p>
+        <!-- CTA Button -->
+        <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+          <tr><td align="center" bgcolor="#2F80ED" style="border-radius:50px;">
+            <a href="{$reset_link}"
+               style="display:inline-block;padding:14px 36px;color:#fff;font-size:15px;font-weight:700;text-decoration:none;border-radius:50px;">
+              Reset My Password
+            </a>
+          </td></tr>
+        </table>
+        <!-- Security Notice -->
+        <table cellpadding="0" cellspacing="0" width="100%">
+          <tr><td style="background:#FEF9E7;border-left:4px solid #F39C12;border-radius:8px;padding:14px 16px;">
+            <p style="margin:0;color:#935116;font-size:13px;line-height:1.6;">
+              <strong>⚠ Security Notice:</strong> If you did not request a password reset, please ignore this email.
+              Your password will remain unchanged. Consider reviewing your account security if you did not initiate this request.
+            </p>
+          </td></tr>
+        </table>
+        <p style="color:#aaa;font-size:12px;margin:20px 0 0;word-break:break-all;">
+          If the button above does not work, copy and paste this link into your browser:<br>
+          <a href="{$reset_link}" style="color:#2F80ED;">{$reset_link}</a>
+        </p>
+      </td></tr>
+      <!-- Footer -->
+      <tr><td style="background:#F4F8FF;padding:20px 32px;text-align:center;border-top:1px solid #e8eef7;">
+        <p style="margin:0;color:#7f8c8d;font-size:12px;">
+          &copy; {$year} RMU Medical Sickbay, Regional Maritime University, Accra, Ghana.<br>
+          This is an automated message. Please do not reply to this email.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>
+HTML;
+        $mail->AltBody = "Hello {$to_name},
+
+You requested a password reset for your RMU Medical Sickbay account.
+
+"
+                       . "Reset link (valid 30 minutes):
+{$reset_link}
+
+"
+                       . "If you did not request this, please ignore this email.
+
+"
+                       . "RMU Medical Sickbay";
+
+        $mail->send();
+
+        // Log success
+        reg_log_email_queue($conn, $to_email, 'password_reset', 'sent');
+        return ['success' => true];
+
+    } catch (Exception $e) {
+        $err = $mail->ErrorInfo;
+        error_log('[RMU-Sickbay] Password reset email FAILED to ' . $to_email . ' — ' . $err);
+        reg_log_email_queue($conn, $to_email, 'password_reset', 'failed', $err);
+        return ['success' => false, 'error' => $err];
+    }
+}
+
+/**
+ * Helper: log email send attempts to email_queue_log table (if available).
+ */
+function reg_log_email_queue($conn, string $to_email, string $type, string $status, string $error = ''): void {
+    // Write to flat log file as guaranteed fallback
+    $log_dir  = dirname(__DIR__, 2) . '/logs/';
+    $log_file = $log_dir . 'email_queue.log';
+    if (!is_dir($log_dir)) @mkdir($log_dir, 0755, true);
+    $line = date('Y-m-d H:i:s') . " | $status | $type | $to_email"
+          . ($error ? " | ERR: $error" : '') . PHP_EOL;
+    @file_put_contents($log_file, $line, FILE_APPEND | LOCK_EX);
+
+    // Also attempt DB log
+    @mysqli_query($conn,
+        "INSERT IGNORE INTO email_queue_log (to_email, email_type, status, error_message, sent_at)
+         VALUES ('" . mysqli_real_escape_string($conn, $to_email) . "',
+                 '" . mysqli_real_escape_string($conn, $type)     . "',
+                 '" . mysqli_real_escape_string($conn, $status)   . "',
+                 '" . mysqli_real_escape_string($conn, $error)    . "',
+                 NOW())"
+    );
 }
 
 /**
@@ -245,7 +353,7 @@ function reg_send_password_changed_email($conn, string $to_email, string $to_nam
             $mail->SMTPAuth   = true;
             $mail->Username   = $cfg['smtp_username'];
             $mail->Password   = $cfg['smtp_password_plain'];
-            $mail->SMTPSecure = ($cfg['encryption'] ?? 'tls') === 'ssl' ? 'ssl' : 'tls';
+            $mail->SMTPSecure = (($cfg['encryption'] ?? 'tls') === 'ssl') ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = (int)($cfg['smtp_port'] ?? 587);
             $mail->setFrom($cfg['from_email'], $cfg['from_name']);
             $mail->addAddress($to_email, $to_name);

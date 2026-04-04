@@ -39,12 +39,12 @@ $site_key = RECAPTCHA_SITE_KEY;
     --bg-gradient: linear-gradient(135deg, #1C3A6B 0%, #2F80ED 55%, #56CCF2 100%);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Poppins',sans-serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;background:var(--bg-gradient);padding:4rem 1.5rem;position:relative;overflow-x:hidden;}
-body::before{content:'';position:absolute;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:50px 50px;animation:bgMove 25s linear infinite;pointer-events:none;}
+body{font-family:'Poppins',sans-serif;background:var(--bg-gradient);padding:4rem 1.5rem;position:relative;overflow-x:hidden;}
+body::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:50px 50px;animation:bgMove 25s linear infinite;pointer-events:none;z-index:0;}
 @keyframes bgMove{0%{transform:translate(0,0)}100%{transform:translate(50px,50px)}}
 
 /* ── Container ── */
-.reg-container{position:relative;z-index:10;background:#fff;border-radius:28px;box-shadow:0 20px 70px rgba(47,128,237,.25);width:100%;max-width:700px;padding:0;overflow:hidden;animation:slideIn .5s ease-out;}
+.reg-container{margin:0 auto;position:relative;z-index:10;background:#fff;border-radius:28px;box-shadow:0 20px 70px rgba(47,128,237,.25);width:100%;max-width:700px;padding:0;overflow:hidden;display:block;animation:slideIn .5s ease-out;}
 @keyframes slideIn{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── Header bar ── */
@@ -168,6 +168,22 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .back-home a:hover{background:#fff;transform:translateY(-2px);}
 
 @media(max-width:600px){.form-row,.review-grid,.pw-checks{grid-template-columns:1fr;}.roles-grid{grid-template-columns:1fr 1fr;}.reg-body{padding:1.5rem;}.reg-header{padding:1.6rem 1.5rem 1.4rem;}.progress-steps{gap:.1rem;}.p-label{font-size:.7rem;}}
+
+/* ── Policy Modal ── */
+.policy-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:1rem;}
+.policy-modal-overlay.open{display:flex;}
+.policy-modal{background:#fff;border-radius:20px;max-width:720px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.25);}
+.policy-modal-head{background:var(--bg-gradient);padding:1.4rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.policy-modal-head h2{color:#fff;font-size:1.2rem;font-weight:700;margin:0;}
+.policy-modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;}
+.policy-modal-close:hover{background:rgba(255,255,255,.35);}
+.policy-modal-body{padding:2rem;overflow-y:auto;font-size:.93rem;line-height:1.7;color:#2c3e50;}
+.policy-modal-body h3{font-size:1.05rem;font-weight:700;color:var(--primary);margin:1.4rem 0 .5rem;}
+.policy-modal-body h3:first-child{margin-top:0;}
+.policy-modal-body p{margin-bottom:.9rem;}
+.policy-modal-body ul{padding-left:1.4rem;margin-bottom:.9rem;}
+.policy-modal-foot{padding:1rem 2rem;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:.8rem;}
+
 </style>
 </head>
 <body>
@@ -576,8 +592,9 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
                     <input type="checkbox" name="terms" id="termsCheck"
                            style="width:18px;height:18px;margin-top:.3rem;flex-shrink:0;cursor:pointer;">
                     <label for="termsCheck" style="font-size:1.3rem;color:var(--text-dark);cursor:pointer;font-weight:400;">
-                        I agree to the <a href="#" style="color:var(--primary);font-weight:600;">Terms & Conditions</a> and
-                        <a href="#" style="color:var(--primary);font-weight:600;">Privacy Policy</a>
+                        I have read and agree to the
+                        <a href="#" onclick="event.preventDefault();openPolicyModal('terms')" style="color:var(--primary);font-weight:600;">Terms & Conditions</a> and
+                        <a href="#" onclick="event.preventDefault();openPolicyModal('privacy')" style="color:var(--primary);font-weight:600;">Privacy Policy</a>
                     </label>
                 </div>
 
@@ -877,14 +894,64 @@ function checkPwMatch() {
 pwField.addEventListener('input', () => { checkPw(); checkStep4(); });
 cpwField.addEventListener('input', checkPwMatch);
 document.getElementById('termsCheck').addEventListener('change', checkStep4);
-document.getElementById('usernameField').addEventListener('input', checkStep4);
+// Username async validation
+let usernameValid = false;
+let usernameTimer = null;
+document.getElementById('usernameField').addEventListener('input', function() {
+    clearTimeout(usernameTimer);
+    const val = this.value.trim();
+    const msg = document.getElementById('usernameMsg');
+    usernameValid = false;
+    msg.className = 'field-msg';
+    this.classList.remove('valid', 'invalid');
+    if (val.length < 3) {
+        if (val.length > 0) { msg.className='field-msg err'; msg.textContent='Username must be at least 3 characters'; this.classList.add('invalid'); }
+        else { msg.textContent=''; }
+        checkStep4(); return;
+    }
+    if (!/^[a-zA-Z0-9_.-]+$/.test(val)) {
+        msg.className='field-msg err'; msg.textContent='Only letters, numbers, _ . - allowed';
+        this.classList.add('invalid'); checkStep4(); return;
+    }
+    msg.textContent = 'Checking...';
+    usernameTimer = setTimeout(() => {
+        const fd = new FormData();
+        fd.append('username', val);
+        fetch('ajax/check_username.php', {method:'POST', body:fd})
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) {
+                    msg.className='field-msg ok'; msg.textContent='✓ Username is available';
+                    document.getElementById('usernameField').classList.add('valid');
+                    usernameValid = true;
+                } else {
+                    msg.className='field-msg err'; msg.textContent = d.msg || 'Username already taken';
+                    document.getElementById('usernameField').classList.add('invalid');
+                    usernameValid = false;
+                }
+                checkStep4();
+            })
+            .catch(() => { usernameValid = true; checkStep4(); });
+    }, 600);
+});
 
 function checkStep4() {
-    const allPw   = checkPw();
-    const match   = pwField.value === cpwField.value && cpwField.value.length > 0;
-    const terms   = document.getElementById('termsCheck').checked;
-    const uname   = document.getElementById('usernameField').value.trim().length >= 3;
-    document.getElementById('step4Next').disabled = !(allPw && match && terms && uname);
+    const pw    = pwField.value;
+    const cpw   = cpwField.value;
+    const terms = document.getElementById('termsCheck').checked;
+    const uname = document.getElementById('usernameField').value.trim().length >= 3;
+
+    // Check all password criteria independently (no circular call to checkPw)
+    const checks = {
+        len:  pw.length >= 8,
+        up:   /[A-Z]/.test(pw),
+        lo:   /[a-z]/.test(pw),
+        num:  /[0-9]/.test(pw),
+        sym:  /[!@#$%^&*()\-_=+\[\]{}|;:'",.<>?\/\\`~]/.test(pw)
+    };
+    const allPw = Object.values(checks).every(Boolean);
+    const match = pw === cpw && cpw.length > 0;
+    document.getElementById('step4Next').disabled = !(allPw && match && terms && uname && usernameValid);
 }
 
 function togglePw(id, btn) {
@@ -968,5 +1035,160 @@ function showGlobalErr(msg) {
 const params = new URLSearchParams(location.search);
 if (params.get('error')) showGlobalErr(params.get('error'));
 </script>
+
+<!-- ── Privacy Policy & Terms Modal ── -->
+<div class="policy-modal-overlay" id="policyModalOverlay" onclick="if(event.target===this)closePolicyModal()">
+  <div class="policy-modal">
+    <div class="policy-modal-head">
+      <h2 id="policyModalTitle"><i class="fas fa-file-contract"></i> Policy Document</h2>
+      <button class="policy-modal-close" onclick="closePolicyModal()" title="Close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="policy-modal-body" id="policyModalBody"></div>
+    <div class="policy-modal-foot">
+      <button class="btn btn-outline btn-sm" onclick="closePolicyModal()">Close</button>
+      <button class="btn btn-primary btn-sm" onclick="acceptPolicy()"><i class="fas fa-check"></i> I Accept</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const POLICY_CONTENT = {
+  terms: {
+    title: '<i class="fas fa-file-contract"></i> Terms & Conditions',
+    body: `
+      <h3>1. Introduction</h3>
+      <p>Welcome to the RMU Medical Sickbay Management System ("System"), operated by Regional Maritime University (RMU) in Accra, Ghana. By registering and using this System, you agree to comply with and be bound by these Terms and Conditions.</p>
+
+      <h3>2. Eligibility</h3>
+      <p>This System is exclusively available to:</p>
+      <ul>
+        <li>Registered students and staff of Regional Maritime University.</li>
+        <li>Licensed healthcare professionals (Doctors, Nurses, Lab Technicians, Pharmacists) employed or contracted by RMU Sickbay.</li>
+        <li>Authorised administrative staff of RMU Medical Sickbay.</li>
+      </ul>
+
+      <h3>3. User Accounts & Security</h3>
+      <p>Users are responsible for maintaining the confidentiality of their credentials. Any unauthorised access or breach must be reported immediately to the Sickbay Administrator. RMU reserves the right to terminate accounts that are misused or inactive.</p>
+
+      <h3>4. Acceptable Use</h3>
+      <p>You agree to use the System solely for its intended medical management purposes. You must not:</p>
+      <ul>
+        <li>Share your login credentials with any other person.</li>
+        <li>Access patient records without clinical necessity.</li>
+        <li>Attempt to alter, delete, or corrupt any data belonging to another user or patient.</li>
+        <li>Use the System for any commercial or non-medical purpose.</li>
+      </ul>
+
+      <h3>5. Healthcare Professional Responsibilities</h3>
+      <p>Doctors, Nurses, Lab Technicians, and Pharmacists must ensure that all clinical entries, prescriptions, and test results recorded in the System are accurate and comply with the standards of the Ghana Health Service and the Medical and Dental Council of Ghana.</p>
+
+      <h3>6. Account Approval</h3>
+      <p>Clinical staff accounts require administrator approval before access is granted. Submission of false credentials during registration is a disciplinary offence and may lead to permanent account suspension and reporting to the relevant professional licensing body.</p>
+
+      <h3>7. Disclaimer</h3>
+      <p>RMU Medical Sickbay System is a support tool and does not replace professional clinical judgement. RMU shall not be held liable for any clinical outcome arising from reliance solely on data presented in this System.</p>
+
+      <h3>8. Amendments</h3>
+      <p>RMU reserves the right to update these Terms at any time. Continued use of the System after updates constitutes acceptance of the revised Terms.</p>
+
+      <h3>9. Governing Law</h3>
+      <p>These Terms shall be governed by the laws of the Republic of Ghana.</p>
+
+      <h3>10. Contact</h3>
+      <p>For queries regarding these Terms, contact the Sickbay Administration at <strong>sickbay@rmu.edu.gh</strong> or call <strong>+233-302-716-071</strong>.</p>
+    `
+  },
+  privacy: {
+    title: '<i class="fas fa-shield-alt"></i> Privacy Policy',
+    body: `
+      <h3>1. Introduction</h3>
+      <p>Regional Maritime University (RMU) is committed to protecting the privacy and confidentiality of all personal and medical data processed through the RMU Medical Sickbay Management System ("System"). This Privacy Policy explains how we collect, use, store, and protect your information.</p>
+
+      <h3>2. Data We Collect</h3>
+      <p>We collect and process the following categories of data:</p>
+      <ul>
+        <li><strong>Personal Data:</strong> Full name, date of birth, gender, contact details, profile photo, and student/staff ID.</li>
+        <li><strong>Medical Data:</strong> Diagnoses, prescriptions, laboratory results, appointments, vitals, and medical history.</li>
+        <li><strong>Professional Data:</strong> License numbers, specialisations, qualifications (for clinical staff).</li>
+        <li><strong>Technical Data:</strong> IP addresses, browser agent, login timestamps, and session information.</li>
+      </ul>
+
+      <h3>3. Purpose of Data Collection</h3>
+      <p>Your data is collected exclusively for:</p>
+      <ul>
+        <li>Provision of medical services at RMU Sickbay.</li>
+        <li>Coordination of care between healthcare professionals.</li>
+        <li>Administrative and record-keeping requirements.</li>
+        <li>Security auditing and system integrity monitoring.</li>
+      </ul>
+
+      <h3>4. Data Sharing</h3>
+      <p>Your data will <strong>not</strong> be sold, rented, or shared with third parties except:</p>
+      <ul>
+        <li>When required by Ghanaian law or a court order.</li>
+        <li>When necessary to protect the vital interests of a patient (emergency referrals).</li>
+        <li>With authorised RMU personnel on a strict need-to-know basis.</li>
+      </ul>
+
+      <h3>5. Data Retention</h3>
+      <p>Patient medical records are retained for a minimum of <strong>10 years</strong> from the date of last treatment in compliance with Ghana Health Service guidelines. Staff professional records are retained for the duration of employment plus 5 years.</p>
+
+      <h3>6. Data Security</h3>
+      <p>We implement the following security measures:</p>
+      <ul>
+        <li>Password hashing using bcrypt.</li>
+        <li>CSRF token protection on all forms.</li>
+        <li>Brute-force lockout mechanisms.</li>
+        <li>Encrypted SMTP for all email communications.</li>
+        <li>Session management with secure, HTTPOnly cookies.</li>
+        <li>Role-based access control (RBAC) for all data access.</li>
+      </ul>
+
+      <h3>7. Your Rights</h3>
+      <p>Under applicable Ghanaian data protection regulations and the Data Protection Act 2012 (Act 843), you have the right to:</p>
+      <ul>
+        <li>Access your personal data held in the System.</li>
+        <li>Request correction of inaccurate personal data.</li>
+        <li>Request deletion of your account subject to legal retention obligations.</li>
+      </ul>
+
+      <h3>8. Cookies</h3>
+      <p>The System uses session cookies for authentication and optional "Remember Me" cookies encrypted with SHA-256. No tracking or analytics cookies are used.</p>
+
+      <h3>9. Changes to this Policy</h3>
+      <p>This policy may be updated periodically. Users will be notified of material changes via the System dashboard.</p>
+
+      <h3>10. Contact</h3>
+      <p>For data protection enquiries, contact the RMU Data Protection Officer at <strong>dpo@rmu.edu.gh</strong>.</p>
+
+      <p><em>Last updated: April 2026</em></p>
+    `
+  }
+};
+
+function openPolicyModal(type) {
+    const overlay = document.getElementById('policyModalOverlay');
+    const title   = document.getElementById('policyModalTitle');
+    const body    = document.getElementById('policyModalBody');
+    const pc      = POLICY_CONTENT[type];
+    if (!pc) return;
+    title.innerHTML = pc.title;
+    body.innerHTML  = pc.body;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closePolicyModal() {
+    document.getElementById('policyModalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+function acceptPolicy() {
+    document.getElementById('termsCheck').checked = true;
+    closePolicyModal();
+    checkStep4();
+}
+// Close modal on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePolicyModal(); });
+</script>
+
 </body>
 </html>

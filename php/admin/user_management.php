@@ -26,22 +26,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $name = $_POST['name'];
             $role = $_POST['role'];
             
-            // Validate password
-            $validation = $securityManager->validatePassword($password, null);
-            if (!$validation['valid']) {
-                $error = $validation['message'];
+            if (empty($username) || empty($email) || empty($password)) {
+                $error = "Username, Email and Password are required.";
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = "Invalid email format.";
             } else {
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                
-                $query = "INSERT INTO users (user_name, email, password, name, user_role) VALUES (?, ?, ?, ?, ?)";
-                $stmt = $conn->prepare($query);
-                $stmt->bind_param("sssss", $username, $email, $hashedPassword, $name, $role);
-                
-                if ($stmt->execute()) {
-                    $auditLogger->logAction($_SESSION['user_id'], 'user_create', 'users', $stmt->insert_id, "Created user: $username");
-                    $message = "User created successfully!";
+                // Check uniqueness
+                $check = $conn->prepare("SELECT id FROM users WHERE user_name = ? OR email = ?");
+                $check->bind_param("ss", $username, $email);
+                $check->execute();
+                if ($check->get_result()->num_rows > 0) {
+                    $error = "Username or Email already taken.";
                 } else {
-                    $error = "Failed to create user: " . $stmt->error;
+                    $validation = $securityManager->validatePassword($password, null);
+                    if (!$validation['valid']) {
+                        $error = $validation['message'];
+                    } else {
+                        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                        $query = "INSERT INTO users (user_name, email, password, name, user_role, is_active, is_verified, account_status) VALUES (?, ?, ?, ?, ?, 1, 1, 'active')";
+                        $stmt = $conn->prepare($query);
+                        $stmt->bind_param("sssss", $username, $email, $hashedPassword, $name, $role);
+                        if ($stmt->execute()) {
+                            $new_uid = $stmt->insert_id;
+                            $auditLogger->logAction($_SESSION['user_id'], 'user_create', 'users', $new_uid, "Admin created user: $username (role: $role)");
+                            $message = "User account created successfully! The staff member can now log in.";
+                        } else {
+                            $error = "Failed to create user: " . $stmt->error;
+                        }
+                    }
                 }
             }
             break;
@@ -564,7 +576,8 @@ $stats = mysqli_fetch_assoc($statsResult);
                 
                 <div class="form-group">
                     <label>Username *</label>
-                    <input type="text" name="username" required>
+                    <input type="text" name="username" id="usernameField" required>
+                    <div id="usernameMsg" style="font-size: 0.8rem; margin-top: 4px;"></div>
                 </div>
                 
                 <div class="form-group">
@@ -728,6 +741,38 @@ $stats = mysqli_fetch_assoc($statsResult);
                 event.target.classList.remove('active');
             }
         }
+
+        // AJAX Username Check
+        const usernameField = document.getElementById('usernameField');
+        const usernameMsg   = document.getElementById('usernameMsg');
+        let usernameTimer;
+
+        usernameField?.addEventListener('input', () => {
+            clearTimeout(usernameTimer);
+            const val = usernameField.value.trim();
+            if (val.length < 3) {
+                usernameMsg.innerHTML = '<span style="color:#7f8c8d;">Too short...</span>';
+                return;
+            }
+
+            usernameMsg.innerHTML = '<span style="color:#2F80ED;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
+            usernameTimer = setTimeout(() => {
+                const fd = new FormData();
+                fd.append('username', val);
+                fetch('../ajax/check_username.php', { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.ok) {
+                            usernameMsg.innerHTML = '<span style="color:#27ae60;"><i class="fas fa-check-circle"></i> ' + d.msg + '</span>';
+                        } else {
+                            usernameMsg.innerHTML = '<span style="color:#e74c3c;"><i class="fas fa-times-circle"></i> ' + d.msg + '</span>';
+                        }
+                    })
+                    .catch(() => {
+                        usernameMsg.innerHTML = '<span style="color:#e74c3c;">Error checking username.</span>';
+                    });
+            }, 500);
+        });
     </script>
 </body>
 </html>

@@ -81,7 +81,8 @@
             <div class="grid-2">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" name="username" class="form-control" required>
+                    <input type="text" name="username" id="tabUsernameField" class="form-control" required>
+                    <div id="tabUsernameMsg" style="font-size: 0.8rem; margin-top: 4px;"></div>
                 </div>
                 <div class="form-group">
                     <label>User Role</label>
@@ -186,3 +187,38 @@
         <i class="fas fa-save"></i> Save Global Permissions
     </button>
 </div>
+
+<script>
+(function() {
+    const usernameField = document.getElementById('tabUsernameField');
+    const usernameMsg   = document.getElementById('tabUsernameMsg');
+    let usernameTimer;
+
+    usernameField?.addEventListener('input', () => {
+        clearTimeout(usernameTimer);
+        const val = usernameField.value.trim();
+        if (val.length < 3) {
+            usernameMsg.innerHTML = '<span style="color:var(--text-muted);">Too short...</span>';
+            return;
+        }
+
+        usernameMsg.innerHTML = '<span style="color:var(--primary);"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
+        usernameTimer = setTimeout(() => {
+            const fd = new FormData();
+            fd.append('username', val);
+            fetch('/RMU-Medical-Management-System/php/ajax/check_username.php', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.ok) {
+                        usernameMsg.innerHTML = '<span style="color:var(--success);"><i class="fas fa-check-circle"></i> ' + d.msg + '</span>';
+                    } else {
+                        usernameMsg.innerHTML = '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> ' + d.msg + '</span>';
+                    }
+                })
+                .catch(() => {
+                    usernameMsg.innerHTML = '<span style="color:var(--danger);">Error checking username.</span>';
+                });
+        }, 500);
+    });
+})();
+</script>

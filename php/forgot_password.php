@@ -55,9 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $domain    = $_SERVER['HTTP_HOST'];
                 $resetLink = "$protocol://$domain/RMU-Medical-Management-System/php/reset_password.php?token=$plainToken";
 
-                // Send email
+                // Send email — capture result for logging
+                $mail_sent = false;
                 if (function_exists('reg_send_password_reset_email')) {
-                    @reg_send_password_reset_email($conn, $email, $user['name'], $resetLink);
+                    $reset_result = reg_send_password_reset_email($conn, $email, $user['name'], $resetLink);
+                    $mail_sent = $reset_result['success'] ?? false;
+                    if (!$mail_sent) {
+                        error_log('[RMU-Sickbay] Password reset email failed for user ' . $uid
+                            . ': ' . ($reset_result['error'] ?? 'unknown error'));
+                    }
                 }
             }
         }
