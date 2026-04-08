@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sent = true;
 
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $st = mysqli_prepare($conn, "SELECT id, name FROM users WHERE email=? AND is_active=1 LIMIT 1");
+            $st = mysqli_prepare($conn, "SELECT id, name FROM users WHERE email=? AND account_status != 'rejected' LIMIT 1");
             mysqli_stmt_bind_param($st, 's', $email);
             mysqli_stmt_execute($st);
             $user = mysqli_fetch_assoc(mysqli_stmt_get_result($st));

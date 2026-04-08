@@ -180,6 +180,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
                             $td['department'],$exp_int,$st_p);
                         @mysqli_stmt_execute($si);
                         mysqli_query($conn, "UPDATE users SET is_active=0 WHERE id=$new_uid");
+                    } elseif (in_array($r, ['ambulance_driver','cleaner','laundry_staff','maintenance','security','kitchen_staff'])) {
+                        $sid = 'STF-' . strtoupper(bin2hex(random_bytes(3)));
+                        $si = mysqli_prepare($conn,
+                            "INSERT INTO staff (user_id, staff_id, approval_status, created_at) VALUES (?,?,'pending',NOW())");
+                        mysqli_stmt_bind_param($si, 'is', $new_uid, $sid);
+                        @mysqli_stmt_execute($si);
+                        mysqli_query($conn, "UPDATE users SET is_active=0 WHERE id=$new_uid");
                     }
 
                     // Mark OTP used

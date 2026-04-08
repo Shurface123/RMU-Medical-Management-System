@@ -352,5 +352,12 @@ if (!empty($row['force_password_change'])) {
     exit;
 }
 
+// ── 13.5. Force Terms Acceptance ──────────────────────────────────────────────
+if (isset($row['accepted_terms']) && (int)$row['accepted_terms'] === 0) {
+    // We already stored full session info, so accept_policy.php can rely on session login
+    header('Location: accept_policy.php');
+    exit;
+}
+
 // ── 14. Route to dashboard ────────────────────────────────────────────────────
 login_route($role);

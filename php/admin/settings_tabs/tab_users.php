@@ -93,7 +93,12 @@
                         <option value="pharmacist">Pharmacist</option>
                         <option value="lab_technician">Lab Technician</option>
                         <option value="patient">Patient</option>
-                        <option value="staff">Operational Staff</option>
+                        <option value="maintenance">Maintenance Officer</option>
+                        <option value="security">Security Officer</option>
+                        <option value="cleaner">Cleaner</option>
+                        <option value="ambulance_driver">Ambulance Driver</option>
+                        <option value="laundry_staff">Laundry Personnel</option>
+                        <option value="kitchen_staff">Kitchen Staff</option>
                     </select>
                 </div>
             </div>

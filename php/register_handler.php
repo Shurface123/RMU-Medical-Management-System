@@ -190,9 +190,7 @@ $needs_approval = in_array($role, APPROVAL_REQUIRED_ROLES);
 $is_active      = $needs_approval ? 0 : 1;
 $account_status = $needs_approval ? 'pending_verification' : 'pending_verification';
 // Both wait for OTP first; approval is a secondary gate for clinical roles.
-$actual_user_role = in_array($role, ['ambulance_driver','cleaner','laundry_staff',
-                                      'maintenance','security','kitchen_staff'])
-                     ? 'staff' : $role;
+$actual_user_role = $role;
 
 // Store temp data in registration_sessions
 $session_token = bin2hex(random_bytes(32));

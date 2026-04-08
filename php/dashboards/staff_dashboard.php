@@ -4,6 +4,81 @@
  * Complete Staff Dashboard — Single unified shell, role-based content.
  */
 require_once '../includes/auth_middleware.php';
+require_once '../db_conn.php';
+
+// ── DB Helper Functions ──────────────────────────────────────
+// Defined here because staff_dashboard is a self-contained shell
+// that does not go through a shared helpers include.
+if (!function_exists('sanitize')) {
+    function sanitize($v) {
+        return htmlspecialchars(trim(stripslashes((string)($v ?? ''))), ENT_QUOTES, 'UTF-8');
+    }
+}
+if (!function_exists('e')) {
+    function e($v) {
+        return htmlspecialchars((string)($v ?? ''), ENT_QUOTES, 'UTF-8');
+    }
+}
+if (!function_exists('dbRow')) {
+    function dbRow($conn, $sql, $types = '', $params = []) {
+        $stmt = mysqli_prepare($conn, $sql);
+        if (!$stmt) return null;
+        if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_assoc($res);
+        mysqli_stmt_close($stmt);
+        return $row ?: null;
+    }
+}
+if (!function_exists('dbVal')) {
+    function dbVal($conn, $sql, $types = '', $params = []) {
+        $stmt = mysqli_prepare($conn, $sql);
+        if (!$stmt) return null;
+        if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_row($res);
+        mysqli_stmt_close($stmt);
+        return $row ? $row[0] : null;
+    }
+}
+if (!function_exists('dbSelect')) {
+    function dbSelect($conn, $sql, $types = '', $params = []) {
+        $stmt = mysqli_prepare($conn, $sql);
+        if (!$stmt) return [];
+        if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $rows = [];
+        while ($r = mysqli_fetch_assoc($res)) $rows[] = $r;
+        mysqli_stmt_close($stmt);
+        return $rows;
+    }
+}
+if (!function_exists('dbExecute')) {
+    function dbExecute($conn, $sql, $types = '', $params = []) {
+        $stmt = mysqli_prepare($conn, $sql);
+        if (!$stmt) return false;
+        if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
+        mysqli_stmt_execute($stmt);
+        $affected = mysqli_stmt_affected_rows($stmt);
+        mysqli_stmt_close($stmt);
+        return $affected;
+    }
+}
+if (!function_exists('dbInsert')) {
+    function dbInsert($conn, $sql, $types = '', $params = []) {
+        $stmt = mysqli_prepare($conn, $sql);
+        if (!$stmt) return false;
+        if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
+        if (!mysqli_stmt_execute($stmt)) { mysqli_stmt_close($stmt); return false; }
+        $id = mysqli_insert_id($conn);
+        mysqli_stmt_close($stmt);
+        return $id;
+    }
+}
+
 enforceSingleDashboard('staff');
 
 $user_id   = (int)$_SESSION['user_id'];

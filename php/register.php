@@ -1011,7 +1011,7 @@ document.getElementById('regForm').addEventListener('submit', function(e) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
     grecaptcha.ready(() => {
-        grecaptcha.execute('<?= htmlspecialchars($site_key) ?>', {action: 'register'})
+        grecaptcha.execute('<?= RECAPTCHA_SITE_KEY ?>', {action: 'register'})
             .then(token => {
                 document.getElementById('recaptchaToken').value = token;
                 this.submit();
@@ -1043,10 +1043,10 @@ if (params.get('error')) showGlobalErr(params.get('error'));
       <h2 id="policyModalTitle"><i class="fas fa-file-contract"></i> Policy Document</h2>
       <button class="policy-modal-close" onclick="closePolicyModal()" title="Close"><i class="fas fa-times"></i></button>
     </div>
-    <div class="policy-modal-body" id="policyModalBody"></div>
+    <div class="policy-modal-body" id="policyModalBody" onscroll="checkPolicyScroll(this)"></div>
     <div class="policy-modal-foot">
       <button class="btn btn-outline btn-sm" onclick="closePolicyModal()">Close</button>
-      <button class="btn btn-primary btn-sm" onclick="acceptPolicy()"><i class="fas fa-check"></i> I Accept</button>
+      <button class="btn btn-primary btn-sm" id="btnAcceptPolicy" onclick="acceptPolicy()" disabled><i class="fas fa-check"></i> I Accept</button>
     </div>
   </div>
 </div>
@@ -1174,8 +1174,15 @@ function openPolicyModal(type) {
     if (!pc) return;
     title.innerHTML = pc.title;
     body.innerHTML  = pc.body;
+    document.getElementById('btnAcceptPolicy').disabled = true;
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    setTimeout(() => { checkPolicyScroll(body); }, 100);
+}
+function checkPolicyScroll(el) {
+    if (el.scrollHeight - el.scrollTop <= el.clientHeight + 20) {
+        document.getElementById('btnAcceptPolicy').disabled = false;
+    }
 }
 function closePolicyModal() {
     document.getElementById('policyModalOverlay').classList.remove('open');

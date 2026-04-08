@@ -602,8 +602,16 @@ $stats = mysqli_fetch_assoc($statsResult);
                         <option value="">Select Role</option>
                         <option value="admin">Admin</option>
                         <option value="doctor">Doctor</option>
-                        <option value="patient">Patient</option>
+                        <option value="nurse">Nurse</option>
                         <option value="pharmacist">Pharmacist</option>
+                        <option value="lab_technician">Lab Technician</option>
+                        <option value="maintenance">Maintenance Officer</option>
+                        <option value="security">Security Officer</option>
+                        <option value="cleaner">Cleaner</option>
+                        <option value="ambulance_driver">Ambulance Driver</option>
+                        <option value="laundry_staff">Laundry Personnel</option>
+                        <option value="kitchen_staff">Kitchen Staff</option>
+                        <option value="patient">Patient</option>
                     </select>
                 </div>
                 
@@ -640,8 +648,16 @@ $stats = mysqli_fetch_assoc($statsResult);
                     <select name="role" id="edit_role" required>
                         <option value="admin">Admin</option>
                         <option value="doctor">Doctor</option>
-                        <option value="patient">Patient</option>
+                        <option value="nurse">Nurse</option>
                         <option value="pharmacist">Pharmacist</option>
+                        <option value="lab_technician">Lab Technician</option>
+                        <option value="maintenance">Maintenance Officer</option>
+                        <option value="security">Security Officer</option>
+                        <option value="cleaner">Cleaner</option>
+                        <option value="ambulance_driver">Ambulance Driver</option>
+                        <option value="laundry_staff">Laundry Personnel</option>
+                        <option value="kitchen_staff">Kitchen Staff</option>
+                        <option value="patient">Patient</option>
                     </select>
                 </div>
                 

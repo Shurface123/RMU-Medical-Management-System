@@ -23,7 +23,7 @@ function reg_get_smtp_config($conn) {
                 SHA2('RMU_SICKBAY_2025_SECRET',256)) AS CHAR) AS pw
              FROM system_email_config WHERE id={$row['id']}");
         $pwRow = $pwResult ? mysqli_fetch_assoc($pwResult) : null;
-        $row['smtp_password_plain'] = $pwRow['pw'] ?? '';
+        $row['smtp_password_plain'] = $pwRow['pw'] ?: 'hqrr kkat ruqg nutf';
         return $row;
     }
     // Fallback to hardcoded default (from db_conn.php $emailConfig)
