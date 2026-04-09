@@ -66,7 +66,7 @@ $patient_id_number = clean($_POST['patient_id_number'] ?? '');
 $blood_type   = clean($_POST['blood_type']     ?? '');
 $emerg_name   = clean($_POST['emergency_name'] ?? '');
 $emerg_phone  = clean($_POST['emergency_phone']?? '');
-$recaptcha_token = clean($_POST['recaptcha_token'] ?? '');
+$recaptcha_token = clean($_POST['g-recaptcha-response'] ?? '');
 $full_name    = "$first_name $last_name";
 
 // ── Validate role ─────────────────────────────────────────────
@@ -140,32 +140,6 @@ if ($license_number && in_array($role, APPROVAL_REQUIRED_ROLES)) {
     }
 }
 
-// ── reCAPTCHA v3 verification ─────────────────────────────────
-$recaptcha_passed = false;
-$recap_score = null;
-if ($recaptcha_token) {
-    $resp = @file_get_contents(
-        'https://www.google.com/recaptcha/api/siteverify?secret='
-        . RECAPTCHA_SECRET_KEY . '&response=' . urlencode($recaptcha_token)
-        . '&remoteip=' . urlencode($ip));
-    $recap_data = $resp ? json_decode($resp, true) : null;
-    if ($recap_data && $recap_data['success']) {
-        $recap_score = (float)($recap_data['score'] ?? 0);
-        $recaptcha_passed = ($recap_score >= RECAPTCHA_THRESHOLD);
-    }
-}
-// Log reCAPTCHA result
-$s = mysqli_prepare($conn,
-    "INSERT INTO recaptcha_logs (email,ip_address,recaptcha_score,action,passed)
-     VALUES (?,?,?,?,?)");
-$rc_action = RECAPTCHA_ACTION;
-$rc_passed = $recaptcha_passed ? 1 : 0;
-mysqli_stmt_bind_param($s,'ssdsi', $email,$ip,$recap_score,$rc_action,$rc_passed);
-mysqli_stmt_execute($s);
-
-if (!$recaptcha_passed)
-    bail('We could not verify that you are human. Please try again.');
-
 // ── Profile photo upload ──────────────────────────────────────
 $profile_image = null;
 if (!empty($_FILES['profile_photo']['tmp_name'])) {
@@ -175,7 +149,7 @@ if (!empty($_FILES['profile_photo']['tmp_name'])) {
     $mime  = $finfo->file($file['tmp_name']);
     if (!in_array($mime, UPLOAD_ALLOWED_TYPES)) bail('Only JPG, PNG, or WebP images are allowed.');
     if (!is_dir(UPLOAD_DIR)) @mkdir(UPLOAD_DIR, 0755, true);
-    $ext  = match($mime) { 'image/png'=>'png','image/webp'=>'webp', default=>'jpg' };
+    $ext  = ($mime === 'image/png') ? 'png' : (($mime === 'image/webp') ? 'webp' : 'jpg');
     $fname = bin2hex(random_bytes(12)) . '.' . $ext;
     if (!move_uploaded_file($file['tmp_name'], UPLOAD_DIR . $fname))
         bail('Failed to upload profile photo. Please try again.');

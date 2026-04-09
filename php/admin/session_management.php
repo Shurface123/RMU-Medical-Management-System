@@ -1,144 +1,148 @@
 <?php
+session_start();
+// Include authentication middleware
 require_once '../includes/auth_middleware.php';
-enforceSingleDashboard('admin');
+requireRole('admin');
 require_once '../db_conn.php';
-
-// Handle Force Logout
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'force_logout') {
-    $uid = (int)$_POST['user_id'];
-    $reason = trim($_POST['reason']);
-    if (empty($reason)) $reason = "Administrative override.";
-    
-    // Insert into forced_logout_queue
-    $ins = mysqli_prepare($conn, "INSERT INTO forced_logout_queue (user_id, reason) VALUES (?, ?)");
-    mysqli_stmt_bind_param($ins, 'is', $uid, $reason);
-    mysqli_stmt_execute($ins);
-    
-    header("Location: session_management.php?success=1");
-    exit;
-}
-
-// Fetch Active Sessions
-$sessions = [];
-$q = mysqli_query($conn, "
-    SELECT a.*, u.username, u.role as user_type 
-    FROM active_sessions a 
-    JOIN users u ON a.user_id = u.id 
-    ORDER BY a.last_active DESC
-");
-if ($q) {
-    while($row = mysqli_fetch_assoc($q)) $sessions[] = $row;
-}
+require_once '../classes/SessionManager.php';
 
 $active_page = 'session_management';
-$page_title = 'Session Control';
+$page_title = 'Global Session Control';
+
+// Handle Force Logout Actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'force_logout') {
+        $sid = mysqli_real_escape_string($conn, $_POST['session_id']);
+        $uid = intval($_POST['user_id'] ?? 0);
+        $reason = mysqli_real_escape_string($conn, $_POST['reason'] ?? 'System Administrator terminated your session.');
+
+        $sm = new SessionManager($conn);
+        $sm->killOtherSessions($uid, $sid);
+
+        // Target specifically
+        mysqli_query($conn, "DELETE FROM active_sessions WHERE session_id='$sid'");
+
+        // Push explicitly into the target's queue
+        mysqli_query($conn, "INSERT INTO forced_logout_queue (user_id, reason, queued_by) VALUES ($uid, '$reason', " . $_SESSION['user_id'] . ")");
+
+        $success = "Session terminated successfully.";
+    } elseif ($action === 'logout_all') {
+        // Kill every single active session except current admin
+        $currSid = session_id();
+        mysqli_query($conn, "DELETE FROM active_sessions WHERE session_id != '$currSid'");
+        mysqli_query($conn, "INSERT INTO forced_logout_queue (user_id, reason, queued_by) 
+                             SELECT DISTINCT user_id, 'Global System Purge', " . $_SESSION['user_id'] . " FROM users WHERE id != " . $_SESSION['user_id']);
+        $success = "All external sessions purged globally.";
+    }
+}
+
+// Fetch all active sessions
+$sessions = [];
+$q = mysqli_query($conn, "
+    SELECT a.*, u.name, u.email 
+    FROM active_sessions a 
+    LEFT JOIN users u ON a.user_id = u.id 
+    ORDER BY a.last_active DESC
+");
+if ($q)
+    while ($r = mysqli_fetch_assoc($q))
+        $sessions[] = $r;
+
 include '../includes/_sidebar.php';
 ?>
-
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
             <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-            <span class="adm-page-title">Active Session Control</span>
-        </div>
-        <div class="adm-topbar-right">
-            <div class="adm-avatar"><i class="fas fa-user-tie"></i></div>
+            <span class="adm-page-title">Session Management & Control</span>
         </div>
     </div>
 
     <div class="adm-content">
-        <div class="adm-welcome" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <h2><i class="fas fa-network-wired" style="margin-right:.5rem;"></i> Active Sessions</h2>
-                <p>Monitor concurrently connected users and enforce immediate terminations across the network.</p>
+        <?php if (!empty($success)): ?>
+            <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($success) ?>
             </div>
-        </div>
-
-        <?php if(isset($_GET['success'])): ?>
-        <div class="adm-alert adm-alert-success" style="margin-bottom:1.5rem;"><i class="fas fa-check-circle"></i> Forced logout successfully queued. The user will be intercepted on their next request.</div>
         <?php endif; ?>
 
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <p style="color:var(--text-muted);">Monitor and force-terminate active connections physically routing
+                through RMU servers.</p>
+            <form method="POST" style="margin:0;"
+                onsubmit="return confirm('Are you sure you want to terminate ALL active users across the entire system?');">
+                <input type="hidden" name="action" value="logout_all">
+                <button type="submit" class="adm-btn adm-btn-danger"><i class="fas fa-skull-crossbones"></i> Purge All
+                    Active Sessions</button>
+            </form>
+        </div>
+
         <div class="adm-card">
-            <div class="adm-card-body" style="padding:0;">
+            <div class="adm-card-header">
+                <h3><i class="fas fa-network-wired"></i> Live System Connections (<?= count($sessions) ?>)</h3>
+            </div>
+            <div style="padding:1.5rem;overflow-x:auto;">
                 <table class="adm-table">
                     <thead>
                         <tr>
                             <th>User Context</th>
-                            <th>IP Address</th>
-                            <th>Device &amp; Browser</th>
-                            <th>Last Active</th>
-                            <th align="right">Actions</th>
+                            <th>Role</th>
+                            <th>IP Endpoint</th>
+                            <th>Hardware / Software</th>
+                            <th>Uptime</th>
+                            <th>Enforcement</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach($sessions as $sess): 
-                            $is_self = ($sess['user_id'] == $_SESSION['user_id'] && $sess['session_id'] === session_id());
-                            $last_active_time = strtotime($sess['last_active']);
-                            $idle_mins = round((time() - $last_active_time) / 60);
-                        ?>
-                        <tr style="<?= $is_self ? 'background:#f0f7ff;' : '' ?>">
-                            <td>
-                                <strong><?= htmlspecialchars($sess['username']) ?></strong>
-                                <?php if($is_self): ?> <span class="adm-badge adm-badge-info" style="font-size:0.7rem;margin-left:5px;">This Device</span> <?php endif; ?>
-                                <br><small style="color:var(--primary); font-weight:600;"><?= strtoupper($sess['user_type']) ?></small>
-                            </td>
-                            <td><span style="font-family:monospace;"><?= htmlspecialchars($sess['ip_address']) ?></span></td>
-                            <td>
-                                <i class="fas <?= stripos($sess['device_info'], 'mobile') !== false ? 'fa-mobile-alt' : 'fa-laptop' ?>" style="color:var(--text-muted);"></i> 
-                                <?= htmlspecialchars(substr($sess['browser'], 0, 30)) ?>...
-                            </td>
-                            <td>
-                                <?php if($idle_mins < 5): ?>
-                                    <span style="color:var(--success);"><i class="fas fa-circle" style="font-size:8px;"></i> Online</span>
-                                <?php else: ?>
-                                    <span style="color:var(--warning);"><i class="fas fa-circle" style="font-size:8px;"></i> Idle <?= $idle_mins ?>m</span>
-                                <?php endif; ?>
-                            </td>
-                            <td align="right">
-                                <?php if(!$is_self): ?>
-                                <button class="adm-btn adm-btn-sm adm-btn-danger" onclick="forceLogout(<?= $sess['user_id'] ?>, '<?= htmlspecialchars(addslashes($sess['username'])) ?>')"><i class="fas fa-ban"></i> Terminate</button>
-                                <?php else: ?>
-                                <span style="font-size:0.8rem;color:var(--text-muted);font-style:italic;">Current Session</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <?php if(empty($sessions)): ?>
-                        <tr><td colspan="5" align="center" style="padding:2rem;color:var(--text-muted);">No active sessions found.</td></tr>
-                        <?php endif; ?>
+                        <?php if (empty($sessions)): ?>
+                            <tr>
+                                <td colspan="6" style="text-align:center;color:var(--text-muted);">No active connections
+                                    found.</td>
+                            </tr>
+                        <?php else:
+                            foreach ($sessions as $s):
+                                $is_me = ($s['session_id'] === session_id());
+                                ?>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:600;"><?= htmlspecialchars($s['name'] ?? 'System User') ?></div>
+                                        <div style="font-size:0.8rem;color:var(--text-muted);">
+                                            <?= htmlspecialchars($s['email'] ?? 'Unknown Email') ?></div>
+                                    </td>
+                                    <td><span
+                                            class="adm-badge adm-badge-info"><?= ucfirst(htmlspecialchars($s['user_role'] ?? 'unknown')) ?></span>
+                                    </td>
+                                    <td style="font-family:monospace;"><?= htmlspecialchars($s['ip_address'] ?? '0.0.0.0') ?>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:600;"><i class="fas fa-desktop"></i>
+                                            <?= htmlspecialchars(substr($s['user_agent'] ?? 'Unknown', 0, 30)) ?>...</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size:0.85rem;">Last:
+                                            <?= date('M j, g:i A', strtotime($s['last_active'])) ?></div>
+                                        <div style="font-size:0.75rem;color:var(--text-muted);">Login:
+                                            <?= date('g:i A', strtotime($s['logged_in_at'])) ?></div>
+                                    </td>
+                                    <td>
+                                        <?php if ($is_me): ?>
+                                            <span class="adm-badge adm-badge-success">Your Active Route</span>
+                                        <?php else: ?>
+                                            <form method="POST" style="margin:0;"
+                                                onsubmit="return confirm('Immediately terminate connection for <?= htmlspecialchars(addslashes($s['name'] ?? 'user')) ?>?');">
+                                                <input type="hidden" name="action" value="force_logout">
+                                                <input type="hidden" name="session_id"
+                                                    value="<?= htmlspecialchars($s['session_id']) ?>">
+                                                <input type="hidden" name="user_id" value="<?= htmlspecialchars($s['user_id']) ?>">
+                                                <button type="submit" class="adm-btn adm-btn-ghost adm-btn-sm"
+                                                    style="color:var(--danger);"><i class="fas fa-ban"></i> Terminate TCP</button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </main>
-
-<!-- Force Logout Modal -->
-<div id="forceModal" class="adm-overlay" style="z-index:9999; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.6);">
-    <div style="background:#fff; padding:2rem; border-radius:16px; width:90%; max-width:400px; text-align:center; box-shadow:0 15px 40px rgba(0,0,0,0.2);">
-        <div style="width:60px; height:60px; background:linear-gradient(135deg,#e74c3c,#c0392b); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; color:#fff; font-size:1.5rem;"><i class="fas fa-skull-crossbones"></i></div>
-        <h3 style="color:#2c3e50; margin-bottom:.5rem;">Force Termination</h3>
-        <p style="color:#7f8c8d; font-size:.9rem; margin-bottom:1.5rem;">You are about to instantly disconnect <strong id="targetUserSpan" style="color:var(--primary);"></strong>. Please provide a reason.</p>
-        
-        <form method="POST">
-            <input type="hidden" name="action" value="force_logout">
-            <input type="hidden" name="user_id" id="targetUserId" value="">
-            <input type="text" name="reason" class="adm-input" placeholder="e.g. Account suspended, security sweep..." required style="width:100%; box-sizing:border-box; margin-bottom:1.5rem; border:1px solid #ddd; padding:10px; border-radius:8px;">
-            
-            <div style="display:flex; gap:1rem;">
-                <button type="button" class="adm-btn" onclick="document.getElementById('forceModal').style.display='none'" style="flex:1; background:#f1f5f9; color:#475569;">Cancel</button>
-                <button type="submit" class="adm-btn adm-btn-danger" style="flex:1;"><i class="fas fa-bolt"></i> Execute</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function forceLogout(uid, username) {
-    document.getElementById('targetUserId').value = uid;
-    document.getElementById('targetUserSpan').innerText = username;
-    document.getElementById('forceModal').style.display = 'flex';
-}
-</script>
-</body>
-</html>

@@ -1,111 +1,140 @@
 <?php
+session_start();
+// Include authentication middleware
 require_once '../includes/auth_middleware.php';
-enforceSingleDashboard('admin');
+requireRole('admin');
 require_once '../db_conn.php';
+require_once '../classes/BroadcastManager.php';
 
-// Handle Add/Edit/Delete
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    if ($action === 'add' || $action === 'edit') {
-        $msg_text = trim($_POST['message_text']);
-        $category = $_POST['category'] ?? 'wellness';
-        $role = empty($_POST['target_role']) ? null : $_POST['target_role'];
-        $is_active = isset($_POST['is_active']) ? 1 : 0;
-        
-        if ($action === 'add') {
-            $stmt = mysqli_prepare($conn, "INSERT INTO health_messages (message_text, message_category, target_role, is_active, created_by) VALUES (?, ?, ?, ?, ?)");
-            $uid = $_SESSION['user_id'];
-            mysqli_stmt_bind_param($stmt, 'sssii', $msg_text, $category, $role, $is_active, $uid);
-            mysqli_stmt_execute($stmt);
-        } else {
-            $id = (int)$_POST['id'];
-            $stmt = mysqli_prepare($conn, "UPDATE health_messages SET message_text=?, message_category=?, target_role=?, is_active=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, 'sssii', $msg_text, $category, $role, $is_active, $id);
-            mysqli_stmt_execute($stmt);
-        }
-        header("Location: settings_health_messages.php?success=1");
-        exit;
-    }
-    
-    if ($action === 'delete') {
-        $id = (int)$_POST['id'];
-        mysqli_query($conn, "DELETE FROM health_messages WHERE id=$id");
-        header("Location: settings_health_messages.php?success=1");
-        exit;
-    }
-}
-
-// Fetch all
-$query = mysqli_query($conn, "SELECT * FROM health_messages ORDER BY created_at DESC");
-$messages = [];
-if ($query) {
-    while($row = mysqli_fetch_assoc($query)) $messages[] = $row;
-}
+$bm = new BroadcastManager($conn);
 
 $active_page = 'health_messages';
 $page_title = 'Broadcast & Health Messages';
+
+// Handle Actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'add' || $action === 'edit') {
+        $msg = mysqli_real_escape_string($conn, $_POST['message_text']);
+        $cat = mysqli_real_escape_string($conn, $_POST['message_category']);
+        $role = empty($_POST['target_role']) ? "NULL" : "'" . mysqli_real_escape_string($conn, $_POST['target_role']) . "'";
+        $status = isset($_POST['is_active']) ? 1 : 0;
+        $adminId = $_SESSION['user_id'] ?? 1;
+        
+        $isBroadcast = isset($_POST['is_broadcast']) ? 1 : 0;
+        $priority = mysqli_real_escape_string($conn, $_POST['priority'] ?? 'Informational');
+        $subject = mysqli_real_escape_string($conn, $_POST['subject'] ?? 'System Announcement');
+        
+        if ($action === 'add') {
+            $q = "INSERT INTO health_messages (message_text, message_category, target_role, is_active, created_by) VALUES ('$msg', '$cat', $role, $status, $adminId)";
+            mysqli_query($conn, $q);
+            $msgId = mysqli_insert_id($conn);
+            $success = "Message saved.";
+            
+            if ($isBroadcast && $status) {
+                $audienceType = 'Everyone';
+                $audienceIds = null;
+                if (!empty($_POST['target_role'])) {
+                    $audienceType = 'Role';
+                    $audienceIds = [$_POST['target_role']];
+                }
+                
+                $bm->createBroadcast([
+                    'subject' => $subject,
+                    'body' => $msg,
+                    'priority' => $priority,
+                    'sender_id' => $adminId,
+                    'audience_type' => $audienceType,
+                    'audience_ids' => $audienceIds,
+                    'requires_acknowledgement' => ($priority === 'Critical' ? 1 : 0)
+                ]);
+                $success .= " Real-time broadcast triggered!";
+            }
+        } else {
+            $id = intval($_POST['message_id']);
+            $q = "UPDATE health_messages SET message_text='$msg', message_category='$cat', target_role=$role, is_active=$status WHERE id=$id";
+            mysqli_query($conn, $q);
+            $success = "Message updated successfully.";
+        }
+    } elseif ($action === 'delete') {
+        $id = intval($_POST['message_id']);
+        mysqli_query($conn, "DELETE FROM health_messages WHERE id=$id");
+        $success = "Message deleted successfully.";
+    } elseif ($action === 'toggle') {
+        $id = intval($_POST['message_id']);
+        mysqli_query($conn, "UPDATE health_messages SET is_active = 1 - is_active WHERE id=$id");
+        echo json_encode(['success'=>true]);
+        exit;
+    }
+}
+
+// Fetch Messages
+$messages = [];
+$q = mysqli_query($conn, "SELECT h.id AS message_id, h.*, u.name as admin_name FROM health_messages h LEFT JOIN users u ON h.created_by = u.id ORDER BY h.updated_at DESC");
+if ($q) {
+    while ($r = mysqli_fetch_assoc($q)) {
+        $messages[] = $r;
+    }
+}
+
 include '../includes/_sidebar.php';
 ?>
-
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
             <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
             <span class="adm-page-title">Broadcast & Health Messages</span>
         </div>
-        <div class="adm-topbar-right">
-            <div class="adm-avatar"><i class="fas fa-user-tie"></i></div>
-        </div>
     </div>
-
     <div class="adm-content">
-        <div class="adm-welcome" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <h2><i class="fas fa-bullhorn" style="margin-right:.5rem;"></i> Message CMS</h2>
-                <p>Manage dynamic health, wellness, and safety prompts displayed during the logout countdown sequence.</p>
-            </div>
-            <button class="adm-btn adm-btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> New Message</button>
-        </div>
-
+        <?php if (!empty($success)): ?>
+            <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> <?= $success ?></div>
+        <?php endif; ?>
+        
         <div class="adm-card">
-            <div class="adm-card-body" style="padding:0;">
+            <div class="adm-card-header">
+                <h3><i class="fas fa-bullhorn"></i> Manage Health & Logout Messages</h3>
+                <button class="adm-btn adm-btn-primary" onclick="document.getElementById('msgModal').classList.add('open')">
+                    <i class="fas fa-plus"></i> New Message
+                </button>
+            </div>
+            <div style="padding:1.5rem;overflow-x:auto;">
                 <table class="adm-table">
                     <thead>
                         <tr>
-                            <th>Message</th>
+                            <th>Message Text</th>
                             <th>Category</th>
                             <th>Target Role</th>
-                            <th>Status</th>
-                            <th align="right">Actions</th>
+                            <th>Active</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach($messages as $msg): ?>
+                        <?php if(empty($messages)): ?>
+                        <tr><td colspan="6" style="text-align:center;">No messages found.</td></tr>
+                        <?php else: foreach($messages as $m): ?>
                         <tr>
-                            <td><strong><?= htmlspecialchars(substr($msg['message_text'], 0, 80)) . (strlen($msg['message_text']) > 80 ? '...' : '') ?></strong></td>
-                            <td><span class="adm-badge adm-badge-info"><?= ucfirst($msg['message_category']) ?></span></td>
-                            <td><?= $msg['target_role'] ? ucfirst($msg['target_role']) : '<em>All Roles</em>' ?></td>
+                            <td style="max-width: 300px; line-height: 1.4;"><?= htmlspecialchars($m['message_text']) ?></td>
+                            <td><span class="adm-badge adm-badge-info"><?= ucfirst(htmlspecialchars($m['message_category'])) ?></span></td>
+                            <td><?= $m['target_role'] ? ucfirst(htmlspecialchars($m['target_role'])) : '<span style="color:var(--text-muted);">All Roles</span>' ?></td>
                             <td>
-                                <?php if($msg['is_active']): ?>
-                                    <span class="adm-badge adm-badge-success">Active</span>
-                                <?php else: ?>
-                                    <span class="adm-badge adm-badge-danger">Inactive</span>
-                                <?php endif; ?>
+                                <label style="cursor:pointer;">
+                                    <input type="checkbox" onchange="toggleStatus(<?= $m['message_id'] ?>)" <?= $m['is_active'] ? 'checked' : '' ?>>
+                                    <span style="font-size:0.8rem; margin-left:0.3rem;"><?= $m['is_active'] ? 'Active' : 'Draft' ?></span>
+                                </label>
                             </td>
-                            <td align="right">
-                                <button class="adm-btn adm-btn-sm" onclick='editModal(<?= json_encode($msg) ?>)' style="background:var(--primary);color:#fff;"><i class="fas fa-edit"></i></button>
-                                <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this message?');">
+                            <td><?= date('M j, Y', strtotime($m['updated_at'])) ?></td>
+                            <td>
+                                <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick='editMsg(<?= json_encode($m) ?>)'><i class="fas fa-edit"></i> Edit</button>
+                                <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this message permanently?');">
                                     <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="id" value="<?= $msg['id'] ?>">
-                                    <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger"><i class="fas fa-trash"></i></button>
+                                    <input type="hidden" name="message_id" value="<?= $m['message_id'] ?>">
+                                    <button class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
                                 </form>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
-                        <?php if (empty($messages)): ?>
-                        <tr><td colspan="5" align="center">No messages found.</td></tr>
-                        <?php endif; ?>
+                        <?php endforeach; endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -113,82 +142,107 @@ include '../includes/_sidebar.php';
     </div>
 </main>
 
-<!-- Modal -->
-<div id="msgModal" class="adm-overlay" style="z-index:9999; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.5);">
-    <div style="background:#fff; padding:2rem; border-radius:12px; width:90%; max-width:500px; box-shadow:0 15px 40px rgba(0,0,0,0.2);">
-        <h3 id="modalTitle" style="margin-bottom:1rem; color:var(--text-dark);">Add Message</h3>
+<div class="modal-bg" id="msgModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999;">
+    <div class="modal-box" style="background:var(--surface);width:90%;max-width:500px;border-radius:12px;padding:2rem;">
+        <h3 id="modalTitle" style="margin-bottom:1.5rem;">Add New Message</h3>
         <form method="POST">
-            <input type="hidden" name="action" id="formAction" value="add">
-            <input type="hidden" name="id" id="msgId" value="">
+            <input type="hidden" name="action" id="modalAction" value="add">
+            <input type="hidden" name="message_id" id="modalId" value="">
             
-            <div style="margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:.5rem; font-weight:500; font-size:.9rem;">Message Text</label>
-                <textarea name="message_text" id="msgText" required class="adm-input" rows="4" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px; font-family:inherit;"></textarea>
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label>Message Content</label>
+                <textarea name="message_text" id="modalText" rows="3" class="form-control" style="width:100%;" required maxlength="255"></textarea>
             </div>
             
-            <div style="margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:.5rem; font-weight:500; font-size:.9rem;">Category</label>
-                <select name="category" id="msgCat" class="adm-input" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px;">
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label>Category</label>
+                <select name="message_category" id="modalCat" class="form-control" style="width:100%;" required>
                     <option value="wellness">Wellness</option>
-                    <option value="safety">Safety</option>
-                    <option value="reminder">Reminder</option>
+                    <option value="safety">Safety Guidelines</option>
+                    <option value="reminder">Clinical Reminder</option>
                     <option value="motivational">Motivational</option>
                     <option value="health tip">Health Tip</option>
                 </select>
             </div>
             
-            <div style="margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:.5rem; font-weight:500; font-size:.9rem;">Target Role</label>
-                <select name="target_role" id="msgRole" class="adm-input" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px;">
-                    <option value="">All Roles (Global)</option>
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label><input type="checkbox" name="is_broadcast" id="modalIsBroadcast" onchange="toggleBroadcastFields(this.checked)"> Trigger as Real-time Broadcast</label>
+            </div>
+
+            <div id="broadcastFields" style="display:none; background:rgba(0,0,0,0.05); padding:1rem; border-radius:8px; margin-bottom:1rem; border-left:4px solid var(--primary);">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label>Broadcast Subject</label>
+                    <input type="text" name="subject" id="modalSubject" class="form-control" style="width:100%;" placeholder="e.g. Scheduled Maintenance">
+                </div>
+                <div class="form-group">
+                    <label>Priority Level</label>
+                    <select name="priority" id="modalPriority" class="form-control" style="width:100%;">
+                        <option value="Informational">Informational (Toast + Bell)</option>
+                        <option value="Important">Important (Pulse + Toast)</option>
+                        <option value="Urgent">Urgent (Top Banner + Alert)</option>
+                        <option value="Critical">Critical (Full Modal + Audio)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label>Target Audience (Leave empty for Everyone)</label>
+                <select name="target_role" id="modalRole" class="form-control" style="width:100%;">
+                    <option value="">-- All Roles --</option>
+                    <option value="admin">Admin</option>
                     <option value="doctor">Doctor</option>
-                    <option value="patient">Patient</option>
                     <option value="nurse">Nurse</option>
                     <option value="pharmacist">Pharmacist</option>
                     <option value="lab_technician">Lab Technician</option>
-                    <option value="staff">Staff</option>
+                    <option value="patient">Patient</option>
+                    <option value="staff">Other Staff</option>
                 </select>
             </div>
             
-            <div style="margin-bottom:1.5rem;">
-                <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer;">
-                    <input type="checkbox" name="is_active" id="msgActive" value="1" checked>
-                    <span style="font-size:.9rem; font-weight:500;">Active (Displayed in UI)</span>
-                </label>
+            <div class="form-group" style="margin-bottom:1.5rem;">
+                <label><input type="checkbox" name="is_active" id="modalActive" checked> Make this message active immediately</label>
             </div>
             
-            <div style="display:flex; gap:1rem; justify-content:flex-end;">
-                <button type="button" class="adm-btn" onclick="closeModal()" style="background:#f1f5f9; color:#475569;">Cancel</button>
+            <div style="display:flex;justify-content:flex-end;gap:1rem;">
+                <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('msgModal').classList.remove('open')">Cancel</button>
                 <button type="submit" class="adm-btn adm-btn-primary">Save Message</button>
             </div>
         </form>
     </div>
 </div>
-
+<style>
+.modal-bg.open { display: flex !important; }
+.form-control { border:1px solid var(--border); padding:0.5rem; border-radius:6px; background:var(--surface-2); color:var(--text-primary); }
+</style>
 <script>
-function openModal() {
-    document.getElementById('modalTitle').innerText = 'Add Health Message';
-    document.getElementById('formAction').value = 'add';
-    document.getElementById('msgId').value = '';
-    document.getElementById('msgText').value = '';
-    document.getElementById('msgCat').value = 'wellness';
-    document.getElementById('msgRole').value = '';
-    document.getElementById('msgActive').checked = true;
-    document.getElementById('msgModal').style.display = 'flex';
+function toggleBroadcastFields(show) {
+    document.getElementById('broadcastFields').style.display = show ? 'block' : 'none';
+    document.getElementById('modalSubject').required = show;
 }
-function editModal(msg) {
-    document.getElementById('modalTitle').innerText = 'Edit Health Message';
-    document.getElementById('formAction').value = 'edit';
-    document.getElementById('msgId').value = msg.id;
-    document.getElementById('msgText').value = msg.message_text;
-    document.getElementById('msgCat').value = msg.message_category;
-    document.getElementById('msgRole').value = msg.target_role || '';
-    document.getElementById('msgActive').checked = msg.is_active == 1;
-    document.getElementById('msgModal').style.display = 'flex';
+
+function editMsg(m) {
+    document.getElementById('modalTitle').innerText = 'Edit Message';
+    document.getElementById('modalAction').value = 'edit';
+    document.getElementById('modalId').value = m.message_id;
+    document.getElementById('modalText').value = m.message_text;
+    document.getElementById('modalCat').value = m.message_category;
+    document.getElementById('modalRole').value = m.target_role || '';
+    document.getElementById('modalActive').checked = m.is_active == 1;
+    
+    // Hide broadcast fields for edit (simplifies logic for now, or you could allow re-triggering)
+    document.getElementById('modalIsBroadcast').checked = false;
+    toggleBroadcastFields(false);
+    
+    document.getElementById('msgModal').classList.add('open');
 }
-function closeModal() {
-    document.getElementById('msgModal').style.display = 'none';
+
+async function toggleStatus(id) {
+    try {
+        await fetch('settings_health_messages.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:`action=toggle&message_id=${id}`
+        });
+    } catch(e) {}
 }
 </script>
-</body>
-</html>

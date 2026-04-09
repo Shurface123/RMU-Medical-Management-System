@@ -333,7 +333,7 @@ select.form-control { cursor:pointer; }
 /* ── Toast Container ── */
 #toastWrap { position:fixed;bottom:2.5rem;right:2.5rem;z-index:99999;display:flex;flex-direction:column;gap:.8rem; }
 </style>
-</head>
+<!-- Phase 4 Hooks --><link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css"><meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>"></head>
 <body>
 <div class="adm-layout">
 
@@ -632,5 +632,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 
-</body>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script></body>
 </html>

@@ -7,13 +7,13 @@ $active_page = 'staff_audit_logs';
 $page_title  = 'Registration Audit Logs';
 include '../includes/_sidebar.php';
 
-// Fetch logs
+// Fetch registration logs
 $stmt = mysqli_query($conn, "
-    SELECT a.*, u.name as user_name, u.email as user_email, u.user_role 
+    SELECT a.audit_id, a.user_id, a.action, a.notes, a.performed_by, a.ip_address, a.created_at, u.name as user_name, u.email as user_email, u.user_role 
     FROM user_registration_audit a
     LEFT JOIN users u ON a.user_id = u.id
     ORDER BY a.created_at DESC
-    LIMIT 200
+    LIMIT 100
 ");
 $logs = [];
 if ($stmt) {
@@ -21,6 +21,40 @@ if ($stmt) {
         $logs[] = $row;
     }
 }
+
+// Fetch logout logs
+$stmt2 = mysqli_query($conn, "
+    SELECT l.log_id as audit_id, l.user_id, l.logout_type as action, CONCAT('Device: ', IFNULL(l.device_info,'?'), ' / Browser: ', IFNULL(l.browser,'?'), ' / Origin: ', IFNULL(l.dashboard_logged_out_from,'?')) as notes, 'self' as performed_by, l.ip_address, l.created_at, u.name as user_name, u.email as user_email, u.user_role 
+    FROM logout_logs l
+    LEFT JOIN users u ON l.user_id = u.id
+    ORDER BY l.created_at DESC
+    LIMIT 100
+");
+if ($stmt2) {
+    while ($row = mysqli_fetch_assoc($stmt2)) {
+        $row['action'] = 'logout_' . $row['action'];
+        $logs[] = $row;
+    }
+}
+
+// Fetch general audit log natively matching Phase 5
+$stmt3 = mysqli_query($conn, "
+    SELECT a.id as audit_id, a.user_id, a.action, a.new_values as notes, 'self' as performed_by, a.ip_address, a.created_at, u.name as user_name, u.email as user_email, u.user_role
+    FROM audit_log a
+    LEFT JOIN users u ON a.user_id = u.id
+    ORDER BY a.created_at DESC
+    LIMIT 100
+");
+if ($stmt3) {
+    while ($row = mysqli_fetch_assoc($stmt3)) {
+        $logs[] = $row;
+    }
+}
+
+// Global Order By
+usort($logs, function($a, $b) {
+    return strtotime($b['created_at']) <=> strtotime($a['created_at']);
+});
 ?>
 
 <main class="adm-main">
@@ -75,6 +109,10 @@ if ($stmt) {
                                 case 'approved': $b_color = 'success'; break;
                                 case 'rejected': $b_color = 'danger'; break;
                                 case 'suspended': $b_color = 'warning'; break;
+                                case 'logout_manual': $b_color = 'info'; break;
+                                case 'logout_timeout': $b_color = 'warning'; break;
+                                case 'logout_forced': $b_color = 'danger'; break;
+                                case 'manual_logout': $b_color = 'info'; break;
                             }
                         ?>
                         <tr>

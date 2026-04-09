@@ -79,7 +79,7 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
 .file-icon-box{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem;flex-shrink:0;}
 .diagnose-pill{display:inline-block;background:var(--role-accent);color:#fff;border-radius:20px;padding:.2rem .9rem;font-size:1.1rem;font-weight:600;}
 </style>
-</head>
+<!-- Phase 4 Hooks --><link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css"><meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>"></head>
 <body>
 
 <div class="adm-layout">
@@ -256,5 +256,5 @@ function filterRecs(q){q=q.toLowerCase();document.querySelectorAll('.rec-card').
 <script src="/RMU-Medical-Management-System/js/notifications.js"></script>
 
 
-</body>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script></body>
 </html>

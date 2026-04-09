@@ -195,7 +195,7 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
         @media(max-width:768px) { .charts-grid { grid-template-columns:1fr; } .form-row { grid-template-columns:1fr; } }
 
     </style>
-</head>
+<!-- Phase 4 Hooks --><link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css"><meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>"></head>
 <body>
 
 <!-- Mobile Overlay -->
@@ -394,5 +394,5 @@ setTimeout(() => {
 
 
 
-</body>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script></body>
 </html>

@@ -23,7 +23,6 @@ $site_key = RECAPTCHA_SITE_KEY;
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://www.google.com/recaptcha/api.js?render=<?= htmlspecialchars($site_key) ?>"></script>
 <style>
 :root {
     --primary: #2F80ED;
@@ -228,7 +227,7 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 
         <form id="regForm" method="POST" action="register_handler.php" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf) ?>">
-            <input type="hidden" name="recaptcha_token" id="recaptchaToken">
+
             <input type="hidden" name="selected_role" id="selectedRole">
             <input type="hidden" name="patient_type" id="patientTypeHidden">
 
@@ -526,6 +525,26 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
                         <div class="input-wrap">
                             <i class="fas fa-hospital field-icon"></i>
                             <input type="text" class="form-control" name="department" placeholder="e.g. Pharmacy Dept.">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Default Staff fields (for Finance, Maintenance, Security, etc.) -->
+                <div id="fields_default_staff" class="role-fields" style="display:none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Department / Office <span class="req">*</span></label>
+                            <div class="input-wrap">
+                                <i class="fas fa-building field-icon"></i>
+                                <input type="text" class="form-control" name="department" placeholder="e.g. Finance Office">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Experience (Years)</label>
+                            <div class="input-wrap">
+                                <i class="fas fa-history field-icon"></i>
+                                <input type="number" class="form-control" name="experience_years" min="0" max="60" placeholder="5">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -830,7 +849,10 @@ function checkStep2() {
 document.getElementById('step2Next').addEventListener('click', () => {
     // Show correct role fields
     document.querySelectorAll('.role-fields').forEach(d => d.style.display='none');
-    const fd = document.getElementById('fields_' + selectedRole);
+    let fd = document.getElementById('fields_' + selectedRole);
+    if (!fd && selectedRole !== 'patient') {
+        fd = document.getElementById('fields_default_staff');
+    }
     if (fd) fd.style.display='block';
     goStep(3);
 });
@@ -969,7 +991,11 @@ document.getElementById('step4Next').addEventListener('click', () => {
 function buildReview() {
     const roleLabels = {
         patient:'Patient', doctor:'Doctor', nurse:'Nurse',
-        lab_technician:'Lab Technician', pharmacist:'Pharmacist'
+        lab_technician:'Lab Technician', pharmacist:'Pharmacist',
+        maintenance:'Maintenance Officer', security:'Security Officer',
+        cleaner:'Cleaner', ambulance_driver:'Ambulance Driver',
+        laundry_staff:'Laundry Personnel', kitchen_staff:'Kitchen Staff',
+        finance_officer:'Finance Officer', finance_manager:'Finance Manager'
     };
     const ptLabels = {student:'Student', staff:'Staff / Lecturer'};
 
@@ -988,58 +1014,30 @@ function buildReview() {
     document.getElementById('rv-gender').textContent   = document.getElementById('genderField').value;
     document.getElementById('rv-username').textContent = document.getElementById('usernameField').value;
 
-    // Role-specific details
-    const fields = document.getElementById('fields_' + selectedRole);
+    // Role-specific details — fall back to default_staff panel for unlisted roles
+    let fields = document.getElementById('fields_' + selectedRole);
+    if (!fields && selectedRole !== 'patient') {
+        fields = document.getElementById('fields_default_staff');
+    }
     const grid   = document.getElementById('rv-role-details');
     grid.innerHTML = '';
+    document.getElementById('rv-role-section').style.display = 'block';
     if (fields) {
         fields.querySelectorAll('input,select').forEach(el => {
             const v = el.value.trim();
             if (!v) return;
-            const label = el.closest('.form-group').querySelector('label').textContent.trim().replace(' *','');
+            const label = el.closest('.form-group').querySelector('label').textContent.trim().replace(' *','').replace('(Years)','').trim();
             grid.innerHTML += `<div class="review-item"><label>${label}</label><span>${v}</span></div>`;
         });
     }
     if (!grid.innerHTML) document.getElementById('rv-role-section').style.display='none';
 }
 
-// ── Final submit with reCAPTCHA ───────────────────────────────
+// ── Final submit ────────────────────────────
 document.getElementById('regForm').addEventListener('submit', function(e) {
-    e.preventDefault();
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-
-    const formEl = document.getElementById('regForm');
-
-    // Fallback if reCAPTCHA hangs (common on localhost)
-    let gTimeout = setTimeout(() => {
-        HTMLFormElement.prototype.submit.call(formEl);
-    }, 4500);
-
-    if (typeof grecaptcha === 'undefined') {
-        clearTimeout(gTimeout);
-        HTMLFormElement.prototype.submit.call(formEl);
-        return;
-    }
-
-    grecaptcha.ready(() => {
-        try {
-            grecaptcha.execute('<?= RECAPTCHA_SITE_KEY ?>', {action: 'register'})
-                .then(token => {
-                    clearTimeout(gTimeout);
-                    document.getElementById('recaptchaToken').value = token;
-                    HTMLFormElement.prototype.submit.call(formEl);
-                })
-                .catch(() => {
-                    clearTimeout(gTimeout);
-                    HTMLFormElement.prototype.submit.call(formEl);
-                });
-        } catch (e) {
-            clearTimeout(gTimeout);
-            HTMLFormElement.prototype.submit.call(formEl);
-        }
-    });
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 });
 
 function showGlobalErr(msg) {

@@ -286,7 +286,7 @@ $method_data_j   = json_encode(array_map('floatval', array_column($rev_method, '
   .fin-kpi-grid{grid-template-columns:1fr;}
 }
 </style>
-</head>
+<!-- Phase 4 Hooks --><link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css"><meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>"></head>
 <body>
 <div class="adm-layout" style="display:flex;">
 
@@ -561,5 +561,5 @@ function initCharts() {
 // Format GHS currency
 function ghs(n) { return 'GHS ' + parseFloat(n||0).toLocaleString('en-GH',{minimumFractionDigits:2}); }
 </script>
-</body>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script></body>
 </html>

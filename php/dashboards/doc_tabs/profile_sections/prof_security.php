@@ -1,4 +1,9 @@
-<?php // SECTION G: Account & Security ?>
+<?php // SECTION G: Account & Security 
+$sessionsQ = mysqli_query($conn, "SELECT * FROM active_sessions WHERE user_id = " . intval($_SESSION['user_id']) . " ORDER BY last_active DESC");
+$active_sessions_list = [];
+if ($sessionsQ) while ($r = mysqli_fetch_assoc($sessionsQ)) $active_sessions_list[] = $r;
+$current_sid = session_id();
+?>
 <div id="prof-security" class="prof-section" style="display:none;">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
     <!-- Password -->
@@ -37,6 +42,57 @@
           </form>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Active Sessions (Phase 3) -->
+  <div class="adm-card" style="margin-top:1.5rem; border-left: 4px solid var(--primary);">
+    <div class="adm-card-header">
+        <h3><i class="fas fa-laptop-house"></i> Active Devices & Sessions</h3>
+        <?php if (count($active_sessions_list) > 1): ?>
+        <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="revokeSession('all')"><i class="fas fa-sign-out-alt"></i> Logout All Other Devices</button>
+        <?php endif; ?>
+    </div>
+    <div style="padding:1.5rem;overflow-x:auto;">
+      <table class="adm-table">
+        <thead>
+            <tr>
+              <th>Device / Browser</th>
+              <th>IP Address</th>
+              <th>Last Active</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($active_sessions_list as $s): 
+              $is_current = ($s['session_id'] === $current_sid);
+          ?>
+            <tr>
+              <td>
+                <div style="font-weight:600;"><i class="fas <?= stripos($s['device_info']??'','mac')!==false?'fa-apple':(stripos($s['device_info']??'','win')!==false?'fa-windows':'fa-desktop') ?>"></i> <?= htmlspecialchars($s['device_info'] ?? 'Unknown Device') ?></div>
+                <div style="font-size:0.8rem;color:var(--text-muted);"><?= htmlspecialchars($s['browser'] ?? $s['user_agent'] ?? 'Unknown Browser') ?></div>
+              </td>
+              <td><?= htmlspecialchars($s['ip_address'] ?? '127.0.0.1') ?></td>
+              <td><?= date('M j, Y g:i A', strtotime($s['last_active'])) ?></td>
+              <td>
+                  <?php if($is_current): ?>
+                      <span class="adm-badge adm-badge-success">Current Session</span>
+                  <?php else: ?>
+                      <span class="adm-badge adm-badge-warning">Active Remote</span>
+                  <?php endif; ?>
+              </td>
+              <td>
+                  <?php if(!$is_current): ?>
+                  <button class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--danger);" onclick="revokeSession('<?= htmlspecialchars($s['session_id']) ?>')"><i class="fas fa-times-circle"></i> Revoke</button>
+                  <?php else: ?>
+                  <span style="color:var(--text-muted);font-size:0.85rem;">Active</span>
+                  <?php endif; ?>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -85,5 +141,24 @@ async function loadActivityLog(){
   if(!res.success)return;
   const tb=document.querySelector('#activityTable tbody');
   tb.innerHTML=res.log.length?res.log.map(l=>`<tr><td>${l.action}</td><td>${l.ip_address||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.device||'—'}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;">No activity yet</td></tr>';
+}
+async function revokeSession(sid) {
+    if(!confirm(sid==='all' ? "Are you sure you want to log out all other devices?" : "Force logout this specific device?")) return;
+    try {
+        const response = await fetch('/RMU-Medical-Management-System/php/handlers/revoke_session.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({session_id: sid})
+        });
+        const res = await response.json();
+        if(res.success){
+            if(window.showToast) showToast(res.message);
+            else alert(res.message);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            if(window.showToast) showToast(res.message, 'danger');
+            else alert(res.message);
+        }
+    } catch(e) { console.error(e); }
 }
 </script>

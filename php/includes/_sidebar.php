@@ -29,6 +29,11 @@ require_once 'maintenance_guard.php';
 
     <!-- Master Admin CSS -->
     <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+    <!-- Logout Overlay CSS -->
+    <link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+    
+    <!-- Security Tokens -->
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
 </head>
 <body>
 
@@ -260,7 +265,7 @@ require_once 'maintenance_guard.php';
 
     <!-- Footer / Logout -->
     <div class="adm-sidebar-footer">
-        <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn">
+        <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn" data-dashboard="<?= htmlspecialchars($active_page) ?>">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
         </a>
@@ -291,6 +296,12 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 });
 </script>
+
+<!-- Global Logout Script -->
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script>
+<script>window.RMU_CSRF_TOKEN = "<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>";</script>
+</body>
+</html>
 
 <script>
 function showToast(message, type = 'success') {

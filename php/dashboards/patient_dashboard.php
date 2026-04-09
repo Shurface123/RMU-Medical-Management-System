@@ -116,7 +116,7 @@ input:checked+.notif-slider::before{transform:translateX(18px);}
 }
 .adm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;}
 </style>
-</head>
+<!-- Phase 4 Hooks --><link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css"><meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>"></head>
 <body>
 <div class="adm-layout">
 
@@ -289,5 +289,5 @@ document.addEventListener('click',e=>{if(e.target.classList.contains('modal-bg')
 </script>
 
 
-</body>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script></body>
 </html>

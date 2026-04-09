@@ -1,1 +1,191 @@
-/* logout.css — Advanced logout system removed. This file is intentionally empty. */
+/* Phase 3: Advanced Logout System Styling */
+body.logout-active {
+    overflow: hidden;
+}
+
+.logout-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.logout-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.logout-modal {
+    background: var(--surface, #ffffff);
+    color: var(--text-dark, #1E293B);
+    width: 90%;
+    max-width: 440px;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+    position: relative;
+}
+.logout-overlay.active .logout-modal {
+    transform: translateY(0) scale(1);
+}
+
+.logout-icon {
+    font-size: 3rem;
+    color: #2F80ED;
+    margin-bottom: 1.25rem;
+    background: rgba(47, 128, 237, 0.1);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logout-modal h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--text-dark, #1E293B);
+}
+
+.logout-modal p {
+    color: var(--text-muted, #64748b);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+.logout-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.logout-btn-cancel, .logout-btn-confirm {
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.logout-btn-cancel {
+    background: transparent;
+    color: var(--text-muted, #64748b);
+    border: 1px solid var(--border, #E2E8F0);
+}
+.logout-btn-cancel:hover, .logout-btn-cancel:focus {
+    background: rgba(100, 116, 139, 0.1);
+    color: var(--text-dark, #1E293B);
+    outline: none;
+}
+
+.logout-btn-confirm {
+    background: #2F80ED;
+    color: white;
+    outline: none;
+    box-shadow: 0 4px 14px rgba(47, 128, 237, 0.3);
+}
+.logout-btn-confirm:hover, .logout-btn-confirm:focus {
+    background: #2563EB;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(47, 128, 237, 0.4);
+}
+
+/* Countdown view */
+.logout-countdown-wrapper {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.logout-countdown-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 1.5rem;
+}
+
+.logout-countdown-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+}
+
+.logout-countdown-bg {
+    fill: none;
+    stroke: rgba(47, 128, 237, 0.1);
+    stroke-width: 6;
+}
+
+.logout-countdown-progress {
+    fill: none;
+    stroke: #2F80ED;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.logout-countdown-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #2F80ED;
+}
+
+.logout-health-msg {
+    font-size: 0.95rem;
+    color: var(--text-muted, #64748b);
+    font-style: italic;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    min-height: 44px;
+}
+.logout-health-msg.show {
+    opacity: 1;
+}
+
+.logout-redirect-text {
+    font-size: 0.8rem;
+    color: var(--border, #cbd5e1);
+}
+
+/* Forced/Timeout Modal specific (hides countdown elements) */
+.logout-timeout-body .logout-btn-cancel {
+    display: none;
+}
+.logout-timeout-body .logout-btn-confirm {
+    background: #e74c3c;
+    box-shadow: 0 4px 14px rgba(231, 76, 60, 0.3);
+}
+.logout-timeout-body .logout-icon {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+}
+.logout-timeout-body h2 {
+    color: #e74c3c;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

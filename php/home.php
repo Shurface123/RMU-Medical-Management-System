@@ -106,6 +106,16 @@ if ($q_role && $r = mysqli_fetch_assoc($q_role)) $logout_stats['top_role'] = ucf
 $q_hour = mysqli_query($conn, "SELECT HOUR(created_at) as h, COUNT(*) as c FROM logout_logs WHERE DATE(created_at) = CURDATE() GROUP BY h ORDER BY c DESC LIMIT 1");
 if ($q_hour && $h = mysqli_fetch_assoc($q_hour)) $logout_stats['peak_hour'] = str_pad($h['h'], 2, '0', STR_PAD_LEFT) . ':00';
 
+// ── Chart Data: Logout Analytics Phase 3 ───────
+$logout_hours = array_fill(0, 24, 0);
+$qh = mysqli_query($conn, "SELECT HOUR(created_at) as h, COUNT(*) as c FROM logout_logs WHERE DATE(created_at) = CURDATE() GROUP BY h");
+if ($qh) while($r = mysqli_fetch_assoc($qh)) $logout_hours[$r['h']] = (int)$r['c'];
+
+$logout_roles_data = [];
+$logout_roles_labels = [];
+$qr = mysqli_query($conn, "SELECT role, COUNT(*) as c FROM logout_logs GROUP BY role ORDER BY c DESC LIMIT 5");
+if ($qr) while($r = mysqli_fetch_assoc($qr)) { $logout_roles_labels[] = ucfirst($r['role']); $logout_roles_data[] = (int)$r['c']; }
+
 // ── Finance Analytics (Phase 5) ─────────────────
 $finance_stats = [
     'today_revenue' => 0.00,
@@ -295,10 +305,25 @@ include 'includes/_sidebar.php';
                 <h3><i class="fas fa-chart-doughnut"></i> Medicine Stock Overview</h3>
                 <canvas id="chartMedicine" height="200"></canvas>
             </div>
+            <!-- Logout Analytics -->
+            <div class="adm-chart-card">
+                <h3><i class="fas fa-history"></i> Logouts by Hour (Today)</h3>
+                <canvas id="chartLogoutHours" height="200"></canvas>
+            </div>
+            <div class="adm-chart-card">
+                <h3><i class="fas fa-user-tag"></i> Logouts by Role</h3>
+                <canvas id="chartLogoutRoles" height="200"></canvas>
+            </div>
         </div>
 
         <!-- ── Security & Logout Analytics Panel (Phase 3) ── -->
-        <h3 style="margin-bottom: 1rem; margin-top: 2rem; color: var(--text-dark);"><i class="fas fa-shield-alt" style="color: #2F80ED;"></i> Security &amp; Logout Analytics</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem; margin-bottom:1rem;">
+            <h3 style="color: var(--text-dark); margin:0;"><i class="fas fa-shield-alt" style="color: #2F80ED;"></i> Security &amp; Logout Analytics</h3>
+            <div style="display:flex; gap:0.5rem;">
+                <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php?export=pdf" class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--text-muted);"><i class="fas fa-file-pdf"></i> Export PDF</a>
+                <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php?export=csv" class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--text-muted);"><i class="fas fa-file-csv"></i> Export CSV</a>
+            </div>
+        </div>
         <div class="adm-stats-grid" style="margin-bottom: 2.8rem;">
             <div class="adm-stat-card">
                 <div class="adm-stat-icon" style="background: rgba(47, 128, 237, 0.1); color: #2F80ED;"><i class="fas fa-sign-out-alt"></i></div>
@@ -591,6 +616,31 @@ if (ctxMed) {
                 legend: { position: 'bottom', labels: { color: textColor(), padding: 16, font: { size: 13 } } }
             }
         }
+    });
+}
+
+// ─── Chart: Logout Activity by Hour ────────────────
+const logoutHoursData = <?php echo json_encode(array_values($logout_hours)); ?>;
+const hrLabels = Array.from({length:24}, (_,i) => `${i}:00`);
+const ctxLh = document.getElementById('chartLogoutHours')?.getContext('2d');
+if (ctxLh) {
+    new Chart(ctxLh, {
+        type: 'line',
+        data: { labels: hrLabels, datasets: [{ label: 'Logouts', data: logoutHoursData, borderColor:'#E67E22', backgroundColor:'rgba(230,126,34,0.1)', fill:true, tension:0.4 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor() } }, y: { ticks: { color: textColor(), stepSize:1 } } } }
+    });
+}
+
+// ─── Chart: Logout Frequency by Role ───────────────
+const ctxLr = document.getElementById('chartLogoutRoles')?.getContext('2d');
+if (ctxLr) {
+    new Chart(ctxLr, {
+        type: 'bar',
+        data: {
+            labels: <?php echo json_encode($logout_roles_labels); ?>,
+            datasets: [{ label: 'Frequency', data: <?php echo json_encode($logout_roles_data); ?>, backgroundColor: ['#2F80ED','#27AE60','#E67E22','#e74c3c','#9b59b6'] }]
+        },
+        options: { responsive: true, plugins: { legend: { display:false } }, scales: { x: { ticks: { color: textColor() } }, y: { ticks: { color: textColor(), stepSize:1 } } } }
     });
 }
 
