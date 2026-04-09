@@ -192,6 +192,27 @@ require_once 'maintenance_guard.php';
             <span>Cleaning & Hygiene</span>
         </a>
 
+        <!-- ── NEW: Finance & Billing ── -->
+        <span class="adm-nav-section-label">Finance & Billing</span>
+
+        <a href="/RMU-Medical-Management-System/php/admin/waiver_approvals.php"
+           class="adm-nav-item <?php echo $active_page === 'waiver_approvals' ? 'active' : ''; ?>">
+            <i class="fas fa-hand-holding-usd"></i>
+            <span>Waiver Approvals</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/budget_approvals.php"
+           class="adm-nav-item <?php echo $active_page === 'budget_approvals' ? 'active' : ''; ?>">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span>Budget Approvals</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/finance_audit.php"
+           class="adm-nav-item <?php echo $active_page === 'finance_audit' ? 'active' : ''; ?>">
+            <i class="fas fa-history"></i>
+            <span>Finance Audit Trail</span>
+        </a>
+
         <span class="adm-nav-section-label">System</span>
 
         <a href="/RMU-Medical-Management-System/php/booking.php"

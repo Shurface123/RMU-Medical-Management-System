@@ -287,6 +287,49 @@ switch ($action) {
         echo json_encode(['success' => true, 'message' => 'reCAPTCHA Configuration saved successfully.']);
         break;
 
+    case 'save_paystack_config':
+        $active_env = $_POST['active_environment'] ?? 'test';
+        $test_pub = $_POST['test_public_key'] ?? '';
+        $test_sec = $_POST['test_secret_key'] ?? '';
+        $live_pub = $_POST['live_public_key'] ?? '';
+        $live_sec = $_POST['live_secret_key'] ?? '';
+
+        mysqli_begin_transaction($conn);
+        try {
+            mysqli_query($conn, "DELETE FROM paystack_config");
+
+            $stmt = mysqli_prepare($conn, "INSERT INTO paystack_config (config_key, config_value, environment, is_active, description, created_at) VALUES (?, AES_ENCRYPT(?, SHA2('RMU_SICKBAY_2025_SECRET',256)), ?, ?, ?, NOW())");
+            
+            $i_tp = ($active_env === 'test') ? 1 : 0;
+            $d_tp = 'Test public key';
+            $k_pub='public_key'; $e_test='test';
+            mysqli_stmt_bind_param($stmt, "sssis", $k_pub, $test_pub, $e_test, $i_tp, $d_tp);
+            mysqli_stmt_execute($stmt);
+
+            $k_sec='secret_key'; $d_ts = 'Test secret key';
+            mysqli_stmt_bind_param($stmt, "sssis", $k_sec, $test_sec, $e_test, $i_tp, $d_ts);
+            mysqli_stmt_execute($stmt);
+
+            $i_lp = ($active_env === 'live') ? 1 : 0;
+            $d_lp = 'Live public key';
+            $e_live='live';
+            mysqli_stmt_bind_param($stmt, "sssis", $k_pub, $live_pub, $e_live, $i_lp, $d_lp);
+            mysqli_stmt_execute($stmt);
+
+            $d_ls = 'Live secret key';
+            mysqli_stmt_bind_param($stmt, "sssis", $k_sec, $live_sec, $e_live, $i_lp, $d_ls);
+            mysqli_stmt_execute($stmt);
+
+            $auditLogger->log($user_id, 'config_update', 'paystack_config', null, null, 'Updated Paystack keys and environment settings');
+
+            mysqli_commit($conn);
+            echo json_encode(['success' => true, 'message' => 'Paystack configuration saved successfully.']);
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Unknown action: ' . $action]);
         break;

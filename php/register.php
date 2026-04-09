@@ -1010,17 +1010,35 @@ document.getElementById('regForm').addEventListener('submit', function(e) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
+    const formEl = document.getElementById('regForm');
+
+    // Fallback if reCAPTCHA hangs (common on localhost)
+    let gTimeout = setTimeout(() => {
+        HTMLFormElement.prototype.submit.call(formEl);
+    }, 4500);
+
+    if (typeof grecaptcha === 'undefined') {
+        clearTimeout(gTimeout);
+        HTMLFormElement.prototype.submit.call(formEl);
+        return;
+    }
+
     grecaptcha.ready(() => {
-        grecaptcha.execute('<?= RECAPTCHA_SITE_KEY ?>', {action: 'register'})
-            .then(token => {
-                document.getElementById('recaptchaToken').value = token;
-                this.submit();
-            })
-            .catch(() => {
-                showGlobalErr('reCAPTCHA verification failed. Please try again.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Registration';
-            });
+        try {
+            grecaptcha.execute('<?= RECAPTCHA_SITE_KEY ?>', {action: 'register'})
+                .then(token => {
+                    clearTimeout(gTimeout);
+                    document.getElementById('recaptchaToken').value = token;
+                    HTMLFormElement.prototype.submit.call(formEl);
+                })
+                .catch(() => {
+                    clearTimeout(gTimeout);
+                    HTMLFormElement.prototype.submit.call(formEl);
+                });
+        } catch (e) {
+            clearTimeout(gTimeout);
+            HTMLFormElement.prototype.submit.call(formEl);
+        }
     });
 });
 

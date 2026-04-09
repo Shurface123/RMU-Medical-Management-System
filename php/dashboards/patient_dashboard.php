@@ -141,8 +141,8 @@ input:checked+.notif-slider::before{transform:translateX(18px);}
       <i class="fas fa-pills"></i><span>My Prescriptions</span>
       <?php if($stats['active_rx']>0):?><span class="adm-badge adm-badge-warning" style="margin-left:auto;font-size:1rem;"><?=$stats['active_rx']?></span><?php endif;?>
     </a>
-    <div class="adm-nav-label" style="margin-top:1rem;">Clinical</div>
     <a href="#" class="adm-nav-item <?=($active_tab==='records')?'active':''?>" onclick="showTab('records',this)"><i class="fas fa-file-medical"></i><span>Medical Records</span></a>
+    <a href="#" class="adm-nav-item <?=($active_tab==='billing')?'active':''?>" onclick="showTab('billing',this)"><i class="fas fa-receipt"></i><span>My Billing</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='emergency')?'active':''?>" onclick="showTab('emergency',this)"><i class="fas fa-phone-alt"></i><span>Emergency Contacts</span></a>
     <div class="adm-nav-label" style="margin-top:1rem;">Account</div>
     <a href="#" class="adm-nav-item <?=($active_tab==='profile')?'active':''?>" onclick="showTab('profile',this)"><i class="fas fa-id-card"></i><span>My Profile</span></a>
@@ -194,6 +194,7 @@ input:checked+.notif-slider::before{transform:translateX(18px);}
     <?php include __DIR__.'/pat_tabs/tab_appointments.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_prescriptions.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_records.php'; ?>
+    <?php include __DIR__.'/pat_tabs/tab_billing.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_emergency.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_notifications.php'; ?>
     <?php include __DIR__.'/pat_tabs/tab_settings.php'; ?>
@@ -226,10 +227,10 @@ function toast(msg,type='success'){
 
 // ── Tab Navigation ────────────────────────────────────────
 const TAB_TITLES={overview:'Overview',book:'Book Appointment',appointments:'My Appointments',
-  prescriptions:'My Prescriptions',lab:'Lab Results',records:'Medical Records',
+  prescriptions:'My Prescriptions',lab:'Lab Results',records:'Medical Records',billing:'My Billing',
   emergency:'Emergency Contacts',notif_page:'Notifications',settings:'Settings',profile:'My Profile'};
 const TAB_ICONS={overview:'fa-house-medical',book:'fa-calendar-plus',appointments:'fa-calendar-check',
-  prescriptions:'fa-pills',lab:'fa-flask',records:'fa-file-medical',
+  prescriptions:'fa-pills',lab:'fa-flask',records:'fa-file-medical',billing:'fa-receipt',
   emergency:'fa-phone-alt',notif_page:'fa-bell',settings:'fa-gear',profile:'fa-id-card'};
 
 function showTab(tab,el){

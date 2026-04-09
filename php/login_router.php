@@ -20,6 +20,8 @@ if (!function_exists('login_route')) {
             'security'          => '/RMU-Medical-Management-System/php/dashboards/staff_dashboard.php',
             'kitchen_staff'     => '/RMU-Medical-Management-System/php/dashboards/staff_dashboard.php',
             'staff'             => '/RMU-Medical-Management-System/php/dashboards/staff_dashboard.php',
+            'finance_officer'   => '/RMU-Medical-Management-System/php/finance/finance_dashboard.php',
+            'finance_manager'   => '/RMU-Medical-Management-System/php/finance/finance_dashboard.php',
         ];
         $dest = $map[$role] ?? '/RMU-Medical-Management-System/php/index.php?error=' . urlencode('Unknown role. Contact administrator.');
         header('Location: ' . $dest);

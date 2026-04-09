@@ -68,7 +68,7 @@ define('UPLOAD_URL_PATH', '/RMU-Medical-Management-System/uploads/profile_photos
 define('REG_SESSION_EXPIRY_MINUTES', 30);
 
 // ── Roles that require admin approval ─────────────────────────
-define('APPROVAL_REQUIRED_ROLES', ['doctor', 'nurse', 'lab_technician', 'pharmacist', 'maintenance', 'security', 'cleaner', 'ambulance_driver', 'laundry_staff', 'kitchen_staff']);
+define('APPROVAL_REQUIRED_ROLES', ['doctor', 'nurse', 'lab_technician', 'pharmacist', 'maintenance', 'security', 'cleaner', 'ambulance_driver', 'laundry_staff', 'kitchen_staff', 'finance_officer', 'finance_manager']);
 
 // ── Available Roles for self-registration ─────────────────────
 define('REGISTERABLE_ROLES', [
@@ -83,4 +83,6 @@ define('REGISTERABLE_ROLES', [
     'ambulance_driver' => ['label' => 'Ambulance Driver', 'icon' => 'fa-ambulance', 'color' => '#C0392B'],
     'laundry_staff' => ['label' => 'Laundry Personnel', 'icon' => 'fa-tshirt', 'color' => '#8E44AD'],
     'kitchen_staff' => ['label' => 'Kitchen Staff', 'icon' => 'fa-utensils', 'color' => '#F39C12'],
+    'finance_officer' => ['label' => 'Finance Officer', 'icon' => 'fa-file-invoice-dollar', 'color' => '#27AE60'],
+    'finance_manager' => ['label' => 'Finance Manager', 'icon' => 'fa-wallet', 'color' => '#16A085'],
 ]);

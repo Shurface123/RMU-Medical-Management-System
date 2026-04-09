@@ -106,6 +106,32 @@ if ($q_role && $r = mysqli_fetch_assoc($q_role)) $logout_stats['top_role'] = ucf
 $q_hour = mysqli_query($conn, "SELECT HOUR(created_at) as h, COUNT(*) as c FROM logout_logs WHERE DATE(created_at) = CURDATE() GROUP BY h ORDER BY c DESC LIMIT 1");
 if ($q_hour && $h = mysqli_fetch_assoc($q_hour)) $logout_stats['peak_hour'] = str_pad($h['h'], 2, '0', STR_PAD_LEFT) . ':00';
 
+// ── Finance Analytics (Phase 5) ─────────────────
+$finance_stats = [
+    'today_revenue' => 0.00,
+    'month_revenue' => 0.00,
+    'outstanding'   => 0.00,
+    'pending_claims'=> 0,
+    'paystack_rate' => 'N/A'
+];
+
+$q_rev_today = mysqli_query($conn, "SELECT SUM(paid_amount) as rev FROM billing_invoices WHERE DATE(updated_at) = CURDATE() AND status IN ('Paid', 'Partially Paid')");
+if ($q_rev_today && $r = mysqli_fetch_assoc($q_rev_today)) $finance_stats['today_revenue'] = $r['rev'] ?? 0;
+
+$q_rev_month = mysqli_query($conn, "SELECT SUM(paid_amount) as rev FROM billing_invoices WHERE MONTH(updated_at) = MONTH(CURDATE()) AND YEAR(updated_at) = YEAR(CURDATE()) AND status IN ('Paid', 'Partially Paid')");
+if ($q_rev_month && $r = mysqli_fetch_assoc($q_rev_month)) $finance_stats['month_revenue'] = $r['rev'] ?? 0;
+
+$q_out = mysqli_query($conn, "SELECT SUM(balance_due) as bal FROM billing_invoices WHERE balance_due > 0 AND status != 'Void'");
+if ($q_out && $r = mysqli_fetch_assoc($q_out)) $finance_stats['outstanding'] = $r['bal'] ?? 0;
+
+$q_claims = mysqli_query($conn, "SELECT COUNT(*) as c FROM insurance_claims WHERE status IN ('Draft', 'Submitted', 'Under Review')");
+if ($q_claims && $r = mysqli_fetch_assoc($q_claims)) $finance_stats['pending_claims'] = $r['c'] ?? 0;
+
+$q_paystack = mysqli_query($conn, "SELECT COUNT(CASE WHEN status='Success' THEN 1 END) as success_c, COUNT(*) as total_c FROM paystack_transactions WHERE DATE(created_at) = CURDATE()");
+if ($q_paystack && $r = mysqli_fetch_assoc($q_paystack)) {
+    if ($r['total_c'] > 0) $finance_stats['paystack_rate'] = round(($r['success_c'] / $r['total_c']) * 100) . '%';
+}
+
 $active_page = 'dashboard';
 $page_title  = 'Admin Dashboard';
 include 'includes/_sidebar.php';
@@ -297,6 +323,37 @@ include 'includes/_sidebar.php';
                 <div class="adm-stat-label">Peak Logout Hour</div>
                 <div class="adm-stat-value" style="font-size: 1.6rem; margin-top:0.3rem;"><?php echo $logout_stats['peak_hour']; ?></div>
                 <div class="adm-stat-footer"><i class="fas fa-history"></i> Highest volume hour</div>
+            </div>
+        </div>
+
+        <!-- ── Finance Overview Panel (Phase 5) ── -->
+        <h3 style="margin-bottom: 1rem; margin-top: 2rem; color: var(--text-dark);"><i class="fas fa-wallet" style="color: #27AE60;"></i> Financial Operations Overview</h3>
+        <div class="adm-stats-grid" style="margin-bottom: 2.8rem;">
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(39, 174, 96, 0.1); color: #27ae60;"><i class="fas fa-coins"></i></div>
+                <div class="adm-stat-label">Revenue Today / Month</div>
+                <div class="adm-stat-value" style="font-size: 1.25rem; font-weight: 700; margin-top:0.3rem;">
+                    GHS <?php echo number_format($finance_stats['today_revenue'], 2); ?> <br>
+                    <small style="color:var(--text-muted);font-weight:400;font-size:0.85rem;">Month: GHS <?php echo number_format($finance_stats['month_revenue'], 2); ?></small>
+                </div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(231, 76, 60, 0.1); color: #e74c3c;"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div class="adm-stat-label">Total Outstanding Balance</div>
+                <div class="adm-stat-value" style="font-size: 1.6rem; margin-top:0.3rem;">GHS <?php echo number_format($finance_stats['outstanding'], 2); ?></div>
+                <div class="adm-stat-footer" style="color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> Unpaid active invoices</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(47, 128, 237, 0.1); color: #2F80ED;"><i class="fas fa-file-medical-alt"></i></div>
+                <div class="adm-stat-label">Pending Insurance Claims</div>
+                <div class="adm-stat-value" style="font-size: 1.6rem; margin-top:0.3rem;"><?php echo $finance_stats['pending_claims']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-clipboard-list"></i> Awaiting resolution</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background: rgba(155, 89, 182, 0.1); color: #9b59b6;"><i class="fas fa-money-check-alt"></i></div>
+                <div class="adm-stat-label">Paystack Success (Today)</div>
+                <div class="adm-stat-value" style="font-size: 1.6rem; margin-top:0.3rem;"><?php echo $finance_stats['paystack_rate']; ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-check-double"></i> Verified online payments</div>
             </div>
         </div>
 

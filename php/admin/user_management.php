@@ -611,6 +611,8 @@ $stats = mysqli_fetch_assoc($statsResult);
                         <option value="ambulance_driver">Ambulance Driver</option>
                         <option value="laundry_staff">Laundry Personnel</option>
                         <option value="kitchen_staff">Kitchen Staff</option>
+                        <option value="finance_officer">Finance Officer</option>
+                        <option value="finance_manager">Finance Manager</option>
                         <option value="patient">Patient</option>
                     </select>
                 </div>
@@ -657,6 +659,8 @@ $stats = mysqli_fetch_assoc($statsResult);
                         <option value="ambulance_driver">Ambulance Driver</option>
                         <option value="laundry_staff">Laundry Personnel</option>
                         <option value="kitchen_staff">Kitchen Staff</option>
+                        <option value="finance_officer">Finance Officer</option>
+                        <option value="finance_manager">Finance Manager</option>
                         <option value="patient">Patient</option>
                     </select>
                 </div>

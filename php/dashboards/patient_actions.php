@@ -261,6 +261,106 @@ case 'toggle_2fa':
     
     ok(['message' => '2FA ' . ($enable ? 'enabled' : 'disabled')]);
 
+// ══════════════════════════════════════════════════════════
+// MODULE 10: BILLING & PAYMENTS
+// ══════════════════════════════════════════════════════════
+case 'get_invoice_detail':
+    $inv_id = (int)($post['invoice_id']??0);
+    $inv = mysqli_fetch_assoc(mysqli_query($conn, "SELECT bi.*, u.name AS gen_name FROM billing_invoices bi LEFT JOIN users u ON bi.generated_by=u.id WHERE bi.invoice_id=$inv_id AND bi.patient_id=$pat_pk LIMIT 1"));
+    if(!$inv) fail('Invoice not found');
+    
+    $items = [];
+    $iq = mysqli_query($conn, "SELECT * FROM invoice_line_items WHERE invoice_id=$inv_id");
+    if($iq) while($r=mysqli_fetch_assoc($iq)) $items[]=$r;
+    
+    // Generate HTML snippet
+    $html = '<div style="background:var(--surface-2); padding:1.5rem; border-radius:8px; margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                    <div><label style="font-size:0.9rem; color:var(--text-muted);">Invoice Number</label><div style="font-weight:700;">'.$inv['invoice_number'].'</div></div>
+                    <div style="text-align:right;"><label style="font-size:0.9rem; color:var(--text-muted);">Date</label><div>'.date('d M Y', strtotime($inv['invoice_date'])).'</div></div>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <div><label style="font-size:0.9rem; color:var(--text-muted);">Status</label><div><span class="adm-badge adm-badge-'.($inv['status']==='Paid'?'success':'warning').'">'.$inv['status'].'</span></div></div>
+                    <div style="text-align:right;"><label style="font-size:0.9rem; color:var(--text-muted);">Due Date</label><div>'.date('d M Y', strtotime($inv['due_date'])).'</div></div>
+                </div>
+             </div>
+             <table style="width:100%; border-collapse:collapse; margin-bottom:1.5rem;">
+                <thead><tr style="border-bottom:2px solid var(--border);"><th style="text-align:left; padding:0.8rem;">Item</th><th style="text-align:right; padding:0.8rem;">Qty</th><th style="text-align:right; padding:0.8rem;">Total</th></tr></thead>
+                <tbody>';
+    foreach($items as $it){
+        $html .= '<tr style="border-bottom:1px solid var(--border);"><td style="padding:0.8rem;">'.htmlspecialchars($it['item_description']).'</td><td style="text-align:right; padding:0.8rem;">'.(float)$it['quantity'].'</td><td style="text-align:right; padding:0.8rem;">GHS '.number_format($it['line_total'],2).'</td></tr>';
+    }
+    $html .= '</tbody></table>
+             <div style="text-align:right; border-top:2px solid var(--border); padding-top:1rem;">
+                <div style="margin-bottom:0.4rem; color:var(--text-muted);">Subtotal: GHS '.number_format($inv['subtotal'],2).'</div>
+                <div style="margin-bottom:0.4rem; color:var(--text-muted);">Tax: GHS '.number_format($inv['tax_total'],2).'</div>
+                <div style="font-size:1.6rem; font-weight:800; color:var(--role-accent);">Total: GHS '.number_format($inv['total_amount'],2).'</div>
+                <div style="font-size:1.2rem; font-weight:700; color:var(--danger); margin-top:0.4rem;">Balance Due: GHS '.number_format($inv['balance_due'],2).'</div>
+             </div>';
+    ok(['html' => $html]);
+
+case 'initialize_payment':
+    $inv_id = (int)($post['invoice_id']??0);
+    $inv = mysqli_fetch_assoc(mysqli_query($conn, "SELECT bi.*, u.email FROM billing_invoices bi JOIN patients p ON bi.patient_id=p.id JOIN users u ON p.user_id=u.id WHERE bi.invoice_id=$inv_id AND bi.patient_id=$pat_pk LIMIT 1"));
+    if(!$inv) fail('Invoice not found');
+    if($inv['balance_due'] <= 0) fail('This invoice is already fully paid.');
+
+    require_once '../finance/paystack_helper.php';
+    $config = _paystackConfig($conn);
+    if(!$config || empty($config['public_key'])) fail('Online payments are currently unavailable. Please contact finance.');
+
+    $ref = generateReference();
+    ok([
+        'key' => $config['public_key'],
+        'email' => $inv['email'],
+        'amount_pesewas' => round($inv['balance_due'] * 100),
+        'reference' => $ref,
+        'invoice_number' => $inv['invoice_number']
+    ]);
+
+case 'verify_payment':
+    $ref = esc($conn, $post['reference']??'');
+    $inv_id = (int)($post['invoice_id']??0);
+    if(empty($ref) || !$inv_id) fail('Reference and Invoice ID required');
+
+    require_once '../finance/paystack_helper.php';
+    $verify = verifyTransaction($ref);
+    if(!$verify['status']) fail($verify['message'] ?? 'Transaction verification failed');
+
+    // Verification successful, update DB
+    $tx = $verify['data'];
+    $amount = $tx['amount'] / 100; // to GHS
+    
+    // Check if this reference was already processed to prevent double crediting
+    $dup = mysqli_fetch_assoc(mysqli_query($conn, "SELECT payment_id FROM payments WHERE paystack_reference='$ref' LIMIT 1"));
+    if($dup) ok(['message' => 'Payment already recorded.']);
+
+    mysqli_begin_transaction($conn);
+    try {
+        // 1. Create payment record
+        $receipt = 'RCP-' . strtoupper(substr(md5(uniqid()), 0, 8));
+        $payRef = $ref;
+        $stmt = $conn->prepare("INSERT INTO payments(invoice_id, patient_id, payment_reference, receipt_number, amount, payment_method, channel, paystack_reference, paystack_response, status, payment_date) 
+                                VALUES(?, ?, ?, ?, ?, 'Paystack', ?, ?, ?, 'Completed', NOW())");
+        $jsonRes = json_encode($tx);
+        $channel = $tx['channel'] ?? 'card';
+        $stmt->bind_param("iissssss", $inv_id, $pat_pk, $payRef, $receipt, $amount, $channel, $ref, $jsonRes);
+        $stmt->execute();
+
+        // 2. Update invoice
+        mysqli_query($conn, "UPDATE billing_invoices SET paid_amount = paid_amount + $amount, balance_due = total_amount - (paid_amount + $amount), updated_at=NOW() WHERE invoice_id=$inv_id");
+        // Re-fetch to get correct balance_due (wait, the math above is slightly wrong if paid_amount was updated before balance_due calculation in same statement, usually it is safer to do it separately or use the variable)
+        $inv_update = mysqli_fetch_assoc(mysqli_query($conn, "SELECT total_amount, paid_amount FROM billing_invoices WHERE invoice_id=$inv_id"));
+        if($inv_update['paid_amount'] >= $inv_update['total_amount']) mysqli_query($conn, "UPDATE billing_invoices SET status='Paid', balance_due=0 WHERE invoice_id=$inv_id");
+        else mysqli_query($conn, "UPDATE billing_invoices SET status='Partially Paid' WHERE invoice_id=$inv_id");
+
+        mysqli_commit($conn);
+        ok(['message' => 'Payment successful', 'receipt' => $receipt]);
+    } catch(Exception $e) {
+        mysqli_rollback($conn);
+        fail('Database error: ' . $e->getMessage());
+    }
+
 default:
     fail('Unknown action: '.$action);
 }

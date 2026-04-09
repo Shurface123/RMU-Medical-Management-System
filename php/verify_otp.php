@@ -187,6 +187,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
                         mysqli_stmt_bind_param($si, 'is', $new_uid, $sid);
                         @mysqli_stmt_execute($si);
                         mysqli_query($conn, "UPDATE users SET is_active=0 WHERE id=$new_uid");
+                    } elseif (in_array($r, ['finance_officer', 'finance_manager'])) {
+                        $sid = 'FIN-' . strtoupper(bin2hex(random_bytes(3)));
+                        $si = mysqli_prepare($conn,
+                            "INSERT INTO finance_staff (user_id, staff_code, role_level, approval_status, created_at) VALUES (?,?,?, 'pending', NOW())");
+                        mysqli_stmt_bind_param($si, 'iss', $new_uid, $sid, $r);
+                        @mysqli_stmt_execute($si);
+                        mysqli_query($conn, "UPDATE users SET is_active=0 WHERE id=$new_uid");
                     }
 
                     // Mark OTP used
@@ -336,6 +343,13 @@ body::before{content:'';position:absolute;width:200%;height:200%;background:radi
     <div class="alert alert-warn">
         <i class="fas fa-triangle-exclamation"></i>
         <span>The verification email could not be sent. Please use the "Resend OTP" button below.</span>
+    </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['dev_otp'])): ?>
+    <div class="alert alert-info" style="background:#EBF5FB;color:#1a5276;border-left:4px solid #2980b9;">
+        <i class="fas fa-hammer"></i>
+        <span><strong>Development Mode OTP:</strong> <?= htmlspecialchars($_GET['dev_otp']) ?></span>
     </div>
     <?php endif; ?>
 

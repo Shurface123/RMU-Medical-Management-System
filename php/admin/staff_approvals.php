@@ -43,6 +43,13 @@ $q_pending = mysqli_query($conn, "
     JOIN users u ON p.user_id = u.id
     WHERE p.approval_status = 'pending'
     
+    UNION ALL
+    
+    SELECT f.finance_staff_id as staff_id, f.staff_code as employee_id, f.role_level as role, u.name, u.email, u.phone, u.created_at, CAST('finance_staff' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
+    FROM finance_staff f
+    JOIN users u ON f.user_id = u.id
+    WHERE f.approval_status = 'pending'
+    
     ORDER BY created_at DESC
 ");
 if ($q_pending) while ($row = mysqli_fetch_assoc($q_pending)) $pending[] = $row;
@@ -97,6 +104,16 @@ $q_recent = mysqli_query($conn, "
     LEFT JOIN users ua ON p.approved_by = ua.id
     WHERE p.approval_status IN ('approved','rejected')
       AND p.approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      
+    UNION ALL
+    
+    SELECT f.finance_staff_id as staff_id, f.staff_code as employee_id, f.role_level as role, f.approval_status, f.rejection_reason, f.approved_at,
+           u.name as staff_name, ua.name as admin_name, CAST('finance_staff' AS CHAR) COLLATE utf8mb4_unicode_ci as source_table
+    FROM finance_staff f
+    JOIN users u ON f.user_id = u.id
+    LEFT JOIN users ua ON f.approved_by = ua.id
+    WHERE f.approval_status IN ('approved','rejected')
+      AND f.approved_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
       
     ORDER BY approved_at DESC LIMIT 15
 ");

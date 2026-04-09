@@ -26,14 +26,15 @@ switch ($action) {
         $type = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : (($type === 'doctor') ? 'doctors' : (($type === 'pharmacist' || $type === 'pharmacist_profile') ? 'pharmacist_profile' : 'staff')));
-        $sql = "UPDATE $table SET approval_status = 'approved', approved_by = ?, approved_at = NOW(), rejection_reason = NULL WHERE id = ?";
+        $table = ($type === 'finance_staff') ? 'finance_staff' : (($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : (($type === 'doctor') ? 'doctors' : (($type === 'pharmacist' || $type === 'pharmacist_profile') ? 'pharmacist_profile' : 'staff'))));
+        $pk = ($table === 'finance_staff') ? 'finance_staff_id' : 'id';
+        $sql = "UPDATE $table SET approval_status = 'approved', approved_by = ?, approved_at = NOW(), rejection_reason = NULL WHERE $pk = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "ii", $admin_id, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
             // ── Sync with users table and Send Email ──
-            $get_uid = mysqli_query($conn, "SELECT u.id, u.email, u.name, u.user_role FROM $table t JOIN users u ON t.user_id = u.id WHERE t.id = $staff_id LIMIT 1");
+            $get_uid = mysqli_query($conn, "SELECT u.id, u.email, u.name, u.user_role FROM $table t JOIN users u ON t.user_id = u.id WHERE t.$pk = $staff_id LIMIT 1");
             if ($u_row = mysqli_fetch_assoc($get_uid)) {
                 $uid = (int)$u_row['id'];
                 mysqli_query($conn, "UPDATE users SET is_active = 1, account_status = 'active', is_verified = 1 WHERE id = $uid");
@@ -64,14 +65,15 @@ switch ($action) {
         $type     = $_POST['type'] ?? 'staff';
         if (!$staff_id) die(json_encode(['success' => false, 'message' => 'Invalid ID.']));
         
-        $table = ($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : (($type === 'doctor') ? 'doctors' : (($type === 'pharmacist' || $type === 'pharmacist_profile') ? 'pharmacist_profile' : 'staff')));
-        $sql = "UPDATE $table SET approval_status = 'rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? WHERE id = ?";
+        $table = ($type === 'finance_staff') ? 'finance_staff' : (($type === 'nurse') ? 'nurses' : (($type === 'lab_technician') ? 'lab_technicians' : (($type === 'doctor') ? 'doctors' : (($type === 'pharmacist' || $type === 'pharmacist_profile') ? 'pharmacist_profile' : 'staff'))));
+        $pk = ($table === 'finance_staff') ? 'finance_staff_id' : 'id';
+        $sql = "UPDATE $table SET approval_status = 'rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? WHERE $pk = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "isi", $admin_id, $reason, $staff_id);
         
         if (mysqli_stmt_execute($stmt)) {
             // ── Sync with users table and Send Email ──
-            $get_uid = mysqli_query($conn, "SELECT u.id, u.email, u.name, u.user_role FROM $table t JOIN users u ON t.user_id = u.id WHERE t.id = $staff_id LIMIT 1");
+            $get_uid = mysqli_query($conn, "SELECT u.id, u.email, u.name, u.user_role FROM $table t JOIN users u ON t.user_id = u.id WHERE t.$pk = $staff_id LIMIT 1");
             if ($u_row = mysqli_fetch_assoc($get_uid)) {
                 $uid = (int)$u_row['id'];
                 mysqli_query($conn, "UPDATE users SET is_active = 0, account_status = 'inactive' WHERE id = $uid");

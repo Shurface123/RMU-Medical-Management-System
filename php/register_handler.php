@@ -212,7 +212,7 @@ $s = mysqli_prepare($conn,
     "INSERT INTO registration_sessions
      (session_token,email,role,step_reached,temp_data,expires_at)
      VALUES (?,?,?,2,?,?)");
-mysqli_stmt_bind_param($s,'ssiss', $session_token,$email,$role,$temp_data,$expires_at);
+mysqli_stmt_bind_param($s,'sssss', $session_token,$email,$role,$temp_data,$expires_at);
 if (!mysqli_stmt_execute($s)) bail('Session creation failed. Please try again.');
 
 // ── Generate & send OTP ───────────────────────────────────────
@@ -242,6 +242,16 @@ $_SESSION['reg_name']          = $full_name;
 // Rotate CSRF
 $_SESSION['_reg_csrf'] = bin2hex(random_bytes(32));
 
+// Safe local fallback for testing Registration
+$redirectQuery = '';
+if (!$mail_result['success']) {
+    $redirectQuery = '?warn=email';
+    if ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_NAME'] === '127.0.0.1') {
+        $redirectQuery .= '&dev_otp=' . urlencode($otp_plain);
+    }
+}
+
 // Redirect to OTP verification
-header('Location: verify_otp.php' . ($mail_result['success'] ? '' : '?warn=email'));
+header('Location: verify_otp.php' . $redirectQuery);
 exit;
+

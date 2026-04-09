@@ -8,6 +8,16 @@ if ($email_cfg) {
     $pwRow = mysqli_fetch_assoc($pwResult);
     $email_cfg['smtp_password_plain'] = $pwRow['pw'] ?? '';
 }
+
+// Fetch Paystack settings
+$ps_res = mysqli_query($conn, "SELECT config_key, CAST(AES_DECRYPT(config_value, SHA2('RMU_SICKBAY_2025_SECRET',256)) AS CHAR) AS val, environment, is_active FROM paystack_config");
+$ps_cfg = ['test' => [], 'live' => [], 'active_env' => 'test'];
+if ($ps_res) {
+    while($r = mysqli_fetch_assoc($ps_res)){
+        if($r['is_active'] == 1) $ps_cfg['active_env'] = $r['environment'];
+        $ps_cfg[$r['environment']][$r['config_key']] = $r['val'];
+    }
+}
 ?>
 
 <div class="settings-card">
@@ -99,3 +109,49 @@ if ($email_cfg) {
         </div>
     </form>
 </div>
+
+<div class="settings-card">
+    <div class="settings-card-header">
+        <h2 class="settings-card-title"><i class="fas fa-credit-card"></i> Paystack API Configuration</h2>
+        <span class="badge" style="background:var(--primary);color:#fff;padding:4px 8px;border-radius:4px;">Payments</span>
+    </div>
+
+    <form id="paystackConfigForm" onsubmit="event.preventDefault(); saveSettings('paystackConfigForm', 'save_paystack_config');">
+        <div class="grid-2">
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Active Environment</label>
+                <select name="active_environment" class="form-control">
+                    <option value="test" <?= ($ps_cfg['active_env'] === 'test') ? 'selected' : '' ?>>Test Mode</option>
+                    <option value="live" <?= ($ps_cfg['active_env'] === 'live') ? 'selected' : '' ?>>Live Mode</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Test Public Key</label>
+                <input type="text" name="test_public_key" class="form-control" value="<?= htmlspecialchars($ps_cfg['test']['public_key'] ?? '') ?>">
+            </div>
+            
+            <div class="form-group">
+                <label>Test Secret Key</label>
+                <input type="password" name="test_secret_key" class="form-control" value="<?= htmlspecialchars($ps_cfg['test']['secret_key'] ?? '') ?>">
+            </div>
+
+            <div class="form-group">
+                <label>Live Public Key</label>
+                <input type="text" name="live_public_key" class="form-control" value="<?= htmlspecialchars($ps_cfg['live']['public_key'] ?? '') ?>">
+            </div>
+            
+            <div class="form-group">
+                <label>Live Secret Key</label>
+                <input type="password" name="live_secret_key" class="form-control" value="<?= htmlspecialchars($ps_cfg['live']['secret_key'] ?? '') ?>">
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="adm-btn adm-btn-primary" style="padding: 0.8rem 2rem;">
+                <i class="fas fa-save"></i> Save Paystack Keys
+            </button>
+        </div>
+    </form>
+</div>
+

@@ -85,7 +85,7 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #2F80ED 0%, #56CCF2 50%, #2F80ED 100%);
+            background: linear-gradient(135deg, #1C3A6B 0%, #2F80ED 55%, #56CCF2 100%);
             position: relative;
             overflow: hidden;
         }
@@ -93,103 +93,111 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
         body::before {
             content: '';
             position: absolute;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,.1) 1px, transparent 1px);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
             background-size: 50px 50px;
-            animation: moveBackground 20s linear infinite;
+            animation: bgMove 25s linear infinite;
+            pointer-events: none;
+            z-index: 0;
         }
-        @keyframes moveBackground {
+        @keyframes bgMove {
             0%   { transform: translate(0,0); }
             100% { transform: translate(50px,50px); }
-        }
-
-        /* Floating shapes */
-        .bg-shape {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255,255,255,.07);
-            animation: floatShape 8s ease-in-out infinite;
-        }
-        .bg-shape:nth-child(1) { width:320px; height:320px; top:-80px; right:-80px; animation-delay:0s; }
-        .bg-shape:nth-child(2) { width:200px; height:200px; bottom:-40px; left:-40px; animation-delay:3s; }
-        .bg-shape:nth-child(3) { width:150px; height:150px; top:40%; right:5%; animation-delay:6s; }
-        @keyframes floatShape {
-            0%,100% { transform: translateY(0) rotate(0deg); }
-            50%      { transform: translateY(-20px) rotate(5deg); }
         }
 
         /* Container */
         .login-container {
             position: relative; z-index: 10;
             background: var(--white);
-            padding: 3rem 2.5rem;
-            border-radius: 24px;
-            box-shadow: 0 15px 40px rgba(47,128,237,.15);
-            width: 90%; max-width: 440px;
-            animation: slideIn .4s ease-out;
+            border-radius: 28px;
+            box-shadow: 0 20px 70px rgba(47,128,237,.25);
+            width: 92%; max-width: 520px;
+            overflow: hidden;
+            animation: slideIn .6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+            display: flex;
+            flex-direction: column;
         }
         @keyframes slideIn {
-            from { opacity:0; transform: translateY(-20px); }
+            from { opacity:0; transform: translateY(-30px); }
             to   { opacity:1; transform: translateY(0); }
         }
 
-        /* Header */
-        .login-header { text-align: center; margin-bottom: 2rem; }
+        /* Header matches registration */
+        .login-header {
+            background: linear-gradient(135deg, #1C3A6B 0%, #2F80ED 55%, #56CCF2 100%);
+            padding: 2.8rem 2.5rem 2.4rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1rem;
+        }
+        .login-header::after {
+            content: ''; position: absolute; right: -40px; top: -40px;
+            width: 180px; height: 180px; border-radius: 50%;
+            background: rgba(255,255,255,.07);
+        }
         .logo-icon {
             width: 72px; height: 72px;
-            background: linear-gradient(135deg,#2F80ED,#56CCF2);
+            background: rgba(255,255,255,.15);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 1.2rem;
-            box-shadow: 0 8px 24px rgba(47,128,237,.25);
+            font-size: 2.2rem; color: var(--white);
+            border: 2px solid rgba(255,255,255,.3);
+            flex-shrink: 0;
+            z-index: 2;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
         }
-        .logo-icon i { font-size: 2.8rem; color: var(--white); }
-        .login-header h1 { font-size: 2.8rem; color: var(--text-dark); font-weight: 700; margin-bottom: .3rem; }
-        .login-header p  { font-size: 1.6rem; color: var(--text-muted); }
+        .login-header-text { position: relative; z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.12); }
+        .login-header-text h1 { font-size: 1.8rem; font-weight: 700; color: var(--white); margin: 0 0 .3rem; letter-spacing: 0.5px; }
+        .login-header-text p { font-size: 1rem; color: rgba(255,255,255,.9); margin: 0; }
+        
+        .login-body { padding: 3rem 2.5rem; }
+
         /* Alert banners */
         .msg-box {
-            border-radius: 8px; padding: 0.8rem 1rem;
-            margin-bottom: 1.2rem; font-size: 0.9rem;
-            display: none; align-items: flex-start; gap: .6rem;
-            border-left: 4px solid;
+            border-radius: 12px; padding: 1rem 1.2rem;
+            margin-bottom: 1.5rem; font-size: 0.95rem;
+            display: none; align-items: flex-start; gap: .8rem;
         }
-        .msg-box.show { display: flex; animation: shake .4s; }
-        .msg-box.err  { background:#FDEDEC; color:#c0392b; border-color:#e74c3c; }
-        .msg-box.ok   { background:#EAFAF1; color:#1e8449; border-color:#27ae60; }
-        .msg-box.info { background:#FEF9E7; color:#935116; border-color:#E67E22; }
-        .msg-box.warn { background:#fff8e1; color:#935116; border-color:#F39C12; }
-        @keyframes shake {
-            0%,100% { transform:translateX(0); }
-            25%      { transform:translateX(-6px); }
-            75%      { transform:translateX(6px); }
-        }
+        .msg-box.show { display: flex; animation: slideDown .4s ease; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        .msg-box.err  { background:#FDEDEC; color:#c0392b; border-left:4px solid #e74c3c; }
+        .msg-box.ok   { background:#EAFAF1; color:#1e8449; border-left:4px solid #27ae60; }
+        .msg-box.info { background:#EBF5FB; color:#1a5276; border-left:4px solid #2980b9; }
+        .msg-box.warn { background:#FEF9E7; color:#7D6608; border-left:4px solid #f39c12; }
 
         /* Form */
-        .form-group { margin-bottom: 1.6rem; position: relative; }
+        .form-group { margin-bottom: 1.8rem; position: relative; }
         .form-group label {
-            display: block; font-size: 1.6rem; font-weight: 600;
+            display: block; font-size: 1rem; font-weight: 600;
             color: var(--text-dark); margin-bottom: .6rem;
         }
         .input-wrapper { position: relative; }
         .input-wrapper .fi {
-            position: absolute; left: 1.25rem; top: 50%;
+            position: absolute; left: 1.2rem; top: 50%;
             transform: translateY(-50%);
-            font-size: 1.25rem; color: var(--text-muted);
+            font-size: 1.2rem; color: var(--text-muted);
             transition: color .3s; pointer-events: none;
         }
         .form-control {
             width: 100%;
-            padding: 1.2rem 1.2rem 1.2rem 3.8rem;
-            font-size: 1.6rem;
+            padding: 1.1rem 1.2rem 1.1rem 3.4rem;
+            font-size: 1.05rem;
             border: 2px solid var(--border);
             border-radius: 12px;
-            transition: all .2s;
+            transition: all .25s;
+            background: #fff;
+            color: var(--text-dark);
             font-family: 'Poppins', sans-serif;
         }
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(47,128,237,.1);
+            box-shadow: 0 0 0 4px rgba(47,128,237,.1);
         }
         .form-control:focus ~ .fi { color: var(--primary-color); }
         .form-control.is-valid   { border-color: var(--success-color); }
@@ -197,80 +205,59 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
 
         /* Show/hide PW toggle */
         .pw-toggle {
-            position: absolute; right: 1.2rem; top: 50%;
+            position: absolute; right: 1rem; top: 50%;
             transform: translateY(-50%);
             cursor: pointer; color: var(--text-muted);
-            font-size: 1.6rem; transition: color .2s;
+            font-size: 1.2rem; transition: color .2s;
             background: none; border: none; padding: 0;
         }
         .pw-toggle:hover { color: var(--primary-color); }
 
         /* Field inline message */
-        .field-msg { font-size: 0.85rem; margin-top: .3rem; min-height: 1.2em; }
+        .field-msg { font-size: 0.85rem; margin-top: .45rem; min-height: 1.2em; }
         .field-msg.ok  { color: var(--success-color); }
         .field-msg.err { color: var(--accent-color); }
 
         /* Remember Me row */
         .remember-row {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1.4rem; font-size: 1.4rem; color: var(--text-muted);
+            margin-bottom: 2rem; font-size: 0.9rem; color: var(--text-muted);
         }
         .remember-row label {
-            display: flex; align-items: center; gap: .4rem; cursor: pointer;
+            display: flex; align-items: center; gap: .5rem; cursor: pointer;
         }
         .remember-row input[type="checkbox"] {
-            width: 17px; height: 17px; accent-color: var(--primary-color); cursor: pointer;
+            width: 16px; height: 16px; accent-color: var(--primary-color); cursor: pointer;
         }
         .remember-row a {
-            color: var(--primary-color); text-decoration: none; font-weight: 500;
+            color: var(--primary-color); text-decoration: none; font-weight: 600;
         }
         .remember-row a:hover { text-decoration: underline; }
 
         /* Submit button */
         .btn-login {
-            width: 100%; padding: 1.2rem;
-            font-size: 1.6rem; font-weight: 600;
-            background: linear-gradient(135deg,#2F80ED,#56CCF2);
+            width: 100%; padding: 1.1rem 1.6rem;
+            font-size: 1.1rem; font-weight: 600;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #56CCF2 100%);
             color: var(--white);
             border: none; border-radius: 12px;
             cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 8px 20px rgba(47,128,237,.25);
-            display: flex; align-items: center; justify-content: center; gap: .6rem;
-            position: relative;
+            box-shadow: 0 8px 25px rgba(47,128,237,.3);
+            display: flex; align-items: center; justify-content: center; gap: .8rem;
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.5px; text-transform: uppercase;
         }
         .btn-login:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 24px rgba(47,128,237,.3);
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(47,128,237,.45);
         }
-        .btn-login:disabled { opacity: .7; cursor: not-allowed; transform: none; }
-        .btn-login .spinner { display: none; align-items: center; justify-content: center; gap: .6rem; }
-        .btn-login.loading {
-            animation: advancedRotate 0.8s ease-in-out forwards;
-        }
-        @keyframes advancedRotate {
-            0% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(0.9) rotate(45deg); }
-            100% { transform: scale(1) rotate(90deg); opacity: 0.8; }
-        }
-        .btn-login.loading .btn-text { display: none; }
-        .btn-login.loading .spinner { display: flex; }
-
-        /* Premium CSS Spinner */
-        .custom-loader {
-            width: 20px; height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-login:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; transform: none; }
 
         /* Lockout countdown */
         .lockout-box {
             background: #FDEDEC; border-left: 4px solid #e74c3c;
-            border-radius: 12px; padding: 1rem 1.3rem;
-            margin-bottom: 1.5rem; font-size: 1.3rem;
+            border-radius: 10px; padding: 1rem 1.2rem;
+            margin-bottom: 1.5rem; font-size: 0.95rem;
             color: #c0392b; display: none;
         }
         .lockout-box.show { display: block; }
@@ -278,28 +265,29 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
 
         /* Footer */
         .login-footer {
-            text-align: center; margin-top: 2rem;
-            padding-top: 1.8rem; border-top: 1px solid var(--border);
+            text-align: center; margin-top: 1rem;
+            padding-top: 1.5rem; border-top: 1px solid var(--border);
         }
-        .login-footer p { font-size: 1.5rem; color: var(--text-muted); margin-bottom: .8rem; }
+        .login-footer p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: .5rem; }
         .login-footer a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
         .login-footer a:hover { text-decoration: underline; }
 
         /* Back-to-home */
-        .back-home { position: absolute; top: 2rem; left: 2rem; z-index: 100; }
+        .back-home { position: absolute; top: 1.5rem; left: 1.5rem; z-index: 100; }
         .back-home a {
-            display: flex; align-items: center; gap: .8rem;
-            padding: 1rem 2rem;
-            background: rgba(255,255,255,.95);
+            display: flex; align-items: center; gap: .6rem;
+            padding: .6rem 1.2rem;
+            background: rgba(255,255,255,.9);
             color: var(--primary-color); text-decoration: none;
-            border-radius: 50px; font-size: 1.6rem; font-weight: 600;
-            box-shadow: 0 10px 30px rgba(47,128,237,.2); transition: all .3s;
+            border-radius: 50px; font-size: 0.95rem; font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,.1); transition: all .25s;
         }
         .back-home a:hover { background: var(--white); transform: translateY(-2px); }
 
         @media(max-width:600px) {
-            .login-container { padding: 2rem 1.5rem; }
-            .login-header h1 { font-size: 1.5rem; }
+            .login-container { margin: 1.5rem; }
+            .login-body { padding: 1.5rem; }
+            .login-header { padding: 1.6rem 1.5rem 1.4rem; }
         }
     </style>
 </head>
@@ -316,69 +304,72 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
 
     <div class="login-container">
         <div class="login-header">
-            <div class="logo-icon"><i class="fas fa-user-shield"></i></div>
-            <h1>Welcome Back</h1>
-            <p>Login to RMU Medical Sickbay</p>
+            <div class="logo-icon"><i class="fas fa-hospital-user"></i></div>
+            <div class="login-header-text">
+                <h1>Welcome Back</h1>
+                <p>Login to RMU Medical Sickbay</p>
+            </div>
         </div>
 
-        <!-- Error message -->
-        <div class="msg-box err" id="errBox"><i class="fas fa-exclamation-circle"></i><span id="errText"></span></div>
-        <!-- Success message -->
-        <div class="msg-box ok"  id="okBox"><i class="fas fa-check-circle"></i><span id="okText"></span></div>
-        <!-- Info (pending approval) -->
-        <div class="msg-box info" id="infoBox"><i class="fas fa-clock"></i><span id="infoText"></span></div>
+        <div class="login-body">
+            <!-- Error message -->
+            <div class="msg-box err" id="errBox"><i class="fas fa-exclamation-circle"></i><span id="errText"></span></div>
+            <!-- Success message -->
+            <div class="msg-box ok"  id="okBox"><i class="fas fa-check-circle"></i><span id="okText"></span></div>
+            <!-- Info (pending approval) -->
+            <div class="msg-box info" id="infoBox"><i class="fas fa-clock"></i><span id="infoText"></span></div>
 
-        <!-- Lockout countdown -->
-        <div class="lockout-box" id="lockoutBox">
-            <i class="fas fa-lock"></i>
-            Account temporarily locked. Try again in <span id="lockCountdown">--:--</span>
-        </div>
+            <!-- Lockout countdown -->
+            <div class="lockout-box" id="lockoutBox">
+                <i class="fas fa-lock"></i>
+                Account temporarily locked. Try again in <span id="lockCountdown">--:--</span>
+            </div>
 
-        <!-- Login Form -->
-        <form id="loginForm" action="login.php" method="POST" autocomplete="off" novalidate>
-            <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_SESSION['_login_csrf']) ?>">
-            <input type="hidden" name="_lockout_until" id="lockoutUntilField" value="">
+            <!-- Login Form -->
+            <form id="loginForm" action="login.php" method="POST" autocomplete="off" novalidate>
+                <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_SESSION['_login_csrf']) ?>">
+                <input type="hidden" name="_lockout_until" id="lockoutUntilField" value="">
 
-            <div class="form-group">
-                <label for="uname">Username</label>
-                <div class="input-wrapper">
-                    <input type="text" id="uname" name="uname" class="form-control"
-                           placeholder="Enter your username" required autocomplete="username">
-                    <i class="fas fa-user fi"></i>
+                <div class="form-group">
+                    <label for="uname">Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="uname" name="uname" class="form-control"
+                               placeholder="Enter your username" required autocomplete="username">
+                        <i class="fas fa-user fi"></i>
+                    </div>
+                    <div class="field-msg" id="unameMsg"></div>
                 </div>
-                <div class="field-msg" id="unameMsg"></div>
-            </div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-wrapper">
-                    <input type="password" id="password" name="password" class="form-control"
-                           placeholder="Enter your password" required autocomplete="current-password">
-                    <i class="fas fa-lock fi"></i>
-                    <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password visibility">
-                        <i class="fas fa-eye" id="pwEyeIcon"></i>
-                    </button>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" class="form-control"
+                               placeholder="Enter your password" required autocomplete="current-password">
+                        <i class="fas fa-lock fi"></i>
+                        <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye" id="pwEyeIcon"></i>
+                        </button>
+                    </div>
+                    <div class="field-msg" id="passMsg"></div>
                 </div>
-                <div class="field-msg" id="passMsg"></div>
+
+                <div class="remember-row">
+                    <label>
+                        <input type="checkbox" name="remember_me" id="rememberMe" value="1">
+                        Remember me
+                    </label>
+                    <a href="forgot_password.php">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt" id="loginBtnIcon"></i> <span id="loginBtnText">Login</span>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p>Don't have an account? <a href="register.php">Register here</a></p>
+                <p><a href="/RMU-Medical-Management-System/html/index.html">Return to Homepage</a></p>
             </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer; font-size:.9rem; color:var(--text-muted);">
-                    <input type="checkbox" name="remember_me" id="rememberMe" value="1" style="width:16px; height:16px; accent-color:var(--primary);">
-                    Remember me
-                </label>
-                <a href="forgot_password.php" style="font-size:.9rem; color:var(--primary); text-decoration:none; font-weight:600;">Forgot Password?</a>
-            </div>
-
-            <button type="submit" class="btn-login" id="loginBtn">
-                <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Login</span>
-                <span class="spinner"><div class="custom-loader"></div> Verifying...</span>
-            </button>
-        </form>
-
-        <div class="login-footer">
-            <p>Don't have an account? <a href="register.php">Register here</a></p>
-            <p><a href="/RMU-Medical-Management-System/html/index.html">Return to Homepage</a></p>
         </div>
     </div>
 
@@ -481,7 +472,8 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     }
     const btn = document.getElementById('loginBtn');
     btn.disabled = true;
-    btn.classList.add('loading');
+    document.getElementById('loginBtnIcon').className = 'fas fa-spinner fa-spin';
+    document.getElementById('loginBtnText').textContent = 'Logging in...';
 });
 </script>
 </body>
