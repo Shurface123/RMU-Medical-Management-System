@@ -3,7 +3,7 @@
 $ps_config = [];
 $pcq = mysqli_query($conn,"SELECT * FROM paystack_config WHERE is_active=1");
 if($pcq) while($r=mysqli_fetch_assoc($pcq)) $ps_config[$r['config_key']] = $r;
-$fs_settings = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM finance_settings WHERE user_id=$user_id LIMIT 1")) ?: [];
+$fs_settings = mysqli_fetch_assoc(mysqli_query($conn,"SELECT s.* FROM finance_settings s JOIN finance_staff fs ON s.finance_staff_id = fs.finance_staff_id WHERE fs.user_id = $user_id LIMIT 1")) ?: [];
 $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').'://'.$_SERVER['HTTP_HOST'].'/RMU-Medical-Management-System';
 ?>
 <div id="sec-settings" class="dash-section">

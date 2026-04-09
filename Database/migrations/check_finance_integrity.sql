@@ -1,0 +1,9 @@
+SHOW TABLES;
+DESCRIBE finance_staff;
+DESCRIBE billing_invoices;
+DESCRIBE payments;
+DESCRIBE insurance_claims;
+DESCRIBE payment_waivers;
+DESCRIBE refunds;
+DESCRIBE paystack_transactions;
+DESCRIBE finance_settings;
