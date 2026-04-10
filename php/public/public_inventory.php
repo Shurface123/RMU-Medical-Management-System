@@ -1,368 +1,197 @@
 <?php
 require_once '../db_conn.php';
+
+// Fetch distinct categories for filters
+$cat_result = mysqli_query($conn, "SELECT DISTINCT category FROM medicines WHERE category IS NOT NULL AND status='active' ORDER BY category ASC");
+$categories = ['all' => 'All Medicines'];
+while ($row = mysqli_fetch_assoc($cat_result)) {
+    if (!empty(trim($row['category']))) {
+        $categories[$row['category']] = $row['category'];
+    }
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RMU Public Request Portal</title>
+    <title>RMU Medical Inventory</title>
     <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/RMU-Medical-Management-System/css/landing.css">
     <style>
-        .inventory-header {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            color: white;
-            padding: 6rem 2rem 4rem;
-            text-align: center;
-        }
-        
-        .inventory-header h1 {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-        
-        .inventory-header p {
-            font-size: 1.8rem;
-            opacity: 0.95;
-        }
+        .inventory-header { padding: 8rem 2rem 5rem; text-align: center; }
+        .inventory-header h1 { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem; color: var(--lp-text); }
+        .inventory-header p { font-size: 1.25rem; color: var(--lp-text-muted); }
         
         .search-filter-section {
-            background: white;
+            background: var(--lp-bg-card);
             padding: 3rem 2rem;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
+            box-shadow: 0 10px 30px rgba(47, 128, 237, 0.08);
             margin: -3rem auto 4rem;
             max-width: 1200px;
             border-radius: 24px;
+            border: 1px solid var(--lp-border);
+            position: relative;
+            z-index: 10;
         }
-        
-        .search-box {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
+        .search-box { display: flex; gap: 1rem; margin-bottom: 2rem; }
         .search-box input {
-            flex: 1;
-            padding: 1.5rem;
-            font-size: 1.6rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 0.8rem;
+            flex: 1; padding: 1.2rem; font-size: 1rem; border: 2px solid var(--lp-border);
+            border-radius: 12px; background: var(--lp-bg); color: var(--lp-text); font-family: inherit;
         }
-        
-        .search-box button {
-            padding: 1.5rem 3rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 0.8rem;
-            font-size: 1.6rem;
-            cursor: pointer;
-        }
-        
-        .filter-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
+        .search-box input:focus { border-color: var(--lp-primary); outline: none; }
+        .filter-buttons { display: flex; gap: 0.8rem; flex-wrap: wrap; }
         .filter-btn {
-            padding: 1rem 2rem;
-            border: 2px solid var(--primary-color);
-            background: white;
-            color: var(--primary-color);
-            border-radius: 5rem;
-            cursor: pointer;
-            font-size: 1.4rem;
-            transition: all 0.3s;
+            padding: 0.8rem 1.5rem; border: 2px solid var(--lp-primary); background: transparent;
+            color: var(--lp-primary); border-radius: 50px; cursor: pointer; font-size: 0.95rem;
+            font-weight: 600; transition: all 0.3s;
         }
-        
-        .filter-btn.active {
-            background: var(--primary-color);
-            color: white;
-        }
+        .filter-btn.active, .filter-btn:hover { background: var(--lp-primary); color: white; }
         
         .medicine-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 2rem;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem; padding: 2rem 0;
         }
-        
         .medicine-card {
-            background: white;
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
+            background: var(--lp-bg-card); border-radius: 20px; padding: 2rem;
+            border: 1px solid var(--lp-border);
+            transition: transform 0.3s var(--lp-ease), box-shadow 0.3s var(--lp-ease);
         }
-        
-        .medicine-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        }
-        
+        .medicine-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .medicine-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
+            width: 56px; height: 56px;
+            background: var(--lp-primary-bg); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;
         }
+        .medicine-icon i { font-size: 1.8rem; color: var(--lp-primary); }
+        .medicine-card h3 { font-size: 1.4rem; color: var(--lp-text); margin-bottom: 0.2rem; font-weight: 800; }
+        .generic-name { font-size: 0.9rem; color: var(--lp-text-muted); margin-bottom: 1rem; }
+        .category-badge {
+            display: inline-block; padding: 0.4rem 0.8rem; background: var(--lp-bg);
+            color: var(--lp-primary); border-radius: 50px; font-size: 0.8rem; font-weight: 600;
+            margin-right: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--lp-border);
+        }
+        .rx-badge { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2); }
+        .medicine-desc { font-size: 0.95rem; color: var(--lp-text-muted); margin-bottom: 1.5rem; line-height: 1.6; }
         
-        .medicine-icon i {
-            font-size: 3rem;
-            color: white;
-        }
-        
-        .medicine-card h3 {
-            font-size: 2rem;
-            color: var(--text-dark);
-            margin-bottom: 0.5rem;
-        }
-        
-        .medicine-card .generic-name {
-            font-size: 1.4rem;
-            color: var(--text-light);
-            margin-bottom: 1rem;
-        }
-        
-        .medicine-card .category {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: #e8f5f3;
-            color: var(--primary-color);
-            border-radius: 5rem;
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-        }
-        
-        .medicine-card .description {
-            font-size: 1.4rem;
-            color: var(--text-light);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
-        
-        .stock-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-        
-        .stock-status.available {
-            color: #27ae60;
-        }
-        
-        .stock-status.low {
-            color: #f39c12;
-        }
-        
-        .stock-status.out {
-            color: #e74c3c;
-        }
-        
-        .stock-status i {
-            font-size: 1.6rem;
-        }
-        
-        .info-banner {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 2rem;
-            margin: 2rem auto;
-            max-width: 1200px;
-            border-radius: 0.5rem;
-        }
-        
-        .info-banner i {
-            color: #ffc107;
-            margin-right: 1rem;
-        }
+        .stock-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; font-weight: 700; }
+        .stock-available { color: #10b981; } .stock-low { color: #f59e0b; } .stock-out { color: #ef4444; }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="logo-container">
-            <img src="../../image/logo-ju-small.png" alt="RMU Logo" class="logo-img">
-            <a href="/RMU-Medical-Management-System/html/index.html" class="logo">
-                RMU <span>Medical</span> Sickbay
-            </a>
-        </div>
-        <nav class="navbar">
-            <a href="/RMU-Medical-Management-System/html/index.html">Home</a>
-            <a href="/RMU-Medical-Management-System/html/services.html">Services</a>
-            <a href="/RMU-Medical-Management-System/html/about.html">About</a>
-            <a href="/RMU-Medical-Management-System/php/index.php">Login</a>
-        </nav>
-        
-        <!-- Theme Toggle -->
-        <button class="theme-toggle-header" id="themeToggle" aria-label="Toggle theme" title="Toggle Dark Mode">
-            <i class="fas fa-moon"></i>
-        </button>
-        
-        <div id="menu-btn" class="fas fa-bars"></div>
-    </header>
+    <div id="lpAnnouncements"></div>
+    <?php
+    $active_page = 'services';
+    $_base = '/RMU-Medical-Management-System';
+    require_once dirname(__DIR__) . '/includes/nav_landing.php';
+    ?>
 
-    <!-- Inventory Header -->
-    <section class="inventory-header">
-        <h1><i class="fas fa-pills"></i> Medical Inventory</h1>
-        <p>Browse our comprehensive range of available medications</p>
+    <section class="inventory-header lp-hero">
+        <div class="lp-container">
+            <h1><i class="fas fa-pills" style="color:var(--lp-primary);"></i> Medical Inventory</h1>
+            <p>Browse our comprehensive range of available medications</p>
+        </div>
     </section>
 
     <!-- Search and Filter -->
-    <div class="search-filter-section">
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search medicines by name...">
-            <button onclick="searchMedicines()"><i class="fas fa-search"></i> Search</button>
+    <div class="lp-container">
+        <div class="search-filter-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search medicines by name or generic name...">
+            </div>
+            <div class="filter-buttons">
+                <?php foreach ($categories as $key => $val): ?>
+                <button class="filter-btn <?php echo $key==='all'?'active':''; ?>" onclick="filterCategory(this, '<?php echo htmlspecialchars($key); ?>')">
+                    <?php echo htmlspecialchars($val); ?>
+                </button>
+                <?php endforeach; ?>
+            </div>
         </div>
-        <div class="filter-buttons">
-            <button class="filter-btn active" onclick="filterCategory('all')">All Medicines</button>
-            <button class="filter-btn" onclick="filterCategory('Analgesic')">Analgesics</button>
-            <button class="filter-btn" onclick="filterCategory('Antibiotic')">Antibiotics</button>
-            <button class="filter-btn" onclick="filterCategory('Vitamin')">Vitamins</button>
-            <button class="filter-btn" onclick="filterCategory('Antacid')">Antacids</button>
-            <button class="filter-btn" onclick="filterCategory('NSAID')">NSAIDs</button>
-        </div>
-    </div>
 
-    <!-- Info Banner -->
-    <div class="container">
-        <div class="info-banner">
-            <i class="fas fa-info-circle"></i>
-            <strong>Note:</strong> This is a public view of available medications. For detailed pricing, stock quantities, and to request prescriptions, please <a href="/RMU-Medical-Management-System/php/index.php" style="color: var(--primary-color); text-decoration: underline;">login to your account</a>.
+        <div style="background: rgba(239, 68, 68, 0.08); border-left: 4px solid #ef4444; padding: 1.25rem 1.5rem; border-radius: 12px; margin-bottom: 3rem; color: var(--lp-text);">
+            <i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-right: 0.5rem;"></i>
+            <strong>Prescription Notice:</strong> Most medicines require a valid prescription from a registered RMU doctor. For detailed pricing and to request prescriptions, please <a href="/RMU-Medical-Management-System/php/login.php" style="color: #ef4444; text-decoration: underline; font-weight: 600;">log in to your account</a>.
         </div>
-    </div>
 
-    <!-- Medicine Grid -->
-    <div class="container">
         <div class="medicine-grid" id="medicineGrid">
             <?php
-            // Fetch medicines from database
-            $sql = "SELECT medicine_name, generic_name, category, description, stock_quantity, reorder_level 
+            $sql = "SELECT medicine_name, generic_name, category, description, stock_quantity, reorder_level, is_prescription_required 
                     FROM medicines 
+                    WHERE status = 'active'
                     ORDER BY medicine_name ASC";
             $result = mysqli_query($conn, $sql);
             
             if ($result && mysqli_num_rows($result) > 0) {
                 while ($medicine = mysqli_fetch_assoc($result)) {
-                    // Determine stock status without showing exact quantities
-                    $stockStatus = 'available';
+                    $stockStatusClass = 'stock-available';
                     $statusText = 'Available';
                     $statusIcon = 'check-circle';
                     
-                    if ($medicine['stock_quantity'] == 0) {
-                        $stockStatus = 'out';
+                    if ($medicine['stock_quantity'] <= 0) {
+                        $stockStatusClass = 'stock-out';
                         $statusText = 'Out of Stock';
                         $statusIcon = 'times-circle';
                     } elseif ($medicine['stock_quantity'] <= $medicine['reorder_level']) {
-                        $stockStatus = 'low';
-                        $statusText = 'Limited Stock';
-                        $statusIcon = 'exclamation-circle';
+                        $stockStatusClass = 'stock-low';
+                        $statusText = 'Low Stock';
+                        $statusIcon = 'exclamation-triangle';
                     }
                     
-                    echo '<div class="medicine-card" data-category="' . htmlspecialchars($medicine['category']) . '">';
-                    echo '    <div class="medicine-icon"><i class="fas fa-pills"></i></div>';
+                    $cat = htmlspecialchars($medicine['category'] ?? 'General');
+                    echo '<div class="medicine-card" data-category="' . $cat . '" data-search="' . strtolower(htmlspecialchars($medicine['medicine_name'] . ' ' . $medicine['generic_name'])) . '">';
+                    echo '    <div class="medicine-icon"><i class="fas fa-capsules"></i></div>';
                     echo '    <h3>' . htmlspecialchars($medicine['medicine_name']) . '</h3>';
                     echo '    <p class="generic-name">' . htmlspecialchars($medicine['generic_name'] ?? 'N/A') . '</p>';
-                    echo '    <span class="category">' . htmlspecialchars($medicine['category'] ?? 'General') . '</span>';
-                    echo '    <p class="description">' . htmlspecialchars($medicine['description'] ?? 'Medication available at our pharmacy.') . '</p>';
-                    echo '    <div class="stock-status ' . $stockStatus . '">';
+                    echo '    <span class="category-badge">' . $cat . '</span>';
+                    
+                    if (!empty($medicine['is_prescription_required'])) {
+                        echo '    <span class="category-badge rx-badge"><i class="fas fa-file-prescription"></i> Rx Required</span>';
+                    }
+
+                    echo '    <p class="medicine-desc">' . htmlspecialchars($medicine['description'] ?? 'Medication available at our pharmacy.') . '</p>';
+                    echo '    <div class="stock-status ' . $stockStatusClass . '">';
                     echo '        <i class="fas fa-' . $statusIcon . '"></i>';
                     echo '        <span>' . $statusText . '</span>';
                     echo '    </div>';
                     echo '</div>';
                 }
             } else {
-                echo '<p style="text-align: center; font-size: 1.8rem; color: var(--text-light); grid-column: 1/-1;">No medicines available at the moment.</p>';
+                echo '<p style="text-align: center; font-size: 1.2rem; color: var(--lp-text-muted); grid-column: 1/-1;">No medicines available at the moment.</p>';
             }
-            
             mysqli_close($conn);
             ?>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer" style="margin-top: 6rem;">
-        <div class="credit">
-            &copy; 2026 RMU Medical Sickbay | All Rights Reserved
-        </div>
-    </footer>
-
-    <script src="../../js/main.js"></script>
+    <?php require_once dirname(__DIR__) . '/includes/footer_landing.php'; ?>
+    <?php require_once dirname(__DIR__) . '/includes/chatbot_landing.php'; ?>
+    <script src="/RMU-Medical-Management-System/js/landing.js"></script>
+    <script src="/RMU-Medical-Management-System/js/landing-chatbot.js"></script>
+    
     <script>
-        function searchMedicines() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        function filterCategory(btn, category) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const term = document.getElementById('searchInput').value.toLowerCase();
             const cards = document.querySelectorAll('.medicine-card');
             
             cards.forEach(card => {
-                const name = card.querySelector('h3').textContent.toLowerCase();
-                const generic = card.querySelector('.generic-name').textContent.toLowerCase();
-                
-                if (name.includes(searchTerm) || generic.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                const searchMatch = card.dataset.search.includes(term);
+                const catMatch = category === 'all' || card.dataset.category === category;
+                card.style.display = (searchMatch && catMatch) ? 'block' : 'none';
             });
         }
-        
-        function filterCategory(category) {
-            const cards = document.querySelectorAll('.medicine-card');
-            const buttons = document.querySelectorAll('.filter-btn');
-            
-            // Update active button
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Filter cards
-            cards.forEach(card => {
-                if (category === 'all' || card.dataset.category === category) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-        
-        // Real-time search
-        document.getElementById('searchInput').addEventListener('input', searchMedicines);
-        
-        // Theme Toggle Script
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        const themeIcon = themeToggle.querySelector('i');
 
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-
-        function updateThemeIcon(theme) {
-            if (theme === 'dark') {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const activeBtn = document.querySelector('.filter-btn.active');
+            // Re-trigger the active filter logic with current search term
+            if(activeBtn) {
+                const cat = activeBtn.textContent.trim() === 'All Medicines' ? 'all' : activeBtn.textContent.trim();
+                filterCategory(activeBtn, cat);
             }
-        }
+        });
     </script>
 </body>
 </html>

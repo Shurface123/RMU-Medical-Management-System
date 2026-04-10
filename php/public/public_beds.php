@@ -2,282 +2,126 @@
 require_once '../db_conn.php';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RMU Public Request Portal</title>
+    <title>RMU Inpatient Bed Facilities</title>
     <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/RMU-Medical-Management-System/css/landing.css">
     <style>
-        .beds-header {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            color: white;
-            padding: 6rem 2rem 4rem;
-            text-align: center;
-        }
-        
-        .beds-header h1 {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-        
+        .beds-hero { padding: 8rem 2rem 5rem; text-align: center; }
+        .beds-hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem; color: var(--lp-text); }
+        .beds-hero p { font-size: 1.25rem; color: var(--lp-text-muted); }
+
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin: -3rem auto 4rem;
-            max-width: 1200px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem;
+            margin: -3rem auto 4rem; max-width: 1000px; position: relative; z-index: 10;
         }
-        
         .stat-card {
-            background: white;
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-            text-align: center;
-            border-top: 4px solid var(--primary-color);
+            background: var(--lp-bg-card); padding: 2rem; border-radius: 20px;
+            text-align: center; border: 1px solid var(--lp-border);
+            box-shadow: 0 10px 30px rgba(47, 128, 237, 0.08);
+            transition: transform 0.3s var(--lp-ease);
         }
-        
-        .stat-card .number {
-            font-size: 5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        
-        .stat-card .label {
-            font-size: 1.6rem;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .wards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 3rem;
-            padding: 2rem;
-        }
-        
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card .number { font-size: 3rem; font-weight: 800; color: var(--lp-text); margin-bottom: 0.5rem; }
+        .stat-card .label { font-size: 1rem; color: var(--lp-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .wards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2.5rem; padding: 2rem 0; }
         .ward-card {
-            background: white;
-            border-radius: 24px;
-            padding: 3rem;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
+            background: var(--lp-bg-card); border-radius: 24px; padding: 2.5rem;
+            border: 1px solid var(--lp-border);
+            transition: transform 0.3s var(--lp-ease), box-shadow 0.3s var(--lp-ease);
+            display: flex; flex-direction: column; height: 100%;
         }
-        
-        .ward-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        }
-        
+        .ward-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
         .ward-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 2rem;
+            width: 64px; height: 64px; border-radius: 16px;
+            background: var(--lp-primary-bg); color: var(--lp-primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; margin-bottom: 1.5rem;
+        }
+        .ward-card h3 { font-size: 1.6rem; color: var(--lp-text); margin-bottom: 0.5rem; font-weight: 800; }
+        .bed-type {
+            display: inline-block; padding: 0.4rem 1rem; background: var(--lp-bg);
+            color: var(--lp-primary); border-radius: 50px; font-size: 0.85rem; font-weight: 600;
+            margin-bottom: 2rem; border: 1px solid var(--lp-border);
         }
         
-        .ward-icon i {
-            font-size: 3.5rem;
-            color: white;
+        .availability-section { margin-top: auto; }
+        .avail-labels { display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.95rem; font-weight: 600; }
+        .avail-labels span:last-child { color: var(--lp-text-muted); }
+        .progress-track {
+            height: 12px; background: rgba(0,0,0,0.05); border-radius: 50px; overflow: hidden;
         }
+        [data-theme="dark"] .progress-track { background: rgba(255,255,255,0.05); }
+        .progress-fill { height: 100%; border-radius: 50px; transition: width 1s ease-out; }
+        .fill-full { background: #ef4444; }
+        .fill-limited { background: #f59e0b; }
+        .fill-available { background: #10b981; }
         
-        .ward-card h3 {
-            font-size: 2.4rem;
-            color: var(--text-dark);
-            margin-bottom: 1.5rem;
+        .admission-section { margin-top: 6rem; padding: 5rem 0; background: var(--lp-bg-card); border-top: 1px solid var(--lp-border); }
+        .admission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; }
+        .feat-item { display: flex; gap: 1.5rem; align-items: flex-start; }
+        .feat-icon {
+            width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+            background: var(--lp-bg); color: var(--lp-primary); border: 1px solid var(--lp-border);
+            display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
         }
-        
-        .ward-card .bed-type {
-            display: inline-block;
-            padding: 0.6rem 1.5rem;
-            background: #f3e5f5;
-            color: #8e44ad;
-            border-radius: 5rem;
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
-        }
-        
-        .availability-bar {
-            margin: 2rem 0;
-        }
-        
-        .availability-bar .label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-            color: var(--text-light);
-        }
-        
-        .availability-bar .bar {
-            height: 12px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .availability-bar .fill {
-            height: 100%;
-            background: linear-gradient(90deg, #27ae60, #2ecc71);
-            transition: width 0.3s;
-        }
-        
-        .availability-bar .fill.medium {
-            background: linear-gradient(90deg, #f39c12, #f1c40f);
-        }
-        
-        .availability-bar .fill.low {
-            background: linear-gradient(90deg, #e74c3c, #c0392b);
-        }
-        
-        .ward-features {
-            border-top: 1px solid #e0e0e0;
-            padding-top: 2rem;
-            margin-top: 2rem;
-        }
-        
-        .ward-features p {
-            font-size: 1.4rem;
-            color: var(--text-light);
-            margin: 0.8rem 0;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .ward-features i {
-            color: var(--primary-color);
-            width: 20px;
-        }
-        
-        .facilities-section {
-            background: #f8f9fa;
-            padding: 6rem 2rem;
-            margin-top: 4rem;
-        }
-        
-        .facilities-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .facility-item {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 24px;
-            text-align: center;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-        }
-        
-        .facility-item i {
-            font-size: 4rem;
-            color: var(--primary-color);
-            margin-bottom: 1.5rem;
-        }
-        
-        .facility-item h4 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
+        .feat-text h4 { font-size: 1.2rem; color: var(--lp-text); margin-bottom: 0.5rem; font-weight: 700; }
+        .feat-text p { font-size: 0.95rem; color: var(--lp-text-muted); line-height: 1.6; }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="logo-container">
-            <img src="../../image/logo-ju-small.png" alt="RMU Logo" class="logo-img">
-            <a href="/RMU-Medical-Management-System/html/index.html" class="logo">
-                RMU <span>Medical</span> Sickbay
-            </a>
-        </div>
-        <nav class="navbar">
-            <a href="/RMU-Medical-Management-System/html/index.html">Home</a>
-            <a href="/RMU-Medical-Management-System/html/services.html">Services</a>
-            <a href="/RMU-Medical-Management-System/html/about.html">About</a>
-            <a href="/RMU-Medical-Management-System/php/index.php">Login</a>
-        </nav>
-        
-        <!-- Theme Toggle -->
-        <button class="theme-toggle-header" id="themeToggle" aria-label="Toggle theme" title="Toggle Dark Mode">
-            <i class="fas fa-moon"></i>
-        </button>
-        
-        <div id="menu-btn" class="fas fa-bars"></div>
-    </header>
+    <div id="lpAnnouncements"></div>
+    <?php
+    $active_page = 'services';
+    $_base = '/RMU-Medical-Management-System';
+    require_once dirname(__DIR__) . '/includes/nav_landing.php';
+    ?>
 
-    <!-- Beds Header -->
-    <section class="beds-header">
-        <h1><i class="fas fa-bed"></i> Inpatient Bed Facilities</h1>
-        <p>Comfortable and well-equipped facilities for your recovery</p>
+    <section class="beds-hero lp-hero">
+        <div class="lp-container">
+            <h1><i class="fas fa-bed" style="color:var(--lp-primary);"></i> Bed Availability</h1>
+            <p>Real-time occupancy and capacity of our inpatient wards.</p>
+        </div>
     </section>
 
     <!-- Statistics -->
-    <div class="container">
+    <div class="lp-container">
         <div class="stats-grid">
             <?php
-            // Fetch bed statistics
-            $total_beds = 0;
-            $available_beds = 0;
-            $occupied_beds = 0;
-            
-            $sql = "SELECT COUNT(*) as total FROM beds";
-            $result = mysqli_query($conn, $sql);
-            if ($result) {
-                $total_beds = mysqli_fetch_assoc($result)['total'];
-            }
-            
-            $sql = "SELECT COUNT(*) as available FROM beds WHERE status = 'Available'";
-            $result = mysqli_query($conn, $sql);
-            if ($result) {
-                $available_beds = mysqli_fetch_assoc($result)['available'];
-            }
-            
-            $sql = "SELECT COUNT(*) as occupied FROM beds WHERE status = 'Occupied'";
-            $result = mysqli_query($conn, $sql);
-            if ($result) {
-                $occupied_beds = mysqli_fetch_assoc($result)['occupied'];
-            }
+            $sql = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status='Available' THEN 1 ELSE 0 END) as available,
+                    SUM(CASE WHEN status='Occupied' THEN 1 ELSE 0 END) as occupied
+                    FROM beds";
+            $res = mysqli_query($conn, $sql);
+            $stats = mysqli_fetch_assoc($res);
             ?>
-            
             <div class="stat-card">
-                <div class="number"><?php echo $total_beds; ?></div>
+                <div class="number"><?php echo $stats['total'] ?: 0; ?></div>
                 <div class="label">Total Beds</div>
             </div>
             <div class="stat-card">
-                <div class="number" style="color: #27ae60;"><?php echo $available_beds; ?></div>
+                <div class="number" style="color: #10b981;"><?php echo $stats['available'] ?: 0; ?></div>
                 <div class="label">Available</div>
             </div>
             <div class="stat-card">
-                <div class="number" style="color: #e74c3c;"><?php echo $occupied_beds; ?></div>
+                <div class="number" style="color: #ef4444;"><?php echo $stats['occupied'] ?: 0; ?></div>
                 <div class="label">Occupied</div>
             </div>
         </div>
     </div>
 
     <!-- Ward Information -->
-    <div class="container">
-        <h2 class="text-center mb-4" style="font-size: 3.5rem; margin-top: 4rem;">Our Wards</h2>
-        <p class="text-center mb-4" style="font-size: 1.8rem; color: var(--text-light); max-width: 800px; margin: 0 auto 4rem;">
-            Modern, clean, and comfortable facilities designed for your comfort and recovery
-        </p>
-        
+    <div class="lp-container">
+        <h2 class="lp-text-center lp-mb-4" style="font-size: 2.5rem; font-weight: 800; color: var(--lp-text);">Our Wards</h2>
         <div class="wards-grid">
             <?php
-            // Fetch ward information
             $sql = "SELECT ward, bed_type, COUNT(*) as total_beds, 
                     SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) as available_beds
                     FROM beds 
@@ -287,122 +131,93 @@ require_once '../db_conn.php';
             
             if ($result && mysqli_num_rows($result) > 0) {
                 while ($ward = mysqli_fetch_assoc($result)) {
-                    $availability_percent = ($ward['available_beds'] / $ward['total_beds']) * 100;
-                    $fill_class = $availability_percent > 50 ? '' : ($availability_percent > 20 ? 'medium' : 'low');
+                    $avail = (int)$ward['available_beds'];
+                    $total = (int)$ward['total_beds'];
+                    $percent = $total > 0 ? ($avail / $total) * 100 : 0;
+                    
+                    if ($percent >= 50) {
+                        $fillClass = 'fill-available';
+                        $statusTxt = '<span style="color:#10b981;">Available</span>';
+                    } elseif ($percent > 0) {
+                        $fillClass = 'fill-limited';
+                        $statusTxt = '<span style="color:#f59e0b;">Limited</span>';
+                    } else {
+                        $fillClass = 'fill-full';
+                        $statusTxt = '<span style="color:#ef4444;">Full</span>';
+                    }
                     
                     echo '<div class="ward-card">';
                     echo '    <div class="ward-icon"><i class="fas fa-hospital"></i></div>';
                     echo '    <h3>' . htmlspecialchars($ward['ward']) . '</h3>';
-                    echo '    <span class="bed-type">' . htmlspecialchars($ward['bed_type']) . ' Ward</span>';
-                    echo '    <div class="availability-bar">';
-                    echo '        <div class="label">';
-                    echo '            <span>Availability</span>';
-                    echo '            <span><strong>' . $ward['available_beds'] . '/' . $ward['total_beds'] . '</strong> beds</span>';
+                    echo '    <div><span class="bed-type">' . htmlspecialchars($ward['bed_type']) . ' Ward</span></div>';
+                    echo '    <div class="availability-section">';
+                    echo '        <div class="avail-labels">';
+                    echo '            <span>Status: ' . $statusTxt . '</span>';
+                    echo '            <span>' . $avail . ' / ' . $total . ' Free</span>';
                     echo '        </div>';
-                    echo '        <div class="bar">';
-                    echo '            <div class="fill ' . $fill_class . '" style="width: ' . $availability_percent . '%"></div>';
+                    echo '        <div class="progress-track">';
+                    echo '            <div class="progress-fill ' . $fillClass . '" style="width: 0%;" data-width="' . $percent . '%"></div>';
                     echo '        </div>';
-                    echo '    </div>';
-                    echo '    <div class="ward-features">';
-                    echo '        <p><i class="fas fa-bed"></i> ' . htmlspecialchars($ward['bed_type']) . ' beds</p>';
-                    echo '        <p><i class="fas fa-user-nurse"></i> 24/7 nursing care</p>';
-                    echo '        <p><i class="fas fa-wifi"></i> Free WiFi access</p>';
                     echo '    </div>';
                     echo '</div>';
                 }
             } else {
-                echo '<p style="text-align: center; font-size: 1.8rem; color: var(--text-light); grid-column: 1/-1;">Ward information will be updated shortly.</p>';
+                echo '<p style="text-align: center; font-size: 1.2rem; color: var(--lp-text-muted); grid-column: 1/-1;">No ward information available.</p>';
             }
-            
-            mysqli_close($conn);
             ?>
         </div>
     </div>
 
-    <!-- Facilities Section -->
-    <section class="facilities-section">
-        <div class="container">
-            <h2 class="text-center mb-4" style="font-size: 3.5rem;">Ward Facilities</h2>
-            <div class="facilities-grid">
-                <div class="facility-item">
-                    <i class="fas fa-bed"></i>
-                    <h4>Comfortable Beds</h4>
-                    <p>Adjustable hospital beds with quality mattresses</p>
+    <!-- Admission Information Section -->
+    <section class="admission-section">
+        <div class="lp-container">
+            <h2 class="lp-text-center lp-mb-4" style="font-size: 2.5rem; font-weight: 800; color: var(--lp-text); margin-bottom: 3.5rem;">Admission Information</h2>
+            <div class="admission-grid">
+                <div class="feat-item lp-card" style="padding:2rem;">
+                    <div class="feat-icon"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="feat-text">
+                        <h4>Admission Process</h4>
+                        <p>Admissions are typically processed through our outpatient doctors after an initial consultation, or directly through emergency depending on patient urgency.</p>
+                    </div>
                 </div>
-                <div class="facility-item">
-                    <i class="fas fa-shower"></i>
-                    <h4>Private Bathrooms</h4>
-                    <p>Clean, modern bathrooms in private wards</p>
+                <div class="feat-item lp-card" style="padding:2rem;">
+                    <div class="feat-icon"><i class="fas fa-suitcase-rolling"></i></div>
+                    <div class="feat-text">
+                        <h4>What to Bring</h4>
+                        <p>Please bring your RMU student/staff ID, any current medications, basic personal toiletries, and comfortable loose-fitting clothing.</p>
+                    </div>
                 </div>
-                <div class="facility-item">
-                    <i class="fas fa-tv"></i>
-                    <h4>Entertainment</h4>
-                    <p>TV and reading materials for patients</p>
+                <div class="feat-item lp-card" style="padding:2rem;">
+                    <div class="feat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="feat-text">
+                        <h4>Visiting Hours</h4>
+                        <p>General visiting hours are between 4:00 PM and 6:00 PM on weekdays, and an additional 10:00 AM to 12:00 PM slot on weekends.</p>
+                    </div>
                 </div>
-                <div class="facility-item">
-                    <i class="fas fa-utensils"></i>
-                    <h4>Meal Service</h4>
-                    <p>Nutritious meals prepared by our kitchen staff</p>
+                <div class="feat-item lp-card" style="padding:2rem;">
+                    <div class="feat-icon"><i class="fas fa-ban"></i></div>
+                    <div class="feat-text">
+                        <h4>Ward Rules</h4>
+                        <p>To preserve patient rest, only two visitors are allowed per bed at any time. Outside food must be approved by the duty nurse.</p>
+                    </div>
                 </div>
-                <div class="facility-item">
-                    <i class="fas fa-bell"></i>
-                    <h4>Call System</h4>
-                    <p>Bedside call buttons for immediate assistance</p>
-                </div>
-                <div class="facility-item">
-                    <i class="fas fa-users"></i>
-                    <h4>Visiting Hours</h4>
-                    <p>Flexible visiting hours for family and friends</p>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 4rem;">
-                <p style="font-size: 1.6rem; color: var(--text-light); margin-bottom: 2rem;">
-                    Need admission? Contact our medical team
-                </p>
-                <a href="/RMU-Medical-Management-System/php/index.php" class="btn btn-lg btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> Login to Book
-                </a>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer" style="margin-top: 6rem;">
-        <div class="credit">
-            &copy; 2026 RMU Medical Sickbay | All Rights Reserved
-        </div>
-    </footer>
-
-    <script src="../../js/main.js"></script>
-    
-    <!-- Theme Toggle Script -->
+    <?php require_once dirname(__DIR__) . '/includes/footer_landing.php'; ?>
+    <?php require_once dirname(__DIR__) . '/includes/chatbot_landing.php'; ?>
+    <script src="/RMU-Medical-Management-System/js/landing.js"></script>
+    <script src="/RMU-Medical-Management-System/js/landing-chatbot.js"></script>
     <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        const themeIcon = themeToggle.querySelector('i');
-
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
+        // Animate progress bars on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.progress-fill').forEach(fill => {
+                    fill.style.width = fill.getAttribute('data-width');
+                });
+            }, 300);
         });
-
-        function updateThemeIcon(theme) {
-            if (theme === 'dark') {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-        }
     </script>
 </body>
 </html>

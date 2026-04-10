@@ -64,6 +64,39 @@ require_once 'maintenance_guard.php';
             <span>Dashboard</span>
         </a>
 
+        <!-- ── NEW: Public Portal ── -->
+        <span class="adm-nav-section-label">Public Portal</span>
+
+        <a href="/RMU-Medical-Management-System/php/admin/admin_landing_config.php"
+           class="adm-nav-item <?php echo $active_page === 'landing_config' ? 'active' : ''; ?>">
+            <i class="fas fa-globe"></i>
+            <span>Site Configuration</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/admin_landing_featured.php"
+           class="adm-nav-item <?php echo $active_page === 'landing_featured' ? 'active' : ''; ?>">
+            <i class="fas fa-star"></i>
+            <span>Featured Personnel</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/admin_chatbot.php"
+           class="adm-nav-item <?php echo $active_page === 'chatbot' ? 'active' : ''; ?>">
+            <i class="fas fa-robot"></i>
+            <span>Chatbot AI</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/admin_bookings.php"
+           class="adm-nav-item <?php echo $active_page === 'public_bookings' ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-check"></i>
+            <span>Public Bookings</span>
+        </a>
+
+        <a href="/RMU-Medical-Management-System/php/admin/admin_ambulance_requests.php"
+           class="adm-nav-item <?php echo $active_page === 'public_ambulance' ? 'active' : ''; ?>">
+            <i class="fas fa-truck-medical"></i>
+            <span>Web Ambulance Requests</span>
+        </a>
+
         <span class="adm-nav-section-label">Management</span>
 
         <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php"

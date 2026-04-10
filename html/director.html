@@ -1,161 +1,517 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Director - RMU Medical Sickbay</title>
-    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="../css/main.css">
-    <link rel="stylesheet" href="../css/chatbot.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Director — RMU Medical Sickbay</title>
+  <meta name="description" content="Meet Dr. Emmanuel Mensah, Chief Medical Officer of RMU Medical Sickbay. Learn about our leadership, qualifications, and vision for healthcare excellence.">
+  <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/landing.css">
 </head>
-
 <body>
-    <header class="header">
-        <div class="logo-container">
-            <img src="../image/logo-ju-small.png" alt="RMU Logo" class="logo-img">
-            <a href="/RMU-Medical-Management-System/html/index.html" class="logo">RMU <span>Medical</span> Sickbay</a>
-        </div>
-        <nav class="navbar">
-            <a href="/RMU-Medical-Management-System/html/index.html">Home</a>
-            <a href="/RMU-Medical-Management-System/html/services.html">Services</a>
-            <a href="/RMU-Medical-Management-System/html/about.html">About</a>
-            <a href="/RMU-Medical-Management-System/php/booking.php">Booking</a>
-            <a href="/RMU-Medical-Management-System/php/index.php">Login</a>
-            <a href="/RMU-Medical-Management-System/php/register.php">Signup</a>
-        </nav>
-        <div id="menu-btn" class="fas fa-bars"></div>
-    </header>
+<div id="lpAnnouncements"></div>
 
-    <section class="hero bg-overlay" style="background-image: url('../image/director.jpg'); min-height: 50vh;">
-        <div class="hero-content">
-            <h1>Medical <span>Director</span></h1>
-            <p>Leadership in Healthcare Excellence</p>
-        </div>
-    </section>
+<!-- ═══════════════════════════════════════════════════════
+     NAVIGATION
+     ══════════════════════════════════════════════════════ -->
+<nav class="lp-nav" id="lpNav">
+  <div class="lp-nav-inner">
+    <!-- Logo -->
+    <a href="/RMU-Medical-Management-System/html/index.html" class="lp-nav-logo">
+      <img src="/RMU-Medical-Management-System/image/logo-ju-small.png" alt="RMU Medical Sickbay Logo">
+      <span class="lp-nav-logo-text">RMU <span>Medical</span> Sickbay</span>
+    </a>
 
-    <section class="section">
-        <div class="container">
-            <div class="grid grid-2" style="align-items: center; gap: 4rem;">
-                <div class="text-center">
-                    <img src="../image/director.jpg" alt="Medical Director"
-                        style="width: 100%; max-width: 400px; border-radius: 1rem; box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);">
-                </div>
-                <div>
-                    <h2>Dr. Emmanuel Mensah</h2>
-                    <p style="font-size: 1.8rem; color: var(--primary-color); font-weight: 600; margin-bottom: 2rem;">
-                        Chief Medical Officer</p>
-                    <p style="font-size: 1.6rem; line-height: 1.8; margin-bottom: 2rem;">
-                        Dr. Emmanuel Mensah serves as the Chief Medical Officer of RMU Medical Sickbay, bringing over 20
-                        years of experience in university healthcare and medical administration. He oversees all medical
-                        operations and ensures the delivery of quality healthcare services to the RMU community.
-                    </p>
-                    <h3 style="margin-top: 3rem; margin-bottom: 1.5rem;">Qualifications</h3>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="padding: 1rem 0; border-bottom: 1px solid var(--border-color);">
-                            <i class="fas fa-graduation-cap"
-                                style="color: var(--primary-color); margin-right: 1rem;"></i>
-                            MBChB - University of Ghana Medical School
-                        </li>
-                        <li style="padding: 1rem 0; border-bottom: 1px solid var(--border-color);">
-                            <i class="fas fa-certificate" style="color: var(--primary-color); margin-right: 1rem;"></i>
-                            MPH - Johns Hopkins University
-                        </li>
-                        <li style="padding: 1rem 0;">
-                            <i class="fas fa-award" style="color: var(--primary-color); margin-right: 1rem;"></i>
-                            Fellow, Ghana College of Physicians
-                        </li>
-                    </ul>
-                    <div style="margin-top: 3rem;">
-                        <p><strong>Office Hours:</strong> Monday - Friday, 9:00 AM - 4:00 PM</p>
-                        <p><strong>Email:</strong> <a
-                                href="mailto:director@rmu-medical.edu.gh">director@rmu-medical.edu.gh</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Centre Nav Links -->
+    <ul class="lp-nav-links">
+      <li><a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="/RMU-Medical-Management-System/html/about.html"><i class="fas fa-info-circle"></i> About</a></li>
+      <li class="lp-has-dropdown">
+        <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-stethoscope"></i> Services <i class="fas fa-chevron-down lp-caret"></i></a>
+        <ul class="lp-nav-dropdown">
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-truck-medical"></i> Emergency Care</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-flask"></i> Laboratory Services</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-pills"></i> Pharmacy</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-bed"></i> Inpatient Care</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-brain"></i> Mental Health</a></li>
+        </ul>
+      </li>
+      <li class="lp-has-dropdown">
+        <a href="/RMU-Medical-Management-System/html/doctors.html" class="active"><i class="fas fa-users"></i> Team <i class="fas fa-chevron-down lp-caret"></i></a>
+        <ul class="lp-nav-dropdown">
+          <li><a href="/RMU-Medical-Management-System/html/director.html" class="active"><i class="fas fa-user-tie"></i> Director</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/staff.html"><i class="fas fa-users"></i> Staff</a></li>
+        </ul>
+      </li>
+      <li><a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-calendar-check"></i> Book Now</a></li>
+    </ul>
 
-    <section class="section section-alt">
-        <div class="container">
-            <h2 class="text-center mb-4">Message from the Director</h2>
-            <div
-                style="max-width: 900px; margin: 0 auto; background: white; padding: 4rem; border-radius: 1rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);">
-                <p style="font-size: 1.8rem; line-height: 2; font-style: italic; margin-bottom: 2rem;">
-                    "Welcome to RMU Medical Sickbay. Our commitment is to provide exceptional healthcare services that
-                    support your academic journey and personal well-being. We understand that good health is fundamental
-                    to academic success, and our team is dedicated to ensuring that every member of the RMU community
-                    has access to quality medical care when they need it."
-                </p>
-                <p style="font-size: 1.8rem; line-height: 2;">
-                    "Whether you need routine checkups, emergency care, or health counseling, our doors are always open.
-                    We continuously strive to improve our services and welcome your feedback as we work together to
-                    build a healthier campus community."
-                </p>
-                <p style="font-size: 1.8rem; margin-top: 3rem; font-weight: 600;">
-                    Dr. Emmanuel Mensah<br>
-                    <span style="color: var(--primary-color);">Chief Medical Officer</span>
-                </p>
-            </div>
-        </div>
-    </section>
+    <!-- Right Actions -->
+    <div class="lp-nav-right">
+      <a href="tel:153" class="lp-emergency-pill" title="Emergency Hotline">
+        <i class="fas fa-phone-volume"></i> 153
+      </a>
+      <button class="lp-theme-toggle" id="lpThemeToggle" aria-label="Toggle theme" title="Switch Theme">
+        <div class="toggle-icon icon-moon active"><i class="fas fa-moon"></i></div>
+        <div class="toggle-icon icon-sun"><i class="fas fa-sun"></i></div>
+      </button>
+      <a href="/RMU-Medical-Management-System/php/index.php" class="lp-nav-btn lp-nav-btn-outline">Login</a>
+      <a href="/RMU-Medical-Management-System/php/register.php" class="lp-nav-btn lp-nav-btn-solid">Register</a>
+      <div class="lp-hamburger" id="lpHamburger" role="button" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
 
-    <footer class="footer">
-        <div class="box-container">
-            <div class="box">
-                <h3>Quick Links</h3>
-                <a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-chevron-right"></i> Home</a>
-                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i>
-                    Services</a>
-                <a href="/RMU-Medical-Management-System/html/about.html"><i class="fas fa-chevron-right"></i> About</a>
-                <a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-chevron-right"></i>
-                    Doctors</a>
-                <a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-chevron-right"></i>
-                    Booking</a>
-            </div>
-            <div class="box">
-                <h3>Our Services</h3>
-                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Free
-                    Checkups</a>
-                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> 24/7
-                    Ambulance</a>
-                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i>
-                    Medicines</a>
-                <a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-chevron-right"></i> Expert
-                    Doctors</a>
-                <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Bed
-                    Facility</a>
-            </div>
-            <div class="box">
-                <h3>Contact Info</h3>
-                <a href="tel:153"><i class="fas fa-phone"></i> 153 (Emergency)</a>
-                <a href="tel:0502371207"><i class="fas fa-phone"></i> 0502371207</a>
-                <a href="mailto:medicalju123@gmail.com"><i class="fas fa-envelope"></i> medicalju123@gmail.com</a>
-                <a href="https://www.google.com/maps/place/Regional+Maritime+University/@5.8613756,-0.3410349,10z"
-                    target="_blank"><i class="fas fa-map-marker-alt"></i> Regional Maritime University, Accra, Ghana</a>
-            </div>
-            <div class="box">
-                <h3>Follow Us</h3>
-                <a href="https://www.facebook.com/rmuofficial/" target="_blank"><i class="fab fa-facebook-f"></i>
-                    Facebook</a>
-                <a href="https://x.com/rmuofficial?lang=ens" target="_blank"><i class="fab fa-twitter"></i> Twitter</a>
-                <a href="https://www.instagram.com/rmuofficial/?hl=en" target="_blank"><i class="fab fa-instagram"></i>
-                    Instagram</a>
-                <a href="https://www.linkedin.com/school/regional-maritime-university/" target="_blank"><i
-                        class="fab fa-linkedin"></i> LinkedIn</a>
-            </div>
-        </div>
-        <div class="credit">&copy; 2026 RMU Medical Sickbay | Created by <span>Lovelace & Craig (Group Six)</span> | All
-            Rights Reserved</div>
-    </footer>
+<!-- Mobile Menu -->
+<div class="lp-mobile-menu" id="lpMobileMenu" role="navigation" aria-label="Mobile navigation">
+  <ul class="lp-mobile-links">
+    <li><a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-home"></i> Home</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/about.html"><i class="fas fa-info-circle"></i> About</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-stethoscope"></i> Services</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/director.html" class="active"><i class="fas fa-user-tie"></i> Director</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/staff.html"><i class="fas fa-users"></i> Staff</a></li>
+    <li><a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-calendar-check"></i> Book Appointment</a></li>
+  </ul>
+  <div class="lp-mobile-actions">
+    <a href="tel:153" class="lp-emergency-pill"><i class="fas fa-phone-volume"></i> Emergency: 153</a>
+    <a href="/RMU-Medical-Management-System/php/index.php" class="lp-nav-btn lp-nav-btn-outline">Login</a>
+    <a href="/RMU-Medical-Management-System/php/register.php" class="lp-nav-btn lp-nav-btn-solid">Register</a>
+  </div>
+</div>
 
-    <script src="../js/main.js"></script>
-    <script src="../js/theme-switcher.js"></script>
-    <script src="../js/modals.js"></script>
-    <script src="../js/chatbot.js"></script>
+<!-- ── PAGE HERO ──────────────────────────────── -->
+<section class="lp-hero lp-page-hero" style="min-height:46vh;">
+  <div class="lp-hero-bg" style="background-image:url('/RMU-Medical-Management-System/image/director.jpg');"></div>
+  <div class="lp-hero-overlay"></div>
+  <div class="lp-hero-content" style="max-width:700px;">
+    <div class="lp-hero-badge"><i class="fas fa-user-tie"></i> Leadership</div>
+    <h1>Medical <span style="color:rgba(255,255,255,0.85);">Director</span></h1>
+    <p>Leadership with vision, compassion, and two decades of healthcare excellence</p>
+  </div>
+</section>
+
+<!-- ── DIRECTOR PROFILE ───────────────────────── -->
+<section class="lp-section">
+  <div class="lp-container">
+    <div class="lp-grid lp-grid-2" style="align-items:flex-start;gap:4rem;" id="directorProfile">
+      <!-- Director Photo & Quick Info (static until DB loads) -->
+      <div class="lp-animate" style="text-align:center;">
+        <img src="/RMU-Medical-Management-System/image/director.jpg"
+             id="directorPhoto"
+             alt="Medical Director"
+             style="width:100%;max-width:380px;border-radius:20px;box-shadow:0 20px 60px rgba(47,128,237,0.18);margin:0 auto;">
+
+        <!-- Quick contact card -->
+        <div style="margin-top:2rem;background:var(--lp-bg-alt);border-radius:16px;padding:1.5rem;border:1px solid var(--lp-border);text-align:left;">
+          <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--lp-primary);margin-bottom:1rem;">Contact Details</div>
+          <div style="display:flex;flex-direction:column;gap:0.8rem;">
+            <div style="display:flex;align-items:center;gap:0.8rem;font-size:0.9rem;">
+              <i class="fas fa-envelope" style="color:var(--lp-primary);width:18px;"></i>
+              <a href="mailto:director@rmu-medical.edu.gh" style="color:var(--lp-text);">director@rmu-medical.edu.gh</a>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.8rem;font-size:0.9rem;">
+              <i class="fas fa-clock" style="color:var(--lp-primary);width:18px;"></i>
+              <span>Office Hours: Mon–Fri, 9AM–4PM</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.8rem;font-size:0.9rem;">
+              <i class="fas fa-building" style="color:var(--lp-primary);width:18px;"></i>
+              <span>RMU Sickbay, Administration Block</span>
+            </div>
+          </div>
+          <a href="/RMU-Medical-Management-System/php/booking.php"
+             style="display:flex;align-items:center;justify-content:center;gap:0.6rem;background:var(--lp-primary);color:#fff;padding:0.8rem;border-radius:10px;font-weight:700;font-size:0.9rem;margin-top:1.2rem;">
+            <i class="fas fa-calendar-check"></i> Request an Appointment
+          </a>
+        </div>
+      </div>
+
+      <!-- Profile Text -->
+      <div class="lp-animate" style="animation-delay:0.15s;" id="directorInfo">
+        <div class="lp-section-label"><i class="fas fa-user-tie"></i> Chief Medical Officer</div>
+        <h2 class="lp-section-title" id="directorName" style="margin-top:0.5rem;">Dr. Emmanuel Mensah</h2>
+        <p id="directorTitle" style="color:var(--lp-primary);font-weight:600;font-size:1.05rem;margin-bottom:1.5rem;">Chief Medical Officer, RMU Medical Sickbay</p>
+
+        <p id="directorBio" style="color:var(--lp-text-muted);line-height:1.8;margin-bottom:2rem;">
+          Dr. Emmanuel Mensah serves as the Chief Medical Officer of RMU Medical Sickbay, bringing over 20 years of experience in university healthcare and medical administration. He oversees all medical operations and ensures the delivery of quality healthcare services to the RMU community. Under his leadership, the sickbay has expanded its services, modernised its facilities, and improved healthcare outcomes for thousands of students and staff.
+        </p>
+
+        <!-- Qualifications -->
+        <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;color:var(--lp-text);">
+          <i class="fas fa-graduation-cap" style="color:var(--lp-primary);margin-right:0.5rem;"></i> Qualifications
+        </h3>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.8rem;margin-bottom:2rem;" id="directorQualifications">
+          <li style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem;background:var(--lp-bg-alt);border-radius:10px;font-size:0.92rem;">
+            <i class="fas fa-certificate" style="color:var(--lp-primary);flex-shrink:0;"></i>
+            MBChB — University of Ghana Medical School
+          </li>
+          <li style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem;background:var(--lp-bg-alt);border-radius:10px;font-size:0.92rem;">
+            <i class="fas fa-certificate" style="color:var(--lp-primary);flex-shrink:0;"></i>
+            MPH — Johns Hopkins University, USA
+          </li>
+          <li style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem;background:var(--lp-bg-alt);border-radius:10px;font-size:0.92rem;">
+            <i class="fas fa-award" style="color:var(--lp-primary);flex-shrink:0;"></i>
+            Fellow — Ghana College of Physicians and Surgeons
+          </li>
+        </ul>
+
+        <!-- Key Achievements -->
+        <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;color:var(--lp-text);">
+          <i class="fas fa-trophy" style="color:var(--lp-primary);margin-right:0.5rem;"></i> Key Achievements
+        </h3>
+        <div style="display:flex;flex-direction:column;gap:0.8rem;">
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;font-size:0.9rem;color:var(--lp-text-muted);">
+            <i class="fas fa-check-circle" style="color:var(--lp-primary);flex-shrink:0;margin-top:2px;"></i>
+            Spearheaded the digitisation of the sickbay's medical records management system
+          </div>
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;font-size:0.9rem;color:var(--lp-text-muted);">
+            <i class="fas fa-check-circle" style="color:var(--lp-primary);flex-shrink:0;margin-top:2px;"></i>
+            Expanded sickbay services to include mental health counselling and physiotherapy
+          </div>
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;font-size:0.9rem;color:var(--lp-text-muted);">
+            <i class="fas fa-check-circle" style="color:var(--lp-primary);flex-shrink:0;margin-top:2px;"></i>
+            Secured accreditation renewal from the Medical and Dental Council of Ghana
+          </div>
+          <div style="display:flex;gap:0.8rem;align-items:flex-start;font-size:0.9rem;color:var(--lp-text-muted);">
+            <i class="fas fa-check-circle" style="color:var(--lp-primary);flex-shrink:0;margin-top:2px;"></i>
+            Published research on university healthcare delivery in sub-Saharan Africa
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DIRECTOR'S MESSAGE ─────────────────────── -->
+<section class="lp-section lp-section-alt">
+  <div class="lp-container">
+    <div style="max-width:800px;margin:0 auto;text-align:center;" class="lp-animate">
+      <div class="lp-section-label"><i class="fas fa-quote-left"></i> Director's Message</div>
+      <h2 class="lp-section-title">A Message from the CMO</h2>
+      <div style="background:var(--lp-bg-card);border-radius:20px;padding:3rem;border:1px solid var(--lp-border);box-shadow:0 8px 32px rgba(47,128,237,0.07);margin-top:1rem;position:relative;">
+        <i class="fas fa-quote-left" style="font-size:3rem;color:var(--lp-primary-bg);position:absolute;top:2rem;left:2rem;"></i>
+        <p id="directorMessage" style="font-size:1.05rem;line-height:1.85;color:var(--lp-text);font-style:italic;max-width:660px;margin:0 auto 2rem;position:relative;z-index:1;">
+          "As the Chief Medical Officer of the RMU Medical Sickbay, I am committed to ensuring that every student, faculty member, and staff person receives the highest standard of healthcare. Our dedicated team works tirelessly to provide compassionate, accessible, and evidence-based care. Your health is not just our duty — it is our calling."
+        </p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:1rem;">
+          <img src="/RMU-Medical-Management-System/image/director.jpg"
+               alt="Dr. Emmanuel Mensah"
+               style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--lp-primary-bg);">
+          <div style="text-align:left;">
+            <div style="font-weight:700;font-size:0.95rem;" id="directorSigName">Dr. Emmanuel Mensah</div>
+            <div style="font-size:0.82rem;color:var(--lp-primary);">Chief Medical Officer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TIMELINE / CAREER ───────────────────────── -->
+<section class="lp-section">
+  <div class="lp-container">
+    <div class="lp-grid lp-grid-2" style="gap:4rem;align-items:flex-start;">
+      <div class="lp-animate">
+        <div class="lp-section-label"><i class="fas fa-timeline"></i> Career Journey</div>
+        <h2 class="lp-section-title">Professional Timeline</h2>
+        <div class="lp-timeline" style="margin-top:2rem;">
+          <div class="lp-timeline-item">
+            <div class="lp-timeline-year">2014 – Present</div>
+            <div class="lp-timeline-title">Chief Medical Officer — RMU Sickbay</div>
+            <div class="lp-timeline-desc">Leading all clinical and operational healthcare activities at Regional Maritime University.</div>
+          </div>
+          <div class="lp-timeline-item">
+            <div class="lp-timeline-year">2010 – 2014</div>
+            <div class="lp-timeline-title">Senior Medical Officer — KATH</div>
+            <div class="lp-timeline-desc">Served as Senior Medical Officer at Komfo Anokye Teaching Hospital, heading internal medicine.</div>
+          </div>
+          <div class="lp-timeline-item">
+            <div class="lp-timeline-year">2008 – 2010</div>
+            <div class="lp-timeline-title">MPH — Johns Hopkins University</div>
+            <div class="lp-timeline-desc">Earned a Master of Public Health with a focus on health systems management in developing nations.</div>
+          </div>
+          <div class="lp-timeline-item">
+            <div class="lp-timeline-year">2002 – 2008</div>
+            <div class="lp-timeline-title">Medical Officer — Korle Bu Teaching Hospital</div>
+            <div class="lp-timeline-desc">Commenced medical practice at Korle Bu Teaching Hospital, specialising in general medicine.</div>
+          </div>
+          <div class="lp-timeline-item" style="padding-bottom:0;">
+            <div class="lp-timeline-year">1996 – 2002</div>
+            <div class="lp-timeline-title">MBChB — University of Ghana Medical School</div>
+            <div class="lp-timeline-desc">Graduated with a Bachelor of Medicine and Surgery with Honours from the University of Ghana.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-animate" style="animation-delay:0.15s;">
+        <div class="lp-section-label"><i class="fas fa-chart-line"></i> Areas of Expertise</div>
+        <h2 class="lp-section-title">Clinical Focus</h2>
+        <div style="display:flex;flex-direction:column;gap:1rem;margin-top:2rem;">
+          <!-- Expertise bars -->
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:600;margin-bottom:0.4rem;">
+              <span>University Healthcare Management</span><span style="color:var(--lp-primary);">96%</span>
+            </div>
+            <div style="height:8px;background:var(--lp-bg-alt);border-radius:4px;overflow:hidden;">
+              <div class="skill-bar" data-width="96" style="height:100%;background:var(--lp-primary);border-radius:4px;width:0;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:600;margin-bottom:0.4rem;">
+              <span>Public Health Policy</span><span style="color:var(--lp-primary);">92%</span>
+            </div>
+            <div style="height:8px;background:var(--lp-bg-alt);border-radius:4px;overflow:hidden;">
+              <div class="skill-bar" data-width="92" style="height:100%;background:var(--lp-primary);border-radius:4px;width:0;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:600;margin-bottom:0.4rem;">
+              <span>Emergency Medicine</span><span style="color:var(--lp-primary);">88%</span>
+            </div>
+            <div style="height:8px;background:var(--lp-bg-alt);border-radius:4px;overflow:hidden;">
+              <div class="skill-bar" data-width="88" style="height:100%;background:var(--lp-primary);border-radius:4px;width:0;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:600;margin-bottom:0.4rem;">
+              <span>Internal Medicine</span><span style="color:var(--lp-primary);">90%</span>
+            </div>
+            <div style="height:8px;background:var(--lp-bg-alt);border-radius:4px;overflow:hidden;">
+              <div class="skill-bar" data-width="90" style="height:100%;background:var(--lp-primary);border-radius:4px;width:0;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:600;margin-bottom:0.4rem;">
+              <span>Health Systems Research</span><span style="color:var(--lp-primary);">85%</span>
+            </div>
+            <div style="height:8px;background:var(--lp-bg-alt);border-radius:4px;overflow:hidden;">
+              <div class="skill-bar" data-width="85" style="height:100%;background:var(--lp-primary);border-radius:4px;width:0;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Awards -->
+        <h3 style="font-size:1rem;font-weight:700;margin:2.5rem 0 1rem;">
+          <i class="fas fa-medal" style="color:var(--lp-primary);margin-right:0.5rem;"></i> Awards &amp; Recognition
+        </h3>
+        <div style="display:flex;flex-direction:column;gap:0.8rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;padding:0.9rem;background:var(--lp-bg-alt);border-radius:12px;">
+            <i class="fas fa-trophy" style="color:#f59e0b;font-size:1.1rem;flex-shrink:0;"></i>
+            <div style="font-size:0.88rem;">
+              <div style="font-weight:600;">Best University Healthcare Officer</div>
+              <div style="color:var(--lp-text-muted);font-size:0.8rem;">Ghana Health Service — 2022</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.8rem;padding:0.9rem;background:var(--lp-bg-alt);border-radius:12px;">
+            <i class="fas fa-star" style="color:#f59e0b;font-size:1.1rem;flex-shrink:0;"></i>
+            <div style="font-size:0.88rem;">
+              <div style="font-weight:600;">Excellence in Public Health Award</div>
+              <div style="color:var(--lp-text-muted);font-size:0.8rem;">Medical &amp; Dental Council of Ghana — 2019</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.8rem;padding:0.9rem;background:var(--lp-bg-alt);border-radius:12px;">
+            <i class="fas fa-certificate" style="color:#f59e0b;font-size:1.1rem;flex-shrink:0;"></i>
+            <div style="font-size:0.88rem;">
+              <div style="font-weight:600;">Distinguished Service Medal</div>
+              <div style="color:var(--lp-text-muted);font-size:0.8rem;">Regional Maritime University — 2018</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MEET THE TEAM CTA ───────────────────────── -->
+<section class="lp-section" style="background:linear-gradient(135deg,#0d1b3e,#1a3a6e);color:#fff;text-align:center;">
+  <div class="lp-container lp-animate">
+    <div class="lp-section-label" style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);">
+      <i class="fas fa-users"></i> Our Team
+    </div>
+    <h2 class="lp-section-title" style="color:#fff;margin-bottom:1rem;">Meet the Full Medical Team</h2>
+    <p style="color:rgba(255,255,255,0.8);max-width:500px;margin:0 auto 2rem;line-height:1.7;">
+      Our Director works alongside a dedicated team of doctors, nurses, and support staff
+    </p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="/RMU-Medical-Management-System/html/doctors.html"
+         style="display:inline-flex;align-items:center;gap:0.6rem;background:#fff;color:var(--lp-primary);padding:0.9rem 2rem;border-radius:12px;font-weight:700;font-size:1rem;">
+        <i class="fas fa-user-doctor"></i> Our Doctors
+      </a>
+      <a href="/RMU-Medical-Management-System/html/staff.html"
+         style="display:inline-flex;align-items:center;gap:0.6rem;background:rgba(255,255,255,0.1);color:#fff;padding:0.9rem 2rem;border-radius:12px;font-weight:700;font-size:1rem;border:2px solid rgba(255,255,255,0.3);">
+        <i class="fas fa-users"></i> Our Staff
+      </a>
+    </div>
+  </div>
+</section>
+
+
+
+<button class="lp-scroll-top" id="lpScrollTop"><i class="fas fa-chevron-up"></i></button>
+
+<!-- Chatbot -->
+<button class="lp-chatbot-btn" id="lpChatBtn"><i class="fas fa-comment-medical"></i><span class="lp-chat-notif" id="lpChatNotif" style="display:none;"></span></button>
+<div class="lp-chatbot-window" id="lpChatWindow">
+  <div class="lp-chat-header">
+    <div class="lp-chat-avatar"><i class="fas fa-robot"></i></div>
+    <div class="lp-chat-header-info"><div class="lp-chat-header-name">RMU Medical Assistant</div><div class="lp-chat-header-status"><span class="lp-chat-online-dot"></span> Online</div></div>
+    <div class="lp-chat-header-actions"><button class="lp-chat-header-btn" id="lpChatMinimize"><i class="fas fa-minus"></i></button><button class="lp-chat-header-btn" id="lpChatClose"><i class="fas fa-times"></i></button></div>
+  </div>
+  <div class="lp-chat-messages" id="lpChatMessages"></div>
+  <div class="lp-chat-suggestions" id="lpChatSuggestions"></div>
+  <div class="lp-chat-input-area">
+    <textarea class="lp-chat-input" id="lpChatInput" placeholder="Ask about our leadership..." rows="1"></textarea>
+    <button class="lp-chat-send" id="lpChatSend"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<script src="../js/landing.js"></script>
+<script src="../js/landing-chatbot.js"></script>
+<script>
+  // Animate skill bars on scroll
+  const skillObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.skill-bar').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+        skillObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  const skillSection = document.querySelector('.skill-bar')?.closest('section');
+  if (skillSection) skillObserver.observe(skillSection);
+
+  // Load director from DB if available
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/RMU-Medical-Management-System/php/public/landing_api.php?action=director')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success || !data.data) return;
+        const d = data.data;
+        if (d.name) {
+          document.getElementById('directorName').textContent = d.name;
+          document.getElementById('directorSigName').textContent = d.name;
+        }
+        if (d.title) document.getElementById('directorTitle').textContent = d.title + ', RMU Medical Sickbay';
+        if (d.bio)   document.getElementById('directorBio').textContent = d.bio;
+        if (d.message) {
+          const msgEl = document.getElementById('directorMessage');
+          if (msgEl) msgEl.textContent = '"' + d.message + '"';
+        }
+        if (d.photo_path) {
+          const img = document.getElementById('directorPhoto');
+          if (img) img.src = '/RMU-Medical-Management-System/' + d.photo_path;
+        }
+        if (d.qualifications) {
+          const ql = document.getElementById('directorQualifications');
+          if (ql) {
+            const items = d.qualifications.split('|').map(q => q.trim()).filter(Boolean);
+            ql.innerHTML = items.map(q => `
+              <li style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem;background:var(--lp-bg-alt);border-radius:10px;font-size:0.92rem;">
+                <i class="fas fa-certificate" style="color:var(--lp-primary);flex-shrink:0;"></i>
+                ${q}
+              </li>
+            `).join('');
+          }
+        }
+      })
+      .catch(() => { /* keep static content */ });
+  });
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════ -->
+<footer class="lp-footer" id="lpFooter">
+  <div class="lp-footer-inner">
+    <div class="lp-footer-grid">
+
+      <!-- Col 1 — Brand -->
+      <div class="lp-footer-brand">
+        <img src="/RMU-Medical-Management-System/image/logo-ju-small.png" alt="RMU Medical Sickbay Logo">
+        <div class="lp-footer-brand-name">RMU <span>Medical</span> Sickbay</div>
+        <p class="lp-footer-desc">Compassionate care for the RMU community. Serving students, faculty, and staff with expert healthcare since 2004.</p>
+        <div class="lp-footer-socials">
+          <a href="https://www.facebook.com/rmuofficial/" target="_blank" rel="noopener" class="lp-footer-social" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://x.com/rmuofficial" target="_blank" rel="noopener" class="lp-footer-social" aria-label="Twitter / X"><i class="fab fa-x-twitter"></i></a>
+          <a href="https://www.instagram.com/rmuofficial/" target="_blank" rel="noopener" class="lp-footer-social" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://www.linkedin.com/school/regional-maritime-university/" target="_blank" rel="noopener" class="lp-footer-social" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+
+      <!-- Col 2 — Quick Links -->
+      <div>
+        <div class="lp-footer-col-title">Quick Links</div>
+        <ul class="lp-footer-links">
+          <li><a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Services</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-chevron-right"></i> Our Doctors</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/staff.html"><i class="fas fa-chevron-right"></i> Medical Staff</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/director.html"><i class="fas fa-chevron-right"></i> Director</a></li>
+          <li><a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-chevron-right"></i> Book Appointment</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3 — Services -->
+      <div>
+        <div class="lp-footer-col-title">Our Services</div>
+        <ul class="lp-footer-links">
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Free Checkups</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> 24/7 Ambulance</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Pharmacy</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Bed Facilities</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Laboratory</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Emergency Care</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4 — Contact & Emergency -->
+      <div>
+        <div class="lp-footer-col-title">Contact &amp; Emergency</div>
+        <div class="lp-footer-emergency-badge">
+          <i class="fas fa-phone-volume"></i>
+          <span>Emergency Hotline</span>
+          <a href="tel:153" class="lp-footer-emergency-num">153</a>
+        </div>
+        <ul class="lp-footer-contact-list">
+          <li><i class="fas fa-phone"></i> <a href="tel:0302716071" style="color:inherit;">0302716071</a></li>
+          <li><i class="fas fa-envelope"></i> <a href="mailto:sickbay@rmu.edu.gh" style="color:inherit;">sickbay@rmu.edu.gh</a></li>
+          <li><i class="fas fa-map-marker-alt"></i> <span>Regional Maritime University,<br>Nungua, Accra, Ghana</span></li>
+        </ul>
+        <div class="lp-footer-hours">
+          <div class="lp-footer-col-title" style="margin-top:1.2rem;margin-bottom:0.6rem;">Operating Hours</div>
+          <ul class="lp-footer-hours-list">
+            <li><span>Mon – Fri</span><span>8:00 AM – 8:00 PM</span></li>
+            <li><span>Sat – Sun</span><span>9:00 AM – 5:00 PM</span></li>
+            <li class="lp-footer-hours-24"><span>Emergency</span><span>24 / 7</span></li>
+          </ul>
+        </div>
+      </div>
+
+    </div><!-- /.lp-footer-grid -->
+
+    <!-- Bottom Bar -->
+    <div class="lp-footer-bottom">
+      <div class="lp-footer-copy">
+        &copy; <span id="footerYear"></span> <span>RMU Medical Sickbay</span>. All Rights Reserved.
+      </div>
+      <ul class="lp-footer-bottom-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Use</a></li>
+      </ul>
+    </div>
+
+  </div><!-- /.lp-footer-inner -->
+</footer>
+
+<script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
+
 </body>
-
 </html>

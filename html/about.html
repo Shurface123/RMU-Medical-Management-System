@@ -1,344 +1,485 @@
-<!DOCTYPE html>
-<html lang="en">
-
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us - RMU Medical Sickbay</title>
-    <meta name="description"
-        content="Learn about RMU Medical Sickbay's history, mission, and commitment to providing quality healthcare to the Regional Maritime University community.">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="shortcut icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-    <link rel="apple-touch-icon" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="../css/main.css">
-    <link rel="stylesheet" href="../css/chatbot.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us — RMU Medical Sickbay</title>
+  <meta name="description" content="Learn about RMU Medical Sickbay's history, mission, vision, and commitment to providing quality healthcare to the Regional Maritime University community.">
+  <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/landing.css">
 </head>
-
 <body>
 
-    <!-- Header Section -->
-    <header class="header">
-        <div class="logo-container">
-            <img src="../image/logo-ju-small.png" alt="RMU Logo" class="logo-img">
-            <a href="/RMU-Medical-Management-System/html/index.html" class="logo">
-                RMU <span>Medical</span> Sickbay
-            </a>
+<!-- Announcements -->
+<div id="lpAnnouncements"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     NAVIGATION
+     ══════════════════════════════════════════════════════ -->
+<nav class="lp-nav" id="lpNav">
+  <div class="lp-nav-inner">
+    <!-- Logo -->
+    <a href="/RMU-Medical-Management-System/html/index.html" class="lp-nav-logo">
+      <img src="/RMU-Medical-Management-System/image/logo-ju-small.png" alt="RMU Medical Sickbay Logo">
+      <span class="lp-nav-logo-text">RMU <span>Medical</span> Sickbay</span>
+    </a>
+
+    <!-- Centre Nav Links -->
+    <ul class="lp-nav-links">
+      <li><a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="/RMU-Medical-Management-System/html/about.html" class="active"><i class="fas fa-info-circle"></i> About</a></li>
+      <li class="lp-has-dropdown">
+        <a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-stethoscope"></i> Services <i class="fas fa-chevron-down lp-caret"></i></a>
+        <ul class="lp-nav-dropdown">
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-truck-medical"></i> Emergency Care</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-flask"></i> Laboratory Services</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-pills"></i> Pharmacy</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-bed"></i> Inpatient Care</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-brain"></i> Mental Health</a></li>
+        </ul>
+      </li>
+      <li class="lp-has-dropdown">
+        <a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-users"></i> Team <i class="fas fa-chevron-down lp-caret"></i></a>
+        <ul class="lp-nav-dropdown">
+          <li><a href="/RMU-Medical-Management-System/html/director.html"><i class="fas fa-user-tie"></i> Director</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/staff.html"><i class="fas fa-users"></i> Staff</a></li>
+        </ul>
+      </li>
+      <li><a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-calendar-check"></i> Book Now</a></li>
+    </ul>
+
+    <!-- Right Actions -->
+    <div class="lp-nav-right">
+      <a href="tel:153" class="lp-emergency-pill" title="Emergency Hotline">
+        <i class="fas fa-phone-volume"></i> 153
+      </a>
+      <button class="lp-theme-toggle" id="lpThemeToggle" aria-label="Toggle theme" title="Switch Theme">
+        <div class="toggle-icon icon-moon active"><i class="fas fa-moon"></i></div>
+        <div class="toggle-icon icon-sun"><i class="fas fa-sun"></i></div>
+      </button>
+      <a href="/RMU-Medical-Management-System/php/index.php" class="lp-nav-btn lp-nav-btn-outline">Login</a>
+      <a href="/RMU-Medical-Management-System/php/register.php" class="lp-nav-btn lp-nav-btn-solid">Register</a>
+      <div class="lp-hamburger" id="lpHamburger" role="button" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="lp-mobile-menu" id="lpMobileMenu" role="navigation" aria-label="Mobile navigation">
+  <ul class="lp-mobile-links">
+    <li><a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-home"></i> Home</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/about.html" class="active"><i class="fas fa-info-circle"></i> About</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-stethoscope"></i> Services</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/director.html"><i class="fas fa-user-tie"></i> Director</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a></li>
+    <li><a href="/RMU-Medical-Management-System/html/staff.html"><i class="fas fa-users"></i> Staff</a></li>
+    <li><a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-calendar-check"></i> Book Appointment</a></li>
+  </ul>
+  <div class="lp-mobile-actions">
+    <a href="tel:153" class="lp-emergency-pill"><i class="fas fa-phone-volume"></i> Emergency: 153</a>
+    <a href="/RMU-Medical-Management-System/php/index.php" class="lp-nav-btn lp-nav-btn-outline">Login</a>
+    <a href="/RMU-Medical-Management-System/php/register.php" class="lp-nav-btn lp-nav-btn-solid">Register</a>
+  </div>
+</div>
+
+
+
+<!-- ── PAGE HERO ─────────────────────────────────────────── -->
+<section class="lp-hero lp-page-hero" style="min-height:48vh;">
+  <div class="lp-hero-bg" style="background-image:url('/RMU-Medical-Management-System/image/bg-image.jpg');"></div>
+  <div class="lp-hero-overlay"></div>
+  <div class="lp-hero-content" style="max-width:700px;">
+    <div class="lp-hero-badge"><i class="fas fa-hospital"></i> About RMU Medical Sickbay</div>
+    <h1>Excellence in <span style="color:rgba(255,255,255,0.85);">University Healthcare</span></h1>
+    <p>Committed to serving the health and wellness of the RMU community for over two decades</p>
+  </div>
+</section>
+
+<!-- ── MISSION & VISION ──────────────────────────────────── -->
+<section class="lp-section">
+  <div class="lp-container">
+    <div class="lp-section-header lp-animate">
+      <div class="lp-section-label"><i class="fas fa-bullseye"></i> Our Purpose</div>
+      <h2 class="lp-section-title">Mission, Vision &amp; Values</h2>
+    </div>
+    <div class="lp-grid lp-grid-3 lp-animate-children">
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-bullseye"></i></div>
+        <h3 class="lp-card-title">Our Mission</h3>
+        <p class="lp-card-text">To provide accessible, high-quality healthcare to the Regional Maritime University community, ensuring the physical and mental well-being of students, faculty, and staff through compassionate care, preventive medicine, and health education.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-eye"></i></div>
+        <h3 class="lp-card-title">Our Vision</h3>
+        <p class="lp-card-text">To be the leading university health facility in Ghana, recognised for excellence in student healthcare, innovative medical practices, and creating a healthy campus environment that supports academic success and personal development.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-heart"></i></div>
+        <h3 class="lp-card-title">Our Values</h3>
+        <p class="lp-card-text">Compassion, Excellence, Integrity, Accessibility, Innovation, and Collaboration. These six values guide every interaction, decision, and service delivery across all our departments.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── OUR STORY ─────────────────────────────────────────── -->
+<section class="lp-section lp-section-alt">
+  <div class="lp-container">
+    <div class="lp-grid lp-grid-2" style="align-items:center;gap:4rem;">
+      <div class="lp-animate">
+        <img src="/RMU-Medical-Management-System/image/home.jpg" alt="RMU Medical Facility"
+             style="width:100%;border-radius:20px;box-shadow:0 20px 60px rgba(47,128,237,0.14);">
+      </div>
+      <div class="lp-animate" style="animation-delay:0.15s;">
+        <div class="lp-section-label"><i class="fas fa-book-open"></i> Our Story</div>
+        <h2 class="lp-section-title">Two Decades of Healthcare Excellence</h2>
+        <p style="color:var(--lp-text-muted);line-height:1.8;margin-bottom:1.2rem;">
+          The RMU Medical Sickbay was established alongside Regional Maritime University to ensure that students, faculty, and staff have access to quality healthcare services without leaving campus. For over 20 years, we have been dedicated to maintaining the health and wellness of the RMU community.
+        </p>
+        <p style="color:var(--lp-text-muted);line-height:1.8;margin-bottom:1.2rem;">
+          Our facility operates under the supervision of a Chief Medical Officer and is staffed by qualified doctors, nurses, and support personnel committed to providing exceptional care. We understand the unique healthcare needs of a university community and have tailored our services accordingly.
+        </p>
+        <p style="color:var(--lp-text-muted);line-height:1.8;">
+          The Medical Sickbay provides 24-hour service, ensuring that emergency medical care is always available. For students, we cover all expenses related to treatment, while faculty and staff receive health advice and referrals when necessary.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS COUNTER ─────────────────────────────────────── -->
+<section class="lp-stats-section">
+  <div class="lp-container">
+    <div style="text-align:center;margin-bottom:2.5rem;">
+      <div class="lp-section-label" style="background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);">
+        <i class="fas fa-chart-bar"></i> By the Numbers
+      </div>
+      <h2 style="color:#fff;font-size:2.2rem;font-weight:800;margin-top:0.5rem;">Our Impact in Numbers</h2>
+    </div>
+    <div class="lp-stats-grid lp-animate-children" id="statsGrid">
+      <div class="lp-stat-item">
+        <div class="lp-stat-icon"><i class="fas fa-users"></i></div>
+        <div class="lp-stat-number" data-count="5000" data-suffix="+">5,000+</div>
+        <div class="lp-stat-label">Patients Served</div>
+      </div>
+      <div class="lp-stat-item">
+        <div class="lp-stat-icon"><i class="fas fa-user-doctor"></i></div>
+        <div class="lp-stat-number" data-count="15" data-suffix="+">15+</div>
+        <div class="lp-stat-label">Medical Professionals</div>
+      </div>
+      <div class="lp-stat-item">
+        <div class="lp-stat-icon"><i class="fas fa-award"></i></div>
+        <div class="lp-stat-number" data-count="20" data-suffix="+">20+</div>
+        <div class="lp-stat-label">Years of Service</div>
+      </div>
+      <div class="lp-stat-item">
+        <div class="lp-stat-icon"><i class="fas fa-stethoscope"></i></div>
+        <div class="lp-stat-number" data-count="20" data-suffix="+">20+</div>
+        <div class="lp-stat-label">Services Offered</div>
+      </div>
+      <div class="lp-stat-item">
+        <div class="lp-stat-icon"><i class="fas fa-ambulance"></i></div>
+        <div class="lp-stat-number" data-count="3" data-suffix="">3</div>
+        <div class="lp-stat-label">Ambulances</div>
+      </div>
+      <div class="lp-stat-item">
+        <div class="lp-stat-icon"><i class="fas fa-bed"></i></div>
+        <div class="lp-stat-number" data-count="50" data-suffix="">50</div>
+        <div class="lp-stat-label">Inpatient Beds</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CORE VALUES ───────────────────────────────────────── -->
+<section class="lp-section">
+  <div class="lp-container">
+    <div class="lp-section-header lp-animate">
+      <div class="lp-section-label"><i class="fas fa-gem"></i> Core Values</div>
+      <h2 class="lp-section-title">What We Stand For</h2>
+    </div>
+    <div class="lp-grid lp-grid-3 lp-animate-children">
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-heart"></i></div>
+        <h3 class="lp-card-title">Compassion</h3>
+        <p class="lp-card-text">We treat every patient with empathy, kindness, and respect, understanding that healthcare is not just about treating illness but caring for people.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-trophy"></i></div>
+        <h3 class="lp-card-title">Excellence</h3>
+        <p class="lp-card-text">We strive for the highest standards in medical care, continuously improving our services and staying updated with the latest medical advancements.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-shield-halved"></i></div>
+        <h3 class="lp-card-title">Integrity</h3>
+        <p class="lp-card-text">We maintain the highest ethical standards in all our interactions, ensuring patient confidentiality and professional conduct at all times.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-universal-access"></i></div>
+        <h3 class="lp-card-title">Accessibility</h3>
+        <p class="lp-card-text">We ensure quality healthcare is accessible to all members of the RMU community, regardless of their background or circumstances.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-lightbulb"></i></div>
+        <h3 class="lp-card-title">Innovation</h3>
+        <p class="lp-card-text">We embrace new technologies and modern methodologies to improve patient care, diagnosis accuracy, and operational efficiency.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon"><i class="fas fa-handshake"></i></div>
+        <h3 class="lp-card-title">Collaboration</h3>
+        <p class="lp-card-text">We work together as a team and partner with leading healthcare providers to ensure comprehensive care for all our patients.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── GALLERY ───────────────────────────────────────────── -->
+<section class="lp-section lp-section-alt">
+  <div class="lp-container">
+    <div class="lp-section-header lp-animate">
+      <div class="lp-section-label"><i class="fas fa-image"></i> Gallery</div>
+      <h2 class="lp-section-title">Our Facility</h2>
+      <p class="lp-section-subtitle">A glimpse into our modern healthcare facility and dedicated team</p>
+    </div>
+    <div class="lp-gallery-grid lp-animate-children" id="galleryGrid">
+      <!-- Static gallery items — DB will replace these if available -->
+      <div class="lp-gallery-item">
+        <img src="/RMU-Medical-Management-System/image/home.jpg" alt="RMU Sickbay Facility">
+        <div class="lp-gallery-overlay"><i class="fas fa-expand"></i></div>
+      </div>
+      <div class="lp-gallery-item">
+        <img src="/RMU-Medical-Management-System/image/emergency.jpg" alt="Emergency Department">
+        <div class="lp-gallery-overlay"><i class="fas fa-expand"></i></div>
+      </div>
+      <div class="lp-gallery-item">
+        <img src="/RMU-Medical-Management-System/image/laboratory.jpg" alt="Laboratory">
+        <div class="lp-gallery-overlay"><i class="fas fa-expand"></i></div>
+      </div>
+      <div class="lp-gallery-item">
+        <img src="/RMU-Medical-Management-System/image/pharmacy.jpg" alt="Pharmacy">
+        <div class="lp-gallery-overlay"><i class="fas fa-expand"></i></div>
+      </div>
+      <div class="lp-gallery-item">
+        <img src="/RMU-Medical-Management-System/image/bed.jpg" alt="Inpatient Ward">
+        <div class="lp-gallery-overlay"><i class="fas fa-expand"></i></div>
+      </div>
+      <div class="lp-gallery-item">
+        <img src="/RMU-Medical-Management-System/image/checkup.jpg" alt="Medical Checkup">
+        <div class="lp-gallery-overlay"><i class="fas fa-expand"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ──────────────────────────────────────── -->
+<section class="lp-section">
+  <div class="lp-container">
+    <div class="lp-section-header lp-animate">
+      <div class="lp-section-label"><i class="fas fa-star"></i> Testimonials</div>
+      <h2 class="lp-section-title">Community Voices</h2>
+      <p class="lp-section-subtitle">Read what members of the RMU community say about our services</p>
+    </div>
+    <div class="lp-testimonials" style="overflow:hidden;">
+      <div class="lp-testimonial-track" id="testimonialTrack">
+        <div class="lp-testimonial-card">
+          <div class="lp-testimonial-stars">★★★★★</div>
+          <p class="lp-testimonial-text">"The level of care and professionalism I experienced at RMU Sickbay exceeded my expectations. The doctors are knowledgeable and the nurses are incredibly caring."</p>
+          <div class="lp-testimonial-author">
+            <div class="lp-testimonial-avatar"><i class="fas fa-user"></i></div>
+            <div><div class="lp-testimonial-name">Kwame Osei</div><div class="lp-testimonial-role">Level 400 Student</div></div>
+          </div>
         </div>
-
-        <nav class="navbar">
-            <a href="/RMU-Medical-Management-System/html/index.html">Home</a>
-            <a href="/RMU-Medical-Management-System/html/services.html">Services</a>
-            <a href="/RMU-Medical-Management-System/html/about.html">About</a>
-            <a href="/RMU-Medical-Management-System/php/booking.php">Booking</a>
-            <a href="/RMU-Medical-Management-System/php/index.php">Login</a>
-            <a href="/RMU-Medical-Management-System/php/register.php">Signup</a>
-        </nav>
-
-        <div id="menu-btn" class="fas fa-bars"></div>
-    </header>
-
-    <!-- Page Header -->
-    <section class="hero bg-overlay" style="background-image: url('../image/bg-image.jpg'); min-height: 50vh;">
-        <div class="hero-content">
-            <h1>About <span>RMU Medical Sickbay</span></h1>
-            <p>Committed to excellence in healthcare for over two decades</p>
+        <div class="lp-testimonial-card">
+          <div class="lp-testimonial-stars">★★★★★</div>
+          <p class="lp-testimonial-text">"Outstanding facility. The mental health support services in particular have been transformative for many students on campus. Keep up the incredible work!"</p>
+          <div class="lp-testimonial-author">
+            <div class="lp-testimonial-avatar"><i class="fas fa-user"></i></div>
+            <div><div class="lp-testimonial-name">Dr. Akosua Birago</div><div class="lp-testimonial-role">Lecturer, RMU</div></div>
+          </div>
         </div>
-    </section>
-
-    <!-- Mission & Vision -->
-    <section class="section">
-        <div class="container">
-            <div class="grid grid-2" style="gap: 4rem;">
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-bullseye"></i>
-                    </div>
-                    <h2 class="card-title">Our Mission</h2>
-                    <p class="card-text">To provide accessible, high-quality healthcare services to the Regional
-                        Maritime University community, ensuring the physical and mental well-being of students, faculty,
-                        and staff through compassionate care, preventive medicine, and health education.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-eye"></i>
-                    </div>
-                    <h2 class="card-title">Our Vision</h2>
-                    <p class="card-text">To be the leading university health facility in Ghana, recognized for
-                        excellence in student healthcare, innovative medical practices, and creating a healthy campus
-                        environment that supports academic success and personal development.</p>
-                </div>
-            </div>
+        <div class="lp-testimonial-card">
+          <div class="lp-testimonial-stars">★★★★☆</div>
+          <p class="lp-testimonial-text">"Fast lab results and a well-stocked pharmacy. I appreciate how the sickbay has modernised its operations. The online booking system is very convenient."</p>
+          <div class="lp-testimonial-author">
+            <div class="lp-testimonial-avatar"><i class="fas fa-user"></i></div>
+            <div><div class="lp-testimonial-name">Yaw Darko</div><div class="lp-testimonial-role">Administrative Staff</div></div>
+          </div>
         </div>
-    </section>
+      </div>
+    </div>
+    <div class="lp-carousel-controls">
+      <button class="lp-carousel-btn" id="testimonialPrev"><i class="fas fa-chevron-left"></i></button>
+      <button class="lp-carousel-btn" id="testimonialNext"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</section>
 
-    <!-- About Content -->
-    <section class="section section-alt">
-        <div class="container">
-            <h2 class="text-center mb-4">Our Story</h2>
-            <div style="max-width: 900px; margin: 0 auto;">
-                <p style="font-size: 1.8rem; line-height: 2; margin-bottom: 2rem;">
-                    The RMU Medical Sickbay was established alongside Regional Maritime University to ensure that
-                    students, faculty, and staff have access to quality healthcare services without leaving campus. For
-                    over 20 years, we have been dedicated to maintaining the health and wellness of the RMU community.
-                </p>
-                <p style="font-size: 1.8rem; line-height: 2; margin-bottom: 2rem;">
-                    Our facility operates under the supervision of a Chief Medical Officer and is staffed by qualified
-                    doctors, nurses, and support personnel who are committed to providing exceptional care. We
-                    understand the unique healthcare needs of a university community and have tailored our services
-                    accordingly.
-                </p>
-                <p style="font-size: 1.8rem; line-height: 2;">
-                    The Medical Sickbay provides twenty-four hour service, ensuring that emergency medical care is
-                    always available. For students, we cover all expenses related to treatment, while faculty and staff
-                    receive comprehensive health-related advice and referrals when necessary.
-                </p>
-            </div>
+<!-- ── PARTNERS ──────────────────────────────────────────── -->
+<section class="lp-section lp-section-alt">
+  <div class="lp-container">
+    <div class="lp-section-header lp-animate">
+      <div class="lp-section-label"><i class="fas fa-handshake"></i> Partnerships</div>
+      <h2 class="lp-section-title">Our Healthcare Partners</h2>
+    </div>
+    <div class="lp-grid lp-grid-3 lp-animate-children">
+      <div class="lp-card" style="text-align:center;">
+        <div class="lp-card-icon" style="margin:0 auto 1.2rem;"><i class="fas fa-hospital"></i></div>
+        <h3 class="lp-card-title">Korle Bu Teaching Hospital</h3>
+        <p class="lp-card-text">Referral partnership for specialised medical care and complex surgical procedures.</p>
+      </div>
+      <div class="lp-card" style="text-align:center;">
+        <div class="lp-card-icon" style="margin:0 auto 1.2rem;"><i class="fas fa-heart-pulse"></i></div>
+        <h3 class="lp-card-title">Ghana Health Service</h3>
+        <p class="lp-card-text">Collaboration on public health initiatives, vaccination programs, and health campaigns.</p>
+      </div>
+      <div class="lp-card" style="text-align:center;">
+        <div class="lp-card-icon" style="margin:0 auto 1.2rem;"><i class="fas fa-pills"></i></div>
+        <h3 class="lp-card-title">Pharmacy Council of Ghana</h3>
+        <p class="lp-card-text">Ensuring quality pharmaceutical services, drug safety, and professional dispensing standards.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<button class="lp-scroll-top" id="lpScrollTop"><i class="fas fa-chevron-up"></i></button>
+<!-- Lightbox -->
+<div class="lp-lightbox" id="lpLightbox">
+  <img src="" alt="Gallery">
+  <button class="lp-lightbox-close"><i class="fas fa-times"></i></button>
+</div>
+<!-- Chatbot -->
+<button class="lp-chatbot-btn" id="lpChatBtn"><i class="fas fa-comment-medical"></i><span class="lp-chat-notif" id="lpChatNotif" style="display:none;"></span></button>
+<div class="lp-chatbot-window" id="lpChatWindow">
+  <div class="lp-chat-header">
+    <div class="lp-chat-avatar"><i class="fas fa-robot"></i></div>
+    <div class="lp-chat-header-info"><div class="lp-chat-header-name">RMU Medical Assistant</div><div class="lp-chat-header-status"><span class="lp-chat-online-dot"></span> Online</div></div>
+    <div class="lp-chat-header-actions"><button class="lp-chat-header-btn" id="lpChatMinimize"><i class="fas fa-minus"></i></button><button class="lp-chat-header-btn" id="lpChatClose"><i class="fas fa-times"></i></button></div>
+  </div>
+  <div class="lp-chat-messages" id="lpChatMessages"></div>
+  <div class="lp-chat-suggestions" id="lpChatSuggestions"></div>
+  <div class="lp-chat-input-area">
+    <textarea class="lp-chat-input" id="lpChatInput" placeholder="Ask me anything..." rows="1"></textarea>
+    <button class="lp-chat-send" id="lpChatSend"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<script src="../js/landing.js"></script>
+<script src="../js/landing-chatbot.js"></script>
+<script>
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+  // Carousel
+  document.addEventListener('DOMContentLoaded', () => {
+    const track = document.getElementById('testimonialTrack');
+    const prev = document.getElementById('testimonialPrev');
+    const next = document.getElementById('testimonialNext');
+    if (!track) return;
+    let idx = 0;
+    function slide(dir) {
+      const cards = track.querySelectorAll('.lp-testimonial-card');
+      const pv = window.innerWidth < 640 ? 1 : window.innerWidth < 1024 ? 2 : 3;
+      idx = Math.max(0, Math.min(idx + dir, cards.length - pv));
+      track.style.transform = `translateX(-${idx * ((cards[0]?.offsetWidth || 340) + 24)}px)`;
+    }
+    prev?.addEventListener('click', () => slide(-1));
+    next?.addEventListener('click', () => slide(1));
+  });
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════ -->
+<footer class="lp-footer" id="lpFooter">
+  <div class="lp-footer-inner">
+    <div class="lp-footer-grid">
+
+      <!-- Col 1 — Brand -->
+      <div class="lp-footer-brand">
+        <img src="/RMU-Medical-Management-System/image/logo-ju-small.png" alt="RMU Medical Sickbay Logo">
+        <div class="lp-footer-brand-name">RMU <span>Medical</span> Sickbay</div>
+        <p class="lp-footer-desc">Compassionate care for the RMU community. Serving students, faculty, and staff with expert healthcare since 2004.</p>
+        <div class="lp-footer-socials">
+          <a href="https://www.facebook.com/rmuofficial/" target="_blank" rel="noopener" class="lp-footer-social" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://x.com/rmuofficial" target="_blank" rel="noopener" class="lp-footer-social" aria-label="Twitter / X"><i class="fab fa-x-twitter"></i></a>
+          <a href="https://www.instagram.com/rmuofficial/" target="_blank" rel="noopener" class="lp-footer-social" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://www.linkedin.com/school/regional-maritime-university/" target="_blank" rel="noopener" class="lp-footer-social" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
         </div>
-    </section>
+      </div>
 
-    <!-- Core Values -->
-    <section class="section">
-        <div class="container">
-            <h2 class="text-center mb-4">Our Core Values</h2>
-            <div class="grid grid-3">
-                <div class="card text-center">
-                    <div class="card-icon">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <h3 class="card-title">Compassion</h3>
-                    <p class="card-text">We treat every patient with empathy, kindness, and respect, understanding that
-                        healthcare is not just about treating illness but caring for people.</p>
-                </div>
-                <div class="card text-center">
-                    <div class="card-icon">
-                        <i class="fas fa-award"></i>
-                    </div>
-                    <h3 class="card-title">Excellence</h3>
-                    <p class="card-text">We strive for the highest standards in medical care, continuously improving our
-                        services and staying updated with medical advancements.</p>
-                </div>
-                <div class="card text-center">
-                    <div class="card-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3 class="card-title">Integrity</h3>
-                    <p class="card-text">We maintain the highest ethical standards in all our interactions, ensuring
-                        patient confidentiality and professional conduct.</p>
-                </div>
-                <div class="card text-center">
-                    <div class="card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3 class="card-title">Accessibility</h3>
-                    <p class="card-text">We ensure that quality healthcare is accessible to all members of the RMU
-                        community, regardless of their background or circumstances.</p>
-                </div>
-                <div class="card text-center">
-                    <div class="card-icon">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                    <h3 class="card-title">Innovation</h3>
-                    <p class="card-text">We embrace new technologies and methodologies to improve patient care and
-                        operational efficiency.</p>
-                </div>
-                <div class="card text-center">
-                    <div class="card-icon">
-                        <i class="fas fa-handshake"></i>
-                    </div>
-                    <h3 class="card-title">Collaboration</h3>
-                    <p class="card-text">We work together as a team and partner with other healthcare providers to
-                        ensure comprehensive care for our patients.</p>
-                </div>
-            </div>
+      <!-- Col 2 — Quick Links -->
+      <div>
+        <div class="lp-footer-col-title">Quick Links</div>
+        <ul class="lp-footer-links">
+          <li><a href="/RMU-Medical-Management-System/html/index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Services</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/doctors.html"><i class="fas fa-chevron-right"></i> Our Doctors</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/staff.html"><i class="fas fa-chevron-right"></i> Medical Staff</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/director.html"><i class="fas fa-chevron-right"></i> Director</a></li>
+          <li><a href="/RMU-Medical-Management-System/php/booking.php"><i class="fas fa-chevron-right"></i> Book Appointment</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3 — Services -->
+      <div>
+        <div class="lp-footer-col-title">Our Services</div>
+        <ul class="lp-footer-links">
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Free Checkups</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> 24/7 Ambulance</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Pharmacy</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Bed Facilities</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Laboratory</a></li>
+          <li><a href="/RMU-Medical-Management-System/html/services.html"><i class="fas fa-chevron-right"></i> Emergency Care</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4 — Contact & Emergency -->
+      <div>
+        <div class="lp-footer-col-title">Contact &amp; Emergency</div>
+        <div class="lp-footer-emergency-badge">
+          <i class="fas fa-phone-volume"></i>
+          <span>Emergency Hotline</span>
+          <a href="tel:153" class="lp-footer-emergency-num">153</a>
         </div>
-    </section>
-
-    <!-- Achievements -->
-    <section class="section section-alt">
-        <div class="container">
-            <h2 class="text-center mb-4">Our Achievements</h2>
-            <div class="grid grid-2" style="gap: 3rem;">
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
-                        <i class="fas fa-trophy"></i> Excellence in University Healthcare
-                    </h3>
-                    <p>Recognized by the Ghana Health Service for outstanding contribution to university healthcare
-                        delivery and student wellness programs.</p>
-                </div>
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
-                        <i class="fas fa-certificate"></i> Accredited Medical Facility
-                    </h3>
-                    <p>Fully accredited by the Medical and Dental Council of Ghana, meeting all standards for quality
-                        healthcare delivery.</p>
-                </div>
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
-                        <i class="fas fa-user-md"></i> Experienced Medical Team
-                    </h3>
-                    <p>Our team includes board-certified physicians and registered nurses with extensive experience in
-                        student health services.</p>
-                </div>
-                <div class="card">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
-                        <i class="fas fa-clock"></i> 24/7 Emergency Response
-                    </h3>
-                    <p>Maintained an uninterrupted 24/7 emergency service record for over 15 years, ensuring student
-                        safety at all times.</p>
-                </div>
-            </div>
+        <ul class="lp-footer-contact-list">
+          <li><i class="fas fa-phone"></i> <a href="tel:0302716071" style="color:inherit;">0302716071</a></li>
+          <li><i class="fas fa-envelope"></i> <a href="mailto:sickbay@rmu.edu.gh" style="color:inherit;">sickbay@rmu.edu.gh</a></li>
+          <li><i class="fas fa-map-marker-alt"></i> <span>Regional Maritime University,<br>Nungua, Accra, Ghana</span></li>
+        </ul>
+        <div class="lp-footer-hours">
+          <div class="lp-footer-col-title" style="margin-top:1.2rem;margin-bottom:0.6rem;">Operating Hours</div>
+          <ul class="lp-footer-hours-list">
+            <li><span>Mon – Fri</span><span>8:00 AM – 8:00 PM</span></li>
+            <li><span>Sat – Sun</span><span>9:00 AM – 5:00 PM</span></li>
+            <li class="lp-footer-hours-24"><span>Emergency</span><span>24 / 7</span></li>
+          </ul>
         </div>
-    </section>
+      </div>
 
-    <!-- Statistics -->
-    <section class="section" style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white;">
-        <div class="container">
-            <h2 class="text-center mb-4" style="color: white;">By The Numbers</h2>
-            <div class="grid grid-4">
-                <div class="text-center">
-                    <h3 style="font-size: 5rem; color: white; margin-bottom: 1rem;">20+</h3>
-                    <p style="font-size: 1.8rem;">Years of Service</p>
-                </div>
-                <div class="text-center">
-                    <h3 style="font-size: 5rem; color: white; margin-bottom: 1rem;">15+</h3>
-                    <p style="font-size: 1.8rem;">Medical Professionals</p>
-                </div>
-                <div class="text-center">
-                    <h3 style="font-size: 5rem; color: white; margin-bottom: 1rem;">10K+</h3>
-                    <p style="font-size: 1.8rem;">Patients Served Annually</p>
-                </div>
-                <div class="text-center">
-                    <h3 style="font-size: 5rem; color: white; margin-bottom: 1rem;">24/7</h3>
-                    <p style="font-size: 1.8rem;">Emergency Availability</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div><!-- /.lp-footer-grid -->
 
-    <!-- Partnerships -->
-    <section class="section">
-        <div class="container">
-            <h2 class="text-center mb-4">Our Partners</h2>
-            <p class="text-center mb-4" style="font-size: 1.8rem; max-width: 700px; margin: 0 auto 4rem;">
-                We collaborate with leading healthcare institutions to provide comprehensive care
-            </p>
-            <div class="grid grid-3">
-                <div class="card text-center">
-                    <i class="fas fa-hospital"
-                        style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                    <h3>Korle Bu Teaching Hospital</h3>
-                    <p>Referral partnership for specialized medical care</p>
-                </div>
-                <div class="card text-center">
-                    <i class="fas fa-heartbeat"
-                        style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                    <h3>Ghana Health Service</h3>
-                    <p>Collaboration on public health initiatives</p>
-                </div>
-                <div class="card text-center">
-                    <i class="fas fa-pills"
-                        style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                    <h3>Pharmacy Council of Ghana</h3>
-                    <p>Ensuring quality pharmaceutical services</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Bottom Bar -->
+    <div class="lp-footer-bottom">
+      <div class="lp-footer-copy">
+        &copy; <span id="footerYear"></span> <span>RMU Medical Sickbay</span>. All Rights Reserved.
+      </div>
+      <ul class="lp-footer-bottom-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Use</a></li>
+      </ul>
+    </div>
 
-    <!-- Footer Section -->
-    <footer class="footer">
-        <div class="box-container">
-            <div class="box">
-                <h3>Quick Links</h3>
-                <a href="/RMU-Medical-Management-System/html/index.html">
-                    <i class="fas fa-chevron-right"></i> Home
-                </a>
-                <a href="/RMU-Medical-Management-System/html/services.html">
-                    <i class="fas fa-chevron-right"></i> Services
-                </a>
-                <a href="/RMU-Medical-Management-System/html/about.html">
-                    <i class="fas fa-chevron-right"></i> About
-                </a>
-                <a href="/RMU-Medical-Management-System/html/doctors.html">
-                    <i class="fas fa-chevron-right"></i> Doctors
-                </a>
-                <a href="/RMU-Medical-Management-System/php/booking.php">
-                    <i class="fas fa-chevron-right"></i> Booking
-                </a>
-            </div>
+  </div><!-- /.lp-footer-inner -->
+</footer>
 
-            <div class="box">
-                <h3>Our Services</h3>
-                <a href="/RMU-Medical-Management-System/html/services.html">
-                    <i class="fas fa-chevron-right"></i> Free Checkups
-                </a>
-                <a href="/RMU-Medical-Management-System/html/services.html">
-                    <i class="fas fa-chevron-right"></i> 24/7 Ambulance
-                </a>
-                <a href="/RMU-Medical-Management-System/html/services.html">
-                    <i class="fas fa-chevron-right"></i> Medicines
-                </a>
-                <a href="/RMU-Medical-Management-System/html/doctors.html">
-                    <i class="fas fa-chevron-right"></i> Expert Doctors
-                </a>
-                <a href="/RMU-Medical-Management-System/html/services.html">
-                    <i class="fas fa-chevron-right"></i> Bed Facility
-                </a>
-            </div>
-
-            <div class="box">
-                <h3>Contact Info</h3>
-                <a href="tel:153">
-                    <i class="fas fa-phone"></i> 153 (Emergency)
-                </a>
-                <a href="tel:0502371207">
-                    <i class="fas fa-phone"></i> 0502371207
-                </a>
-                <a href="mailto:medicalju123@gmail.com">
-                    <i class="fas fa-envelope"></i> medicalju123@gmail.com
-                </a>
-                <a href="https://www.google.com/maps/place/Regional+Maritime+University/@5.8613756,-0.3410349,10z"
-                    target="_blank">
-                    <i class="fas fa-map-marker-alt"></i> Regional Maritime University, Accra, Ghana
-                </a>
-            </div>
-
-            <div class="box">
-                <h3>Follow Us</h3>
-                <a href="https://www.facebook.com/rmuofficial/" target="_blank">
-                    <i class="fab fa-facebook-f"></i> Facebook
-                </a>
-                <a href="https://x.com/rmuofficial?lang=ens" target="_blank">
-                    <i class="fab fa-twitter"></i> Twitter
-                </a>
-                <a href="https://www.instagram.com/rmuofficial/?hl=en" target="_blank">
-                    <i class="fab fa-instagram"></i> Instagram
-                </a>
-                <a href="https://www.linkedin.com/school/regional-maritime-university/" target="_blank">
-                    <i class="fab fa-linkedin"></i> LinkedIn
-                </a>
-            </div>
-        </div>
-
-        <div class="credit">
-            &copy; 2026 RMU Medical Sickbay | Created by <span>Lovelace & Craig (Group Six)</span> | All Rights Reserved
-        </div>
-    </footer>
-
-    <!-- JavaScript Files -->
-    <script src="../js/main.js"></script>
-    <script src="../js/theme-switcher.js"></script>
-    <script src="../js/modals.js"></script>
-    <script src="../js/chatbot.js"></script>
+<script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
 
 </body>
-
 </html>
