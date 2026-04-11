@@ -67,23 +67,23 @@ if ($q_dis) {
                 <span style="width:10px; height:10px; border-radius:50%; background:var(--primary); display:inline-block;"></span>
                 <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);">Readiness <small style="font-weight:700; color:var(--primary);">OPTIMAL</small></div>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('eduForm').reset(); document.getElementById('eduModal').style.display='flex';" style="border-radius:12px; font-weight:700;">
+            <button class="btn-icon btn btn-primary" onclick="document.getElementById('eduForm').reset(); document.getElementById('eduModal').style.display='flex';" style="border-radius:12px; font-weight:700;"><span class="btn-text">
                 <i class="fas fa-book-medical"></i> Log Education
-            </button>
-            <button class="adm-btn adm-btn-ghost" onclick="document.getElementById('dischargeForm').reset(); document.getElementById('dischargeModal').style.display='flex';" style="border-radius:12px; font-weight:700; border-color:var(--primary); color:var(--primary);">
+            </span></button>
+            <button class="btn-icon btn btn-ghost" onclick="document.getElementById('dischargeForm').reset(); document.getElementById('dischargeModal').style.display='flex';" style="border-radius:12px; font-weight:700; border-color:var(--primary); color:var(--primary);"><span class="btn-text">
                 <i class="fas fa-door-open"></i> Discharge Plan
-            </button>
+            </span></button>
         </div>
     </div>
 
     <!-- Premium Sub-Navigation -->
     <div style="margin-bottom:2.5rem; border-bottom:2px solid var(--border); display:flex; gap:3rem;">
-        <button class="tab-link active" onclick="switchEduTab('log')" id="btn-edu-tab" style="padding:1rem 0; font-weight:800; font-size:1.3rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+        <button class="btn btn-primary tab-link active" onclick="switchEduTab('log')" id="btn-edu-tab" style="padding:1rem 0; font-weight:800; font-size:1.3rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;"><span class="btn-text">
             <i class="fas fa-list-alt"></i> EDUCATION LOGS
-        </button>
-        <button class="tab-link" onclick="switchEduTab('disc')" id="btn-disc-tab" style="padding:1rem 0; font-weight:700; font-size:1.3rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+        </span></button>
+        <button class="btn btn-success btn-icon tab-link" onclick="switchEduTab('disc')" id="btn-disc-tab" style="padding:1rem 0; font-weight:700; font-size:1.3rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;"><span class="btn-text">
             <i class="fas fa-file-export"></i> DISCHARGE INSTRUCTIONS
-        </button>
+        </span></button>
     </div>
 
     <div class="tab-content active">
@@ -231,7 +231,7 @@ if ($q_dis) {
     <div class="modal-box" style="max-width:700px;">
         <div class="modal-header" style="background:var(--primary);">
             <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-book-medical"></i> Clinical Teaching Log</h3>
-            <button class="modal-close" onclick="document.getElementById('eduModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="document.getElementById('eduModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         <div style="padding:2.5rem;">
             <form id="eduForm">
@@ -288,10 +288,10 @@ if ($q_dis) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('eduModal').style.display='none'" style="font-weight:700;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSaveEdu" style="padding:.8rem 3.5rem; font-weight:900; border-radius:12px; font-size:1.2rem;">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('eduModal').style.display='none'" style="font-weight:700;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveEdu" style="padding:.8rem 3.5rem; font-weight:900; border-radius:12px; font-size:1.2rem;"><span class="btn-text">
                         <i class="fas fa-save" style="margin-right:.6rem;"></i> LOG TEACHING
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>
@@ -305,7 +305,7 @@ if ($q_dis) {
     <div class="modal-box" style="max-width:750px;">
         <div class="modal-header" style="background:linear-gradient(135deg, var(--primary), var(--primary-dark));">
             <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-paper-plane"></i> Formulate Discharge Instructions</h3>
-            <button class="modal-close" onclick="document.getElementById('dischargeModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="document.getElementById('dischargeModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         <div style="padding:2.5rem;">
             <form id="dischargeForm">
@@ -336,10 +336,10 @@ if ($q_dis) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('dischargeModal').style.display='none'" style="font-weight:700;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSaveDisc" style="padding:.8rem 4rem; font-weight:900; border-radius:12px; font-size:1.3rem;">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('dischargeModal').style.display='none'" style="font-weight:700;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn-icon btn btn-primary" id="btnSaveDisc" style="padding:.8rem 4rem; font-weight:900; border-radius:12px; font-size:1.3rem;"><span class="btn-text">
                         <i class="fas fa-door-open" style="margin-right:.8rem;"></i> FINALIZE DISCHARGE PLAN
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

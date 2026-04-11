@@ -106,7 +106,7 @@ $notif_prefs = is_string($settings['notification_preferences']??'')
                     <p style="font-weight:700;font-size:1.5rem;margin:0;">Log Out of All Sessions</p>
                     <p style="font-size:1.2rem;color:var(--text-muted);margin:.3rem 0 0;">This will sign you out from all devices except the current one.</p>
                 </div>
-                <button class="btn btn-danger" onclick="logoutAllSessions()"><i class="fas fa-sign-out-alt"></i> Terminate All Sessions</button>
+                <button class="btn btn-danger" onclick="logoutAllSessions()"><span class="btn-text"><i class="fas fa-sign-out-alt"></i> Terminate All Sessions</span></button>
             </div>
             <hr style="border:none;border-top:1px solid var(--danger-light);margin:1.5rem 0;">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2rem;">
@@ -114,7 +114,7 @@ $notif_prefs = is_string($settings['notification_preferences']??'')
                     <p style="font-weight:700;font-size:1.5rem;margin:0;">Clear Activity Log</p>
                     <p style="font-size:1.2rem;color:var(--text-muted);margin:.3rem 0 0;">Remove read notifications older than 30 days from your notification feed.</p>
                 </div>
-                <button class="btn btn-danger" onclick="clearNotifs()"><i class="fas fa-trash"></i> Clear Old Notifications</button>
+                <button class="btn-icon btn btn-danger" onclick="clearNotifs()"><span class="btn-text"><i class="fas fa-trash"></i> Clear Old Notifications</span></button>
             </div>
         </div>
     </div>

@@ -20,9 +20,9 @@ if ($fq) while ($r = mysqli_fetch_assoc($fq)) $fees[] = $r;
       <p>Manage service fees, tax rates and categories</p>
     </div>
     <?php if (in_array($user_role, ['finance_manager','admin'])): ?>
-    <button onclick="openModal('modalAddFee')" class="adm-btn adm-btn-primary">
+    <button onclick="openModal('modalAddFee')" class="btn btn-primary"><span class="btn-text">
       <i class="fas fa-plus"></i> Add Service Fee
-    </button>
+    </span></button>
     <?php endif; ?>
   </div>
 
@@ -74,7 +74,7 @@ if ($fq) while ($r = mysqli_fetch_assoc($fq)) $fees[] = $r;
             <td>
               <div class="adm-table-actions">
                 <?php if (in_array($user_role, ['finance_manager','admin'])): ?>
-                <button onclick="editFee(<?= htmlspecialchars(json_encode($f)) ?>)" class="adm-btn adm-btn-sm adm-btn-ghost" title="Edit"><i class="fas fa-pen"></i></button>
+                <button onclick="editFee(<?= htmlspecialchars(json_encode($f)) ?>)" class="btn btn-sm btn-ghost" title="Edit"><span class="btn-text"><i class="fas fa-pen"></i></span></button>
                 <?php endif; ?>
               </div>
             </td>
@@ -91,7 +91,7 @@ if ($fq) while ($r = mysqli_fetch_assoc($fq)) $fees[] = $r;
   <div class="adm-modal-content" style="max-width:640px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-list-ol" style="color:var(--role-accent);"></i> <span id="feeModalTitle">Add Service Fee</span></h3>
-      <button class="adm-modal-close" onclick="closeModal('modalAddFee')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalAddFee')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formFee">
@@ -138,8 +138,8 @@ if ($fq) while ($r = mysqli_fetch_assoc($fq)) $fees[] = $r;
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalAddFee')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="saveFee()" class="adm-btn adm-btn-primary"><i class="fas fa-floppy-disk"></i> Save Fee</button>
+      <button onclick="closeModal('modalAddFee')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="saveFee()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-floppy-disk"></i> Save Fee</span></button>
     </div>
   </div>
 </div>

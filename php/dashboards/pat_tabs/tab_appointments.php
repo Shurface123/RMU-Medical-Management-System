@@ -10,7 +10,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $all_appts[]=$r;
   <div class="adm-card">
     <div class="adm-card-header">
       <h3><i class="fas fa-calendar-check" style="color:var(--primary);"></i> My Appointments</h3>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="showTab('book',document.querySelector('.adm-nav-item[onclick*=book]'))"><i class="fas fa-plus"></i> Book New</button>
+      <button class="btn-icon btn btn-primary btn-sm" onclick="showTab('book',document.querySelector('.adm-nav-item[onclick*=book]'))"><span class="btn-text"><i class="fas fa-plus"></i> Book New</span></button>
     </div>
     <!-- Filters -->
     <div class="filter-tabs" style="padding:.5rem 1.5rem 0;" id="apptFilters">
@@ -47,9 +47,9 @@ if($q) while($r=mysqli_fetch_assoc($q)) $all_appts[]=$r;
             <td><span class="adm-badge adm-badge-<?=$sc?>"><?=$a['status']?></span></td>
             <td>
               <div style="display:flex;gap:.4rem;">
-                <button class="adm-btn adm-btn-sm" onclick='viewApptDetail(<?=json_encode($a)?>)' title="Details"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-primary btn btn-sm" onclick='viewApptDetail(<?=json_encode($a)?>)' title="Details"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
                 <?php if(in_array($a['status'],['Pending','Confirmed','Approved'])):?>
-                <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="cancelAppt(<?=$a['id']?>)" title="Cancel"><i class="fas fa-times"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="cancelAppt(<?=$a['id']?>)" title="Cancel"><span class="btn-text"><i class="fas fa-times"></i></span></button>
                 <?php endif;?>
               </div>
             </td>
@@ -64,7 +64,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $all_appts[]=$r;
 <!-- Appointment Detail Modal -->
 <div class="modal-bg" id="modalApptDetail">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-calendar-alt" style="color:var(--primary);margin-right:.5rem;"></i>Appointment Details</h3><button class="modal-close" onclick="closeModal('modalApptDetail')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-calendar-alt" style="color:var(--primary);margin-right:.5rem;"></i>Appointment Details</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalApptDetail')"><span class="btn-text">&times;</span></button></div>
     <div id="apptDetailBody" style="font-size:1.3rem;line-height:2;"></div>
   </div>
 </div>
@@ -72,11 +72,11 @@ if($q) while($r=mysqli_fetch_assoc($q)) $all_appts[]=$r;
 <!-- Cancel Modal -->
 <div class="modal-bg" id="modalCancelAppt">
   <div class="modal-box">
-    <div class="modal-header"><h3 style="color:var(--danger);"><i class="fas fa-times-circle" style="margin-right:.5rem;"></i>Cancel Appointment</h3><button class="modal-close" onclick="closeModal('modalCancelAppt')">&times;</button></div>
+    <div class="modal-header"><h3 style="color:var(--danger);"><i class="fas fa-times-circle" style="margin-right:.5rem;"></i>Cancel Appointment</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalCancelAppt')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="confirmCancelAppt(event)">
       <input type="hidden" id="cancelApptId" name="id">
       <div class="form-group"><label>Reason for Cancellation</label><textarea name="reason" class="form-control" rows="3" required placeholder="Please provide a reason..."></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-danger" style="width:100%;justify-content:center;"><i class="fas fa-times"></i> Confirm Cancellation</button>
+      <button type="submit" class="btn-icon btn btn-danger" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-times"></i> Confirm Cancellation</span></button>
     </form>
   </div>
 </div>

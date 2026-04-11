@@ -31,12 +31,12 @@ include '../includes/_sidebar.php';
                 <p>Manage medical supply chains, vendor relations, and procurement lifecycle.</p>
             </div>
             <div style="display:flex; gap:1rem;">
-                <button class="adm-btn adm-btn-outline" style="background:var(--surface); border:1px solid var(--border);">
+                <button class="btn btn-outline" style="background:var(--surface); border:1px solid var(--border);"><span class="btn-text">
                     <i class="fas fa-truck"></i> Vendor Directory
-                </button>
-                <button class="adm-btn adm-btn-primary">
+                </span></button>
+                <button class="btn btn-primary"><span class="btn-text">
                     <i class="fas fa-plus"></i> New Purchase Order
-                </button>
+                </span></button>
             </div>
         </div>
 
@@ -78,7 +78,7 @@ include '../includes/_sidebar.php';
                 <div class="adm-card shadow-sm" style="border-radius:20px; height:fit-content;">
                     <div class="adm-card-header" style="padding: 1.8rem 2rem;">
                         <h3><i class="fas fa-history"></i> Stock Audit Trail</h3>
-                        <button class="adm-btn adm-btn-sm" style="background:transparent; color:var(--primary); padding:0; height:auto; width:auto;"><i class="fas fa-external-link-alt"></i></button>
+                        <button class="btn btn-primary btn btn-sm" style="background:transparent; color:var(--primary); padding:0; height:auto; width:auto;"><span class="btn-text"><i class="fas fa-external-link-alt"></i></span></button>
                     </div>
                     <div class="adm-card-body" style="padding: 0;">
                         <div id="transactionFeed" style="padding: 1.5rem; display:flex; flex-direction:column; gap:1.2rem; max-height:700px; overflow-y:auto;">
@@ -145,7 +145,7 @@ include '../includes/_sidebar.php';
                     <td><span class="stock-badge badge-${statusClass}">${po.status}</span></td>
                     <td style="font-weight:800; color:var(--text-primary);">$${parseFloat(po.total_amount).toLocaleString()}</td>
                     <td style="text-align:right;">
-                        <button class="adm-btn adm-btn-sm" style="background:var(--primary-light); color:var(--primary);"><i class="fas fa-eye"></i> Details</button>
+                        <button class="btn btn-primary btn btn-sm" style="background:var(--primary-light); color:var(--primary);"><span class="btn-text"><i class="fas fa-eye"></i> Details</span></button>
                     </td>
                 </tr>
             `;

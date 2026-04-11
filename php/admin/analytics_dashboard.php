@@ -56,12 +56,12 @@ include '../includes/_sidebar.php';
                         <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:0.25rem;">END DATE</label>
                         <input type="date" id="endDate" style="border:1px solid var(--border); padding:0.5rem; border-radius:var(--radius-sm);" value="<?= date('Y-m-d') ?>">
                     </div>
-                    <button id="applyFilters" class="adm-btn adm-btn-primary" style="margin-top:1.5rem;">
+                    <button id="applyFilters" class="btn btn-primary" style="margin-top:1.5rem;"><span class="btn-text">
                         <i class="fas fa-filter"></i>
-                    </button>
-                    <button class="adm-btn adm-btn-outline" onclick="window.print()" style="margin-top:1.5rem; background:transparent; border:1px solid var(--border);">
+                    </span></button>
+                    <button class="btn-icon btn btn-outline" onclick="window.print()" style="margin-top:1.5rem; background:transparent; border:1px solid var(--border);"><span class="btn-text">
                         <i class="fas fa-print"></i>
-                    </button>
+                    </span></button>
                 </div>
             </div>
         </div>

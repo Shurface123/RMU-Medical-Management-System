@@ -111,12 +111,12 @@ if (!isset($conn)) exit;
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
-                    <button class="adm-btn adm-btn-ghost" style="padding:1.4rem; border-radius:14px; font-weight:800; border-width:2px; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:1rem;" onclick="testEmergencySound()">
+                    <button class="btn btn-ghost" style="padding:1.4rem; border-radius:14px; font-weight:800; border-width:2px; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:1rem;" onclick="testEmergencySound()"><span class="btn-text">
                         <i class="fas fa-play-circle" style="font-size:1.6rem; color:var(--danger);"></i> TEST SIREN
-                    </button>
-                    <button class="adm-btn adm-btn-ghost" style="padding:1.4rem; border-radius:14px; font-weight:800; border-width:2px; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:1rem;" onclick="testMessageSound()">
+                    </span></button>
+                    <button class="btn btn-ghost" style="padding:1.4rem; border-radius:14px; font-weight:800; border-width:2px; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:1rem;" onclick="testMessageSound()"><span class="btn-text">
                         <i class="fas fa-play-circle" style="font-size:1.6rem; color:var(--primary);"></i> TEST CHIME
-                    </button>
+                    </span></button>
                 </div>
             </div>
         </div>

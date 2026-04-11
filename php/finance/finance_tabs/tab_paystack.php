@@ -22,8 +22,8 @@ $ps_failed    = (int)fval($conn,"SELECT COUNT(*) FROM paystack_transactions WHER
     <p>All online payments processed via Paystack — verification and reconciliation</p>
   </div>
   <div style="display:flex;gap:1rem;">
-    <button onclick="reconcilePaystack()" class="adm-btn adm-btn-primary"><i class="fas fa-scale-balanced"></i> Reconcile with Paystack</button>
-    <button onclick="exportPaystack()" class="adm-btn adm-btn-ghost"><i class="fas fa-file-csv"></i> Export CSV</button>
+    <button onclick="reconcilePaystack()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-scale-balanced"></i> Reconcile with Paystack</span></button>
+    <button onclick="exportPaystack()" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-file-csv"></i> Export CSV</span></button>
   </div>
 </div>
 
@@ -66,13 +66,13 @@ $ps_failed    = (int)fval($conn,"SELECT COUNT(*) FROM paystack_transactions WHER
   </select>
   <input type="date" id="psDateFrom" onchange="applyPsFilters()">
   <input type="date" id="psDateTo" onchange="applyPsFilters()">
-  <button onclick="clearPsFilters()" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-xmark"></i></button>
+  <button onclick="clearPsFilters()" class="btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
 </div>
 
 <!-- Discrepancy Alert -->
 <div id="psDiscrepancyAlert" style="display:none;" class="adm-alert adm-alert-warning" style="margin-bottom:1.5rem;">
   <i class="fas fa-triangle-exclamation"></i>
-  <div><strong>Discrepancies found</strong> — Some Paystack transactions don't match internal records. <button onclick="viewDiscrepancies()" class="adm-btn adm-btn-sm adm-btn-warning" style="margin-left:.5rem;">View Details</button></div>
+  <div><strong>Discrepancies found</strong> — Some Paystack transactions don't match internal records. <button onclick="viewDiscrepancies()" class="btn-icon btn btn-sm btn-warning" style="margin-left:.5rem;"><span class="btn-text">View Details</span></button></div>
 </div>
 
 <div class="adm-card">
@@ -113,8 +113,8 @@ $ps_failed    = (int)fval($conn,"SELECT COUNT(*) FROM paystack_transactions WHER
           </td>
           <td>
             <div class="adm-table-actions">
-              <button onclick="verifyPaystackTxn('<?=htmlspecialchars($ps['paystack_reference'])?>')" class="adm-btn adm-btn-sm adm-btn-ghost" title="Verify with Paystack API"><i class="fas fa-shield-check"></i></button>
-              <button onclick="viewRawPayload(<?=$ps['transaction_id']?>)" class="adm-btn adm-btn-sm" style="background:var(--surface-2);color:var(--text-secondary);" title="Raw Payload"><i class="fas fa-code"></i></button>
+              <button onclick="verifyPaystackTxn('<?=htmlspecialchars($ps['paystack_reference'])?>')" class="btn btn-sm btn-ghost" title="Verify with Paystack API"><span class="btn-text"><i class="fas fa-shield-check"></i></span></button>
+              <button onclick="viewRawPayload(<?=$ps['transaction_id']?>)" class="btn btn-primary btn btn-sm" style="background:var(--surface-2);color:var(--text-secondary);" title="Raw Payload"><span class="btn-text"><i class="fas fa-code"></i></span></button>
             </div>
           </td>
         </tr>
@@ -130,7 +130,7 @@ $ps_failed    = (int)fval($conn,"SELECT COUNT(*) FROM paystack_transactions WHER
   <div class="adm-modal-content" style="max-width:700px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-code"></i> Paystack Raw Payload</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalRawPayload')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalRawPayload')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <pre id="rawPayloadContent" style="background:var(--surface-2);padding:1.5rem;border-radius:10px;font-size:1.15rem;overflow:auto;max-height:400px;white-space:pre-wrap;word-break:break-all;"></pre>

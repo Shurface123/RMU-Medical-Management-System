@@ -31,9 +31,9 @@ $occup_rate  = $total_beds > 0 ? round(($occup_beds / $total_beds) * 100) : 0;
                 <h1>Bed Management</h1>
                 <p>Monitor real-time bed availability across all wards and manage patient assignments.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/bed/add-bed.php" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/bed/add-bed.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-plus"></i> Add Bed
-            </a>
+            </span></a>
         </div>
 
         <?php if ($occup_rate >= 90): ?>
@@ -150,13 +150,13 @@ $occup_rate  = $total_beds > 0 ? round(($occup_beds / $total_beds) * 100) : 0;
                             <td>
                                 <div class="adm-table-actions">
                                     <a href="/RMU-Medical-Management-System/php/bed/update.php?id=<?php echo $bed['id']; ?>"
-                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i></a>
+                                       class="btn btn-warning btn-sm"><span class="btn-text"><i class="fas fa-edit"></i></span></a>
                                     <?php if ($bed['status'] === 'Available'): ?>
                                     <a href="/RMU-Medical-Management-System/php/bed/assign.php?bed_id=<?php echo $bed['id']; ?>"
-                                       class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-user-plus"></i> Assign</a>
+                                       class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-user-plus"></i> Assign</span></a>
                                     <?php elseif ($bed['status'] === 'Occupied'): ?>
                                     <a href="/RMU-Medical-Management-System/php/bed/discharge.php?bed_id=<?php echo $bed['id']; ?>"
-                                       class="adm-btn adm-btn-danger adm-btn-sm" onclick="return confirm('Discharge patient from this bed?');"><i class="fas fa-sign-out-alt"></i> Discharge</a>
+                                       class="btn-icon btn btn-danger btn-sm" onclick="return confirm('Discharge patient from this bed?');"><span class="btn-text"><i class="fas fa-sign-out-alt"></i> Discharge</span></a>
                                     <?php endif; ?>
                                 </div>
                             </td>

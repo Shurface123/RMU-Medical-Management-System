@@ -151,7 +151,7 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
     <a href="patient_dashboard.php?tab=settings" class="adm-nav-item"><i class="fas fa-gear"></i><span>Settings</span></a>
   </nav>
   <div class="adm-sidebar-footer">
-    <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text"><i class="fas fa-right-from-bracket"></i><span>Logout</span></span></a>
   </div>
 </aside>
 <div class="adm-overlay" id="admOverlay"></div>
@@ -165,7 +165,7 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
     <div class="adm-topbar-right">
       <span style="font-size:1.2rem;color:var(--text-secondary);"><?=date('D, d M Y')?></span>
       <?php $bd=$unread>0?'flex':'none'; $bl=$unread>99?'99+':$unread; $bc=$unread>0?'adm-notif-btn has-unread':'adm-notif-btn'; ?>
-      <div style="position:relative;"><button id="rmuBellBtn" class="<?=$bc?>" title="Notifications"><i class="fas fa-bell"></i><span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span></button></div>
+      <div style="position:relative;"><button id="rmuBellBtn" class="btn btn-primary <?=$bc?>" title="Notifications"><span class="btn-text"><i class="fas fa-bell"></i><span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span></span></button></div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
       <div class="adm-avatar" style="background:var(--role-accent);"><?=strtoupper(substr($_SESSION['user_name']??$_SESSION['name']??'P',0,1))?></div>
     </div>
@@ -184,13 +184,13 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
 
     <!-- Filter Tabs -->
     <div class="filter-tabs">
-      <button class="ftab active" onclick="filterAppts('all',this)">All</button>
-      <button class="ftab" onclick="filterAppts('today',this)">Today</button>
-      <button class="ftab" onclick="filterAppts('Pending',this)">Pending</button>
-      <button class="ftab" onclick="filterAppts('Confirmed',this)">Confirmed</button>
-      <button class="ftab" onclick="filterAppts('Rescheduled',this)">Rescheduled</button>
-      <button class="ftab" onclick="filterAppts('Cancelled',this)">Cancelled</button>
-      <button class="ftab" onclick="filterAppts('Completed',this)">Completed</button>
+      <button class="btn btn-primary ftab active" onclick="filterAppts('all',this)"><span class="btn-text">All</span></button>
+      <button class="btn btn-primary ftab" onclick="filterAppts('today',this)"><span class="btn-text">Today</span></button>
+      <button class="btn btn-warning btn-icon ftab" onclick="filterAppts('Pending',this)"><span class="btn-text">Pending</span></button>
+      <button class="btn btn-success btn-icon ftab" onclick="filterAppts('Confirmed',this)"><span class="btn-text">Confirmed</span></button>
+      <button class="btn btn-primary ftab" onclick="filterAppts('Rescheduled',this)"><span class="btn-text">Rescheduled</span></button>
+      <button class="btn btn-ghost ftab" onclick="filterAppts('Cancelled',this)"><span class="btn-text">Cancelled</span></button>
+      <button class="btn btn-primary ftab" onclick="filterAppts('Completed',this)"><span class="btn-text">Completed</span></button>
     </div>
 
     <!-- Appointment Cards -->
@@ -198,7 +198,7 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
       <div class="adm-card" style="text-align:center;padding:4rem;">
         <i class="fas fa-calendar-xmark" style="font-size:3rem;opacity:.25;display:block;margin-bottom:1rem;"></i>
         <p style="color:var(--text-muted);font-size:1.3rem;">No appointments found.</p>
-        <a href="patient_dashboard.php?tab=book" class="adm-btn adm-btn-primary" style="margin-top:1rem;">Book an Appointment</a>
+        <a href="patient_dashboard.php?tab=book" class="btn-icon btn btn-primary" style="margin-top:1rem;"><span class="btn-text">Book an Appointment</span></a>
       </div>
     <?php else: foreach($appointments as $ap):
       $bStatus = $ap['status'] ?? 'Pending';
@@ -234,8 +234,8 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;">
           <span class="adm-badge adm-badge-<?=$sc?>" style="font-size:1.2rem;"><?=$bStatus?></span>
           <?php if($can_act):?>
-          <button onclick="openReschedule(<?=$ap['id']?>,<?=json_encode('Dr. '.$ap['doctor_name'])?>,<?=$ap['doctor_id']?>)" class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-calendar-pen"></i> Reschedule</button>
-          <button onclick="openCancel(<?=$ap['id']?>,<?=json_encode('Dr. '.$ap['doctor_name'])?>)" class="adm-btn adm-btn-danger adm-btn-sm"><i class="fas fa-xmark"></i> Cancel</button>
+          <button onclick="openReschedule(<?=$ap['id']?>,<?=json_encode('Dr. '.$ap['doctor_name'])?>,<?=$ap['doctor_id']?>)" class="btn btn-warning btn-sm"><span class="btn-text"><i class="fas fa-calendar-pen"></i> Reschedule</span></button>
+          <button onclick="openCancel(<?=$ap['id']?>,<?=json_encode('Dr. '.$ap['doctor_name'])?>)" class="btn btn-danger btn-sm"><span class="btn-text"><i class="fas fa-xmark"></i> Cancel</span></button>
           <?php endif;?>
         </div>
       </div>
@@ -248,7 +248,7 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
 <!-- Reschedule Modal -->
 <div class="modal-bg" id="modalReschedule">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-calendar-pen" style="color:var(--warning);"></i> Request Reschedule</h3><button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-calendar-pen" style="color:var(--warning);"></i> Request Reschedule</h3><button class="btn btn-primary modal-close" onclick="this.closest('.modal-bg').classList.remove('open')"><span class="btn-text">&times;</span></button></div>
     <p id="rsDoctorName" style="font-weight:600;font-size:1.4rem;margin-bottom:1.5rem;"></p>
     <form method="POST">
       <input type="hidden" name="action" value="reschedule">
@@ -256,7 +256,7 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
       <div class="form-group"><label>Preferred New Date</label><input type="date" name="new_date" class="form-control" min="<?=date('Y-m-d')?>" required></div>
       <div class="form-group"><label>Preferred New Time</label><input type="time" name="new_time" class="form-control" required></div>
       <div class="form-group"><label>Reason</label><textarea name="reason" class="form-control" rows="3" placeholder="Why do you need to reschedule?" required></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Send Reschedule Request</button>
+      <button type="submit" class="btn btn-warning" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Send Reschedule Request</span></button>
     </form>
   </div>
 </div>
@@ -264,14 +264,14 @@ $stat_pending  = count(array_filter($appointments, fn($a)=>$a['status']==='Pendi
 <!-- Cancel Modal -->
 <div class="modal-bg" id="modalCancel">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-xmark" style="color:var(--danger);"></i> Cancel Appointment</h3><button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-xmark" style="color:var(--danger);"></i> Cancel Appointment</h3><button class="btn btn-primary modal-close" onclick="this.closest('.modal-bg').classList.remove('open')"><span class="btn-text">&times;</span></button></div>
     <p id="cancelDoctorName" style="font-weight:600;font-size:1.4rem;margin-bottom:.8rem;"></p>
     <div style="background:var(--danger-light);color:var(--danger);border-radius:10px;padding:1rem 1.4rem;margin-bottom:1.2rem;font-size:1.2rem;"><i class="fas fa-triangle-exclamation"></i> Your doctor will be notified of this cancellation.</div>
     <form method="POST">
       <input type="hidden" name="action" value="cancel">
       <input type="hidden" name="appointment_id" id="cancelApptIdLegacy">
       <div class="form-group"><label>Cancellation Reason</label><textarea name="reason" class="form-control" rows="3" placeholder="Please tell us why you're cancelling…" required></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-danger" style="width:100%;justify-content:center;"><i class="fas fa-xmark"></i> Confirm Cancellation</button>
+      <button type="submit" class="btn-icon btn btn-danger" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-xmark"></i> Confirm Cancellation</span></button>
     </form>
   </div>
 </div>

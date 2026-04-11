@@ -30,9 +30,9 @@ $maint_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulan
                 <h1>Ambulance Fleet Management</h1>
                 <p>Track ambulance availability, maintenance schedules, and emergency dispatch records.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/Ambulence/add-ambulence.php" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/Ambulence/add-ambulence.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-plus"></i> Register Ambulance
-            </a>
+            </span></a>
         </div>
 
         <?php
@@ -105,10 +105,10 @@ $maint_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulan
                 </div>
                 <div style="display:flex;gap:.5rem;margin-top:1rem;">
                     <a href="/RMU-Medical-Management-System/php/Ambulence/update.php?id=<?php echo $amb['id']; ?>"
-                       class="adm-btn adm-btn-warning adm-btn-sm" style="flex:1;text-align:center;"><i class="fas fa-edit"></i> Edit</a>
+                       class="btn btn-warning btn-sm" style="flex:1;text-align:center;"><span class="btn-text"><i class="fas fa-edit"></i> Edit</span></a>
                     <a href="/RMU-Medical-Management-System/php/Ambulence/Delete.php?id=<?php echo $amb['id']; ?>"
-                       class="adm-btn adm-btn-danger adm-btn-sm"
-                       onclick="return confirm('Remove this ambulance from fleet?');"><i class="fas fa-trash"></i></a>
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Remove this ambulance from fleet?');"><span class="btn-text"><i class="fas fa-trash"></i></span></a>
                 </div>
             </div>
             <?php endwhile;
@@ -116,7 +116,7 @@ $maint_amb  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM ambulan
             <div class="adm-card" style="padding:3rem;text-align:center;grid-column:1/-1;">
                 <i class="fas fa-ambulance" style="font-size:3rem;color:var(--text-muted);margin-bottom:1rem;"></i>
                 <p style="color:var(--text-muted);">No ambulances registered yet.</p>
-                <a href="add-ambulence.php" class="adm-btn adm-btn-primary" style="margin-top:1rem;"><i class="fas fa-plus"></i> Register First Ambulance</a>
+                <a href="add-ambulence.php" class="btn btn-primary" style="margin-top:1rem;"><span class="btn-text"><i class="fas fa-plus"></i> Register First Ambulance</span></a>
             </div>
             <?php endif; ?>
         </div>

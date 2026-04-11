@@ -36,15 +36,15 @@ $pendingApprovals = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c
                 <p>Monitor staff performance, manage duty rosters, and handle administrative requests.</p>
             </div>
             <div style="display:flex; gap:1rem;">
-                <a href="staff_approvals.php" class="adm-btn adm-btn-outline" style="background:var(--surface); border:1px solid var(--border); position:relative;">
+                <a href="staff_approvals.php" class="btn-icon btn btn-outline" style="background:var(--surface); border:1px solid var(--border); position:relative;"><span class="btn-text">
                     <i class="fas fa-user-check"></i> Pending Approvals
                     <?php if($pendingApprovals > 0): ?>
                         <span style="position:absolute; top:-5px; right:-5px; background:var(--danger); color:white; width:20px; height:20px; border-radius:50%; font-size:0.7rem; display:flex; align-items:center; justify-content:center; border:2px solid white;"><?php echo $pendingApprovals; ?></span>
                     <?php endif; ?>
-                </a>
-                <button class="adm-btn adm-btn-primary">
+                </span></a>
+                <button class="btn btn-primary"><span class="btn-text">
                     <i class="fas fa-user-plus"></i> Onboard New Staff
-                </button>
+                </span></button>
             </div>
         </div>
 
@@ -126,9 +126,9 @@ $pendingApprovals = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c
                         </table>
                     </div>
                     <div style="padding: 1.5rem; border-top: 1px solid var(--border); background: var(--bg-surface);">
-                        <button class="adm-btn" style="width:100%; border:1px solid var(--border); justify-content:center;">
+                        <button class="btn btn-primary btn" style="width:100%; border:1px solid var(--border); justify-content:center;"><span class="btn-text">
                             <i class="fas fa-calendar-alt"></i> Detailed Schedule
-                        </button>
+                        </span></button>
                     </div>
                 </div>
             </div>

@@ -11,7 +11,7 @@ $unread_count = count(array_filter($all_notifs, fn($n) => !$n['is_read']));
             <?php if($unread_count>0): ?><span class="badge badge-urgent" style="font-size:1.2rem;margin-left:.8rem;"><?=$unread_count?> new</span><?php endif; ?>
         </h2>
         <?php if($unread_count>0): ?>
-        <button class="btn btn-outline btn-sm" onclick="markAllRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
+        <button class="btn-icon btn btn-outline btn-sm" onclick="markAllRead()"><span class="btn-text"><i class="fas fa-check-double"></i> Mark All Read</span></button>
         <?php endif; ?>
     </div>
 

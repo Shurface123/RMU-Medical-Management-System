@@ -17,12 +17,12 @@
       </div>
     </div>
     <div style="text-align:right;position:relative;z-index:1;">
-      <button onclick="showTab('appointments',document.querySelector('.adm-nav-item[onclick*=appointments]'))" class="adm-btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);margin:.3rem;">
+      <button onclick="showTab('appointments',document.querySelector('.adm-nav-item[onclick*=appointments]'))" class="btn btn-primary btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);margin:.3rem;"><span class="btn-text">
         <i class="fas fa-calendar-check"></i> Appointments
-      </button>
-      <button onclick="showTab('prescriptions',document.querySelector('.adm-nav-item[onclick*=prescriptions]'))" class="adm-btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);margin:.3rem;">
+      </span></button>
+      <button onclick="showTab('prescriptions',document.querySelector('.adm-nav-item[onclick*=prescriptions]'))" class="btn btn-primary btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);margin:.3rem;"><span class="btn-text">
         <i class="fas fa-prescription-bottle-medical"></i> New Rx
-      </button>
+      </span></button>
     </div>
   </div>
 
@@ -73,7 +73,7 @@
           <h3><i class="fas fa-calendar-day"></i> Today's Schedule
             <span class="adm-badge adm-badge-primary" style="margin-left:.5rem;"><?=$stats['today_appts']?></span>
           </h3>
-          <a href="#" onclick="showTab('appointments',document.querySelector('.adm-nav-item[onclick*=appointments]'))" class="adm-btn adm-btn-primary adm-btn-sm">View All</a>
+          <a href="#" onclick="showTab('appointments',document.querySelector('.adm-nav-item[onclick*=appointments]'))" class="btn-icon btn btn-primary btn-sm"><span class="btn-text">View All</span></a>
         </div>
         <div style="padding:.5rem 1.5rem;">
         <?php $today_list=array_filter($appointments,fn($a)=>$a['appointment_date']===$today); ?>
@@ -154,15 +154,15 @@
       <div class="adm-card">
         <div class="adm-card-header"><h3><i class="fas fa-bolt"></i> Quick Actions</h3></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:1.5rem;">
-          <button onclick="openModal('modalNewRx')" class="adm-btn adm-btn-primary" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;">
+          <button onclick="openModal('modalNewRx')" class="btn btn-primary" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;"><span class="btn-text">
             <i class="fas fa-prescription-bottle-medical" style="font-size:1.5rem;"></i><span style="font-size:1.1rem;">New Prescription</span>
-          </button>
-          <button onclick="openModal('modalNewRecord')" class="adm-btn adm-btn-success" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;">
+          </span></button>
+          <button onclick="openModal('modalNewRecord')" class="btn btn-success" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;"><span class="btn-text">
             <i class="fas fa-file-circle-plus" style="font-size:1.5rem;"></i><span style="font-size:1.1rem;">Add Record</span>
-          </button>
-          <button onclick="showTab('reports',document.querySelector('.adm-nav-item[onclick*=reports]'))" class="adm-btn adm-btn-ghost" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;">
+          </span></button>
+          <button onclick="showTab('reports',document.querySelector('.adm-nav-item[onclick*=reports]'))" class="btn-icon btn btn-ghost" style="flex-direction:column;height:auto;padding:1.2rem .8rem;text-align:center;gap:.5rem;"><span class="btn-text">
             <i class="fas fa-file-export" style="font-size:1.5rem;"></i><span style="font-size:1.1rem;">Generate Report</span>
-          </button>
+          </span></button>
         </div>
       </div>
 

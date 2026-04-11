@@ -65,8 +65,8 @@ $report_defs = array_merge($report_defs, [
             <input type="date" id="rptFromDate" class="form-control" style="width:auto;" value="<?=date('Y-m-01')?>">
             <span>to</span>
             <input type="date" id="rptToDate" class="form-control" style="width:auto;" value="<?=date('Y-m-d')?>">
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('rptFromDate').value='<?=date('Y-m-d',strtotime('-7 days'))?>';document.getElementById('rptToDate').value='<?=date('Y-m-d')?>';">Last 7 Days</button>
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('rptFromDate').value='<?=date('Y-m-01')?>';document.getElementById('rptToDate').value='<?=date('Y-m-d')?>';">This Month</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('rptFromDate').value='<?=date('Y-m-d',strtotime('-7 days'))?>';document.getElementById('rptToDate').value='<?=date('Y-m-d')?>';"><span class="btn-text">Last 7 Days</span></button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('rptFromDate').value='<?=date('Y-m-01')?>';document.getElementById('rptToDate').value='<?=date('Y-m-d')?>';"><span class="btn-text">This Month</span></button>
         </div>
     </div>
 
@@ -85,12 +85,12 @@ $report_defs = array_merge($report_defs, [
                     </div>
                 </div>
                 <div style="display:flex;gap:1rem;">
-                    <button class="btn btn-primary btn-sm" style="flex:1;" onclick="generateReport('<?=e($rpt['key'])?>','<?=e($rpt['label'])?>','html')">
+                    <button class="btn-icon btn btn-primary btn-sm" style="flex:1;" onclick="generateReport('<?=e($rpt['key'])?>','<?=e($rpt['label'])?>','html')"><span class="btn-text">
                         <i class="fas fa-eye"></i> View
-                    </button>
-                    <button class="btn btn-outline btn-sm" style="flex:1;" onclick="generateReport('<?=e($rpt['key'])?>','<?=e($rpt['label'])?>','csv')">
+                    </span></button>
+                    <button class="btn-icon btn btn-outline btn-sm" style="flex:1;" onclick="generateReport('<?=e($rpt['key'])?>','<?=e($rpt['label'])?>','csv')"><span class="btn-text">
                         <i class="fas fa-download"></i> CSV
-                    </button>
+                    </span></button>
                 </div>
             </div>
         </div>
@@ -102,7 +102,7 @@ $report_defs = array_merge($report_defs, [
         <div class="card">
             <div class="card-header">
                 <h3 id="reportViewerTitle"><i class="fas fa-table"></i> Report</h3>
-                <button class="btn btn-outline btn-sm" onclick="document.getElementById('reportViewer').style.display='none'"><i class="fas fa-times"></i> Close</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('reportViewer').style.display='none'"><span class="btn-text"><i class="fas fa-times"></i> Close</span></button>
             </div>
             <div class="card-body" id="reportViewerBody" style="overflow-x:auto;">
                 <div id="reportLoading" style="text-align:center;padding:4rem;color:var(--text-muted);">

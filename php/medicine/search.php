@@ -210,7 +210,7 @@
                 <h2>MANAGE <b>MEDICINE</b></h2>
             </div>
             <div style="margin-left: 81%; margin-top: 3%;">
-                <button><a href="/php/medicine/add-medicine.php">ADD MEDICINE</a></button>
+                <button class="btn btn-primary"><span class="btn-text"><a href="/php/medicine/add-medicine.php">ADD MEDICINE</a></span></button>
             </div>
         </div>
     </div>
@@ -253,8 +253,8 @@
                             <td><?php echo $Patient_data['Quantity'];  ?></td>
                             <td style="width: 140px;">
 
-                                <button> <a href="/php/medicine/update.php?M_Code=<?php echo $Patient_data['M_Code'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/medicine/Delete.php?M_Code=<?php echo $Patient_data['M_Code']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
+                                <button class="btn btn-primary"><span class="btn-text"> <a href="/php/medicine/update.php?M_Code=<?php echo $Patient_data['M_Code'];  ?>" class="btn btn-success"><span class="btn-text"><b>UPDATE</b></span></a></span></button>
+                                <button class="btn btn-danger btn-sm btn-icon"><span class="btn-text"><a href="/php/medicine/Delete.php?M_Code=<?php echo $Patient_data['M_Code']; ?>" class="btn-icon btn btn-danger"><span class="btn-text"><b>DELETE</b></span></a></span></button>
 
 
                             </td>

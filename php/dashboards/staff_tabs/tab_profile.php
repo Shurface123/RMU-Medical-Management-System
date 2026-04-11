@@ -72,7 +72,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
     <!-- Sub-tabs for Profile Sections -->
     <div class="filter-tabs" style="margin-bottom:2rem;">
         <?php foreach(['personal'=>'Personal Info','documents'=>'Qualifications & Docs','security'=>'Security'] as $k=>$l): ?>
-        <button class="ftab <?=$k==='personal'?'active':''?>" onclick="showProfileSec('psec-<?=$k?>',this)"><?=$l?></button>
+        <button class="btn btn-primary ftab <?=$k==='personal'?'active':''?>" onclick="showProfileSec('psec-<?=$k?>',this)"><span class="btn-text"><?=$l?></span></button>
         <?php endforeach; ?>
     </div>
 
@@ -81,7 +81,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
         <div class="card">
             <div class="card-header">
                 <h3><i class="fas fa-user"></i> Personal Information</h3>
-                <button class="btn btn-primary btn-sm" onclick="document.getElementById('btnSavePersonal').click()"><i class="fas fa-save"></i> Save Changes</button>
+                <button class="btn btn-primary btn-sm" onclick="document.getElementById('btnSavePersonal').click()"><span class="btn-text"><i class="fas fa-save"></i> Save Changes</span></button>
             </div>
             <div class="card-body">
                 <form id="frmPersonal" onsubmit="event.preventDefault();savePersonal();">
@@ -147,7 +147,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
         <div class="card" style="margin-bottom:2rem;">
             <div class="card-header">
                 <h3><i class="fas fa-graduation-cap"></i> Qualifications (<?=count($quals)?>)</h3>
-                <button class="btn btn-primary btn-sm" onclick="openModal('addQualModal')"><i class="fas fa-plus"></i> Add</button>
+                <button class="btn btn-primary btn-sm" onclick="openModal('addQualModal')"><span class="btn-text"><i class="fas fa-plus"></i> Add</span></button>
             </div>
             <?php if(empty($quals)): ?>
             <div class="card-body"><p style="text-align:center;color:var(--text-muted);">No qualifications added yet.</p></div>
@@ -160,8 +160,8 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
                     <td><strong><?=e($q['certificate_name'])?></strong></td>
                     <td><?=e($q['institution']??'—')?></td>
                     <td><?=$q['year_awarded']??'—'?></td>
-                    <td><?=$q['file_path']?'<a href="/RMU-Medical-Management-System/'.e($q['file_path']).'" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-download"></i> Download</a>':'<span style="color:var(--text-muted);">No file</span>'?></td>
-                    <td><button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="deleteQual(<?=$q['id']?>)"><i class="fas fa-trash"></i></button></td>
+                    <td><?=$q['file_path']?'<a href="/RMU-Medical-Management-System/'.e($q['file_path']).'" target="_blank" class="btn-icon btn btn-outline btn-sm"><span class="btn-text"><i class="fas fa-download"></i> Download</span></a>':'<span style="color:var(--text-muted);">No file</span>'?></td>
+                    <td><button class="btn btn-primary btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="deleteQual(<?=$q['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -172,7 +172,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
         <div class="card">
             <div class="card-header">
                 <h3><i class="fas fa-folder-open"></i> Documents (<?=count($docs)?>)</h3>
-                <button class="btn btn-primary btn-sm" onclick="openModal('addDocModal')"><i class="fas fa-upload"></i> Upload</button>
+                <button class="btn btn-primary btn-sm" onclick="openModal('addDocModal')"><span class="btn-text"><i class="fas fa-upload"></i> Upload</span></button>
             </div>
             <?php if(empty($docs)): ?>
             <div class="card-body"><p style="text-align:center;color:var(--text-muted);">No documents uploaded yet.</p></div>
@@ -186,8 +186,8 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
                     <td><?=e(ucfirst($d['document_type']??'—'))?></td>
                     <td><?=date('d M Y',strtotime($d['uploaded_at']))?></td>
                     <td style="display:flex;gap:.5rem;">
-                        <a href="/RMU-Medical-Management-System/<?=e($d['file_path'])?>" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
-                        <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="deleteDoc(<?=$d['id']?>)"><i class="fas fa-trash"></i></button>
+                        <a href="/RMU-Medical-Management-System/<?=e($d['file_path'])?>" target="_blank" class="btn btn-outline btn-sm"><span class="btn-text"><i class="fas fa-eye"></i></span></a>
+                        <button class="btn btn-primary btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="deleteDoc(<?=$d['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -212,7 +212,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
                             <span id="passStrengthLabel" style="font-size:1.1rem;color:var(--text-muted);"></span>
                         </div>
                         <div class="form-group"><label>Confirm New Password *</label><input name="confirm_password" type="password" class="form-control" required></div>
-                        <button type="submit" class="btn btn-primary btn-wide" id="btnPassword"><i class="fas fa-lock"></i> Update Password</button>
+                        <button type="submit" class="btn btn-primary btn-wide" id="btnPassword"><span class="btn-text"><i class="fas fa-lock"></i> Update Password</span></button>
                     </form>
                 </div>
             </div>
@@ -221,7 +221,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
             <div class="card">
                 <div class="card-header">
                     <h3><i class="fas fa-desktop"></i> Active Sessions (<?=count($sessions)?>)</h3>
-                    <button class="btn btn-outline btn-sm btn-danger" onclick="logoutAllSessions()"><i class="fas fa-sign-out-alt"></i> Logout All Others</button>
+                    <button class="btn btn-outline btn-sm btn-danger" onclick="logoutAllSessions()"><span class="btn-text"><i class="fas fa-sign-out-alt"></i> Logout All Others</span></button>
                 </div>
                 <div class="card-body">
                     <?php if(empty($sessions)): ?>
@@ -237,7 +237,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
                         <?php if($is_cur): ?>
                         <span class="badge badge-done">Current</span>
                         <?php else: ?>
-                        <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="logoutSession(<?=$s['session_id']?>)"><i class="fas fa-times"></i></button>
+                        <button class="btn btn-primary btn btn-sm" style="background:var(--danger-light);color:var(--danger);" onclick="logoutSession(<?=$s['session_id']?>)"><span class="btn-text"><i class="fas fa-times"></i></span></button>
                         <?php endif; ?>
                     </div>
                     <?php endforeach; endif; ?>
@@ -252,7 +252,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-graduation-cap" style="color:var(--role-accent);"></i> Add Qualification</h3>
-            <button class="modal-close" onclick="closeModal('addQualModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('addQualModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmQual" onsubmit="event.preventDefault();saveQual();">
             <input type="hidden" name="action" value="save_qualification">
@@ -262,7 +262,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
                 <div class="form-group"><label>Year Awarded *</label><input name="year_awarded" type="number" class="form-control" required min="1960" max="<?=date('Y')?>"></div>
             </div>
             <div class="form-group"><label>Upload Certificate / Document</label><input name="document" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnQual"><i class="fas fa-plus"></i> Add Qualification</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnQual"><span class="btn-text"><i class="fas fa-plus"></i> Add Qualification</span></button>
         </form>
     </div>
 </div>
@@ -272,7 +272,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
     <div class="modal-box" style="max-width:420px;">
         <div class="modal-header">
             <h3><i class="fas fa-upload" style="color:var(--role-accent);"></i> Upload Document</h3>
-            <button class="modal-close" onclick="closeModal('addDocModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('addDocModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmDoc" onsubmit="event.preventDefault();saveDoc();">
             <input type="hidden" name="action" value="upload_document">
@@ -285,7 +285,7 @@ $age = $dob ? floor((time() - strtotime($dob)) / (365.25 * 24 * 3600)) : '—';
                 </select>
             </div>
             <div class="form-group"><label>File *</label><input name="document" type="file" class="form-control" required accept=".pdf,.jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnDoc"><i class="fas fa-upload"></i> Upload Document</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnDoc"><span class="btn-text"><i class="fas fa-upload"></i> Upload Document</span></button>
         </form>
     </div>
 </div>

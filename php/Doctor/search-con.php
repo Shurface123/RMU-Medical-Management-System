@@ -324,7 +324,7 @@
                 <h2>MANAGE <b>DOCTOR</b></h2>
             </div>
             <div style="margin-left: 83%; margin-top: 3%;">
-                <button class="docadd"><a href="/php/Doctor/add-doctor.php">ADD DOCTOR </a></button>
+                <button class="btn btn-primary docadd"><span class="btn-text"><a href="/php/Doctor/add-doctor.php">ADD DOCTOR </a></span></button>
             </div>
         </div>
     </div>
@@ -368,8 +368,8 @@
                             <td><?php echo $Patient_data['Work_Day'];  ?></td>
                             <td><?php echo $Patient_data['Speciality'];  ?></td>
                             <td style="width: 140px;">
-                                <button class="tabbutton" style="background:      rgba(178, 83, 64, 0.819);"><a href="/php/Doctor/update-doctor.php?D_ID=<?php echo $Patient_data['D_ID']; ?>" class="btn btn-danger"><b>UPDATE</b></a></button>
-                                <button class="tabbutton" style="background:      rgba(59, 104, 39, 0.819 );"> <a href="/php/Doctor/Delete.php?D_ID=<?php echo $Patient_data['D_ID'];  ?>" class="btn btn-success"><b>DELETE</b></a></button> &nbsp;
+                                <button class="btn btn-primary tabbutton" style="background:      rgba(178, 83, 64, 0.819);"><span class="btn-text"><a href="/php/Doctor/update-doctor.php?D_ID=<?php echo $Patient_data['D_ID']; ?>" class="btn btn-danger"><span class="btn-text"><b>UPDATE</b></span></a></span></button>
+                                <button class="btn btn-danger btn-sm btn-icon tabbutton" style="background:      rgba(59, 104, 39, 0.819 );"><span class="btn-text"> <a href="/php/Doctor/Delete.php?D_ID=<?php echo $Patient_data['D_ID'];  ?>" class="btn-icon btn btn-success"><span class="btn-text"><b>DELETE</b></span></a></span></button> &nbsp;
 
 
                             </td>

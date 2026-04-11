@@ -3,19 +3,19 @@
   <div class="sec-header">
     <h2><i class="fas fa-calendar-check"></i> Appointments Management</h2>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap;">
-      <button onclick="document.getElementById('apptCalView').style.display=document.getElementById('apptCalView').style.display==='none'?'block':'none'" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-calendar"></i> Calendar View</button>
+      <button onclick="document.getElementById('apptCalView').style.display=document.getElementById('apptCalView').style.display==='none'?'block':'none'" class="btn-icon btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-calendar"></i> Calendar View</span></button>
     </div>
   </div>
 
   <!-- Filter Tabs -->
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterAppts('all',this)">All</button>
-    <button class="ftab" onclick="filterAppts('Pending',this)">Pending</button>
-    <button class="ftab" onclick="filterAppts('Confirmed',this)">Confirmed</button>
-    <button class="ftab" onclick="filterAppts('Rescheduled',this)">Rescheduled</button>
-    <button class="ftab" onclick="filterAppts('Completed',this)">Completed</button>
-    <button class="ftab" onclick="filterAppts('Cancelled',this)">Cancelled</button>
-    <button class="ftab" onclick="filterAppts('today',this)">Today</button>
+    <button class="btn btn-primary ftab active" onclick="filterAppts('all',this)"><span class="btn-text">All</span></button>
+    <button class="btn btn-warning btn-icon ftab" onclick="filterAppts('Pending',this)"><span class="btn-text">Pending</span></button>
+    <button class="btn btn-success btn-icon ftab" onclick="filterAppts('Confirmed',this)"><span class="btn-text">Confirmed</span></button>
+    <button class="btn btn-primary ftab" onclick="filterAppts('Rescheduled',this)"><span class="btn-text">Rescheduled</span></button>
+    <button class="btn btn-primary ftab" onclick="filterAppts('Completed',this)"><span class="btn-text">Completed</span></button>
+    <button class="btn btn-ghost ftab" onclick="filterAppts('Cancelled',this)"><span class="btn-text">Cancelled</span></button>
+    <button class="btn btn-primary ftab" onclick="filterAppts('today',this)"><span class="btn-text">Today</span></button>
   </div>
 
   <!-- Search -->
@@ -72,13 +72,13 @@
           <td><span class="adm-badge adm-badge-<?=$sc?>"><?=$ap['status']?></span></td>
           <td>
             <div class="action-btns">
-              <button onclick='viewAppt(<?=$appt_json?>)' class="adm-btn adm-btn-ghost adm-btn-sm" title="View"><i class="fas fa-eye"></i></button>
+              <button onclick='viewAppt(<?=$appt_json?>)' class="btn btn-ghost btn-sm" title="View"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
               <?php if($can_act):?>
               <?php if($ap['status']==='Pending'):?>
-              <button onclick="approveAppt(<?=$ap['id']?>,this)" class="adm-btn adm-btn-success adm-btn-sm" title="Approve"><i class="fas fa-check"></i></button>
+              <button onclick="approveAppt(<?=$ap['id']?>,this)" class="btn btn-success btn-sm" title="Approve"><span class="btn-text"><i class="fas fa-check"></i></span></button>
               <?php endif;?>
-              <button onclick='rescheduleAppt(<?=$ap["id"]?>,<?=json_encode($ap["patient_name"])?>)' class="adm-btn adm-btn-warning adm-btn-sm" title="Reschedule"><i class="fas fa-calendar-pen"></i></button>
-              <button onclick='cancelAppt(<?=$ap["id"]?>,<?=json_encode($ap["patient_name"])?>)' class="adm-btn adm-btn-danger adm-btn-sm" title="Cancel"><i class="fas fa-xmark"></i></button>
+              <button onclick='rescheduleAppt(<?=$ap["id"]?>,<?=json_encode($ap["patient_name"])?>)' class="btn btn-warning btn-sm" title="Reschedule"><span class="btn-text"><i class="fas fa-calendar-pen"></i></span></button>
+              <button onclick='cancelAppt(<?=$ap["id"]?>,<?=json_encode($ap["patient_name"])?>)' class="btn btn-danger btn-sm" title="Cancel"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
               <?php endif;?>
             </div>
           </td>
@@ -95,7 +95,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-calendar-check" style="color:var(--role-accent);"></i> Appointment Details</h3>
-      <button class="modal-close" onclick="closeModal('modalViewAppt')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalViewAppt')"><span class="btn-text">&times;</span></button>
     </div>
     <div id="apptDetail" style="font-size:1.3rem;line-height:2;"></div>
   </div>
@@ -106,13 +106,13 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-calendar-pen" style="color:var(--warning);"></i> Reschedule Appointment</h3>
-      <button class="modal-close" onclick="closeModal('modalReschedule')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalReschedule')"><span class="btn-text">&times;</span></button>
     </div>
     <p id="reschedPatient" style="margin-bottom:1.5rem;font-weight:600;font-size:1.4rem;color:var(--text-primary);"></p>
     <div class="form-group"><label>New Date</label><input type="date" id="newApptDate" class="form-control" min="<?=date('Y-m-d')?>"></div>
     <div class="form-group"><label>New Time</label><input type="time" id="newApptTime" class="form-control"></div>
     <div class="form-group"><label>Reason for Rescheduling</label><textarea id="reschedReason" class="form-control" rows="3" placeholder="Enter reason..."></textarea></div>
-    <button onclick="submitReschedule()" class="adm-btn adm-btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-calendar-check"></i> Confirm Reschedule</button>
+    <button onclick="submitReschedule()" class="btn-icon btn btn-warning" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-calendar-check"></i> Confirm Reschedule</span></button>
   </div>
 </div>
 
@@ -121,14 +121,14 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-xmark" style="color:var(--danger);"></i> Cancel Appointment</h3>
-      <button class="modal-close" onclick="closeModal('modalCancel')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalCancel')"><span class="btn-text">&times;</span></button>
     </div>
     <p id="cancelPatient" style="margin-bottom:1.5rem;font-weight:600;font-size:1.4rem;"></p>
     <div class="adm-alert adm-alert-danger" style="margin-bottom:1.5rem;border-radius:10px;padding:1rem 1.5rem;background:var(--danger-light);color:var(--danger);font-size:1.2rem;">
       <i class="fas fa-triangle-exclamation"></i> The patient will be notified of this cancellation.
     </div>
     <div class="form-group"><label>Cancellation Reason</label><textarea id="cancelReason" class="form-control" rows="3" placeholder="Enter reason..."></textarea></div>
-    <button onclick="submitCancel()" class="adm-btn adm-btn-danger" style="width:100%;justify-content:center;"><i class="fas fa-xmark"></i> Confirm Cancellation</button>
+    <button onclick="submitCancel()" class="btn-icon btn btn-danger" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-xmark"></i> Confirm Cancellation</span></button>
   </div>
 </div>
 

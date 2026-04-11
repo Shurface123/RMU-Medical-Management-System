@@ -2,14 +2,14 @@
 <div id="sec-prescriptions" class="dash-section">
   <div class="sec-header">
     <h2><i class="fas fa-prescription-bottle-medical"></i> Prescriptions</h2>
-    <button onclick="openModal('modalNewRx')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> New Prescription</button>
+    <button onclick="openModal('modalNewRx')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> New Prescription</span></button>
   </div>
 
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterByStatus('all','rxTable',4)">All</button>
-    <button class="ftab" onclick="filterByStatus('Pending','rxTable',4)">Pending</button>
-    <button class="ftab" onclick="filterByStatus('Dispensed','rxTable',4)">Dispensed</button>
-    <button class="ftab" onclick="filterByStatus('Cancelled','rxTable',4)">Cancelled</button>
+    <button class="btn btn-primary ftab active" onclick="filterByStatus('all','rxTable',4)"><span class="btn-text">All</span></button>
+    <button class="btn btn-warning btn-icon ftab" onclick="filterByStatus('Pending','rxTable',4)"><span class="btn-text">Pending</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByStatus('Dispensed','rxTable',4)"><span class="btn-text">Dispensed</span></button>
+    <button class="btn btn-ghost ftab" onclick="filterByStatus('Cancelled','rxTable',4)"><span class="btn-text">Cancelled</span></button>
   </div>
 
   <div style="margin-bottom:1.2rem;">
@@ -41,9 +41,9 @@
           <td><?=date('d M Y',strtotime($rx['prescription_date']))?></td>
           <td>
             <div class="action-btns">
-              <button onclick='viewRx(<?=$rxj?>)' class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-eye"></i></button>
+              <button onclick='viewRx(<?=$rxj?>)' class="btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
               <?php if($rx['status']==='Pending'):?>
-              <button onclick="cancelRx(<?=$rx['id']?>)" class="adm-btn adm-btn-danger adm-btn-sm"><i class="fas fa-xmark"></i></button>
+              <button onclick="cancelRx(<?=$rx['id']?>)" class="btn btn-danger btn-sm"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
               <?php endif;?>
             </div>
           </td>
@@ -60,7 +60,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <h3><i class="fas fa-prescription-bottle-medical" style="color:var(--role-accent);"></i> Issue New Prescription</h3>
-      <button class="modal-close" onclick="closeModal('modalNewRx')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalNewRx')"><span class="btn-text">&times;</span></button>
     </div>
     <form id="formNewRx" onsubmit="submitRx(event)">
       <div class="form-row">
@@ -101,7 +101,7 @@
       </div>
       <div class="form-group"><label>Instructions / Notes</label><textarea name="instructions" class="form-control" rows="2" placeholder="Take with food, avoid alcohol, etc."></textarea></div>
       <div class="form-group"><label>Prescription Date</label><input type="date" name="prescription_date" class="form-control" value="<?=$today?>" required></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-prescription-bottle-medical"></i> Issue Prescription</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-prescription-bottle-medical"></i> Issue Prescription</span></button>
     </form>
   </div>
 </div>
@@ -111,7 +111,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-prescription-bottle-medical" style="color:var(--role-accent);"></i> Prescription Details</h3>
-      <button class="modal-close" onclick="closeModal('modalViewRx')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalViewRx')"><span class="btn-text">&times;</span></button>
     </div>
     <div id="rxDetail" style="font-size:1.3rem;line-height:2.2;"></div>
   </div>

@@ -70,9 +70,9 @@ if ($ps_res) {
         </div>
 
         <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-            <button type="submit" class="adm-btn adm-btn-primary" style="padding: 0.8rem 2rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2rem;"><span class="btn-text">
                 <i class="fas fa-save"></i> Save SMTP Configuration
-            </button>
+            </span></button>
         </div>
     </form>
 </div>
@@ -103,9 +103,9 @@ if ($ps_res) {
         </div>
 
         <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-            <button type="submit" class="adm-btn adm-btn-primary" style="padding: 0.8rem 2rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2rem;"><span class="btn-text">
                 <i class="fas fa-save"></i> Save reCAPTCHA config
-            </button>
+            </span></button>
         </div>
     </form>
 </div>
@@ -148,9 +148,9 @@ if ($ps_res) {
         </div>
 
         <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-            <button type="submit" class="adm-btn adm-btn-primary" style="padding: 0.8rem 2rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2rem;"><span class="btn-text">
                 <i class="fas fa-save"></i> Save Paystack Keys
-            </button>
+            </span></button>
         </div>
     </form>
 </div>

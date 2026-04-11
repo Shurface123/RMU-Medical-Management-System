@@ -67,7 +67,7 @@ include '../includes/_sidebar.php';
                 <h1>Update Ambulance Record</h1>
                 <p>Dashboard &rarr; Ambulance Management &rarr; Update Record</p>
             </div>
-            <a href="ambulence.php" class="adm-btn adm-btn-ghost"><i class="fas fa-arrow-left"></i> Back to Fleet</a>
+            <a href="ambulence.php" class="btn btn-ghost"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back to Fleet</span></a>
         </div>
 
         <?php if (isset($error_message)): ?>
@@ -121,8 +121,8 @@ include '../includes/_sidebar.php';
                     </div>
 
                     <div style="display:flex;gap:1rem;">
-                        <button type="submit" class="adm-btn adm-btn-primary" onclick="if(this.closest('form').checkValidity()) { this.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Saving...'; this.style.pointerEvents='none'; this.closest('form').submit(); }"><i class="fas fa-save"></i> Save Changes</button>
-                        <a href="ambulence.php" class="adm-btn adm-btn-ghost">Cancel</a>
+                        <button type="submit" class="btn btn-primary" onclick="if(this.closest('form').checkValidity()) { this.innerHTML='<i class=\'fas fa-spinner fa-spin\'><span class="btn-text"></i> Saving...'; this.style.pointerEvents='none'; this.closest('form').submit(); }"><i class="fas fa-save"></i> Save Changes</span></button>
+                        <a href="ambulence.php" class="btn btn-ghost"><span class="btn-text">Cancel</span></a>
                     </div>
                 </form>
             </div>

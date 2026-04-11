@@ -177,13 +177,13 @@ $status_icon  = $is_rejected ? 'fa-times-circle' : 'fa-clock';
   <!-- Actions -->
   <div>
     <?php if (!$is_rejected): ?>
-    <a href="<?= htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/RMU-Medical-Management-System/php/dashboards/staff_dashboard.php', ENT_QUOTES) ?>" class="btn btn-check">
+    <a href="<?= htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/RMU-Medical-Management-System/php/dashboards/staff_dashboard.php', ENT_QUOTES) ?>" class="btn btn-primary btn btn-check"><span class="btn-text">
       <i class="fas fa-sync-alt"></i> Check Again
-    </a>
+    </span></a>
     <?php endif; ?>
-    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-logout">
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary btn btn-logout"><span class="btn-text">
       <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
+    </span></a>
   </div>
 
 </div>

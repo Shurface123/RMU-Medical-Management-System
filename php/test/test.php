@@ -30,9 +30,9 @@ $pending_lt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM lab_tes
                 <h1>Lab Tests &amp; Diagnostics</h1>
                 <p>Track all patient laboratory tests, results, and diagnostic services.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/test/add-test.php" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/test/add-test.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-plus"></i> Order New Test
-            </a>
+            </span></a>
         </div>
 
         <div class="adm-summary-strip">
@@ -57,12 +57,12 @@ $pending_lt = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM lab_tes
 
         <!-- Tabs -->
         <div class="adm-tabs" id="testTabs" style="margin-bottom:2rem;display:flex;gap:1rem;border-bottom:2px solid var(--border);padding-bottom:.5rem;">
-            <button class="adm-tab adm-tab-active" data-tab="orders" style="background:none;border:none;padding:.8rem 1.5rem;font-weight:600;color:var(--text-secondary);cursor:pointer;position:relative;transition:var(--transition);">
+            <button class="btn btn-primary adm-tab adm-tab-active" data-tab="orders" style="background:none;border:none;padding:.8rem 1.5rem;font-weight:600;color:var(--text-secondary);cursor:pointer;position:relative;transition:var(--transition);"><span class="btn-text">
                 <i class="fas fa-clipboard-list"></i> Patient Test Orders
-            </button>
-            <button class="adm-tab" data-tab="services" style="background:none;border:none;padding:.8rem 1.5rem;font-weight:600;color:var(--text-secondary);cursor:pointer;position:relative;transition:var(--transition);">
+            </span></button>
+            <button class="btn btn-primary adm-tab" data-tab="services" style="background:none;border:none;padding:.8rem 1.5rem;font-weight:600;color:var(--text-secondary);cursor:pointer;position:relative;transition:var(--transition);"><span class="btn-text">
                 <i class="fas fa-list"></i> Service Catalogue
-            </button>
+            </span></button>
         </div>
 
         <style>

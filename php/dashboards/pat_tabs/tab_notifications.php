@@ -10,7 +10,7 @@ $unread_count=$stats['unread_notif'];
     <div class="adm-card-header">
       <h3><i class="fas fa-bell" style="color:var(--warning);"></i> Notifications <?php if($unread_count):?><span class="adm-badge adm-badge-danger"><?=$unread_count?> unread</span><?php endif;?></h3>
       <?php if($unread_count>0):?>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="markAllRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
+      <button class="btn-icon btn btn-primary btn-sm" onclick="markAllRead()"><span class="btn-text"><i class="fas fa-check-double"></i> Mark All Read</span></button>
       <?php endif;?>
     </div>
     <!-- Filters -->

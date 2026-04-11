@@ -2,7 +2,7 @@
 <div id="sec-records" class="dash-section">
   <div class="sec-header">
     <h2><i class="fas fa-file-medical"></i> Medical Records</h2>
-    <button onclick="openModal('modalNewRecord')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> Add New Record</button>
+    <button onclick="openModal('modalNewRecord')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> Add New Record</span></button>
   </div>
 
   <div style="margin-bottom:1.2rem;">
@@ -32,8 +32,8 @@
           <td><?=$mr['follow_up_required']?('<span class="adm-badge adm-badge-warning">'.date('d M',strtotime($mr['follow_up_date']??'')).'</span>'):'<span style="color:var(--text-muted);">None</span>'?></td>
           <td>
             <div class="action-btns">
-              <button onclick='viewRecord(<?=$rj?>)' class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-eye"></i> View</button>
-              <a href="/RMU-Medical-Management-System/php/dashboards/medical_records.php?record=<?=$mr['id']?>" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-paperclip"></i> Files</a>
+              <button onclick='viewRecord(<?=$rj?>)' class="btn-icon btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-eye"></i> View</span></button>
+              <a href="/RMU-Medical-Management-System/php/dashboards/medical_records.php?record=<?=$mr['id']?>" class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-paperclip"></i> Files</span></a>
             </div>
           </td>
         </tr>
@@ -49,7 +49,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <h3><i class="fas fa-file-medical" style="color:var(--role-accent);"></i> Medical Record</h3>
-      <button class="modal-close" onclick="closeModal('modalViewRecord')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalViewRecord')"><span class="btn-text">&times;</span></button>
     </div>
     <div id="recordDetail"></div>
   </div>
@@ -60,7 +60,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <h3><i class="fas fa-file-circle-plus" style="color:var(--role-accent);"></i> Add New Medical Record</h3>
-      <button class="modal-close" onclick="closeModal('modalNewRecord')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalNewRecord')"><span class="btn-text">&times;</span></button>
     </div>
     <form id="formNewRecord" onsubmit="submitRecord(event)">
       <div class="form-row">
@@ -87,7 +87,7 @@
         </div>
         <div class="form-group" id="fuDate" style="display:none;"><label>Follow-up Date</label><input type="date" name="follow_up_date" class="form-control"></div>
       </div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;margin-top:.5rem;"><i class="fas fa-save"></i> Save Record</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Record</span></button>
     </form>
   </div>
 </div>

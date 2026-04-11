@@ -361,9 +361,9 @@ if (empty($_SESSION['user_id']) && isset($_COOKIE['rmumss_remember'])) {
                     <a href="forgot_password.php">Forgot Password?</a>
                 </div>
 
-                <button type="submit" class="btn-login" id="loginBtn">
+                <button type="submit" class="btn btn-primary btn-login" id="loginBtn"><span class="btn-text">
                     <i class="fas fa-sign-in-alt" id="loginBtnIcon"></i> <span id="loginBtnText">Login</span>
-                </button>
+                </span></button>
             </form>
 
             <div class="login-footer">

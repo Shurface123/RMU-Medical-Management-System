@@ -379,7 +379,7 @@ class SessionManager
   <div class="icon"><i class="fas fa-ban"></i></div>
   <h2>' . htmlspecialchars($title) . '</h2>
   <p>' . htmlspecialchars($msg) . '</p>
-  <a href="/RMU-Medical-Management-System/php/index.php" class="btn">Go to Login</a>
+  <a href="/RMU-Medical-Management-System/php/index.php" class="btn btn-primary btn"><span class="btn-text">Go to Login</span></a>
 </div>
 <script>setTimeout(function(){ window.location.href="/RMU-Medical-Management-System/php/index.php"; }, 5000);</script>
 </body>

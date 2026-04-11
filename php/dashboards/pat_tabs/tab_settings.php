@@ -57,7 +57,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $activity_log[]=$r;
             <div class="form-group"><label>Allergies</label><input type="text" name="allergies" class="form-control" value="<?=htmlspecialchars($pat_row['allergies']??'')?>"></div>
             <div class="form-group"><label>Chronic Conditions</label><input type="text" name="chronic_conditions" class="form-control" value="<?=htmlspecialchars($pat_row['chronic_conditions']??'')?>"></div>
           </div>
-          <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Save Profile</button>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Profile</span></button>
         </form>
       </div>
     </div>
@@ -72,7 +72,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $activity_log[]=$r;
             <div class="form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" required></div>
             <div class="form-group"><label>New Password</label><input type="password" name="new_password" id="patNewPwd" class="form-control" required minlength="8" oninput="checkPwdStr(this)"><div id="patPwdStr" style="margin-top:.4rem;font-size:1.1rem;font-weight:600;"></div></div>
             <div class="form-group"><label>Confirm Password</label><input type="password" name="confirm_password" class="form-control" required></div>
-            <button type="submit" class="adm-btn adm-btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-key"></i> Update Password</button>
+            <button type="submit" class="btn btn-warning" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-key"></i> Update Password</span></button>
           </form>
         </div>
       </div>
@@ -120,7 +120,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $activity_log[]=$r;
                 </select>
               </div>
             </div>
-            <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Save Settings</button>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Settings</span></button>
           </form>
         </div>
       </div>

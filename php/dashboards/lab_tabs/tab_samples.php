@@ -32,7 +32,7 @@ function getSampleStageColor($status) {
 <div class="sec-header">
     <h2><i class="fas fa-vials"></i> Sample Tracking System</h2>
     <div style="display:flex; gap:1rem; align-items:center;">
-        <button class="adm-btn adm-btn-success" onclick="newSampleModal()"><i class="fas fa-plus-circle"></i> Register Sample</button>
+        <button class="btn btn-success" onclick="newSampleModal()"><span class="btn-text"><i class="fas fa-plus-circle"></i> Register Sample</span></button>
         <select class="form-select" id="sampleStatusFilter" style="width:200px;" onchange="window.location.href='?tab=samples&filter_status='+this.value">
             <option value="All" <?= $status_filter=='All'?'selected':'' ?>>All Samples</option>
             <option value="Collected" <?= $status_filter=='Collected'?'selected':'' ?>>Collected (Awaiting)</option>
@@ -74,12 +74,12 @@ function getSampleStageColor($status) {
         <?php endif; ?>
 
         <div class="action-btns" style="display:flex; gap:0.5rem; flex-wrap:wrap; border-top: 1px dashed var(--border); padding-top: 1rem;">
-            <button class="adm-btn adm-btn-sm" style="background:var(--surface-2);" onclick="printBarcode('<?= $row['sample_code'] ?>')"><i class="fas fa-print"></i> Barcode</button>
+            <button class="btn btn-outline btn-icon btn btn-sm" style="background:var(--surface-2);" onclick="printBarcode('<?= $row['sample_code'] ?>')"><span class="btn-text"><i class="fas fa-print"></i> Barcode</span></button>
             <?php if($row['status'] === 'Collected'): ?>
-                <button class="adm-btn adm-btn-teal adm-btn-sm" onclick="receiveSample(<?= $row['id'] ?>)"><i class="fas fa-boxes"></i> Receive</button>
+                <button class="btn btn-primary btn btn-teal btn-sm" onclick="receiveSample(<?= $row['id'] ?>)"><span class="btn-text"><i class="fas fa-boxes"></i> Receive</span></button>
             <?php endif; ?>
             <?php if($row['status'] === 'Received'): ?>
-                <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="processSample(<?= $row['id'] ?>)"><i class="fas fa-flask"></i> Process</button>
+                <button class="btn btn-primary btn-sm" onclick="processSample(<?= $row['id'] ?>)"><span class="btn-text"><i class="fas fa-flask"></i> Process</span></button>
             <?php endif; ?>
         </div>
     </div>
@@ -119,8 +119,8 @@ function getSampleStageColor($status) {
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-primary" onclick="submitReceiveSample()"><i class="fas fa-check"></i> Update Status</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal"><span class="btn-text">Cancel</span></button>
+                <button type="button" class="btn btn-primary" onclick="submitReceiveSample()"><span class="btn-text"><i class="fas fa-check"></i> Update Status</span></button>
             </div>
         </div>
     </div>

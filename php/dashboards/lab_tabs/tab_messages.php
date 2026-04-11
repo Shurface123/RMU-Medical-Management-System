@@ -94,8 +94,8 @@ if ($active_doc > 0) {
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.8rem;">
-                    <button class="adm-btn adm-btn-ghost" title="Clear Chat"><i class="fas fa-broom"></i></button>
-                    <button class="adm-btn adm-btn-teal" title="Order Details" onclick="window.location.href='?tab=orders'"><i class="fas fa-file-medical"></i></button>
+                    <button class="btn btn-ghost" title="Clear Chat"><span class="btn-text"><i class="fas fa-broom"></i></span></button>
+                    <button class="btn btn-primary btn btn-teal" title="Order Details" onclick="window.location.href='?tab=orders'"><span class="btn-text"><i class="fas fa-file-medical"></i></span></button>
                 </div>
             </div>
 
@@ -148,10 +148,10 @@ if ($active_doc > 0) {
                 
                 <!-- Quick Command Presets -->
                 <div style="display: flex; gap: 0.8rem; margin-bottom: 1.2rem; overflow-x: auto; padding-bottom: 10px;" class="custom-scrollbar">
-                    <button class="adm-btn adm-btn-sm adm-btn-outline" style="white-space: nowrap; border-radius: 30px; border-color: var(--danger); color: var(--danger);" onclick="insertTpl('Sample rejected due to hemolysis. Please re-draw.')"><i class="fas fa-vial"></i> Hemolysed</button>
-                    <button class="adm-btn adm-btn-sm adm-btn-outline" style="white-space: nowrap; border-radius: 30px; border-color: var(--role-accent); color: var(--role-accent);" onclick="insertTpl('Critical value alert: Results for patient order #ID are significantly outside normal limits.')"><i class="fas fa-bullhorn"></i> Critical Alert</button>
-                    <button class="adm-btn adm-btn-sm adm-btn-outline" style="white-space: nowrap; border-radius: 30px;" onclick="insertTpl('Requesting clarification for clinical indication on order #ID.')"><i class="fas fa-question-circle"></i> Indication Query</button>
-                    <button class="adm-btn adm-btn-sm adm-btn-outline" style="white-space: nowrap; border-radius: 30px;" onclick="insertTpl('Results are now validated and available for review in the dashboard.')"><i class="fas fa-file-signature"></i> Results Ready</button>
+                    <button class="btn btn-sm btn-outline" style="white-space: nowrap; border-radius: 30px; border-color: var(--danger); color: var(--danger);" onclick="insertTpl('Sample rejected due to hemolysis. Please re-draw.')"><span class="btn-text"><i class="fas fa-vial"></i> Hemolysed</span></button>
+                    <button class="btn btn-sm btn-outline" style="white-space: nowrap; border-radius: 30px; border-color: var(--role-accent); color: var(--role-accent);" onclick="insertTpl('Critical value alert: Results for patient order #ID are significantly outside normal limits.')"><span class="btn-text"><i class="fas fa-bullhorn"></i> Critical Alert</span></button>
+                    <button class="btn btn-sm btn-outline" style="white-space: nowrap; border-radius: 30px;" onclick="insertTpl('Requesting clarification for clinical indication on order #ID.')"><span class="btn-text"><i class="fas fa-question-circle"></i> Indication Query</span></button>
+                    <button class="btn-icon btn btn-sm btn-outline" style="white-space: nowrap; border-radius: 30px;" onclick="insertTpl('Results are now validated and available for review in the dashboard.')"><span class="btn-text"><i class="fas fa-file-signature"></i> Results Ready</span></button>
                 </div>
 
                 <form id="chatForm" onsubmit="sendMessage(event)" style="display: flex; gap: 1.2rem; align-items: flex-end;">
@@ -162,9 +162,9 @@ if ($active_doc > 0) {
                                   oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
                                   required></textarea>
                     </div>
-                    <button type="submit" class="adm-btn adm-btn-primary" style="width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 0;">
+                    <button type="submit" class="btn btn-primary" style="width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; padding: 0;"><span class="btn-text">
                         <i class="fas fa-paper-plane" style="font-size: 1.6rem;"></i>
-                    </button>
+                    </span></button>
                 </form>
             </div>
             

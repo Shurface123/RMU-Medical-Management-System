@@ -18,17 +18,17 @@ $myPrefs = dbRow($conn, "SELECT * FROM pharmacy_settings WHERE pharmacist_id=?",
 
 <!-- ── Settings Sub-Navigation ────────────────────────────── -->
 <div class="settings-subnav">
-  <button class="stab active" onclick="showSettingsSection('general',this)"><i class="fas fa-cog"></i> General</button>
-  <button class="stab" onclick="showSettingsSection('inventory',this)"><i class="fas fa-boxes"></i> Inventory</button>
-  <button class="stab" onclick="showSettingsSection('notifications',this)"><i class="fas fa-bell"></i> Notifications</button>
-  <button class="stab" onclick="showSettingsSection('preferences',this)"><i class="fas fa-palette"></i> Preferences</button>
-  <button class="stab" onclick="showSettingsSection('security',this)"><i class="fas fa-shield-alt"></i> Security</button>
+  <button class="btn btn-primary stab active" onclick="showSettingsSection('general',this)"><span class="btn-text"><i class="fas fa-cog"></i> General</span></button>
+  <button class="btn btn-primary stab" onclick="showSettingsSection('inventory',this)"><span class="btn-text"><i class="fas fa-boxes"></i> Inventory</span></button>
+  <button class="btn btn-primary stab" onclick="showSettingsSection('notifications',this)"><span class="btn-text"><i class="fas fa-bell"></i> Notifications</span></button>
+  <button class="btn btn-primary stab" onclick="showSettingsSection('preferences',this)"><span class="btn-text"><i class="fas fa-palette"></i> Preferences</span></button>
+  <button class="btn btn-primary stab" onclick="showSettingsSection('security',this)"><span class="btn-text"><i class="fas fa-shield-alt"></i> Security</span></button>
 </div>
 
 <!-- ════════════════ GENERAL SETTINGS ════════════════════ -->
 <div class="settings-section active" id="sett-general">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-hospital"></i> General Settings</h3><button class="btn btn-sm btn-primary" onclick="saveGeneral()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-hospital"></i> General Settings</h3><button class="btn btn-sm btn-primary" onclick="saveGeneral()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <div class="form-grid-2">
     <div class="form-group">
       <label>System Name</label>
@@ -65,7 +65,7 @@ $myPrefs = dbRow($conn, "SELECT * FROM pharmacy_settings WHERE pharmacist_id=?",
 <!-- ════════════════ INVENTORY SETTINGS ══════════════════ -->
 <div class="settings-section" id="sett-inventory">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-warehouse"></i> Inventory Settings</h3><button class="btn btn-sm btn-primary" onclick="saveInventory()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-warehouse"></i> Inventory Settings</h3><button class="btn btn-sm btn-primary" onclick="saveInventory()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <div class="settings-info-bar"><i class="fas fa-info-circle"></i> These defaults apply when adding new medicines. Individual medicines can override these values.</div>
   <div class="form-grid-2">
     <div class="form-group">
@@ -90,7 +90,7 @@ $myPrefs = dbRow($conn, "SELECT * FROM pharmacy_settings WHERE pharmacist_id=?",
 <!-- ════════════════ NOTIFICATION SETTINGS ═══════════════ -->
 <div class="settings-section" id="sett-notifications">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-bell-slash"></i> Notification Triggers</h3><button class="btn btn-sm btn-primary" onclick="saveNotifSettings()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-bell-slash"></i> Notification Triggers</h3><button class="btn btn-sm btn-primary" onclick="saveNotifSettings()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <p class="text-muted" style="font-size:.88rem;margin-bottom:1rem;">Configure when system-wide alerts are triggered. These apply to all pharmacists.</p>
   <div class="form-grid-2">
     <div class="form-group">
@@ -110,7 +110,7 @@ $myPrefs = dbRow($conn, "SELECT * FROM pharmacy_settings WHERE pharmacist_id=?",
 <!-- ════════════════ USER PREFERENCES ════════════════════ -->
 <div class="settings-section" id="sett-preferences">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-user-cog"></i> User Preferences</h3><button class="btn btn-sm btn-primary" onclick="saveUserPrefs()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-user-cog"></i> User Preferences</h3><button class="btn btn-sm btn-primary" onclick="saveUserPrefs()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <div class="form-grid-2">
     <div class="form-group">
       <label>Theme</label>
@@ -147,7 +147,7 @@ $myPrefs = dbRow($conn, "SELECT * FROM pharmacy_settings WHERE pharmacist_id=?",
 <!-- ════════════════ SECURITY SETTINGS ═══════════════════ -->
 <div class="settings-section" id="sett-security">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-lock"></i> Security Settings</h3><button class="btn btn-sm btn-primary" onclick="saveSecuritySettings()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-lock"></i> Security Settings</h3><button class="btn btn-sm btn-primary" onclick="saveSecuritySettings()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <div class="settings-info-bar" style="border-left-color:var(--warning);"><i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> Changes here affect system-wide security policy. Use caution.</div>
   <div class="form-grid-2">
     <div class="form-group">

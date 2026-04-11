@@ -219,7 +219,7 @@
                 <h2>MANAGE <b>STAFF</b></h2>
             </div>
             <div style="margin-left: 82%; margin-top: 3%;">
-                <button><a href="/php/staff/add-staff.php">ADD STAFF</a></button>
+                <button class="btn btn-primary"><span class="btn-text"><a href="/php/staff/add-staff.php">ADD STAFF</a></span></button>
             </div>
         </div>
     </div>
@@ -264,8 +264,8 @@
                             <td><?php echo $Patient_data['Work_Day'];  ?></td>
                             <td style="width: 140px;">
 
-                                <button> <a href="/php/staff/update.php?S_ID=<?php echo $Patient_data['S_ID'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/staff/Delete.php?S_ID=<?php echo $Patient_data['S_ID']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
+                                <button class="btn btn-primary"><span class="btn-text"> <a href="/php/staff/update.php?S_ID=<?php echo $Patient_data['S_ID'];  ?>" class="btn btn-success"><span class="btn-text"><b>UPDATE</b></span></a></span></button>
+                                <button class="btn btn-danger btn-sm btn-icon"><span class="btn-text"><a href="/php/staff/Delete.php?S_ID=<?php echo $Patient_data['S_ID']; ?>" class="btn-icon btn btn-danger"><span class="btn-text"><b>DELETE</b></span></a></span></button>
 
 
                             </td>

@@ -31,16 +31,16 @@ $avg_tat_rep = (float)qv8($conn, "SELECT AVG(TIMESTAMPDIFF(HOUR, o.created_at, r
 <!-- Sub-navigation for Reports -->
 <ul class="nav nav-tabs mb-4 px-2" id="reportTabs" role="tablist" style="border-bottom: 2px solid var(--border); gap: 1rem;">
   <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="vol-tab" data-bs-toggle="tab" data-bs-target="#vol" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><i class="fas fa-chart-bar"></i> Volume Analytics</button>
+    <button class="btn btn-primary nav-link active" id="vol-tab" data-bs-toggle="tab" data-bs-target="#vol" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><span class="btn-text"><i class="fas fa-chart-bar"></i> Volume Analytics</span></button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="tat-tab" data-bs-toggle="tab" data-bs-target="#tat" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><i class="fas fa-clock"></i> SLA & TAT</button>
+    <button class="btn btn-primary nav-link" id="tat-tab" data-bs-toggle="tab" data-bs-target="#tat" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><span class="btn-text"><i class="fas fa-clock"></i> SLA & TAT</span></button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="crit-tab" data-bs-toggle="tab" data-bs-target="#crit" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><i class="fas fa-exclamation-circle" style="color:var(--danger);"></i> Critical Ledger</button>
+    <button class="btn btn-primary nav-link" id="crit-tab" data-bs-toggle="tab" data-bs-target="#crit" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><span class="btn-text"><i class="fas fa-exclamation-circle" style="color:var(--danger);"></i> Critical Ledger</span></button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="inv-tab" data-bs-toggle="tab" data-bs-target="#inv" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><i class="fas fa-boxes"></i> Consumption</button>
+    <button class="btn btn-primary nav-link" id="inv-tab" data-bs-toggle="tab" data-bs-target="#inv" type="button" role="tab" style="border:none; background:none; padding:1rem 1.5rem; font-weight:700; color:var(--text-secondary); transition:var(--transition);"><span class="btn-text"><i class="fas fa-boxes"></i> Consumption</span></button>
   </li>
 </ul>
 

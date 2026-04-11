@@ -8,7 +8,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $emerg_contacts[]=$r;
   <div class="adm-card">
     <div class="adm-card-header">
       <h3><i class="fas fa-phone-alt" style="color:#e74c3c;"></i> Emergency Contacts</h3>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="document.getElementById('addEcForm').style.display='block';"><i class="fas fa-plus"></i> Add Contact</button>
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('addEcForm').style.display='block';"><span class="btn-text"><i class="fas fa-plus"></i> Add Contact</span></button>
     </div>
     <div style="padding:1.5rem;">
       <!-- Add form (hidden) -->
@@ -33,8 +33,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $emerg_contacts[]=$r;
             <label style="margin:0;cursor:pointer;"><input type="checkbox" name="is_primary" value="1"> Mark as Primary Contact</label>
           </div>
           <div style="display:flex;gap:.8rem;">
-            <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save</button>
-            <button type="button" class="adm-btn" onclick="this.closest('#addEcForm').style.display='none'">Cancel</button>
+            <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button>
+            <button type="button" class="btn btn-ghost btn" onclick="this.closest('#addEcForm').style.display='none'"><span class="btn-text">Cancel</span></button>
           </div>
         </form>
       </div>
@@ -61,8 +61,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $emerg_contacts[]=$r;
             <?php if($ec['address']):?><div style="font-size:1.1rem;color:var(--text-muted);margin-top:.2rem;"><i class="fas fa-map-marker-alt"></i> <?=htmlspecialchars($ec['address'])?></div><?php endif;?>
           </div>
           <div style="display:flex;gap:.4rem;">
-            <button class="adm-btn adm-btn-sm" onclick='editEc(<?=json_encode($ec)?>)' title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteEc(<?=$ec['id']?>)" title="Delete"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-primary btn btn-sm" onclick='editEc(<?=json_encode($ec)?>)' title="Edit"><span class="btn-text"><i class="fas fa-edit"></i></span></button>
+            <button class="btn btn-danger btn-sm" onclick="deleteEc(<?=$ec['id']?>)" title="Delete"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
           </div>
         </div>
         <?php endforeach; endif;?>
@@ -74,7 +74,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $emerg_contacts[]=$r;
 <!-- Edit EC Modal -->
 <div class="modal-bg" id="modalEditEc">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-edit" style="color:var(--primary);margin-right:.5rem;"></i>Edit Contact</h3><button class="modal-close" onclick="closeModal('modalEditEc')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-edit" style="color:var(--primary);margin-right:.5rem;"></i>Edit Contact</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalEditEc')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="updateEc(event)">
       <input type="hidden" id="editEcId" name="id">
       <div class="form-row">
@@ -91,7 +91,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $emerg_contacts[]=$r;
       </div>
       <div class="form-group"><label>Address</label><input type="text" id="editEcAddr" name="address" class="form-control"></div>
       <div class="form-group"><label><input type="checkbox" id="editEcPrimary" name="is_primary" value="1"> Mark as Primary</label></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Update</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Update</span></button>
     </form>
   </div>
 </div>

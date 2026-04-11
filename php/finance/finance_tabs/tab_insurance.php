@@ -18,8 +18,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $claim_list[]=$r;
     <p>Submit, track, and manage insurance claim submissions</p>
   </div>
   <div style="display:flex;gap:1rem;">
-    <button onclick="openModal('modalNewClaim')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> New Claim</button>
-    <button onclick="exportClaims()" class="adm-btn adm-btn-ghost"><i class="fas fa-file-export"></i> Export</button>
+    <button onclick="openModal('modalNewClaim')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> New Claim</span></button>
+    <button onclick="exportClaims()" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-file-export"></i> Export</span></button>
   </div>
 </div>
 
@@ -47,7 +47,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $claim_list[]=$r;
     <option><?=$s?></option>
     <?php endforeach;?>
   </select>
-  <button onclick="clearClaimFilters()" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-xmark"></i></button>
+  <button onclick="clearClaimFilters()" class="btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
 </div>
 
 <div class="adm-card">
@@ -81,8 +81,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $claim_list[]=$r;
           <td><?=$cl['submission_date']?date('d M Y',strtotime($cl['submission_date'])):' —'?></td>
           <td>
             <div class="adm-table-actions">
-              <button onclick="viewClaimDetail(<?=$cl['claim_id']?>)" class="adm-btn adm-btn-sm adm-btn-ghost" title="View"><i class="fas fa-eye"></i></button>
-              <button onclick="updateClaimStatus(<?=$cl['claim_id']?>,'<?=$cl['status']?>')" class="adm-btn adm-btn-sm adm-btn-primary" title="Update Status"><i class="fas fa-pen"></i></button>
+              <button onclick="viewClaimDetail(<?=$cl['claim_id']?>)" class="btn btn-sm btn-ghost" title="View"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
+              <button onclick="updateClaimStatus(<?=$cl['claim_id']?>,'<?=$cl['status']?>')" class="btn btn-sm btn-primary" title="Update Status"><span class="btn-text"><i class="fas fa-pen"></i></span></button>
             </div>
           </td>
         </tr>
@@ -98,7 +98,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $claim_list[]=$r;
   <div class="adm-modal-content" style="max-width:700px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-shield-halved" style="color:var(--role-accent);"></i> New Insurance Claim</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalNewClaim')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalNewClaim')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formNewClaim">
@@ -142,9 +142,9 @@ if($q) while($r=mysqli_fetch_assoc($q)) $claim_list[]=$r;
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalNewClaim')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="saveDraftClaim()" class="adm-btn adm-btn-ghost"><i class="fas fa-floppy-disk"></i> Save Draft</button>
-      <button onclick="submitClaim()" class="adm-btn adm-btn-primary"><i class="fas fa-paper-plane"></i> Submit Claim</button>
+      <button onclick="closeModal('modalNewClaim')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="saveDraftClaim()" class="btn btn-ghost"><span class="btn-text"><i class="fas fa-floppy-disk"></i> Save Draft</span></button>
+      <button onclick="submitClaim()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Claim</span></button>
     </div>
   </div>
 </div>
@@ -154,7 +154,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $claim_list[]=$r;
   <div class="adm-modal-content" style="max-width:520px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-pen"></i> Update Claim Status</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalUpdateClaim')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalUpdateClaim')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <input type="hidden" id="updateClaimId">
@@ -188,8 +188,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $claim_list[]=$r;
       </div>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalUpdateClaim')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="applyClaimUpdate()" class="adm-btn adm-btn-primary"><i class="fas fa-check"></i> Update Status</button>
+      <button onclick="closeModal('modalUpdateClaim')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="applyClaimUpdate()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-check"></i> Update Status</span></button>
     </div>
   </div>
 </div>

@@ -55,13 +55,13 @@ if ($q_notes) { while ($r = mysqli_fetch_assoc($q_notes)) $notes[] = $r; }
                 <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);"><?= count($notes) ?> <small style="font-weight:500; font-size:1rem; color:var(--text-muted);">Recent Entries</small></div>
             </div>
             <?php if($shift_pk): ?>
-                <button class="adm-btn adm-btn-primary" onclick="openNoteModal()" style="padding:.8rem 2rem; border-radius:12px; font-weight:700; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);">
+                <button class="btn btn-primary" onclick="openNoteModal()" style="padding:.8rem 2rem; border-radius:12px; font-weight:700; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);"><span class="btn-text">
                     <i class="fas fa-plus"></i> New Note
-                </button>
+                </span></button>
             <?php else: ?>
-                <button class="adm-btn adm-btn-ghost" disabled title="Active shift required" style="padding:.8rem 2rem; border-radius:12px; opacity:0.6;">
+                <button class="btn btn-ghost" disabled title="Active shift required" style="padding:.8rem 2rem; border-radius:12px; opacity:0.6;"><span class="btn-text">
                     <i class="fas fa-lock"></i> Add Note
-                </button>
+                </span></button>
             <?php endif; ?>
         </div>
     </div>
@@ -156,7 +156,7 @@ if ($q_notes) { while ($r = mysqli_fetch_assoc($q_notes)) $notes[] = $r; }
     <div class="modal-box" style="max-width:680px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--primary); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-file-signature" style="margin-right:.8rem;"></i> Document Clinical Note</h3>
-            <button class="modal-close" onclick="closeNoteModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeNoteModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         
         <div style="padding:2.5rem;">
@@ -204,10 +204,10 @@ if ($q_notes) { while ($r = mysqli_fetch_assoc($q_notes)) $notes[] = $r; }
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeNoteModal()" style="font-weight:600;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSaveNote" <?= empty($patients_in_ward) ? 'disabled' : '' ?> style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);">
+                    <button type="button" class="btn btn-ghost" onclick="closeNoteModal()" style="font-weight:600;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveNote" <?= empty($patients_in_ward) ? 'disabled' : '' ?> style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);"><span class="btn-text">
                         <i class="fas fa-check-circle"></i> Complete &amp; Sign
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

@@ -135,7 +135,7 @@ if ($q_kb) while($r = mysqli_fetch_assoc($q_kb)) $kb[] = $r;
                 <p style="margin-bottom:2rem; color:var(--text-muted);">The chatbot relies on a pre-programmed dataset to understand intents. Click below to strictly enforce the 40-entry seed requirement.</p>
                 <form method="POST">
                     <input type="hidden" name="action" value="seed">
-                    <button type="submit" class="adm-btn adm-btn-primary" style="background:#8b5cf6; border:none; padding:1rem 2rem; font-size:1.1rem;"><i class="fas fa-magic"></i> Auto-Seed 40 Entries</button>
+                    <button type="submit" class="btn btn-primary" style="background:#8b5cf6; border:none; padding:1rem 2rem; font-size:1.1rem;"><span class="btn-text"><i class="fas fa-magic"></i> Auto-Seed 40 Entries</span></button>
                 </form>
             </div>
         <?php else: ?>
@@ -152,7 +152,7 @@ if ($q_kb) while($r = mysqli_fetch_assoc($q_kb)) $kb[] = $r;
                     <div><label class="lbl">Question Variants (JSON)</label><input type="text" name="qv" class="inp" placeholder='["How do i?"]' required></div>
                     <div><label class="lbl">Follow-up Suggestion (Text)</label><input type="text" name="fs" class="inp" placeholder="Type X to book..."></div>
                     
-                    <div style="grid-column:1 / -1;"><button class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save Intent</button></div>
+                    <div style="grid-column:1 / -1;"><button class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save Intent</span></button></div>
                 </form>
             </div>
 
@@ -163,8 +163,8 @@ if ($q_kb) while($r = mysqli_fetch_assoc($q_kb)) $kb[] = $r;
                     <tr>
                         <td><span class="adm-badge" style="background:var(--bg-secondary); color:var(--text);"><?= htmlspecialchars($k['category']) ?></span></td>
                         <td><b><?= htmlspecialchars($k['intent_tag']) ?></b></td>
-                        <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="<?= htmlspecialchars($k['response_text']) ?>"><?= htmlspecialchars($k['response_text']) ?></td>
-                        <td><?= htmlspecialchars($k['followup_suggestion']) ?></td>
+                        <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="<?= htmlspecialchars($k['response_text'] ?? '') ?>"><?= htmlspecialchars($k['response_text'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($k['followup_suggestion'] ?? '') ?></td>
                         <td>
                             <form method="POST" style="margin:0; display:inline-block;">
                                 <input type="hidden" name="action" value="toggle_kb">
@@ -177,7 +177,7 @@ if ($q_kb) while($r = mysqli_fetch_assoc($q_kb)) $kb[] = $r;
                             </form>
                         </td>
                         <td>
-                            <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_kb"><input type="hidden" name="id" value="<?= $k['entry_id'] ?>"><button class="adm-btn adm-btn-ghost" style="color:var(--danger); padding:5px;"><i class="fas fa-trash"></i></button></form>
+                            <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_kb"><input type="hidden" name="id" value="<?= $k['entry_id'] ?>"><button class="btn btn-ghost" style="color:var(--danger); padding:5px;"><span class="btn-text"><i class="fas fa-trash"></i></span></button></form>
                         </td>
                     </tr>
                     <?php endforeach; ?>

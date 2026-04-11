@@ -12,8 +12,8 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
         <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-tshirt" style="color:var(--role-accent);"></i> Laundry Management</h2>
         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="openModal('newBatchModal')"><i class="fas fa-plus"></i> Register Batch</button>
-            <button class="btn btn-outline" onclick="openModal('damageModal')"><i class="fas fa-exclamation"></i> Report Damage</button>
+            <button class="btn btn-primary" onclick="openModal('newBatchModal')"><span class="btn-text"><i class="fas fa-plus"></i> Register Batch</span></button>
+            <button class="btn btn-outline" onclick="openModal('damageModal')"><span class="btn-text"><i class="fas fa-exclamation"></i> Report Damage</span></button>
         </div>
     </div>
 
@@ -52,9 +52,9 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
                 </td>
                 <td>
                     <?php if($bs!=='delivered'): ?>
-                    <button class="btn btn-primary btn-sm" onclick="updateBatch(<?=$b['batch_id']?>),'<?=e($next_status)?>')">
+                    <button class="btn btn-primary btn-sm" onclick="updateBatch(<?=$b['batch_id']?>),'<?=e($next_status)?>')"><span class="btn-text">
                         <i class="fas fa-chevron-right"></i> <?=ucfirst($next_status)?>
-                    </button>
+                    </span></button>
                     <?php else: ?>
                     <span style="color:var(--success);font-size:1.2rem;"><i class="fas fa-check-circle"></i></span>
                     <?php endif; ?>
@@ -119,7 +119,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-plus-circle" style="color:var(--role-accent);"></i> Register New Batch</h3>
-            <button class="modal-close" onclick="closeModal('newBatchModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('newBatchModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmNewBatch" onsubmit="event.preventDefault();submitBatch();">
             <input type="hidden" name="action" value="register_laundry_batch">
@@ -145,7 +145,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
                     <span>⚠️ Flag as Contaminated (biohazard protocol)</span>
                 </label>
             </div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnBatch"><i class="fas fa-plus"></i> Register Batch</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnBatch"><span class="btn-text"><i class="fas fa-plus"></i> Register Batch</span></button>
         </form>
     </div>
 </div>
@@ -155,7 +155,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i> Report Damage</h3>
-            <button class="modal-close" onclick="closeModal('damageModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('damageModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmDamage" onsubmit="event.preventDefault();submitDamage();">
             <input type="hidden" name="action" value="report_laundry_damage">
@@ -166,7 +166,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
             </div>
             <div class="form-group"><label>Damage Description *</label><textarea name="description" class="form-control" rows="3" required placeholder="Describe the damage..."></textarea></div>
             <div class="form-group"><label>Photo (Optional)</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-danger btn-wide" id="btnDamage"><i class="fas fa-paper-plane"></i> Submit Report</button>
+            <button type="submit" class="btn btn-danger btn-wide" id="btnDamage"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Report</span></button>
         </form>
     </div>
 </div>

@@ -7,18 +7,18 @@
     <h2><i class="fas fa-pills"></i> Medicine Inventory</h2>
     <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;">
       <div class="adm-search-wrap"><i class="fas fa-search"></i><input type="text" class="adm-search-input" id="invSearch" placeholder="Search medicines…" oninput="filterTable('invSearch','invTable')"></div>
-      <button class="adm-btn adm-btn-success adm-btn-sm" onclick="openModal('modalAddMed')"><i class="fas fa-plus"></i> Add Medicine</button>
+      <button class="btn btn-success btn-sm" onclick="openModal('modalAddMed')"><span class="btn-text"><i class="fas fa-plus"></i> Add Medicine</span></button>
     </div>
   </div>
 
   <!-- Filter Tabs -->
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterByAttr('all','invTable',this)">All (<?=$stats['total_medicines']?>)</button>
-    <button class="ftab" onclick="filterByAttr('in_stock','invTable',this)">In Stock (<?=$stats['in_stock']?>)</button>
-    <button class="ftab" onclick="filterByAttr('low_stock','invTable',this)">Low Stock (<?=$stats['low_stock']?>)</button>
-    <button class="ftab" onclick="filterByAttr('out_of_stock','invTable',this)">Out of Stock (<?=$stats['out_of_stock']?>)</button>
-    <button class="ftab" onclick="filterByAttr('expiring_soon','invTable',this)">Expiring Soon (<?=$stats['expiring_soon']?>)</button>
-    <button class="ftab" onclick="filterByAttr('expired','invTable',this)">Expired (<?=$stats['expired']?>)</button>
+    <button class="btn btn-primary ftab active" onclick="filterByAttr('all','invTable',this)"><span class="btn-text">All (<?=$stats['total_medicines']?>)</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('in_stock','invTable',this)"><span class="btn-text">In Stock (<?=$stats['in_stock']?>)</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('low_stock','invTable',this)"><span class="btn-text">Low Stock (<?=$stats['low_stock']?>)</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('out_of_stock','invTable',this)"><span class="btn-text">Out of Stock (<?=$stats['out_of_stock']?>)</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('expiring_soon','invTable',this)"><span class="btn-text">Expiring Soon (<?=$stats['expiring_soon']?>)</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('expired','invTable',this)"><span class="btn-text">Expired (<?=$stats['expired']?>)</span></button>
   </div>
 
   <div class="adm-card">
@@ -65,9 +65,9 @@
           <td><span class="adm-badge adm-badge-<?=$sInfo[1]?>"><?=$sInfo[0]?></span></td>
           <td>
             <div class="action-btns">
-              <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="viewMedicine(<?=$med['id']?>)" title="View"><i class="fas fa-eye"></i></button>
-              <button class="adm-btn adm-btn-sm" onclick="editMedicine(<?=$med['id']?>)" title="Edit" style="background:var(--warning-light);color:var(--warning);border-color:var(--warning);"><i class="fas fa-edit"></i></button>
-              <button class="adm-btn adm-btn-sm" onclick="discontinueMedicine(<?=$med['id']?>,<?=json_encode($med['medicine_name'])?>)" title="Discontinue" style="background:var(--danger-light);color:var(--danger);border-color:var(--danger);"><i class="fas fa-ban"></i></button>
+              <button class="btn btn-primary btn-sm" onclick="viewMedicine(<?=$med['id']?>)" title="View"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
+              <button class="btn btn-primary btn btn-sm" onclick="editMedicine(<?=$med['id']?>)" title="Edit" style="background:var(--warning-light);color:var(--warning);border-color:var(--warning);"><span class="btn-text"><i class="fas fa-edit"></i></span></button>
+              <button class="btn btn-primary btn btn-sm" onclick="discontinueMedicine(<?=$med['id']?>,<?=json_encode($med['medicine_name'])?>)" title="Discontinue" style="background:var(--danger-light);color:var(--danger);border-color:var(--danger);"><span class="btn-text"><i class="fas fa-ban"></i></span></button>
             </div>
           </td>
         </tr>
@@ -81,7 +81,7 @@
 <!-- ══ Add Medicine Modal ══ -->
 <div class="modal-bg" id="modalAddMed">
   <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-plus-circle" style="color:var(--role-accent);"></i> Add New Medicine</h3><button class="modal-close" onclick="closeModal('modalAddMed')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-plus-circle" style="color:var(--role-accent);"></i> Add New Medicine</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalAddMed')"><span class="btn-text">&times;</span></button></div>
     <form id="formAddMed" onsubmit="submitAddMedicine(event)">
       <div class="form-row">
         <div class="form-group"><label>Medicine Name *</label><input class="form-control" name="medicine_name" required></div>
@@ -137,7 +137,7 @@
         <div class="form-group"><label>Side Effects</label><textarea class="form-control" name="side_effects" rows="2"></textarea></div>
         <div class="form-group"><label>Contraindications</label><textarea class="form-control" name="contraindications" rows="2"></textarea></div>
       </div>
-      <button type="submit" class="adm-btn adm-btn-success" style="width:100%;justify-content:center;margin-top:.5rem;"><i class="fas fa-plus"></i> Add Medicine</button>
+      <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;margin-top:.5rem;"><span class="btn-text"><i class="fas fa-plus"></i> Add Medicine</span></button>
     </form>
   </div>
 </div>
@@ -145,7 +145,7 @@
 <!-- ══ View Medicine Detail Modal ══ -->
 <div class="modal-bg" id="modalViewMed">
   <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-pills" style="color:var(--role-accent);"></i> Medicine Details</h3><button class="modal-close" onclick="closeModal('modalViewMed')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-pills" style="color:var(--role-accent);"></i> Medicine Details</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalViewMed')"><span class="btn-text">&times;</span></button></div>
     <div id="medDetailContent" style="font-size:1.3rem;"><p style="text-align:center;color:var(--text-muted);padding:2rem;">Loading…</p></div>
   </div>
 </div>
@@ -153,7 +153,7 @@
 <!-- ══ Edit Medicine Modal ══ -->
 <div class="modal-bg" id="modalEditMed">
   <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-edit" style="color:var(--warning);"></i> Edit Medicine</h3><button class="modal-close" onclick="closeModal('modalEditMed')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-edit" style="color:var(--warning);"></i> Edit Medicine</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalEditMed')"><span class="btn-text">&times;</span></button></div>
     <div id="editMedContent"><p style="text-align:center;color:var(--text-muted);padding:2rem;">Loading…</p></div>
   </div>
 </div>
@@ -229,7 +229,7 @@ async function editMedicine(id){
         <div class="form-group"><label>Side Effects</label><textarea class="form-control" name="side_effects" rows="2">${m.side_effects||''}</textarea></div>
         <div class="form-group"><label>Contraindications</label><textarea class="form-control" name="contraindications" rows="2">${m.contraindications||''}</textarea></div>
       </div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Save Changes</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Changes</span></button>
     </form>`;
 }
 

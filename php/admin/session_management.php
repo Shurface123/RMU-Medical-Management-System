@@ -71,8 +71,8 @@ include '../includes/_sidebar.php';
             <form method="POST" style="margin:0;"
                 onsubmit="return confirm('Are you sure you want to terminate ALL active users across the entire system?');">
                 <input type="hidden" name="action" value="logout_all">
-                <button type="submit" class="adm-btn adm-btn-danger"><i class="fas fa-skull-crossbones"></i> Purge All
-                    Active Sessions</button>
+                <button type="submit" class="btn btn-danger"><span class="btn-text"><i class="fas fa-skull-crossbones"></i> Purge All
+                    Active Sessions</span></button>
             </form>
         </div>
 
@@ -133,8 +133,8 @@ include '../includes/_sidebar.php';
                                                 <input type="hidden" name="session_id"
                                                     value="<?= htmlspecialchars($s['session_id']) ?>">
                                                 <input type="hidden" name="user_id" value="<?= htmlspecialchars($s['user_id']) ?>">
-                                                <button type="submit" class="adm-btn adm-btn-ghost adm-btn-sm"
-                                                    style="color:var(--danger);"><i class="fas fa-ban"></i> Terminate TCP</button>
+                                                <button type="submit" class="btn btn-ghost btn-sm"
+                                                    style="color:var(--danger);"><span class="btn-text"><i class="fas fa-ban"></i> Terminate TCP</span></button>
                                             </form>
                                         <?php endif; ?>
                                     </td>

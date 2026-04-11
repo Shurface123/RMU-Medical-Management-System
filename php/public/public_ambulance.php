@@ -147,9 +147,9 @@ if ($hc_res && mysqli_num_rows($hc_res) > 0) {
             <h2><i class="fas fa-phone-alt" style="color: #ef4444;"></i> Emergency Hotline</h2>
             <div class="hotline-number"><?php echo htmlspecialchars($hotline); ?></div>
             <p style="font-size: 1.2rem; color: var(--lp-text-muted); margin-bottom: 2rem;">Available 24 hours a day, 7 days a week</p>
-            <a href="tel:<?php echo htmlspecialchars($hotline); ?>" class="call-btn">
+            <a href="tel:<?php echo htmlspecialchars($hotline); ?>" class="btn btn-primary call-btn"><span class="btn-text">
                 <i class="fas fa-phone"></i> Call Now
-            </a>
+            </span></a>
         </div>
 
         <?php if (!empty($message)): ?>
@@ -172,7 +172,7 @@ if ($hc_res && mysqli_num_rows($hc_res) > 0) {
                     <?php if (!$is_logged_in): ?>
                         <div style="text-align: center; padding: 2rem 0;">
                             <p style="font-size: 1.1rem; color: var(--lp-text-muted); margin-bottom: 2rem;">To request an ambulance online, please log in to your RMU Medical account so we can access your contact details quickly.</p>
-                            <a href="/RMU-Medical-Management-System/php/index.php" class="lp-btn lp-btn-primary" style="background:#ef4444;border-color:#ef4444;font-size:1.1rem;padding:0.8rem 2.5rem;">Log In to Request</a>
+                            <a href="/RMU-Medical-Management-System/php/index.php" class="lp-btn lp-btn-primary" style="background:#ef4444;border-color:#ef4444;font-size:1.1rem;padding:0.8rem 2.5rem;"><span class="btn-text">Log In to Request</span></a>
                         </div>
                     <?php else: ?>
                         <form method="POST" action="">
@@ -199,7 +199,7 @@ if ($hc_res && mysqli_num_rows($hc_res) > 0) {
                                 <label>Additional Notes (Optional)</label>
                                 <textarea name="notes" class="lp-form-control" rows="3" placeholder="Condition details or directions..."></textarea>
                             </div>
-                            <button type="submit" name="request_ambulance" class="lp-btn lp-btn-primary" style="width: 100%; background: #ef4444; border-color: #ef4444; font-size: 1.1rem; padding: 1rem;"><i class="fas fa-paper-plane"></i> Submit Emergency Request</button>
+                            <button type="submit" name="request_ambulance" class="lp-btn lp-btn-primary" style="width: 100%; background: #ef4444; border-color: #ef4444; font-size: 1.1rem; padding: 1rem;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Emergency Request</span></button>
                         </form>
                     <?php endif; ?>
                 </div>

@@ -298,10 +298,10 @@ require_once 'maintenance_guard.php';
 
     <!-- Footer / Logout -->
     <div class="adm-sidebar-footer">
-        <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn" data-dashboard="<?= htmlspecialchars($active_page) ?>">
+        <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn" data-dashboard="<?= htmlspecialchars($active_page) ?>"><span class="btn-text">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
-        </a>
+        </span></a>
     </div>
 </aside>
 <!-- ═══════════════════════════ END SIDEBAR ═══════════════════════ -->
@@ -360,4 +360,4 @@ function showToast(message, type = 'success') {
     }, 4000);
 }
 </script>
-
+

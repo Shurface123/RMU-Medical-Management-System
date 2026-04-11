@@ -189,9 +189,9 @@ tr:nth-child(even) td{background:#F4F8FF;}
 <h1><?=htmlspecialchars($title)?></h1>
 <div class="period">Period: <?=date('d M Y',strtotime($dfrom))?> — <?=date('d M Y',strtotime($dto))?></div>
 
-<button onclick="window.print()" class="no-print" style="margin-bottom:1.5rem;padding:.7rem 2rem;background:#2F80ED;color:#fff;border:none;border-radius:8px;font-family:Poppins,sans-serif;font-size:1rem;cursor:pointer;font-weight:600;">
+<button onclick="window.print()" class="btn btn-primary no-print" style="margin-bottom:1.5rem;padding:.7rem 2rem;background:#2F80ED;color:#fff;border:none;border-radius:8px;font-family:Poppins,sans-serif;font-size:1rem;cursor:pointer;font-weight:600;"><span class="btn-text">
   🖨 Print / Save as PDF
-</button>
+</span></button>
 
 <?php if ($type === 'analytics_summary'): ?>
 <div class="analytics-grid">

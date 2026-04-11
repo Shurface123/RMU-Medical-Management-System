@@ -12,7 +12,7 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
         <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-user-check" style="color:var(--role-accent);"></i> Visitor Log
             <?php if(!empty($active_visitors)): ?><span class="badge badge-progress" style="font-size:1.2rem;margin-left:.8rem;"><?=count($active_visitors)?> inside</span><?php endif; ?>
         </h2>
-        <button class="btn btn-primary" onclick="openModal('addVisitorModal')"><i class="fas fa-user-plus"></i> Log New Visitor</button>
+        <button class="btn btn-primary" onclick="openModal('addVisitorModal')"><span class="btn-text"><i class="fas fa-user-plus"></i> Log New Visitor</span></button>
     </div>
 
     <!-- Active Visitors (in premises) -->
@@ -30,7 +30,7 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
                 <td><?=e($v['person_visiting']??'—')?></td>
                 <td><?=e($v['ward_department']??'—')?></td>
                 <td><?=date('H:i',strtotime($v['entry_time']))?></td>
-                <td><button class="btn btn-success btn-sm" onclick="logExit(<?=$v['log_id']?>)"><i class="fas fa-sign-out-alt"></i> Log Exit</button></td>
+                <td><button class="btn btn-success btn-sm" onclick="logExit(<?=$v['log_id']?>)"><span class="btn-text"><i class="fas fa-sign-out-alt"></i> Log Exit</span></button></td>
             </tr>
             <?php endforeach; ?>
             </tbody>
@@ -75,7 +75,7 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-user-plus" style="color:var(--role-accent);"></i> Log New Visitor</h3>
-            <button class="modal-close" onclick="closeModal('addVisitorModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('addVisitorModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmVisitor" onsubmit="event.preventDefault();submitVisitor();">
             <input type="hidden" name="action" value="log_visitor">
@@ -95,7 +95,7 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
                 <div class="form-group"><label>Person Visiting</label><input name="person_visiting" type="text" class="form-control" placeholder="Name of patient/staff"></div>
                 <div class="form-group"><label>Ward / Department</label><input name="ward" type="text" class="form-control" placeholder="Ward A, OPD, etc."></div>
             </div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnVisitor"><i class="fas fa-sign-in-alt"></i> Log Entry</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnVisitor"><span class="btn-text"><i class="fas fa-sign-in-alt"></i> Log Entry</span></button>
         </form>
     </div>
 </div>

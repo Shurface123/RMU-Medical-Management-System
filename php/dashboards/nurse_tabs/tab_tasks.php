@@ -60,13 +60,13 @@ if ($q_shifts) {
         </div>
         <div style="display:flex; gap:1.2rem; align-items:center;">
             <?php if($shift_pk && !$handover_done): ?>
-                <button class="adm-btn adm-btn-warning" onclick="openHandoverModal()" style="padding:.8rem 2rem; border-radius:12px; font-weight:700; box-shadow:0 4px 12px rgba(241,196,15,0.2);">
+                <button class="btn btn-warning" onclick="openHandoverModal()" style="padding:.8rem 2rem; border-radius:12px; font-weight:700; box-shadow:0 4px 12px rgba(241,196,15,0.2);"><span class="btn-text">
                     <i class="fas fa-file-export"></i> Submit Handover
-                </button>
+                </span></button>
             <?php elseif($handover_done): ?>
-                <button class="adm-btn adm-btn-ghost" disabled style="padding:.8rem 2rem; border-radius:12px; opacity:0.8; color:var(--success); border-color:var(--success);">
+                <button class="btn btn-ghost" disabled style="padding:.8rem 2rem; border-radius:12px; opacity:0.8; color:var(--success); border-color:var(--success);"><span class="btn-text">
                     <i class="fas fa-check-double"></i> Handover Signed
-                </button>
+                </span></button>
             <?php endif; ?>
         </div>
     </div>
@@ -131,9 +131,9 @@ if ($q_shifts) {
                                                 <small style="color:var(--danger); font-weight:700; font-size:1rem; text-transform:uppercase; letter-spacing:0.05em;">Overdue</small>
                                             <?php endif; ?>
                                         </div>
-                                        <button class="adm-btn adm-btn-ghost" onclick="completeTask(<?= $t['id'] ?>)" style="padding:.6rem 1.5rem; border-radius:8px; font-weight:700; width:100%;">
+                                        <button class="btn btn-ghost" onclick="completeTask(<?= $t['id'] ?>)" style="padding:.6rem 1.5rem; border-radius:8px; font-weight:700; width:100%;"><span class="btn-text">
                                             <i class="fas fa-check"></i> Mark Done
-                                        </button>
+                                        </span></button>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -251,7 +251,7 @@ if ($q_shifts) {
     <div class="modal-box" style="max-width:720px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--warning); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-clipboard-check" style="margin-right:.8rem;"></i> Clinical Shift Handover</h3>
-            <button class="modal-close" onclick="closeHandoverModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeHandoverModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         
         <div style="padding:2.5rem;">
@@ -294,10 +294,10 @@ if ($q_shifts) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeHandoverModal()" style="font-weight:600;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-warning" id="btnSubmitHandover" style="padding:.8rem 2.5rem; font-weight:800; border-radius:12px; box-shadow:0 4px 12px rgba(241,196,15,0.2);">
+                    <button type="button" class="btn btn-ghost" onclick="closeHandoverModal()" style="font-weight:600;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-warning" id="btnSubmitHandover" style="padding:.8rem 2.5rem; font-weight:800; border-radius:12px; box-shadow:0 4px 12px rgba(241,196,15,0.2);"><span class="btn-text">
                         <i class="fas fa-check-double"></i> Sign Off &amp; Submit
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

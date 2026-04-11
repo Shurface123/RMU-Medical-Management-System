@@ -265,9 +265,9 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
                 </div>
 
                 <div class="btn-row" style="justify-content:flex-end;">
-                    <button type="button" class="btn btn-primary" id="step1Next" disabled>
+                    <button type="button" class="btn btn-primary" id="step1Next" disabled><span class="btn-text">
                         Next <i class="fas fa-arrow-right"></i>
-                    </button>
+                    </span></button>
                 </div>
             </div>
 
@@ -349,8 +349,8 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
                 </div>
 
                 <div class="btn-row">
-                    <button type="button" class="btn btn-outline" onclick="goStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button type="button" class="btn btn-primary" id="step2Next" disabled>Next <i class="fas fa-arrow-right"></i></button>
+                    <button type="button" class="btn btn-outline" onclick="goStep(1)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
+                    <button type="button" class="btn btn-primary" id="step2Next" disabled><span class="btn-text">Next <i class="fas fa-arrow-right"></i></span></button>
                 </div>
             </div>
 
@@ -550,8 +550,8 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
                 </div>
 
                 <div class="btn-row">
-                    <button type="button" class="btn btn-outline" onclick="goStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button type="button" class="btn btn-primary" id="step3Next">Next <i class="fas fa-arrow-right"></i></button>
+                    <button type="button" class="btn btn-outline" onclick="goStep(2)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
+                    <button type="button" class="btn btn-primary" id="step3Next"><span class="btn-text">Next <i class="fas fa-arrow-right"></i></span></button>
                 </div>
             </div>
 
@@ -618,8 +618,8 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
                 </div>
 
                 <div class="btn-row">
-                    <button type="button" class="btn btn-outline" onclick="goStep(3)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button type="button" class="btn btn-primary" id="step4Next" disabled>Next <i class="fas fa-arrow-right"></i></button>
+                    <button type="button" class="btn btn-outline" onclick="goStep(3)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
+                    <button type="button" class="btn btn-primary" id="step4Next" disabled><span class="btn-text">Next <i class="fas fa-arrow-right"></i></span></button>
                 </div>
             </div>
 
@@ -659,10 +659,10 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
                 </div>
 
                 <div class="btn-row">
-                    <button type="button" class="btn btn-outline" onclick="goStep(4)"><i class="fas fa-arrow-left"></i> Back & Edit</button>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <button type="button" class="btn btn-outline" onclick="goStep(4)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back & Edit</span></button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn"><span class="btn-text">
                         <i class="fas fa-paper-plane"></i> Submit Registration
-                    </button>
+                    </span></button>
                 </div>
             </div>
 
@@ -1057,12 +1057,12 @@ if (params.get('error')) showGlobalErr(params.get('error'));
   <div class="policy-modal">
     <div class="policy-modal-head">
       <h2 id="policyModalTitle"><i class="fas fa-file-contract"></i> Policy Document</h2>
-      <button class="policy-modal-close" onclick="closePolicyModal()" title="Close"><i class="fas fa-times"></i></button>
+      <button class="btn btn-primary policy-modal-close" onclick="closePolicyModal()" title="Close"><span class="btn-text"><i class="fas fa-times"></i></span></button>
     </div>
     <div class="policy-modal-body" id="policyModalBody" onscroll="checkPolicyScroll(this)"></div>
     <div class="policy-modal-foot">
-      <button class="btn btn-outline btn-sm" onclick="closePolicyModal()">Close</button>
-      <button class="btn btn-primary btn-sm" id="btnAcceptPolicy" onclick="acceptPolicy()" disabled><i class="fas fa-check"></i> I Accept</button>
+      <button class="btn btn-outline btn-sm" onclick="closePolicyModal()"><span class="btn-text">Close</span></button>
+      <button class="btn btn-primary btn-sm" id="btnAcceptPolicy" onclick="acceptPolicy()" disabled><span class="btn-text"><i class="fas fa-check"></i> I Accept</span></button>
     </div>
   </div>
 </div>

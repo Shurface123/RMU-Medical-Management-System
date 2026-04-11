@@ -21,7 +21,7 @@ if($pq) while($r=mysqli_fetch_assoc($pq)) $pay_for_refund[]=$r;
     <h1><i class="fas fa-rotate-left" style="color:var(--role-accent);"></i> Refunds</h1>
     <p>Process and track all payment refunds including Paystack reversals</p>
   </div>
-  <button onclick="openModal('modalInitRefund')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> Initiate Refund</button>
+  <button onclick="openModal('modalInitRefund')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> Initiate Refund</span></button>
 </div>
 
 <div class="adm-summary-strip">
@@ -62,8 +62,8 @@ if($pq) while($r=mysqli_fetch_assoc($pq)) $pay_for_refund[]=$r;
           <td>
             <?php if($rf['status']==='Pending Approval'&&$user_role==='finance_manager'): ?>
             <div class="adm-table-actions">
-              <button onclick="approveRefund(<?=$rf['refund_id']?>)" class="adm-btn adm-btn-sm adm-btn-success"><i class="fas fa-check"></i></button>
-              <button onclick="rejectRefund(<?=$rf['refund_id']?>)" class="adm-btn adm-btn-sm adm-btn-danger"><i class="fas fa-xmark"></i></button>
+              <button onclick="approveRefund(<?=$rf['refund_id']?>)" class="btn btn-sm btn-success"><span class="btn-text"><i class="fas fa-check"></i></span></button>
+              <button onclick="rejectRefund(<?=$rf['refund_id']?>)" class="btn btn-sm btn-danger"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
             </div>
             <?php endif;?>
           </td>
@@ -80,7 +80,7 @@ if($pq) while($r=mysqli_fetch_assoc($pq)) $pay_for_refund[]=$r;
   <div class="adm-modal-content" style="max-width:660px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-rotate-left" style="color:var(--role-accent);"></i> Initiate Refund</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalInitRefund')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalInitRefund')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formInitRefund">
@@ -119,8 +119,8 @@ if($pq) while($r=mysqli_fetch_assoc($pq)) $pay_for_refund[]=$r;
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalInitRefund')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="submitRefund()" class="adm-btn adm-btn-danger"><i class="fas fa-rotate-left"></i> Submit Refund Request</button>
+      <button onclick="closeModal('modalInitRefund')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="submitRefund()" class="btn btn-danger"><span class="btn-text"><i class="fas fa-rotate-left"></i> Submit Refund Request</span></button>
     </div>
   </div>
 </div>

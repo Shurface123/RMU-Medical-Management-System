@@ -50,9 +50,9 @@ if ($q)
                 <h1>Meal & Dietary Orders</h1>
                 <p>Assign dietary requirements and meal prep tasks to the kitchen staff.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('dietModal').classList.add('active')">
+            <button class="btn btn-primary" onclick="document.getElementById('dietModal').classList.add('active')"><span class="btn-text">
                 <i class="fas fa-plus"></i> New Dietary Order
-            </button>
+            </span></button>
         </div>
 
         <?php if (isset($_GET['success'])): ?>
@@ -137,7 +137,7 @@ endif; ?>
     <div class="adm-modal-content" style="max-width: 900px;">
         <div class="adm-modal-header">
             <h3><i class="fas fa-utensils"></i> New Dietary Order</h3>
-            <button class="adm-modal-close" onclick="document.getElementById('dietModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary adm-modal-close" onclick="document.getElementById('dietModal').classList.remove('active')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <div class="adm-modal-body">
             <form id="dietForm" onsubmit="submitDietOrder(event)">
@@ -284,8 +284,8 @@ endif; ?>
                 </div>
 
                 <div class="adm-modal-footer">
-                    <button type="button" class="adm-btn" onclick="document.getElementById('dietModal').classList.remove('active')">Cancel</button>
-                    <button type="submit" id="submitBtn" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Submit Order</button>
+                    <button type="button" class="btn btn-ghost btn" onclick="document.getElementById('dietModal').classList.remove('active')"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Submit Order</span></button>
                 </div>
             </form>
         </div>
@@ -297,14 +297,14 @@ endif; ?>
     <div class="adm-modal-content" style="max-width: 500px; border-left: 5px solid var(--danger);">
         <div class="adm-modal-header">
             <h3 style="color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> Allergy Warning</h3>
-            <button class="adm-modal-close" onclick="document.getElementById('allergyWarningModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary adm-modal-close" onclick="document.getElementById('allergyWarningModal').classList.remove('active')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <div class="adm-modal-body">
             <p>This order may conflict with the patient's recorded allergies: <strong id="conflict_allergies_list" style="color:var(--danger);"></strong></p>
             <p>Do you want to override and proceed?</p>
             <div class="adm-modal-footer">
-                <button type="button" class="adm-btn" onclick="document.getElementById('allergyWarningModal').classList.remove('active')">Go Back</button>
-                <button type="button" class="adm-btn adm-btn-danger" onclick="overrideAllergyAndSubmit()"><i class="fas fa-check"></i> Proceed Anyway</button>
+                <button type="button" class="btn btn-ghost btn" onclick="document.getElementById('allergyWarningModal').classList.remove('active')"><span class="btn-text">Go Back</span></button>
+                <button type="button" class="btn btn-danger" onclick="overrideAllergyAndSubmit()"><span class="btn-text"><i class="fas fa-check"></i> Proceed Anyway</span></button>
             </div>
         </div>
     </div>

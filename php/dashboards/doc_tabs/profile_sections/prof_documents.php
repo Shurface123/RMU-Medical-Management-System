@@ -2,7 +2,7 @@
 <div id="prof-documents" class="prof-section" style="display:none;">
   <div class="adm-card">
     <div class="adm-card-header"><h3><i class="fas fa-file-upload"></i> Documents & Uploads</h3>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="document.getElementById('addDocForm').style.display='block'"><i class="fas fa-plus"></i> Upload</button>
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('addDocForm').style.display='block'"><span class="btn-text"><i class="fas fa-plus"></i> Upload</span></button>
     </div>
     <div style="padding:1.5rem;">
       <!-- Upload form -->
@@ -14,7 +14,7 @@
             <div class="form-group"><label>Description</label><input type="text" name="description" class="form-control" placeholder="e.g. Medical License, Insurance"></div>
           </div>
           <p style="font-size:1.05rem;color:var(--text-muted);margin-bottom:1rem;">Accepted: PDF, JPG, PNG, DOC, DOCX (max 10MB)</p>
-          <div style="display:flex;gap:.8rem;"><button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-upload"></i> Upload</button><button type="button" class="adm-btn" onclick="this.closest('div[id]').style.display='none'">Cancel</button></div>
+          <div style="display:flex;gap:.8rem;"><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-upload"></i> Upload</span></button><button type="button" class="btn btn-ghost btn" onclick="this.closest('div[id]').style.display='none'"><span class="btn-text">Cancel</span></button></div>
         </form>
       </div>
       <!-- Document list -->
@@ -34,8 +34,8 @@
             <div style="font-weight:600;font-size:1.3rem;"><?=htmlspecialchars($dc['file_name'])?></div>
             <div style="font-size:1.1rem;color:var(--text-muted);"><?=htmlspecialchars($dc['description']??'No description')?> &middot; <?=$sizeStr?> &middot; <?=date('d M Y',strtotime($dc['uploaded_at']))?></div>
           </div>
-          <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($dc['file_path'])?>" target="_blank" class="adm-btn adm-btn-sm" title="Download"><i class="fas fa-download"></i></a>
-          <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delDoc(<?=$dc['id']?>,this)" title="Delete"><i class="fas fa-trash"></i></button>
+          <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($dc['file_path'])?>" target="_blank" class="btn btn-outline btn-icon btn btn-sm" title="Download"><span class="btn-text"><i class="fas fa-download"></i></span></a>
+          <button class="btn btn-danger btn-sm" onclick="delDoc(<?=$dc['id']?>,this)" title="Delete"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
         </div>
       <?php endforeach; endif;?>
       </div>

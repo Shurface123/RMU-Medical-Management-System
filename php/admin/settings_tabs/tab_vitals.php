@@ -47,10 +47,10 @@
         ?>
 
         <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
-            <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">Reset Defaults</button>
-            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem;">
+            <button type="button" class="btn btn-outline-secondary" onclick="location.reload()"><span class="btn-text">Reset Defaults</span></button>
+            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem;"><span class="btn-text">
                 <i class="fas fa-save"></i> Save Thresholds
-            </button>
+            </span></button>
         </div>
     </form>
 </div>

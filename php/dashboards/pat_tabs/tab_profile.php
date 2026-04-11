@@ -154,7 +154,7 @@ function calcBMI(){
         <div class="form-group"><label>Country</label><input type="text" name="country" class="form-control" value="<?=htmlspecialchars($pat_row['country']??'Ghana')?>"></div>
         <div class="form-group"><label>Postal Code</label><input type="text" name="postal_code" class="form-control" value="<?=htmlspecialchars($pat_row['postal_code']??'')?>"></div>
       </div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><i class="fas fa-save"></i> Save Personal Information</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Personal Information</span></button>
     </form>
   </div>
 </div>
@@ -178,32 +178,32 @@ function calcBMI(){
       </div>
       <!-- Allergies -->
       <div class="form-group"><label><i class="fas fa-allergies" style="color:var(--danger);"></i> Known Allergies</label>
-        <div id="allergyList"><?php foreach($allergies as $i=>$a):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="allergies[<?=$i?>][name]" class="form-control" value="<?=htmlspecialchars($a['name']??'')?>" placeholder="Allergy" style="flex:2;"><select name="allergies[<?=$i?>][type]" class="form-control" style="flex:1;"><?php foreach(['Drug','Food','Environmental','Other'] as $t):?><option <?=($a['type']??'')===$t?'selected':''?>><?=$t?></option><?php endforeach;?></select><select name="allergies[<?=$i?>][severity]" class="form-control" style="flex:1;"><?php foreach(['Mild','Moderate','Severe'] as $s):?><option <?=($a['severity']??'')===$s?'selected':''?>><?=$s?></option><?php endforeach;?></select><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div><?php endforeach;?></div>
-        <button type="button" class="adm-btn adm-btn-sm" onclick="addArrItem('allergyList','allergies',['name|text|Allergy','type|select|Drug,Food,Environmental,Other','severity|select|Mild,Moderate,Severe'])"><i class="fas fa-plus"></i> Add Allergy</button>
+        <div id="allergyList"><?php foreach($allergies as $i=>$a):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="allergies[<?=$i?>][name]" class="form-control" value="<?=htmlspecialchars($a['name']??'')?>" placeholder="Allergy" style="flex:2;"><select name="allergies[<?=$i?>][type]" class="form-control" style="flex:1;"><?php foreach(['Drug','Food','Environmental','Other'] as $t):?><option <?=($a['type']??'')===$t?'selected':''?>><?=$t?></option><?php endforeach;?></select><select name="allergies[<?=$i?>][severity]" class="form-control" style="flex:1;"><?php foreach(['Mild','Moderate','Severe'] as $s):?><option <?=($a['severity']??'')===$s?'selected':''?>><?=$s?></option><?php endforeach;?></select><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button></div><?php endforeach;?></div>
+        <button type="button" class="btn btn-primary btn btn-sm" onclick="addArrItem('allergyList','allergies',['name|text|Allergy','type|select|Drug,Food,Environmental,Other','severity|select|Mild,Moderate,Severe'])"><span class="btn-text"><i class="fas fa-plus"></i> Add Allergy</span></button>
       </div>
       <!-- Chronic Conditions -->
       <div class="form-group"><label><i class="fas fa-lungs" style="color:var(--warning);"></i> Chronic Conditions</label>
-        <div id="chronicList"><?php foreach($chronic as $i=>$c):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="chronic_conditions[<?=$i?>][condition]" class="form-control" value="<?=htmlspecialchars($c['condition']??$c??'')?>" placeholder="Condition"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div><?php endforeach;?></div>
-        <button type="button" class="adm-btn adm-btn-sm" onclick="addSimpleItem('chronicList','chronic_conditions','Condition')"><i class="fas fa-plus"></i> Add Condition</button>
+        <div id="chronicList"><?php foreach($chronic as $i=>$c):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="chronic_conditions[<?=$i?>][condition]" class="form-control" value="<?=htmlspecialchars($c['condition']??$c??'')?>" placeholder="Condition"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button></div><?php endforeach;?></div>
+        <button type="button" class="btn btn-primary btn btn-sm" onclick="addSimpleItem('chronicList','chronic_conditions','Condition')"><span class="btn-text"><i class="fas fa-plus"></i> Add Condition</span></button>
       </div>
       <!-- Disabilities -->
       <div class="form-group"><label>Disabilities / Special Needs</label><textarea name="disabilities" class="form-control" rows="2"><?=htmlspecialchars($medProfile['disabilities']??'')?></textarea></div>
       <!-- Current Medications -->
       <div class="form-group"><label><i class="fas fa-capsules" style="color:var(--info);"></i> Current Medications (outside system)</label>
-        <div id="medsList"><?php foreach($currentMeds as $i=>$m):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="current_medications[<?=$i?>][name]" class="form-control" value="<?=htmlspecialchars($m['name']??$m??'')?>" placeholder="Medication" style="flex:2;"><input type="text" name="current_medications[<?=$i?>][dosage]" class="form-control" value="<?=htmlspecialchars($m['dosage']??'')?>" placeholder="Dosage" style="flex:1;"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div><?php endforeach;?></div>
-        <button type="button" class="adm-btn adm-btn-sm" onclick="addMedItem()"><i class="fas fa-plus"></i> Add Medication</button>
+        <div id="medsList"><?php foreach($currentMeds as $i=>$m):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="current_medications[<?=$i?>][name]" class="form-control" value="<?=htmlspecialchars($m['name']??$m??'')?>" placeholder="Medication" style="flex:2;"><input type="text" name="current_medications[<?=$i?>][dosage]" class="form-control" value="<?=htmlspecialchars($m['dosage']??'')?>" placeholder="Dosage" style="flex:1;"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button></div><?php endforeach;?></div>
+        <button type="button" class="btn btn-primary btn btn-sm" onclick="addMedItem()"><span class="btn-text"><i class="fas fa-plus"></i> Add Medication</span></button>
       </div>
       <!-- Vaccination History -->
       <div class="form-group"><label><i class="fas fa-syringe" style="color:var(--success);"></i> Vaccination History</label>
-        <div id="vaccList"><?php foreach($vaccinations as $i=>$v):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="vaccination_history[<?=$i?>][vaccine]" class="form-control" value="<?=htmlspecialchars($v['vaccine']??'')?>" placeholder="Vaccine" style="flex:2;"><input type="date" name="vaccination_history[<?=$i?>][date]" class="form-control" value="<?=htmlspecialchars($v['date']??'')?>" style="flex:1;"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div><?php endforeach;?></div>
-        <button type="button" class="adm-btn adm-btn-sm" onclick="addVaccItem()"><i class="fas fa-plus"></i> Add Vaccine</button>
+        <div id="vaccList"><?php foreach($vaccinations as $i=>$v):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="vaccination_history[<?=$i?>][vaccine]" class="form-control" value="<?=htmlspecialchars($v['vaccine']??'')?>" placeholder="Vaccine" style="flex:2;"><input type="date" name="vaccination_history[<?=$i?>][date]" class="form-control" value="<?=htmlspecialchars($v['date']??'')?>" style="flex:1;"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button></div><?php endforeach;?></div>
+        <button type="button" class="btn btn-primary btn btn-sm" onclick="addVaccItem()"><span class="btn-text"><i class="fas fa-plus"></i> Add Vaccine</span></button>
       </div>
       <!-- Family Medical History -->
       <div class="form-group"><label><i class="fas fa-people-group" style="color:var(--role-accent);"></i> Family Medical History</label>
-        <div id="famList"><?php foreach($familyHx as $i=>$f):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="family_medical_history[<?=$i?>][relation]" class="form-control" value="<?=htmlspecialchars($f['relation']??'')?>" placeholder="Relation" style="flex:1;"><input type="text" name="family_medical_history[<?=$i?>][condition]" class="form-control" value="<?=htmlspecialchars($f['condition']??'')?>" placeholder="Condition" style="flex:2;"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div><?php endforeach;?></div>
-        <button type="button" class="adm-btn adm-btn-sm" onclick="addFamItem()"><i class="fas fa-plus"></i> Add Entry</button>
+        <div id="famList"><?php foreach($familyHx as $i=>$f):?><div class="arr-item" style="display:flex;gap:.5rem;margin-bottom:.5rem;"><input type="text" name="family_medical_history[<?=$i?>][relation]" class="form-control" value="<?=htmlspecialchars($f['relation']??'')?>" placeholder="Relation" style="flex:1;"><input type="text" name="family_medical_history[<?=$i?>][condition]" class="form-control" value="<?=htmlspecialchars($f['condition']??'')?>" placeholder="Condition" style="flex:2;"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button></div><?php endforeach;?></div>
+        <button type="button" class="btn btn-primary btn btn-sm" onclick="addFamItem()"><span class="btn-text"><i class="fas fa-plus"></i> Add Entry</span></button>
       </div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><i class="fas fa-save"></i> Save Medical Profile</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Medical Profile</span></button>
     </form>
   </div>
 </div>
@@ -227,7 +227,7 @@ function calcBMI(){
       </div>
       <div class="form-group"><label>Payment Preference</label><select name="payment_preference" class="form-control"><?php foreach(['Cash','Insurance','Mobile Money'] as $pp):?><option <?=($insurance['payment_preference']??'')===$pp?'selected':''?>><?=$pp?></option><?php endforeach;?></select></div>
       <div class="form-group"><label>Billing Address</label><textarea name="billing_address" class="form-control" rows="2" placeholder="Leave blank to use residential address"><?=htmlspecialchars($insurance['billing_address']??'')?></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><i class="fas fa-save"></i> Save Insurance Info</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Insurance Info</span></button>
     </form>
   </div>
 </div>
@@ -244,7 +244,7 @@ function calcBMI(){
         <div class="form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" required></div>
         <div class="form-group"><label>New Password</label><input type="password" name="new_password" class="form-control" required minlength="8" oninput="profPwdStr(this)"><div id="profPwdMeter" style="margin-top:.4rem;font-size:1.1rem;font-weight:600;"></div></div>
         <div class="form-group"><label>Confirm Password</label><input type="password" name="confirm_password" class="form-control" required></div>
-        <button type="submit" class="adm-btn adm-btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-key"></i> Update Password</button>
+        <button type="submit" class="btn btn-warning" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-key"></i> Update Password</span></button>
       </form>
     </div>
   </div>
@@ -261,21 +261,21 @@ function calcBMI(){
       <div class="adm-card-header"><h3 style="color:var(--danger);"><i class="fas fa-user-slash"></i> Deactivate Account</h3></div>
       <div style="padding:1.5rem;">
         <p style="font-size:1.2rem;color:var(--text-muted);margin-bottom:1rem;">Request account deactivation. Admin will review your request.</p>
-        <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="requestDeactivation()"><i class="fas fa-power-off"></i> Request Deactivation</button>
+        <button class="btn btn-danger btn-sm" onclick="requestDeactivation()"><span class="btn-text"><i class="fas fa-power-off"></i> Request Deactivation</span></button>
       </div>
     </div>
   </div>
 </div>
 <!-- Active Sessions -->
 <div class="adm-card" style="margin-top:1.5rem;">
-  <div class="adm-card-header"><h3><i class="fas fa-desktop" style="color:var(--info);"></i> Active Sessions</h3><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="logoutAllSessions()"><i class="fas fa-sign-out-alt"></i> Logout All Others</button></div>
+  <div class="adm-card-header"><h3><i class="fas fa-desktop" style="color:var(--info);"></i> Active Sessions</h3><button class="btn btn-danger btn-sm" onclick="logoutAllSessions()"><span class="btn-text"><i class="fas fa-sign-out-alt"></i> Logout All Others</span></button></div>
   <div class="adm-table-wrap" style="padding:0 .5rem;">
     <table class="adm-table"><thead><tr><th>Device / Browser</th><th>IP Address</th><th>Login Time</th><th>Last Active</th><th>Action</th></tr></thead>
     <tbody id="sessionsBody">
       <?php if(empty($patSessions)):?><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No sessions</td></tr>
       <?php else: foreach($patSessions as $s):?>
       <tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;"><?=htmlspecialchars($s['device_info']??$s['browser']??'—')?></td><td><?=htmlspecialchars($s['ip_address']??'—')?></td><td><?=date('d M, g:i A',strtotime($s['login_time']))?></td><td><?=$s['last_active']?date('g:i A',strtotime($s['last_active'])):'—'?></td>
-      <td><?php if($s['is_current']):?><span class="adm-badge adm-badge-success">Current</span><?php else:?><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="logoutSession(<?=$s['id']?>)"><i class="fas fa-sign-out-alt"></i></button><?php endif;?></td></tr>
+      <td><?php if($s['is_current']):?><span class="adm-badge adm-badge-success">Current</span><?php else:?><button class="btn btn-danger btn-sm" onclick="logoutSession(<?=$s['id']?>)"><span class="btn-text"><i class="fas fa-sign-out-alt"></i></span></button><?php endif;?></td></tr>
       <?php endforeach; endif;?>
     </tbody></table>
   </div>
@@ -320,7 +320,7 @@ function calcBMI(){
         <div class="form-group"><label>Preferred Channel</label><select name="preferred_channel" class="form-control"><?php foreach(['dashboard'=>'In-Dashboard','email'=>'Email','sms'=>'SMS','all'=>'All Channels'] as $v=>$l):?><option value="<?=$v?>" <?=($patSettings['preferred_channel']??'dashboard')===$v?'selected':''?>><?=$l?></option><?php endforeach;?></select></div>
         <div class="form-group"><label>Language</label><select name="language_preference" class="form-control"><?php foreach(['English','French','Twi','Ga','Ewe'] as $l):?><option <?=($patSettings['language_preference']??'English')===$l?'selected':''?>><?=$l?></option><?php endforeach;?></select></div>
       </div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><i class="fas fa-save"></i> Save Preferences</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Preferences</span></button>
     </form>
   </div>
 </div>
@@ -330,7 +330,7 @@ function calcBMI(){
 <div class="prof-sec" id="profSec-documents" style="display:none;">
 <div class="adm-card">
   <div class="adm-card-header"><h3><i class="fas fa-file-upload" style="color:var(--role-accent);"></i> Documents & Uploads</h3>
-    <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="document.getElementById('docUploadForm').style.display='block'"><i class="fas fa-plus"></i> Upload</button>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('docUploadForm').style.display='block'"><span class="btn-text"><i class="fas fa-plus"></i> Upload</span></button>
   </div>
   <div style="padding:1.5rem;">
     <!-- Upload Form -->
@@ -341,7 +341,7 @@ function calcBMI(){
           <div class="form-group"><label>Description</label><input type="text" name="description" class="form-control" placeholder="Brief description..."></div>
         </div>
         <div class="form-group"><label>File (PDF, JPG, PNG, DOCX — max 5MB)</label><input type="file" name="document" class="form-control" required accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"></div>
-        <div style="display:flex;gap:.8rem;"><button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-upload"></i> Upload</button><button type="button" class="adm-btn" onclick="this.closest('#docUploadForm').style.display='none'">Cancel</button></div>
+        <div style="display:flex;gap:.8rem;"><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-upload"></i> Upload</span></button><button type="button" class="btn btn-ghost btn" onclick="this.closest('#docUploadForm').style.display='none'"><span class="btn-text">Cancel</span></button></div>
       </form>
     </div>
     <!-- Document List -->
@@ -355,7 +355,7 @@ function calcBMI(){
           <td><span class="adm-badge adm-badge-info"><?=htmlspecialchars($d['document_category']??'Other')?></span></td>
           <td><?=$sizeKB?> KB</td>
           <td><?=date('d M Y',strtotime($d['uploaded_at']))?></td>
-          <td><div style="display:flex;gap:.4rem;"><a href="/RMU-Medical-Management-System/<?=htmlspecialchars($d['file_path'])?>" target="_blank" class="adm-btn adm-btn-sm" title="Download"><i class="fas fa-download"></i></a><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteDoc(<?=$d['id']?>)" title="Delete"><i class="fas fa-trash"></i></button></div></td>
+          <td><div style="display:flex;gap:.4rem;"><a href="/RMU-Medical-Management-System/<?=htmlspecialchars($d['file_path'])?>" target="_blank" class="btn btn-outline btn-icon btn btn-sm" title="Download"><span class="btn-text"><i class="fas fa-download"></i></span></a><button class="btn btn-danger btn-sm" onclick="deleteDoc(<?=$d['id']?>)" title="Delete"><span class="btn-text"><i class="fas fa-trash"></i></span></button></div></td>
         </tr>
         <?php endforeach;?>
       </tbody></table>
@@ -445,11 +445,11 @@ function addArrItem(listId,fieldName,fields){
     if(type==='select'){html+=`<select name="${fieldName}[${i}][${n}]" class="form-control" style="flex:1;">${opts.split(',').map(o=>`<option>${o}</option>`).join('')}</select>`;}
     else{html+=`<input type="text" name="${fieldName}[${i}][${n}]" class="form-control" placeholder="${opts||n}" style="flex:2;">`;}
   });
-  html+=`<button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+  html+=`<button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button>`;
   div.innerHTML=html;document.getElementById(listId).appendChild(div);
 }
-function addSimpleItem(listId,fieldName,ph){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="${fieldName}[${i}][condition]" class="form-control" placeholder="${ph}"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;document.getElementById(listId).appendChild(div);}
-function addMedItem(){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="current_medications[${i}][name]" class="form-control" placeholder="Medication" style="flex:2;"><input type="text" name="current_medications[${i}][dosage]" class="form-control" placeholder="Dosage" style="flex:1;"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;document.getElementById('medsList').appendChild(div);}
-function addVaccItem(){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="vaccination_history[${i}][vaccine]" class="form-control" placeholder="Vaccine" style="flex:2;"><input type="date" name="vaccination_history[${i}][date]" class="form-control" style="flex:1;"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;document.getElementById('vaccList').appendChild(div);}
-function addFamItem(){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="family_medical_history[${i}][relation]" class="form-control" placeholder="Relation" style="flex:1;"><input type="text" name="family_medical_history[${i}][condition]" class="form-control" placeholder="Condition" style="flex:2;"><button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;document.getElementById('famList').appendChild(div);}
+function addSimpleItem(listId,fieldName,ph){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="${fieldName}[${i}][condition]" class="form-control" placeholder="${ph}"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button>`;document.getElementById(listId).appendChild(div);}
+function addMedItem(){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="current_medications[${i}][name]" class="form-control" placeholder="Medication" style="flex:2;"><input type="text" name="current_medications[${i}][dosage]" class="form-control" placeholder="Dosage" style="flex:1;"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button>`;document.getElementById('medsList').appendChild(div);}
+function addVaccItem(){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="vaccination_history[${i}][vaccine]" class="form-control" placeholder="Vaccine" style="flex:2;"><input type="date" name="vaccination_history[${i}][date]" class="form-control" style="flex:1;"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button>`;document.getElementById('vaccList').appendChild(div);}
+function addFamItem(){const i=arrIdx++;const div=document.createElement('div');div.className='arr-item';div.style='display:flex;gap:.5rem;margin-bottom:.5rem;';div.innerHTML=`<input type="text" name="family_medical_history[${i}][relation]" class="form-control" placeholder="Relation" style="flex:1;"><input type="text" name="family_medical_history[${i}][condition]" class="form-control" placeholder="Condition" style="flex:2;"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><span class="btn-text"><i class="fas fa-times"></i></span></button>`;document.getElementById('famList').appendChild(div);}
 </script>

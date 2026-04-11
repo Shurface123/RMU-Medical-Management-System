@@ -37,9 +37,9 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                 <h1>Staff Management</h1>
                 <p>Manage all non-clinical staff members — pharmacists, receptionists, and support staff.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/register.php?role=staff" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/register.php?role=staff" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-user-plus"></i> Add Staff Member
-            </a>
+            </span></a>
         </div>
 
         <div class="adm-summary-strip">
@@ -77,8 +77,8 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                 </select>
             </div>
             <div style="display:flex;gap:.5rem;">
-                <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-search"></i> Filter</button>
-                <a href="staff.php" class="adm-btn adm-btn-back"><i class="fas fa-times"></i> Clear</a>
+                <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-search"></i> Filter</span></button>
+                <a href="staff.php" class="btn btn-danger btn-sm btn-icon btn btn-back"><span class="btn-text"><i class="fas fa-times"></i> Clear</span></a>
             </div>
         </form>
 
@@ -171,12 +171,12 @@ $total_all    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM staff
                             <td>
                                 <div class="adm-table-actions">
                                     <a href="/RMU-Medical-Management-System/php/staff/edit_staff.php?id=<?php echo $st['id']; ?>"
-                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i></a>
+                                       class="btn btn-warning btn-sm"><span class="btn-text"><i class="fas fa-edit"></i></span></a>
                                     <a href="/RMU-Medical-Management-System/php/staff/deactivate_staff.php?id=<?php echo $st['id']; ?>"
-                                       class="adm-btn adm-btn-<?php echo $st['is_active']?'danger':'success'; ?> adm-btn-sm"
-                                       onclick="return confirm('<?php echo $st['is_active']?'Deactivate':'Activate'; ?> this staff member?');">
+                                       class="btn btn-primary btn btn-<?php echo $st['is_active']?'danger':'success'; ?> btn-sm"
+                                       onclick="return confirm('<?php echo $st['is_active']?'Deactivate':'Activate'; ?> this staff member?');"><span class="btn-text">
                                         <i class="fas fa-<?php echo $st['is_active']?'user-slash':'user-check'; ?>"></i>
-                                    </a>
+                                    </span></a>
                                 </div>
                             </td>
                         </tr>

@@ -356,18 +356,18 @@ $memoryLimit = ini_get('memory_limit');
         <?php endif; ?>
         
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('general')">
+            <button class="btn btn-primary tab active" onclick="switchTab('general')"><span class="btn-text">
                 <i class="fas fa-info-circle"></i> General
-            </button>
-            <button class="tab" onclick="switchTab('security')">
+            </span></button>
+            <button class="btn btn-primary tab" onclick="switchTab('security')"><span class="btn-text">
                 <i class="fas fa-shield-alt"></i> Security
-            </button>
-            <button class="tab" onclick="switchTab('email')">
+            </span></button>
+            <button class="btn btn-primary tab" onclick="switchTab('email')"><span class="btn-text">
                 <i class="fas fa-envelope"></i> Email
-            </button>
-            <button class="tab" onclick="switchTab('system')">
+            </span></button>
+            <button class="btn btn-primary tab" onclick="switchTab('system')"><span class="btn-text">
                 <i class="fas fa-server"></i> System Info
-            </button>
+            </span></button>
         </div>
         
         <!-- General Settings -->
@@ -399,9 +399,9 @@ $memoryLimit = ini_get('memory_limit');
                         </select>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary"><span class="btn-text">
                         <i class="fas fa-save"></i> Save General Settings
-                    </button>
+                    </span></button>
                 </form>
             </div>
         </div>
@@ -445,9 +445,9 @@ $memoryLimit = ini_get('memory_limit');
                         <small>Force all users to enable two-factor authentication</small>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary"><span class="btn-text">
                         <i class="fas fa-save"></i> Save Security Settings
-                    </button>
+                    </span></button>
                 </form>
             </div>
         </div>
@@ -489,9 +489,9 @@ $memoryLimit = ini_get('memory_limit');
                         <small>Email address shown as sender</small>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary"><span class="btn-text">
                         <i class="fas fa-save"></i> Save Email Settings
-                    </button>
+                    </span></button>
                 </form>
             </div>
         </div>
@@ -536,9 +536,9 @@ $memoryLimit = ini_get('memory_limit');
         </div>
         
         <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary">
+            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            </span></a>
         </div>
     </div>
     

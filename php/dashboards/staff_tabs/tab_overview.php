@@ -153,9 +153,9 @@ $current_shift = dbRow($conn,"SELECT * FROM staff_shifts WHERE staff_id=? AND sh
             <div class="card-body" style="display:flex;flex-direction:column;gap:1rem;">
                 <?php foreach ($quick_actions as $qa): ?>
                 <button class="btn btn-outline" style="justify-content:flex-start;width:100%;"
-                    onclick="<?= !empty($qa['modal']) ? "openModal('{$qa['modal']}')" : "showTab('{$qa['tab']}',null)" ?>">
+                    onclick="<?= !empty($qa['modal']) ? "openModal('{$qa['modal']}')" : "showTab('{$qa['tab']}',null)" ?>"><span class="btn-text">
                     <i class="fas <?= e($qa['icon']) ?>" style="width:20px;"></i> <?= e($qa['label']) ?>
-                </button>
+                </span></button>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -164,7 +164,7 @@ $current_shift = dbRow($conn,"SELECT * FROM staff_shifts WHERE staff_id=? AND sh
         <div class="card">
             <div class="card-header">
                 <h3><i class="fas fa-bell"></i> Recent Alerts</h3>
-                <button class="btn btn-outline btn-sm" onclick="showTab('notifications',null)">See All</button>
+                <button class="btn btn-outline btn-sm" onclick="showTab('notifications',null)"><span class="btn-text">See All</span></button>
             </div>
             <div class="card-body" style="padding:1.5rem;">
                 <?php if (empty($activity_raw)): ?>
@@ -193,7 +193,7 @@ $current_shift = dbRow($conn,"SELECT * FROM staff_shifts WHERE staff_id=? AND sh
     <div class="card">
         <div class="card-header">
             <h3><i class="fas fa-calendar-week"></i> Upcoming Shifts</h3>
-            <button class="btn btn-outline btn-sm" onclick="showTab('schedule',null)">Full Schedule</button>
+            <button class="btn btn-outline btn-sm" onclick="showTab('schedule',null)"><span class="btn-text">Full Schedule</span></button>
         </div>
         <div class="card-body-flush">
             <table class="stf-table">

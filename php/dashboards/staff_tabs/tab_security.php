@@ -11,8 +11,8 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
         <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-shield-alt" style="color:var(--role-accent);"></i> Security Operations</h2>
         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="openModal('incidentModal')"><i class="fas fa-exclamation-triangle"></i> Report Incident</button>
-            <button class="btn btn-outline" onclick="openModal('patrolModal')"><i class="fas fa-map-pin"></i> Log Patrol Check-in</button>
+            <button class="btn btn-primary" onclick="openModal('incidentModal')"><span class="btn-text"><i class="fas fa-exclamation-triangle"></i> Report Incident</span></button>
+            <button class="btn btn-outline" onclick="openModal('patrolModal')"><span class="btn-text"><i class="fas fa-map-pin"></i> Log Patrol Check-in</span></button>
         </div>
     </div>
 
@@ -88,7 +88,7 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i> Report Incident</h3>
-            <button class="modal-close" onclick="closeModal('incidentModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('incidentModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmIncident" onsubmit="event.preventDefault();submitIncident();">
             <input type="hidden" name="action" value="report_incident">
@@ -113,7 +113,7 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
             <div class="form-group"><label>Description *</label><textarea name="description" class="form-control" rows="4" required placeholder="Detailed description of what happened..."></textarea></div>
             <div class="form-group"><label>Persons Involved</label><input name="persons_involved" type="text" class="form-control" placeholder="Names or descriptions..."></div>
             <div class="form-group"><label>Actions Taken</label><textarea name="actions_taken" class="form-control" rows="2" placeholder="What immediate actions did you take?"></textarea></div>
-            <button type="submit" class="btn btn-danger btn-wide" id="btnIncident"><i class="fas fa-paper-plane"></i> Submit Report</button>
+            <button type="submit" class="btn btn-danger btn-wide" id="btnIncident"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Report</span></button>
         </form>
     </div>
 </div>
@@ -123,7 +123,7 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
     <div class="modal-box" style="max-width:420px;">
         <div class="modal-header">
             <h3><i class="fas fa-map-pin" style="color:var(--role-accent);"></i> Patrol Check-in</h3>
-            <button class="modal-close" onclick="closeModal('patrolModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('patrolModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmPatrol" onsubmit="event.preventDefault();submitPatrol();">
             <input type="hidden" name="action" value="log_patrol_checkin">
@@ -138,7 +138,7 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
                 </select>
             </div>
             <div class="form-group"><label>Observations / Notes</label><textarea name="notes" class="form-control" rows="2" placeholder="All clear / any observations..."></textarea></div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnPatrol"><i class="fas fa-map-pin"></i> Log Check-in</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnPatrol"><span class="btn-text"><i class="fas fa-map-pin"></i> Log Check-in</span></button>
         </form>
     </div>
 </div>

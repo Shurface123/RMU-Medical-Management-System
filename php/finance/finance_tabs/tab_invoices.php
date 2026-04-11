@@ -36,10 +36,10 @@ if ($fq)
       <p>Create, view, and manage all patient billing invoices</p>
     </div>
     <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-      <button onclick="openModal('modalCreateInvoice')" class="adm-btn adm-btn-primary"><i class="fas fa-file-plus"></i>
-        Create Invoice</button>
-      <button onclick="exportInvoices()" class="adm-btn adm-btn-ghost"><i class="fas fa-file-export"></i>
-        Export</button>
+      <button onclick="openModal('modalCreateInvoice')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-file-plus"></i>
+        Create Invoice</span></button>
+      <button onclick="exportInvoices()" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-file-export"></i>
+        Export</span></button>
     </div>
   </div>
 
@@ -72,8 +72,8 @@ if ($fq)
     </select>
     <input type="date" id="invDateFrom" onchange="applyInvFilters()" placeholder="From">
     <input type="date" id="invDateTo" onchange="applyInvFilters()" placeholder="To">
-    <button onclick="clearInvFilters()" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-xmark"></i>
-      Clear</button>
+    <button onclick="clearInvFilters()" class="btn-icon btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-xmark"></i>
+      Clear</span></button>
   </div>
 
   <!-- Invoice Table -->
@@ -131,21 +131,21 @@ if ($fq)
                 <td><span class="badge-fin <?= $badge ?>"><?= htmlspecialchars($inv['status']) ?></span></td>
                 <td>
                   <div class="adm-table-actions">
-                    <button onclick="viewInvoiceDetail(<?= $inv['invoice_id'] ?>)" class="adm-btn adm-btn-sm adm-btn-ghost"
-                      title="View"><i class="fas fa-eye"></i></button>
+                    <button onclick="viewInvoiceDetail(<?= $inv['invoice_id'] ?>)" class="btn btn-sm btn-ghost"
+                      title="View"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
                     <?php if (in_array($inv['status'], ['Pending', 'Partially Paid', 'Overdue'])): ?>
                       <button
                         onclick="openRecordPaymentFor(<?= $inv['invoice_id'] ?>,'<?= htmlspecialchars($inv['invoice_number']) ?>',<?= $inv['balance_due'] ?>)"
-                        class="adm-btn adm-btn-sm adm-btn-success" title="Record Payment"><i
-                          class="fas fa-money-bill"></i></button>
+                        class="btn btn-sm btn-success" title="Record Payment"><span class="btn-text"><i
+                          class="fas fa-money-bill"></i></span></button>
                     <?php endif; ?>
                     <?php if ($inv['status'] === 'Draft'): ?>
-                      <button onclick="issueInvoice(<?= $inv['invoice_id'] ?>)" class="adm-btn adm-btn-sm adm-btn-primary"
-                        title="Issue Invoice"><i class="fas fa-paper-plane"></i></button>
+                      <button onclick="issueInvoice(<?= $inv['invoice_id'] ?>)" class="btn btn-sm btn-primary"
+                        title="Issue Invoice"><span class="btn-text"><i class="fas fa-paper-plane"></i></span></button>
                     <?php endif; ?>
-                    <button onclick="printInvoice(<?= $inv['invoice_id'] ?>)" class="adm-btn adm-btn-sm"
-                      style="background:var(--primary-light);color:var(--primary);" title="Print"><i
-                        class="fas fa-print"></i></button>
+                    <button onclick="printInvoice(<?= $inv['invoice_id'] ?>)" class="btn btn-outline btn-icon btn btn-sm"
+                      style="background:var(--primary-light);color:var(--primary);" title="Print"><span class="btn-text"><i
+                        class="fas fa-print"></i></span></button>
                   </div>
                 </td>
               </tr>
@@ -157,12 +157,12 @@ if ($fq)
     <div
       style="padding:1.2rem 2rem;border-top:1px solid var(--border);display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
       <span style="font-size:1.2rem;color:var(--text-muted);">Bulk Actions:</span>
-      <button onclick="bulkIssue()" class="adm-btn adm-btn-sm adm-btn-primary"><i class="fas fa-paper-plane"></i> Issue
-        Selected</button>
-      <button onclick="bulkReminder()" class="adm-btn adm-btn-sm adm-btn-warning"><i class="fas fa-bell"></i> Send
-        Reminders</button>
-      <button onclick="exportSelected()" class="adm-btn adm-btn-sm adm-btn-ghost"><i class="fas fa-download"></i> Export
-        Selected</button>
+      <button onclick="bulkIssue()" class="btn btn-sm btn-primary"><span class="btn-text"><i class="fas fa-paper-plane"></i> Issue
+        Selected</span></button>
+      <button onclick="bulkReminder()" class="btn btn-sm btn-warning"><span class="btn-text"><i class="fas fa-bell"></i> Send
+        Reminders</span></button>
+      <button onclick="exportSelected()" class="btn-icon btn btn-sm btn-ghost"><span class="btn-text"><i class="fas fa-download"></i> Export
+        Selected</span></button>
     </div>
   </div>
 </div><!-- /sec-invoices -->
@@ -172,7 +172,7 @@ if ($fq)
   <div class="adm-modal-content" style="max-width:900px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-file-plus" style="color:var(--role-accent);"></i> Create New Invoice</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalCreateInvoice')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalCreateInvoice')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formCreateInvoice">
@@ -212,8 +212,8 @@ if ($fq)
           <div id="lineItemsContainer">
             <!-- Initial row added by JS -->
           </div>
-          <button type="button" onclick="addLineItem()" class="adm-btn adm-btn-ghost adm-btn-sm"
-            style="margin-top:.8rem;"><i class="fas fa-plus"></i> Add Service</button>
+          <button type="button" onclick="addLineItem()" class="btn btn-ghost btn-sm"
+            style="margin-top:.8rem;"><span class="btn-text"><i class="fas fa-plus"></i> Add Service</span></button>
         </div>
 
         <!-- Invoice Summary -->
@@ -233,14 +233,14 @@ if ($fq)
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalCreateInvoice')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="saveInvoice('draft')" class="adm-btn"
-        style="background:var(--surface-2);border:1px solid var(--border);color:var(--text-primary);">
+      <button onclick="closeModal('modalCreateInvoice')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="saveInvoice('draft')" class="btn btn-primary btn"
+        style="background:var(--surface-2);border:1px solid var(--border);color:var(--text-primary);"><span class="btn-text">
         <i class="fas fa-floppy-disk"></i> Save Draft
-      </button>
-      <button onclick="saveInvoice('issue')" class="adm-btn adm-btn-primary">
+      </span></button>
+      <button onclick="saveInvoice('issue')" class="btn btn-primary"><span class="btn-text">
         <i class="fas fa-paper-plane"></i> Issue Invoice
-      </button>
+      </span></button>
     </div>
   </div>
 </div><!-- /modal create invoice -->
@@ -250,17 +250,17 @@ if ($fq)
   <div class="adm-modal-content" style="max-width:820px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-file-invoice-dollar" style="color:var(--role-accent);"></i> Invoice Detail</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalInvoiceDetail')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalInvoiceDetail')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body" id="invoiceDetailContent" style="min-height:200px;">
       <div style="text-align:center;padding:4rem;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"
           style="font-size:2rem;"></i></div>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalInvoiceDetail')" class="adm-btn adm-btn-ghost">Close</button>
-      <button onclick="printCurrentInvoice()" class="adm-btn adm-btn-ghost"><i class="fas fa-print"></i> Print</button>
-      <button onclick="downloadInvoicePDF()" class="adm-btn adm-btn-primary"><i class="fas fa-file-pdf"></i> Download
-        PDF</button>
+      <button onclick="closeModal('modalInvoiceDetail')" class="btn btn-ghost"><span class="btn-text">Close</span></button>
+      <button onclick="printCurrentInvoice()" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-print"></i> Print</span></button>
+      <button onclick="downloadInvoicePDF()" class="btn-icon btn btn-primary"><span class="btn-text"><i class="fas fa-file-pdf"></i> Download
+        PDF</span></button>
     </div>
   </div>
 </div>
@@ -287,7 +287,7 @@ if ($fq)
     <input type="number" id="price_${idx}" value="${data.unit_price || 0}" step="0.01" min="0" oninput="calcLineTotal(${idx})" placeholder="Unit Price" style="padding:.8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-primary);font-size:1.2rem;width:100%;">
     <input type="number" id="disc_${idx}" value="${data.disc || 0}" min="0" max="100" step="0.1" oninput="calcLineTotal(${idx})" placeholder="Disc %" style="padding:.8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-primary);font-size:1.2rem;width:100%;">
     <div id="lineTotal_${idx}" style="font-weight:700;font-size:1.3rem;color:var(--role-accent);text-align:right;">GHS 0.00</div>
-    <button type="button" onclick="removeLineItem(${idx},this)" style="width:34px;height:34px;border-radius:8px;background:var(--danger-light);color:var(--danger);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;" title="Remove"><i class="fas fa-xmark"></i></button>
+    <button type="button" onclick="removeLineItem(${idx},this)" style="width:34px;height:34px;border-radius:8px;background:var(--danger-light);color:var(--danger);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;" title="Remove" class="btn btn-primary"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     <input type="hidden" id="feeId_${idx}" name="line_items[${idx}][fee_id]">
     <input type="hidden" id="tax_${idx}" value="0">
     <input type="hidden" id="taxable_${idx}" value="0">

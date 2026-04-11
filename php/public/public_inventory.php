@@ -102,9 +102,9 @@ while ($row = mysqli_fetch_assoc($cat_result)) {
             </div>
             <div class="filter-buttons">
                 <?php foreach ($categories as $key => $val): ?>
-                <button class="filter-btn <?php echo $key==='all'?'active':''; ?>" onclick="filterCategory(this, '<?php echo htmlspecialchars($key); ?>')">
+                <button class="btn btn-primary filter-btn <?php echo $key==='all'?'active':''; ?>" onclick="filterCategory(this, '<?php echo htmlspecialchars($key); ?>')"><span class="btn-text">
                     <?php echo htmlspecialchars($val); ?>
-                </button>
+                </span></button>
                 <?php endforeach; ?>
             </div>
         </div>

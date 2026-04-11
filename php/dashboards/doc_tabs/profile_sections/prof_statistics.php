@@ -2,7 +2,7 @@
 <div id="prof-statistics" class="prof-section" style="display:none;">
   <div class="adm-card">
     <div class="adm-card-header"><h3><i class="fas fa-chart-bar"></i> Patient Load & Statistics</h3>
-      <button class="adm-btn adm-btn-sm" onclick="loadStats()"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary btn btn-sm" onclick="loadStats()"><span class="btn-text"><i class="fas fa-sync-alt"></i> Refresh</span></button>
     </div>
     <div style="padding:2rem;">
       <div id="statsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.2rem;margin-bottom:2rem;">

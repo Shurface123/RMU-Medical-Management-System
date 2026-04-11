@@ -11,11 +11,11 @@ $daily_rpt = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM daily_cash_rep
   </div>
   <div style="display:flex;gap:1rem;align-items:center;">
     <input type="date" id="reconDatePicker" value="<?=$recon_date?>" max="<?=$today?>" class="adm-search-input" style="width:180px;" onchange="loadReconciliation(this.value)">
-    <button onclick="loadReconciliation(document.getElementById('reconDatePicker').value)" class="adm-btn adm-btn-primary"><i class="fas fa-rotate"></i> Load</button>
+    <button onclick="loadReconciliation(document.getElementById('reconDatePicker').value)" class="btn btn-primary"><span class="btn-text"><i class="fas fa-rotate"></i> Load</span></button>
     <?php if(!empty($daily_rpt)&&$daily_rpt['status']!=='Reconciled'&&$user_role==='finance_manager'): ?>
-    <button onclick="markReconciled()" class="adm-btn adm-btn-success"><i class="fas fa-check-double"></i> Mark Reconciled</button>
+    <button onclick="markReconciled()" class="btn btn-success"><span class="btn-text"><i class="fas fa-check-double"></i> Mark Reconciled</span></button>
     <?php endif;?>
-    <button onclick="exportReconReport()" class="adm-btn adm-btn-ghost"><i class="fas fa-file-pdf"></i> Export PDF</button>
+    <button onclick="exportReconReport()" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-file-pdf"></i> Export PDF</span></button>
   </div>
 </div>
 
@@ -75,7 +75,7 @@ $net   = $gross - $totals['refunds'] - $totals['waivers'];
   <div class="adm-card">
     <div class="adm-card-header">
       <h3><i class="fas fa-credit-card"></i> Paystack Reconciliation</h3>
-      <button onclick="fetchPaystackReconcile('<?=$rdt?>')" class="adm-btn adm-btn-sm adm-btn-primary"><i class="fas fa-rotate"></i> Fetch from Paystack</button>
+      <button onclick="fetchPaystackReconcile('<?=$rdt?>')" class="btn btn-sm btn-primary"><span class="btn-text"><i class="fas fa-rotate"></i> Fetch from Paystack</span></button>
     </div>
     <div class="adm-card-body" id="paystackReconPanel">
       <div style="text-align:center;padding:3rem;color:var(--text-muted);">

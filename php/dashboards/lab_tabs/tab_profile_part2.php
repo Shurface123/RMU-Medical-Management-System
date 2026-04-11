@@ -17,7 +17,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
     <div class="info-card" style="margin-bottom:2rem; border-top: 4px solid var(--primary);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800;"><i class="fas fa-graduation-cap" style="color:var(--primary); margin-right:.8rem;"></i> Academic Qualifications</h3>
-            <button class="adm-btn adm-btn-primary" onclick="$('#addQualModal').show()"><i class="fas fa-plus-circle"></i> Add Qualification</button>
+            <button class="btn btn-primary" onclick="$('#addQualModal').show()"><span class="btn-text"><i class="fas fa-plus-circle"></i> Add Qualification</span></button>
         </div>
         <?php if(empty($qualifications)): ?>
             <div style="text-align:center; padding:3rem; color:var(--text-muted); background:var(--surface-2); border-radius:15px; border:2px dashed var(--border);">
@@ -35,9 +35,9 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                     <td><div style="font-weight:700; color:var(--text-secondary);"><?= e($q['institution_name']) ?></div></td>
                     <td><span class="adm-badge" style="background:var(--surface-2); font-weight:800;"><?= e($q['year_awarded'] ?? '—') ?></span></td>
                     <td><?php if($q['certificate_file_path']): ?>
-                        <a href="/RMU-Medical-Management-System/php/api/download_doc.php?file=<?= urlencode($q['certificate_file_path']) ?>" class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--primary);" target="_blank"><i class="fas fa-file-pdf"></i> Download</a>
+                        <a href="/RMU-Medical-Management-System/php/api/download_doc.php?file=<?= urlencode($q['certificate_file_path']) ?>" class="btn btn-outline btn-icon btn btn-sm" style="background:var(--surface-2); color:var(--primary);" target="_blank"><span class="btn-text"><i class="fas fa-file-pdf"></i> Download</span></a>
                     <?php else: echo '<span style="color:var(--text-muted); font-size:0.85rem;">No digital copy</span>'; endif; ?></td>
-                    <td><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteQualification(<?= $q['id'] ?>)"><i class="fas fa-trash-alt"></i></button></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteQualification(<?= $q['id'] ?>)"><span class="btn-text"><i class="fas fa-trash-alt"></i></span></button></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -50,7 +50,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
     <div class="info-card" style="border-top: 4px solid var(--role-accent);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800;"><i class="fas fa-award" style="color:var(--role-accent); margin-right:.8rem;"></i> Specialist Certifications</h3>
-            <button class="adm-btn adm-btn-primary" onclick="$('#addCertModal').show()"><i class="fas fa-plus-circle"></i> Register Certification</button>
+            <button class="btn btn-primary" onclick="$('#addCertModal').show()"><span class="btn-text"><i class="fas fa-plus-circle"></i> Register Certification</span></button>
         </div>
         <?php if(empty($certifications)): ?>
             <div style="text-align:center; padding:3rem; color:var(--text-muted); background:var(--surface-2); border-radius:15px; border:2px dashed var(--border);">
@@ -80,9 +80,9 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                         <?php else: echo '<span class="adm-badge" style="background:var(--surface-2); color:var(--text-muted);">Perpetual</span>'; endif; ?>
                     </td>
                     <td><?php if($c['certificate_file_path']): ?>
-                        <a href="/RMU-Medical-Management-System/php/api/download_doc.php?file=<?= urlencode($c['certificate_file_path']) ?>" class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--primary);" target="_blank"><i class="fas fa-cloud-download-alt"></i></a>
+                        <a href="/RMU-Medical-Management-System/php/api/download_doc.php?file=<?= urlencode($c['certificate_file_path']) ?>" class="btn btn-outline btn-icon btn btn-sm" style="background:var(--surface-2); color:var(--primary);" target="_blank"><span class="btn-text"><i class="fas fa-cloud-download-alt"></i></span></a>
                     <?php else: echo '—'; endif; ?></td>
-                    <td><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteCertification(<?= $c['id'] ?>)"><i class="fas fa-trash-alt"></i></button></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteCertification(<?= $c['id'] ?>)"><span class="btn-text"><i class="fas fa-trash-alt"></i></span></button></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -125,7 +125,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
     <div class="info-card" style="margin-bottom:2rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:1.2rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800;"><i class="fas fa-microscope" style="color:var(--primary); margin-right:.8rem;"></i> Equipment Stewardship</h3>
-            <a class="adm-btn adm-btn-primary adm-btn-sm" href="?tab=equipment"><i class="fas fa-external-link-alt"></i> Asset Hub</a>
+            <a class="btn btn-primary btn-sm" href="?tab=equipment"><span class="btn-text"><i class="fas fa-external-link-alt"></i> Asset Hub</span></a>
         </div>
         <div class="adm-table-wrap">
             <table class="adm-table">
@@ -159,7 +159,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
     <div class="info-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:1.2rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800;"><i class="fas fa-vial-circle-check" style="color:var(--primary); margin-right:.8rem;"></i> Critical Reagent Oversight</h3>
-            <a class="adm-btn adm-btn-primary adm-btn-sm" href="?tab=inventory"><i class="fas fa-external-link-alt"></i> Inventory</a>
+            <a class="btn btn-primary btn-sm" href="?tab=inventory"><span class="btn-text"><i class="fas fa-external-link-alt"></i> Inventory</span></a>
         </div>
         <div class="adm-table-wrap">
             <table class="adm-table">
@@ -212,7 +212,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
             <label style="font-weight:700; color:var(--text-secondary); margin-bottom:0.8rem;">Shift Preference & Scheduling Constraints <small style="color:var(--text-muted); font-weight:500;">(Visible to Personnel Management)</small></label>
             <textarea id="shift_notes" class="form-control" rows="4" placeholder="Document specific scheduling requirements or preferences here..." style="padding:1.2rem; font-size:1rem; border-radius:12px;"><?= e($profile['shift_notes'] ?? '') ?></textarea>
             <div style="margin-top:1.5rem; text-align:right;">
-                <button class="adm-btn adm-btn-primary" onclick="saveShiftNotes()"><i class="fas fa-save"></i> Commit Preferences</button>
+                <button class="btn btn-primary" onclick="saveShiftNotes()"><span class="btn-text"><i class="fas fa-save"></i> Commit Preferences</span></button>
             </div>
         </div>
     </div>
@@ -242,7 +242,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                 <input type="password" id="conf_pass" class="form-control" style="padding:0.9rem; letter-spacing:0.2em;">
             </div>
             <div style="margin-top:0.5rem;">
-                <button class="adm-btn adm-btn-primary" style="padding:0.8rem 2rem;" onclick="changePassword()"><i class="fas fa-shield-check"></i> Authorize Rotation</button>
+                <button class="btn btn-primary" style="padding:0.8rem 2rem;" onclick="changePassword()"><span class="btn-text"><i class="fas fa-shield-check"></i> Authorize Rotation</span></button>
             </div>
         </div>
     </div>
@@ -274,7 +274,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                     <td><span style="font-weight:600; color:var(--text-muted);"><?= date('d M, h:i A', strtotime($s['last_active'])) ?></span></td>
                     <td>
                         <?php if(!$s['is_current']): ?>
-                            <button class="adm-btn adm-btn-danger adm-btn-sm" style="border-radius:8px;" onclick="logoutSession(<?= $s['id'] ?>)" title="Terminate Link"><i class="fas fa-power-off"></i></button>
+                            <button class="btn btn-danger btn-sm" style="border-radius:8px;" onclick="logoutSession(<?= $s['id'] ?>)" title="Terminate Link"><span class="btn-text"><i class="fas fa-power-off"></i></span></button>
                         <?php else: echo '<span style="color:var(--text-muted); font-size:0.8rem; font-weight:800; text-transform:uppercase;">Self Node</span>'; endif; ?>
                     </td>
                 </tr>
@@ -293,7 +293,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
     <div class="info-card" style="padding:2.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800;"><i class="fas fa-bell-on" style="color:var(--primary); margin-right:.8rem;"></i> Alert Calibration Matrix</h3>
-            <button class="adm-btn adm-btn-primary" onclick="saveNotificationSettings()"><i class="fas fa-save"></i> Synchronize Alerts</button>
+            <button class="btn btn-primary" onclick="saveNotificationSettings()"><span class="btn-text"><i class="fas fa-save"></i> Synchronize Alerts</span></button>
         </div>
         <?php
         $notif_toggles = [
@@ -359,7 +359,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
     <div class="info-card" style="padding:2.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800;"><i class="fas fa-folders" style="color:var(--primary); margin-right:.8rem;"></i> Professional Document Archive</h3>
-            <button class="adm-btn adm-btn-primary" onclick="$('#addDocModal').show()"><i class="fas fa-cloud-upload"></i> Upload Evidence</button>
+            <button class="btn btn-primary" onclick="$('#addDocModal').show()"><span class="btn-text"><i class="fas fa-cloud-upload"></i> Upload Evidence</span></button>
         </div>
         <?php if(empty($documents)): ?>
             <div style="text-align:center; padding:3rem; color:var(--text-muted); background:var(--surface-2); border-radius:15px; border:2px dashed var(--border);">
@@ -385,8 +385,8 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                     <td><span style="font-weight:600; color:var(--text-muted);"><?= date('d M Y', strtotime($doc['uploaded_at'])) ?></span></td>
                     <td>
                         <div class="action-btns">
-                            <a href="/RMU-Medical-Management-System/php/api/download_doc.php?file=<?= urlencode($doc['file_path']) ?>" class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--primary); border-radius:8px;" target="_blank"><i class="fas fa-download"></i></a>
-                            <button class="adm-btn adm-btn-danger adm-btn-sm" style="border-radius:8px;" onclick="deleteDocument(<?= $doc['id'] ?>)"><i class="fas fa-trash-alt"></i></button>
+                            <a href="/RMU-Medical-Management-System/php/api/download_doc.php?file=<?= urlencode($doc['file_path']) ?>" class="btn btn-outline btn-icon btn btn-sm" style="background:var(--surface-2); color:var(--primary); border-radius:8px;" target="_blank"><span class="btn-text"><i class="fas fa-download"></i></span></a>
+                            <button class="btn btn-danger btn-sm" style="border-radius:8px;" onclick="deleteDocument(<?= $doc['id'] ?>)"><span class="btn-text"><i class="fas fa-trash-alt"></i></span></button>
                         </div>
                     </td>
                 </tr>
@@ -405,7 +405,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
     <div class="info-card" style="padding:2.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800;"><i class="fas fa-fingerprint" style="color:var(--primary); margin-right:.8rem;"></i> Personal Action Ledger <small style="font-size:0.65em; vertical-align:middle; margin-left:1rem; opacity:0.5; font-weight:400;">(IMMUTABLE HISTORY)</small></h3>
-            <a href="lab_exports.php?type=audit&tech_id=<?= $tech_pk ?>&csrf_token=<?= $csrf_token ?>" class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--primary); font-weight:700;" target="_blank"><i class="fas fa-file-csv"></i> Export CSV</a>
+            <a href="lab_exports.php?type=audit&tech_id=<?= $tech_pk ?>&csrf_token=<?= $csrf_token ?>" class="btn btn-outline btn-icon btn btn-sm" style="background:var(--surface-2); color:var(--primary); font-weight:700;" target="_blank"><span class="btn-text"><i class="fas fa-file-csv"></i> Export CSV</span></a>
         </div>
         <div class="adm-table-wrap">
             <table class="adm-table display" id="auditTable">
@@ -489,7 +489,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
         <div class="modal-content" style="background:var(--surface); border:1px solid var(--border); border-radius:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden;">
             <div class="modal-header" style="padding:1.5rem 2rem; background:var(--surface-2); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <h4 style="margin:0; font-weight:800; color:var(--text-primary);"><i class="fas fa-graduation-cap" style="color:var(--primary); margin-right:0.8rem;"></i> Add Qualification</h4>
-                <button type="button" style="background:none; border:none; font-size:1.4rem; color:var(--text-muted); cursor:pointer;" onclick="$('#addQualModal').hide()">&times;</button>
+                <button type="button" style="background:none; border:none; font-size:1.4rem; color:var(--text-muted); cursor:pointer;" onclick="$('#addQualModal').hide()" class="btn btn-primary"><span class="btn-text">&times;</span></button>
             </div>
             <div class="modal-body" style="padding:2rem;">
                 <div class="form-group mb-4">
@@ -514,8 +514,8 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                 </div>
             </div>
             <div class="modal-footer" style="padding:1.5rem 2rem; background:var(--surface-2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:1rem;">
-                <button class="adm-btn" style="background:white; border:1px solid var(--border); color:var(--text-secondary);" onclick="$('#addQualModal').hide()">Cancel</button>
-                <button class="adm-btn adm-btn-primary" onclick="submitQualification()"><i class="fas fa-save"></i> Commit Record</button>
+                <button class="btn btn-ghost btn" style="background:white; border:1px solid var(--border); color:var(--text-secondary);" onclick="$('#addQualModal').hide()"><span class="btn-text">Cancel</span></button>
+                <button class="btn btn-primary" onclick="submitQualification()"><span class="btn-text"><i class="fas fa-save"></i> Commit Record</span></button>
             </div>
         </div>
     </div>
@@ -527,7 +527,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
         <div class="modal-content" style="background:var(--surface); border:1px solid var(--border); border-radius:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden;">
             <div class="modal-header" style="padding:1.5rem 2rem; background:var(--surface-2); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <h4 style="margin:0; font-weight:800; color:var(--text-primary);"><i class="fas fa-certificate" style="color:var(--primary); margin-right:0.8rem;"></i> Register Certification</h4>
-                <button type="button" style="background:none; border:none; font-size:1.4rem; color:var(--text-muted); cursor:pointer;" onclick="$('#addCertModal').hide()">&times;</button>
+                <button type="button" style="background:none; border:none; font-size:1.4rem; color:var(--text-muted); cursor:pointer;" onclick="$('#addCertModal').hide()" class="btn btn-primary"><span class="btn-text">&times;</span></button>
             </div>
             <div class="modal-body" style="padding:2rem;">
                 <div class="form-group mb-4">
@@ -558,8 +558,8 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                 </div>
             </div>
             <div class="modal-footer" style="padding:1.5rem 2rem; background:var(--surface-2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:1rem;">
-                <button class="adm-btn" style="background:white; border:1px solid var(--border); color:var(--text-secondary);" onclick="$('#addCertModal').hide()">Cancel</button>
-                <button class="adm-btn adm-btn-primary" onclick="submitCertification()"><i class="fas fa-save"></i> Register Asset</button>
+                <button class="btn btn-ghost btn" style="background:white; border:1px solid var(--border); color:var(--text-secondary);" onclick="$('#addCertModal').hide()"><span class="btn-text">Cancel</span></button>
+                <button class="btn btn-primary" onclick="submitCertification()"><span class="btn-text"><i class="fas fa-save"></i> Register Asset</span></button>
             </div>
         </div>
     </div>
@@ -571,7 +571,7 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
         <div class="modal-content" style="background:var(--surface); border:1px solid var(--border); border-radius:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden;">
             <div class="modal-header" style="padding:1.5rem 2rem; background:var(--surface-2); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <h4 style="margin:0; font-weight:800; color:var(--text-primary);"><i class="fas fa-file-upload" style="color:var(--primary); margin-right:0.8rem;"></i> Archive Document</h4>
-                <button type="button" style="background:none; border:none; font-size:1.4rem; color:var(--text-muted); cursor:pointer;" onclick="$('#addDocModal').hide()">&times;</button>
+                <button type="button" style="background:none; border:none; font-size:1.4rem; color:var(--text-muted); cursor:pointer;" onclick="$('#addDocModal').hide()" class="btn btn-primary"><span class="btn-text">&times;</span></button>
             </div>
             <div class="modal-body" style="padding:2rem;">
                 <div class="form-group mb-4">
@@ -588,8 +588,8 @@ $sixty_days_date  = date('Y-m-d', strtotime('+60 days'));
                 </div>
             </div>
             <div class="modal-footer" style="padding:1.5rem 2rem; background:var(--surface-2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:1rem;">
-                <button class="adm-btn" style="background:white; border:1px solid var(--border); color:var(--text-secondary);" onclick="$('#addDocModal').hide()">Cancel</button>
-                <button class="adm-btn adm-btn-primary" onclick="submitDocument()"><i class="fas fa-upload"></i> Initialize Upload</button>
+                <button class="btn btn-ghost btn" style="background:white; border:1px solid var(--border); color:var(--text-secondary);" onclick="$('#addDocModal').hide()"><span class="btn-text">Cancel</span></button>
+                <button class="btn btn-primary" onclick="submitDocument()"><span class="btn-text"><i class="fas fa-upload"></i> Initialize Upload</span></button>
             </div>
         </div>
     </div>

@@ -169,9 +169,9 @@ class CaptchaManager {
                      title="Click to refresh">
                 <button type="button" 
                         onclick="refreshCaptcha()" 
-                        style="padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        style="padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;" class="btn btn-primary"><span class="btn-text">
                     <i class="fas fa-sync-alt"></i> Refresh
-                </button>
+                </span></button>
             </div>
             <input type="text" 
                    name="captcha" 

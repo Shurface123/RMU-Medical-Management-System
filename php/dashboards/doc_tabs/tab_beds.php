@@ -2,7 +2,7 @@
 <div id="sec-beds" class="dash-section">
   <div class="sec-header">
     <h2><i class="fas fa-bed"></i> Bed Management</h2>
-    <button onclick="openModal('modalBedRequest')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> Request Bed Assignment</button>
+    <button onclick="openModal('modalBedRequest')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> Request Bed Assignment</span></button>
   </div>
 
   <?php
@@ -17,10 +17,10 @@
   </div>
 
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterBeds('all',this)">All Beds</button>
-    <button class="ftab" onclick="filterBeds('Available',this)">Available</button>
-    <button class="ftab" onclick="filterBeds('Occupied',this)">Occupied</button>
-    <button class="ftab" onclick="filterBeds('Maintenance',this)">Maintenance</button>
+    <button class="btn btn-primary ftab active" onclick="filterBeds('all',this)"><span class="btn-text">All Beds</span></button>
+    <button class="btn btn-primary ftab" onclick="filterBeds('Available',this)"><span class="btn-text">Available</span></button>
+    <button class="btn btn-primary ftab" onclick="filterBeds('Occupied',this)"><span class="btn-text">Occupied</span></button>
+    <button class="btn btn-primary ftab" onclick="filterBeds('Maintenance',this)"><span class="btn-text">Maintenance</span></button>
   </div>
 
   <?php $wards=array_unique(array_column($beds,'ward')); ?>
@@ -65,7 +65,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-bed" style="color:var(--role-accent);"></i> Request Bed Assignment</h3>
-      <button class="modal-close" onclick="closeModal('modalBedRequest')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalBedRequest')"><span class="btn-text">&times;</span></button>
     </div>
     <form id="formBedReq" onsubmit="submitBedReq(event)">
       <div class="form-group"><label>Patient</label>
@@ -86,7 +86,7 @@
       </div>
       <div class="form-group"><label>Admission Reason</label><textarea name="reason" class="form-control" rows="3" placeholder="Reason for hospitalization…" required></textarea></div>
       <div class="form-group"><label>Admission Date</label><input type="datetime-local" name="admission_date" class="form-control" value="<?=date('Y-m-d\TH:i')?>" required></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-bed"></i> Assign Bed</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-bed"></i> Assign Bed</span></button>
     </form>
   </div>
 </div>

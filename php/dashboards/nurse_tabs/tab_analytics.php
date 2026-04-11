@@ -100,9 +100,9 @@ if($q_fluids) {
                 <span class="activity-dot shadow-sm" style="background:var(--success); position:static;"></span>
                 <div style="font-size:1.2rem; font-weight:800; color:var(--text-primary);">Clinical Insight: <small style="font-weight:700; color:var(--success);">LIVE ACTIVE</small></div>
             </div>
-            <button class="adm-btn adm-btn-ghost" onclick="window.print()" style="border-radius:12px; font-weight:700; border-color:var(--primary); color:var(--primary);">
+            <button class="btn-icon btn btn-ghost" onclick="window.print()" style="border-radius:12px; font-weight:700; border-color:var(--primary); color:var(--primary);"><span class="btn-text">
                 <i class="fas fa-print"></i> Print Analysis
-            </button>
+            </span></button>
         </div>
     </div>
 

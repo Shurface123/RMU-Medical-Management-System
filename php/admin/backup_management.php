@@ -288,9 +288,9 @@ if (is_dir($backupDir)) {
         <div class="header">
             <h1><i class="fas fa-database"></i> Backup Management</h1>
             <form method="POST" style="margin: 0;">
-                <button type="submit" name="create_backup" class="btn btn-success" onclick="return confirm('Create a new database backup? This may take a few moments.');">
+                <button type="submit" name="create_backup" class="btn btn-success" onclick="return confirm('Create a new database backup? This may take a few moments.');"><span class="btn-text">
                     <i class="fas fa-plus"></i> Create New Backup
-                </button>
+                </span></button>
             </form>
         </div>
         
@@ -339,12 +339,12 @@ else: ?>
                                 <td><?php echo date('F j, Y g:i A', $backup['date']); ?></td>
                                 <td><?php echo number_format($backup['size'] / 1024, 2); ?> KB</td>
                                 <td>
-                                    <a href="../../backups/<?php echo urlencode($backup['name']); ?>" class="btn btn-primary btn-sm" download>
+                                    <a href="../../backups/<?php echo urlencode($backup['name']); ?>" class="btn-icon btn btn-primary btn-sm" download><span class="btn-text">
                                         <i class="fas fa-download"></i> Download
-                                    </a>
-                                    <a href="?delete=<?php echo urlencode($backup['name']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this backup? This action cannot be undone.');">
+                                    </span></a>
+                                    <a href="?delete=<?php echo urlencode($backup['name']); ?>" class="btn-icon btn btn-danger btn-sm" onclick="return confirm('Delete this backup? This action cannot be undone.');"><span class="btn-text">
                                         <i class="fas fa-trash"></i> Delete
-                                    </a>
+                                    </span></a>
                                 </td>
                             </tr>
                         <?php
@@ -367,9 +367,9 @@ endif; ?>
         </div>
         
         <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary">
+            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            </span></a>
         </div>
     </div>
 </body>

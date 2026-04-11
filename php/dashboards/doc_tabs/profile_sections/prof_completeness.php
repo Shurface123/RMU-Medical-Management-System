@@ -34,9 +34,9 @@
           <?php if(!$done):?><div style="font-size:1.1rem;color:var(--text-muted);"><?=$hint?></div><?php endif;?>
         </div>
         <?php if(!$done):?>
-        <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="showProfSection('<?=$navTarget?>',document.querySelector('.prof-nav'))">
+        <button class="btn btn-primary btn-sm" onclick="showProfSection('<?=$navTarget?>',document.querySelector('.prof-nav'))"><span class="btn-text">
           <i class="fas fa-arrow-right"></i> Complete Now
-        </button>
+        </span></button>
         <?php else:?>
         <span style="color:var(--success);font-weight:600;font-size:1.2rem;"><i class="fas fa-check-circle"></i> Done</span>
         <?php endif;?>
@@ -44,7 +44,7 @@
       <?php endforeach;?>
 
       <div style="text-align:center;margin-top:2rem;">
-        <button class="adm-btn adm-btn-primary" onclick="refreshCompleteness()"><i class="fas fa-sync-alt"></i> Recalculate</button>
+        <button class="btn btn-primary" onclick="refreshCompleteness()"><span class="btn-text"><i class="fas fa-sync-alt"></i> Recalculate</span></button>
       </div>
     </div>
   </div>

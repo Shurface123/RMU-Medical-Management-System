@@ -129,9 +129,9 @@ include '../includes/_sidebar.php';
                 <h1>Update Patient Record</h1>
                 <p>Dashboard &rarr; Patient Management &rarr; Update Patient</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="adm-btn adm-btn-ghost">
+            <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="btn btn-ghost"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Patients
-            </a>
+            </span></a>
         </div>
 
         <?php if ($error_message): ?>
@@ -263,13 +263,13 @@ include '../includes/_sidebar.php';
                             <h3 style="color:#fff;"><i class="fas fa-check-circle" style="color:#fff;"></i> Save Changes</h3>
                         </div>
                         <div class="adm-card-body">
-                            <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;margin-bottom:1rem;padding:1.4rem;font-size:1.5rem;">
+                            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:1rem;padding:1.4rem;font-size:1.5rem;"><span class="btn-text">
                                 <i class="fas fa-save"></i> Update Patient
-                            </button>
+                            </span></button>
                             <a href="/RMU-Medical-Management-System/php/patient/patient.php"
-                               class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;">
+                               class="btn btn-ghost" style="width:100%;justify-content:center;"><span class="btn-text">
                                 Cancel
-                            </a>
+                            </span></a>
                         </div>
                     </div>
                 </div>

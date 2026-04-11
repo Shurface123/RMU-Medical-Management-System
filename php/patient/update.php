@@ -177,7 +177,7 @@ if (!$row) {
                 </div>
                 
                 <div style="margin-top: 2.5rem; display: flex; gap: 1rem; align-items: center;">
-                    <button type="submit" name="update_patient" class="btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+                    <button type="submit" name="update_patient" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save Changes</span></button>
                     <!-- Deactivate option logic omitted per requirements; uses separate delete file -->
                     <?php if ($_SESSION['user_role'] === 'admin'): ?>
                         <a href="Delete.php?id=<?php echo $row['id']; ?>" class="back-link" style="color: #e74c3c; margin: 0;" onclick="return confirm('WARNING: Are you sure you want to deactivate/delete this patient?');"><i class="fas fa-trash-alt"></i> Deactivate Patient</a>

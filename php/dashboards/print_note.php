@@ -39,7 +39,7 @@ $n = $note[0];
 </head>
 <body onload="window.print()">
     <div class="no-print" style="margin-bottom:20px; text-align:right;">
-        <button onclick="window.print()" style="background:#E91E63;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;font-weight:bold;">Save as PDF / Print</button>
+        <button onclick="window.print()" style="background:#E91E63;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;font-weight:bold;" class="btn btn-primary"><span class="btn-text">Save as PDF / Print</span></button>
     </div>
 
     <div class="header">

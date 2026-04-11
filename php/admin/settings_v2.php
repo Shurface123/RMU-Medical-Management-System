@@ -80,10 +80,10 @@ $active_tab = $_GET['tab'] ?? 'hospital';
             foreach ($tabs as $id => $info):
                 $active = ($active_tab == $id) ? 'active' : '';
             ?>
-            <a href="?tab=<?= $id ?>" class="adm-tab-btn <?= $active ?>">
+            <a href="?tab=<?= $id ?>" class="btn btn-primary adm-tab-btn <?= $active ?>"><span class="btn-text">
                 <i class="fas fa-<?= $info['icon'] ?>"></i>
                 <span><?= $info['label'] ?></span>
-            </a>
+            </span></a>
             <?php endforeach; ?>
         </div>
 

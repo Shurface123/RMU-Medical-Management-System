@@ -54,7 +54,7 @@
           <td><?=date('d M Y, g:i A',strtotime($rpt['generated_at']))?></td>
           <td>
             <?php if($rpt['file_path']):?>
-            <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($rpt['file_path'])?>" class="adm-btn adm-btn-primary adm-btn-sm" download><i class="fas fa-download"></i> Download</a>
+            <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($rpt['file_path'])?>" class="btn-icon btn btn-primary btn-sm" download><span class="btn-text"><i class="fas fa-download"></i> Download</span></a>
             <?php else:?>—<?php endif;?>
           </td>
         </tr>
@@ -69,7 +69,7 @@
 <!-- ══ Report Generation Modal ══ -->
 <div class="modal-bg" id="modalReport">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-file-export" style="color:var(--primary);"></i> <span id="reportTitle">Generate Report</span></h3><button class="modal-close" onclick="closeModal('modalReport')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-file-export" style="color:var(--primary);"></i> <span id="reportTitle">Generate Report</span></h3><button class="btn btn-primary modal-close" onclick="closeModal('modalReport')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="submitReport(event)">
       <input type="hidden" name="report_type" id="reportType">
       <div class="form-row">
@@ -83,7 +83,7 @@
           <option value="XLSX">Excel (XLSX)</option>
         </select>
       </div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-download"></i> Generate & Download</button>
+      <button type="submit" class="btn-icon btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-download"></i> Generate & Download</span></button>
     </form>
   </div>
 </div>

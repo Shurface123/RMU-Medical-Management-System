@@ -43,9 +43,9 @@
           <label><i class="fas fa-comment-medical"></i> Reason / Symptoms</label>
           <textarea name="reason" class="form-control" rows="3" placeholder="Describe your reason for visit or symptoms..."></textarea>
         </div>
-        <button type="submit" id="bookSubmitBtn" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.2rem;font-size:1.4rem;" disabled>
+        <button type="submit" id="bookSubmitBtn" class="btn-icon btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;font-size:1.4rem;" disabled><span class="btn-text">
           <i class="fas fa-calendar-check"></i> Book Appointment
-        </button>
+        </span></button>
       </form>
     </div>
   </div>

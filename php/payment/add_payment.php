@@ -40,9 +40,9 @@ if ($tbl_exists) {
             <h1>Add Payment Record</h1>
             <p>Record a new payment or consultation fee.</p>
         </div>
-        <a href="/RMU-Medical-Management-System/php/payment/payment.php" class="adm-btn adm-btn-back">
+        <a href="/RMU-Medical-Management-System/php/payment/payment.php" class="btn btn-ghost btn btn-back"><span class="btn-text">
             <i class="fas fa-arrow-left"></i> Back to Payments
-        </a>
+        </span></a>
     </div>
 
     <?php if (!$tbl_exists): ?>
@@ -106,8 +106,8 @@ if ($tbl_exists) {
                     <textarea name="notes" class="adm-search-input" rows="3" placeholder="Any additional notes…" style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
                 </div>
                 <div style="display:flex;gap:.75rem;justify-content:flex-end;">
-                    <a href="payment.php" class="adm-btn adm-btn-back">Cancel</a>
-                    <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save Payment</button>
+                    <a href="payment.php" class="btn btn-ghost btn btn-back"><span class="btn-text">Cancel</span></a>
+                    <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save Payment</span></button>
                 </div>
             </form>
         </div>

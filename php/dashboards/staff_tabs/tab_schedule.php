@@ -8,7 +8,7 @@ $all_shifts = dbSelect($conn,"SELECT * FROM staff_shifts WHERE staff_id=? ORDER 
 <div id="sec-schedule" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
         <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-calendar-alt" style="color:var(--role-accent);"></i> Shift Schedule</h2>
-        <button class="btn btn-primary" onclick="openModal('leaveModal')"><i class="fas fa-calendar-plus"></i> Request Leave</button>
+        <button class="btn btn-primary" onclick="openModal('leaveModal')"><span class="btn-text"><i class="fas fa-calendar-plus"></i> Request Leave</span></button>
     </div>
 
     <!-- Shift Table -->
@@ -80,7 +80,7 @@ $all_shifts = dbSelect($conn,"SELECT * FROM staff_shifts WHERE staff_id=? ORDER 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-umbrella-beach" style="color:var(--role-accent);"></i> Request Leave</h3>
-            <button class="modal-close" onclick="closeModal('leaveModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('leaveModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmLeave" onsubmit="event.preventDefault();submitLeave();">
             <div class="form-group">
@@ -112,7 +112,7 @@ $all_shifts = dbSelect($conn,"SELECT * FROM staff_shifts WHERE staff_id=? ORDER 
                 <textarea name="reason" class="form-control" rows="3" required placeholder="Please provide reason..."></textarea>
             </div>
             <input type="hidden" name="action" value="submit_leave_request">
-            <button type="submit" class="btn btn-primary btn-wide" id="btnLeave"><i class="fas fa-paper-plane"></i> Submit Request</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnLeave"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Request</span></button>
         </form>
     </div>
 </div>

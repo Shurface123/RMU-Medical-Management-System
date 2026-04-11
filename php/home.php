@@ -185,12 +185,12 @@ include 'includes/_sidebar.php';
             }
             ?>
             <div style="position:relative;">
-                <button class="adm-notif-btn" id="notifBtn" title="Notifications" style="position:relative;">
+                <button class="btn btn-primary adm-notif-btn" id="notifBtn" title="Notifications" style="position:relative;"><span class="btn-text">
                     <i class="fas fa-bell"></i>
                     <?php if ($notif_count > 0): ?>
                     <span class="adm-notif-badge" id="notifBadge"><?php echo $notif_count > 9 ? '9+' : $notif_count; ?></span>
                     <?php endif; ?>
-                </button>
+                </span></button>
                 <!-- Dropdown -->
                 <div id="notifDropdown" style="display:none;position:absolute;right:0;top:calc(100% + 8px);width:300px;background:var(--bg-card);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.15);border:1px solid var(--border);z-index:200;overflow:hidden;">
                     <div style="padding:.85rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
@@ -320,8 +320,8 @@ include 'includes/_sidebar.php';
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem; margin-bottom:1rem;">
             <h3 style="color: var(--text-dark); margin:0;"><i class="fas fa-shield-alt" style="color: #2F80ED;"></i> Security &amp; Logout Analytics</h3>
             <div style="display:flex; gap:0.5rem;">
-                <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php?export=pdf" class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--text-muted);"><i class="fas fa-file-pdf"></i> Export PDF</a>
-                <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php?export=csv" class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--text-muted);"><i class="fas fa-file-csv"></i> Export CSV</a>
+                <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php?export=pdf" class="btn-icon btn btn-ghost btn-sm" style="color:var(--text-muted);"><span class="btn-text"><i class="fas fa-file-pdf"></i> Export PDF</span></a>
+                <a href="/RMU-Medical-Management-System/php/admin/analytics_dashboard.php?export=csv" class="btn-icon btn btn-ghost btn-sm" style="color:var(--text-muted);"><span class="btn-text"><i class="fas fa-file-csv"></i> Export CSV</span></a>
             </div>
         </div>
         <div class="adm-stats-grid" style="margin-bottom: 2.8rem;">
@@ -389,9 +389,9 @@ include 'includes/_sidebar.php';
             <div class="adm-card">
                 <div class="adm-card-header">
                     <h3><i class="fas fa-users"></i> Recent Patient Queue</h3>
-                    <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="adm-btn adm-btn-ghost adm-btn-sm">
+                    <a href="/RMU-Medical-Management-System/php/patient/patient.php" class="btn-icon btn btn-ghost btn-sm"><span class="btn-text">
                         <i class="fas fa-eye"></i> View All
-                    </a>
+                    </span></a>
                 </div>
                 <div class="adm-card-body" style="padding:0;">
                     <?php if (empty($recent_patients)): ?>
@@ -438,7 +438,7 @@ include 'includes/_sidebar.php';
             <div class="adm-card">
                 <div class="adm-card-header">
                     <h3><i class="fas fa-calendar-day"></i> Today's Appointments</h3>
-                    <a href="/RMU-Medical-Management-System/php/Appointment/appointment.php?date=<?php echo date('Y-m-d'); ?>" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-eye"></i> View All</a>
+                    <a href="/RMU-Medical-Management-System/php/Appointment/appointment.php?date=<?php echo date('Y-m-d'); ?>" class="btn-icon btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-eye"></i> View All</span></a>
                 </div>
                 <div class="adm-card-body" style="padding:0;">
                     <?php if (empty($today_apts)): ?>

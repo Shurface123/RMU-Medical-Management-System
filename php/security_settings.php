@@ -367,9 +367,9 @@ $loginStats = $securityManager->getLoginStatistics($userId, 30);
                     </p>
                     <form method="POST">
                         <input type="hidden" name="action" value="enable_2fa">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary"><span class="btn-text">
                             <i class="fas fa-lock"></i> Enable 2FA
-                        </button>
+                        </span></button>
                     </form>
                 <?php elseif (isset($_SESSION['2fa_setup'])): ?>
                     <div class="qr-code">
@@ -398,9 +398,9 @@ $loginStats = $securityManager->getLoginStatistics($userId, 30);
                             <label>Enter 6-digit code to verify:</label>
                             <input type="text" name="verification_code" maxlength="6" pattern="[0-9]{6}" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary"><span class="btn-text">
                             <i class="fas fa-check"></i> Verify & Activate
-                        </button>
+                        </span></button>
                     </form>
                 <?php else: ?>
                     <div class="info-box">
@@ -410,16 +410,16 @@ $loginStats = $securityManager->getLoginStatistics($userId, 30);
                     <div style="margin-top: 20px;">
                         <form method="POST" style="display: inline-block; margin-right: 10px;">
                             <input type="hidden" name="action" value="regenerate_backup_codes">
-                            <button type="submit" class="btn btn-secondary">
+                            <button type="submit" class="btn btn-ghost btn btn-secondary"><span class="btn-text">
                                 <i class="fas fa-sync"></i> Regenerate Backup Codes
-                            </button>
+                            </span></button>
                         </form>
                         
                         <form method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to disable 2FA?');">
                             <input type="hidden" name="action" value="disable_2fa">
-                            <button type="submit" class="btn btn-danger">
+                            <button type="submit" class="btn btn-danger"><span class="btn-text">
                                 <i class="fas fa-times"></i> Disable 2FA
-                            </button>
+                            </span></button>
                         </form>
                     </div>
                     
@@ -487,9 +487,9 @@ $loginStats = $securityManager->getLoginStatistics($userId, 30);
                 </div>
                 
                 <div style="margin-top: 20px;">
-                    <a href="change_password.php" class="btn btn-primary">
+                    <a href="change_password.php" class="btn btn-primary"><span class="btn-text">
                         <i class="fas fa-lock"></i> Change Password
-                    </a>
+                    </span></a>
                 </div>
             </div>
             
@@ -526,9 +526,9 @@ $loginStats = $securityManager->getLoginStatistics($userId, 30);
         </div>
         
         <div style="margin-top: 30px; text-align: center;">
-            <a href="<?php echo $_SESSION['role'] === 'admin' ? 'home.php' : 'dashboards/' . $_SESSION['role'] . '_dashboard.php'; ?>" class="btn btn-secondary">
+            <a href="<?php echo $_SESSION['role'] === 'admin' ? 'home.php' : 'dashboards/' . $_SESSION['role'] . '_dashboard.php'; ?>" class="btn btn-ghost btn btn-secondary"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            </span></a>
         </div>
     </div>
 </body>

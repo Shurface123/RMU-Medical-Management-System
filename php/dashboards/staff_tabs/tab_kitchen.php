@@ -10,7 +10,7 @@ $dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(
 <div id="sec-kitchen" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
         <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-utensils" style="color:var(--role-accent);"></i> Kitchen Tasks</h2>
-        <button class="btn btn-outline" onclick="openModal('dietaryModal')"><i class="fas fa-allergies"></i> Flag Dietary Issue</button>
+        <button class="btn-icon btn btn-outline" onclick="openModal('dietaryModal')"><span class="btn-text"><i class="fas fa-allergies"></i> Flag Dietary Issue</span></button>
     </div>
 
     <!-- Dietary Alerts Banner -->
@@ -61,10 +61,10 @@ $dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(
                 <td><span class="badge" style="background:color-mix(in srgb,<?=$st_c?> 15%,#fff 85%);color:<?=$st_c?>;"><?=ucfirst($st)?></span></td>
                 <td>
                     <?php if($next): ?>
-                    <button class="btn btn-primary btn-sm" onclick="updateKitchenTask(<?=$t['task_id']?>,'<?=e($next)?>')">
+                    <button class="btn-icon btn btn-primary btn-sm" onclick="updateKitchenTask(<?=$t['task_id']?>,'<?=e($next)?>')"><span class="btn-text">
                         <?php $icons=['in preparation'=>'fa-fire','ready'=>'fa-check','delivered'=>'fa-truck']; ?>
                         <i class="fas <?=$icons[$next]??'fa-chevron-right'?>"></i> <?=ucfirst($next)?>
-                    </button>
+                    </span></button>
                     <?php elseif($st==='delivered'): ?>
                     <span style="color:var(--success);"><i class="fas fa-check-double"></i></span>
                     <?php endif; ?>
@@ -82,14 +82,14 @@ $dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(
     <div class="modal-box" style="max-width:460px;">
         <div class="modal-header">
             <h3><i class="fas fa-allergies" style="color:var(--danger);"></i> Flag Dietary Issue</h3>
-            <button class="modal-close" onclick="closeModal('dietaryModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('dietaryModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmDietary" onsubmit="event.preventDefault();submitDietary();">
             <input type="hidden" name="action" value="report_dietary_issue">
             <div class="form-group"><label>Patient Name</label><input type="text" name="patient_name" class="form-control" placeholder="Patient's name"></div>
             <div class="form-group"><label>Ward / Department</label><input type="text" name="ward" class="form-control" placeholder="Ward A, OPD..."></div>
             <div class="form-group"><label>Issue Description *</label><textarea name="issue" class="form-control" rows="3" required placeholder="Describe the dietary concern or ingredient shortage..."></textarea></div>
-            <button type="submit" class="btn btn-danger btn-wide" id="btnDietary"><i class="fas fa-paper-plane"></i> Submit Flag</button>
+            <button type="submit" class="btn btn-danger btn-wide" id="btnDietary"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Flag</span></button>
         </form>
     </div>
 </div>

@@ -93,10 +93,10 @@ while($row = mysqli_fetch_assoc($act_query)) {
                 <h2 style="font-size: 1.6rem; font-weight: 700;"><i class="fas fa-bolt"></i> Quick Lab Actions</h2>
             </div>
             <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 0;">
-                <button class="adm-btn adm-btn-primary" onclick="window.location.href='?tab=orders'" style="padding: 1.2rem; border-radius: 12px;"><i class="fas fa-check-circle"></i> Accept Order</button>
-                <button class="adm-btn adm-btn-primary" onclick="window.location.href='?tab=samples'" style="padding: 1.2rem; border-radius: 12px;"><i class="fas fa-vial"></i> Record Sample</button>
-                <button class="adm-btn adm-btn-success" onclick="window.location.href='?tab=results'" style="padding: 1.2rem; border-radius: 12px;"><i class="fas fa-edit"></i> Enter Results</button>
-                <button class="adm-btn adm-btn-primary" onclick="window.location.href='?tab=reports'" style="padding: 1.2rem; border-radius: 12px;"><i class="fas fa-file-pdf"></i> Gen. Report</button>
+                <button class="btn btn-primary" onclick="window.location.href='?tab=orders'" style="padding: 1.2rem; border-radius: 12px;"><span class="btn-text"><i class="fas fa-check-circle"></i> Accept Order</span></button>
+                <button class="btn btn-primary" onclick="window.location.href='?tab=samples'" style="padding: 1.2rem; border-radius: 12px;"><span class="btn-text"><i class="fas fa-vial"></i> Record Sample</span></button>
+                <button class="btn btn-success" onclick="window.location.href='?tab=results'" style="padding: 1.2rem; border-radius: 12px;"><span class="btn-text"><i class="fas fa-edit"></i> Enter Results</span></button>
+                <button class="btn btn-primary" onclick="window.location.href='?tab=reports'" style="padding: 1.2rem; border-radius: 12px;"><span class="btn-text"><i class="fas fa-file-pdf"></i> Gen. Report</span></button>
             </div>
         </div>
 

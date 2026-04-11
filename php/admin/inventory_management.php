@@ -40,12 +40,12 @@ $expired = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM
                     <i class="fas fa-search" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
                     <input type="text" id="searchMed" class="adm-form-input" placeholder="Search medicine..." style="padding-left:3rem; width:280px; height:48px; border-radius:12px;">
                 </div>
-                <button id="refreshInv" class="adm-btn" style="background:var(--surface); border:1px solid var(--border); width:48px; height:48px; justify-content:center; padding:0;">
+                <button id="refreshInv" class="btn btn-primary btn" style="background:var(--surface); border:1px solid var(--border); width:48px; height:48px; justify-content:center; padding:0;"><span class="btn-text">
                     <i class="fas fa-sync-alt" style="color:var(--primary);"></i>
-                </button>
-                <button class="adm-btn adm-btn-primary">
+                </span></button>
+                <button class="btn btn-primary"><span class="btn-text">
                     <i class="fas fa-plus"></i> New Medicine
-                </button>
+                </span></button>
             </div>
         </div>
 
@@ -107,9 +107,9 @@ $expired = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM
                             </div>
                         </div>
                         <div style="padding: 1.5rem; border-top: 1px solid var(--border); background: var(--bg-surface);">
-                            <a href="procurement_center.php" class="adm-btn" style="width:100%; border:1px solid var(--border); justify-content:center;">
+                            <a href="procurement_center.php" class="btn btn-primary btn" style="width:100%; border:1px solid var(--border); justify-content:center;"><span class="btn-text">
                                 <i class="fas fa-truck-loading"></i> Open Procurement Center
-                            </a>
+                            </span></a>
                         </div>
                     </div>
                 </div>

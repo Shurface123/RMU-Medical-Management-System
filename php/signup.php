@@ -81,7 +81,7 @@ session_start();
                 <input type="password" id="re_password" name="re_password" required placeholder="Re-enter password">
             </div>
 
-            <button type="submit" class="btn-primary">Register Account</button>
+            <button type="submit" class="btn btn-primary"><span class="btn-text">Register Account</span></button>
         </form>
 
         <div class="login-link">

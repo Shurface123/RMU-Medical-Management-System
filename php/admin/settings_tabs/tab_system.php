@@ -29,12 +29,12 @@
             <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1.5rem;">Create a restorable snapshot of the entire RMU Medical database.</p>
             
             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <a href="backup_management.php?action=create" class="btn btn-primary" style="justify-content: center;">
+                <a href="backup_management.php?action=create" class="btn btn-primary" style="justify-content: center;"><span class="btn-text">
                     <i class="fas fa-file-export"></i> Run Manual Backup Now
-                </a>
-                <button class="btn btn-outline-primary" style="justify-content: center;">
+                </span></a>
+                <button class="btn btn-outline-primary" style="justify-content: center;"><span class="btn-text">
                     <i class="fas fa-clock"></i> Configure Auto-Backup
-                </button>
+                </span></button>
             </div>
         </div>
 
@@ -44,9 +44,9 @@
             <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1.5rem;">Clear compiled templates and temporary system files to free up space.</p>
             
             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <button onclick="clearSystemCache()" class="btn btn-outline-warning" style="justify-content: center;">
+                <button onclick="clearSystemCache()" class="btn-icon btn btn-outline-warning" style="justify-content: center;"><span class="btn-text">
                     <i class="fas fa-eraser"></i> Clear System Cache
-                </button>
+                </span></button>
                 <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted);">
                     Last cleanup: <?= date('d M Y, H:i') ?>
                 </div>

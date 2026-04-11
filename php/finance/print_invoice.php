@@ -183,6 +183,6 @@ body { font-family: 'Poppins', sans-serif; background: #e0e0e0; margin: 0; paddi
     </div>
   </div>
 
-  <button class="print-btn" onclick="window.print()">🖨️ Print Invoice</button>
+  <button class="btn btn-outline btn-icon print-btn" onclick="window.print()"><span class="btn-text">🖨️ Print Invoice</span></button>
 </body>
 </html>

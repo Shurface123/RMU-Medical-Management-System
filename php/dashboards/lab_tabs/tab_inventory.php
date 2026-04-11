@@ -62,8 +62,8 @@ function getDaysRemaining($conn, $item_id, $current_qty) {
 <div class="sec-header">
     <h2 style="font-size: 1.8rem; font-weight: 700;"><i class="fas fa-boxes"></i> Reagent Inventory</h2>
     <div style="display:flex; gap:1.2rem;">
-        <button class="adm-btn" style="background:var(--role-accent); color:#fff;" onclick="logUsageModal()"><i class="fas fa-minus-circle"></i> Log Usage</button>
-        <button class="adm-btn adm-btn-primary" onclick="addStockModal()"><i class="fas fa-plus-circle"></i> Add New Stock</button>
+        <button class="btn btn-primary btn" style="background:var(--role-accent); color:#fff;" onclick="logUsageModal()"><span class="btn-text"><i class="fas fa-minus-circle"></i> Log Usage</span></button>
+        <button class="btn btn-primary" onclick="addStockModal()"><span class="btn-text"><i class="fas fa-plus-circle"></i> Add New Stock</span></button>
     </div>
 </div>
 
@@ -122,7 +122,7 @@ function getDaysRemaining($conn, $item_id, $current_qty) {
                     </td>
                     <td><?= getInvStatusBadge($row['status'], $row['quantity_in_stock'], $row['reorder_level'], $row['expiry_date']) ?></td>
                     <td>
-                        <button class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick="viewInv(<?= $row['id'] ?>)" title="Inventory History"><i class="fas fa-history"></i> Log</button>
+                        <button class="btn btn-primary btn btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick="viewInv(<?= $row['id'] ?>)" title="Inventory History"><span class="btn-text"><i class="fas fa-history"></i> Log</span></button>
                     </td>
                 </tr>
                 <?php endwhile; ?>
@@ -164,8 +164,8 @@ function getDaysRemaining($conn, $item_id, $current_qty) {
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-primary" onclick="submitNewStock()"><i class="fas fa-save"></i> Save Stock Addition</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal"><span class="btn-text">Cancel</span></button>
+                <button type="button" class="btn btn-primary" onclick="submitNewStock()"><span class="btn-text"><i class="fas fa-save"></i> Save Stock Addition</span></button>
             </div>
         </div>
     </div>

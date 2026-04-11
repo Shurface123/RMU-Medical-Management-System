@@ -35,7 +35,7 @@ function getResultStatusBadge($s) {
 <div class="sec-header">
     <h2><i class="fas fa-file-medical-alt"></i> Lab Result Entry & Validation</h2>
     <div style="display:flex; gap:1rem;">
-        <button class="adm-btn adm-btn-primary" onclick="newResultModal()"><i class="fas fa-plus"></i> Enter New Result</button>
+        <button class="btn btn-primary" onclick="newResultModal()"><span class="btn-text"><i class="fas fa-plus"></i> Enter New Result</span></button>
     </div>
 </div>
 
@@ -52,7 +52,7 @@ function getResultStatusBadge($s) {
                             <td><strong>#ORD-<?= str_pad($r['id'], 5, '0', STR_PAD_LEFT) ?></strong></td>
                             <td><span style="font-weight:600; color:var(--text-primary);"><?= e($r['test_name']) ?></span></td>
                             <td><?= e($r['patient_name']) ?></td>
-                            <td><button class="adm-btn adm-btn-primary adm-btn-sm" onclick="enterResult(<?= $r['id'] ?>, '<?= e($r['test_name']) ?>', <?= $r['patient_id'] ?>)"><i class="fas fa-edit"></i> Enter</button></td>
+                            <td><button class="btn btn-primary btn-sm" onclick="enterResult(<?= $r['id'] ?>, '<?= e($r['test_name']) ?>', <?= $r['patient_id'] ?>)"><span class="btn-text"><i class="fas fa-edit"></i> Enter</span></button></td>
                         </tr>
                     <?php endwhile; ?>
                     <?php if(mysqli_num_rows($ready_for_entry_q) === 0): ?>
@@ -97,13 +97,13 @@ function getResultStatusBadge($s) {
                         <td><?= getResultStatusBadge($row['result_status']) ?></td>
                         <td>
                             <div class="action-btns">
-                                <button class="adm-btn adm-btn-sm" style="background:var(--surface-2);" onclick="viewResult(<?= $row['result_id'] ?>)"><i class="fas fa-eye"></i></button>
+                                <button class="btn btn-primary btn btn-sm" style="background:var(--surface-2);" onclick="viewResult(<?= $row['result_id'] ?>)"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
                                 <?php if($row['result_status'] === 'Draft'): ?>
-                                    <button class="adm-btn adm-btn-primary adm-btn-sm" title="Submit for Validation" onclick="updateResultStatus(<?= $row['result_id'] ?>, 'Pending Validation')"><i class="fas fa-paper-plane"></i></button>
+                                    <button class="btn btn-primary btn-sm" title="Submit for Validation" onclick="updateResultStatus(<?= $row['result_id'] ?>, 'Pending Validation')"><span class="btn-text"><i class="fas fa-paper-plane"></i></span></button>
                                 <?php elseif($row['result_status'] === 'Pending Validation'): ?>
-                                    <button class="adm-btn adm-btn-success adm-btn-sm" title="Validate Result" onclick="updateResultStatus(<?= $row['result_id'] ?>, 'Validated')"><i class="fas fa-check-double"></i></button>
+                                    <button class="btn btn-success btn-sm" title="Validate Result" onclick="updateResultStatus(<?= $row['result_id'] ?>, 'Validated')"><span class="btn-text"><i class="fas fa-check-double"></i></span></button>
                                 <?php elseif($row['result_status'] === 'Validated'): ?>
-                                    <button class="adm-btn adm-btn-teal adm-btn-sm" title="Release to Doctor" onclick="updateResultStatus(<?= $row['result_id'] ?>, 'Released')"><i class="fas fa-share-square"></i></button>
+                                    <button class="btn btn-primary btn btn-teal btn-sm" title="Release to Doctor" onclick="updateResultStatus(<?= $row['result_id'] ?>, 'Released')"><span class="btn-text"><i class="fas fa-share-square"></i></span></button>
                                 <?php endif; ?>
                             </div>
                         </td>
@@ -176,8 +176,8 @@ function getResultStatusBadge($s) {
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-primary" onclick="saveResult('Draft')"><i class="fas fa-save"></i> Save as Draft</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal"><span class="btn-text">Cancel</span></button>
+                <button type="button" class="btn btn-primary" onclick="saveResult('Draft')"><span class="btn-text"><i class="fas fa-save"></i> Save as Draft</span></button>
             </div>
         </div>
     </div>

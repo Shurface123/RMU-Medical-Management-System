@@ -28,9 +28,9 @@ $search_query = trim($_POST['search'] ?? ($_GET['search'] ?? ''));
                 <h1>Search Bed Matrix</h1>
                 <p>Find beds by number, ward, type, or status.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="adm-btn adm-btn-ghost">
+            <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="btn btn-ghost"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Beds
-            </a>
+            </span></a>
         </div>
 
         <div class="adm-card">
@@ -38,7 +38,7 @@ $search_query = trim($_POST['search'] ?? ($_GET['search'] ?? ''));
                 <h3><i class="fas fa-search"></i> Search Results</h3>
                 <form method="get" action="search.php" class="adm-search-form" style="margin:0;display:flex;gap:.5rem;">
                     <input type="text" name="search" class="adm-search-input" placeholder="Keyword..." value="<?php echo htmlspecialchars($search_query); ?>" required>
-                    <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-search"></i></button>
+                    <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-search"></i></span></button>
                 </form>
             </div>
             <div class="adm-table-wrap">
@@ -95,13 +95,13 @@ $search_query = trim($_POST['search'] ?? ($_GET['search'] ?? ''));
                             <td>
                                 <div class="adm-table-actions">
                                     <a href="/RMU-Medical-Management-System/php/bed/update.php?id=<?php echo $bed['id']; ?>"
-                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i></a>
+                                       class="btn btn-warning btn-sm"><span class="btn-text"><i class="fas fa-edit"></i></span></a>
                                     <?php if ($bed['status'] === 'Available'): ?>
                                     <a href="/RMU-Medical-Management-System/php/bed/assign.php?bed_id=<?php echo $bed['id']; ?>"
-                                       class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-user-plus"></i></a>
+                                       class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-user-plus"></i></span></a>
                                     <?php elseif ($bed['status'] === 'Occupied'): ?>
                                     <a href="/RMU-Medical-Management-System/php/bed/discharge.php?bed_id=<?php echo $bed['id']; ?>"
-                                       class="adm-btn adm-btn-danger adm-btn-sm" onclick="return confirm('Discharge patient?');"><i class="fas fa-sign-out-alt"></i></a>
+                                       class="btn btn-danger btn-sm" onclick="return confirm('Discharge patient?');"><span class="btn-text"><i class="fas fa-sign-out-alt"></i></span></a>
                                     <?php endif; ?>
                                 </div>
                             </td>

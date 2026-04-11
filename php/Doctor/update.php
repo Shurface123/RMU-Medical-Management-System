@@ -156,7 +156,7 @@ if (!$row) {
                 </div>
                 
                 <div style="margin-top: 2.5rem; display: flex; gap: 1rem;">
-                    <button type="submit" name="update_doctor" class="btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+                    <button type="submit" name="update_doctor" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save Changes</span></button>
                     <!-- Deactivate option in typical system is a separate button targeting the auth module -->
                 </div>
             </form>

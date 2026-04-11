@@ -177,17 +177,17 @@ body::before{content:'';position:absolute;width:200%;height:200%;background:radi
                        pattern="[0-9]" autocomplete="off">
                 <?php endfor; ?>
             </div>
-            <button type="submit" class="btn btn-primary" id="verifyBtn" disabled>
+            <button type="submit" class="btn btn-primary" id="verifyBtn" disabled><span class="btn-text">
                 <i class="fas fa-check-circle"></i> Verify Code
-            </button>
+            </span></button>
             <p class="attempts-info">Maximum 3 attempts allowed</p>
         </form>
 
         <form method="POST" action="ajax/resend_2fa_otp.php" id="resendForm">
             <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf) ?>">
-            <button type="button" class="btn btn-outline" id="resendBtn" disabled>
+            <button type="button" class="btn btn-outline" id="resendBtn" disabled><span class="btn-text">
                 <i class="fas fa-paper-plane"></i> <span id="resendLabel">Resend Code</span>
-            </button>
+            </span></button>
         </form>
     </div>
     <div class="footer-link">Wrong account? <a href="index.php">Back to Login</a></div>

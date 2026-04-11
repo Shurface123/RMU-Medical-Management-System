@@ -186,12 +186,12 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                             <td><?php echo date('M d, Y g:i A', strtotime($p['created_at'])); ?></td>
                             <td style="text-align:right;">
                                 <div style="display:inline-flex;gap:.5rem;">
-                                    <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveStaff(<?php echo $p['staff_id']; ?>, '<?php echo $p['source_table']; ?>')">
+                                    <button class="btn-icon btn btn-success btn-sm" onclick="approveStaff(<?php echo $p['staff_id']; ?>, '<?php echo $p['source_table']; ?>')"><span class="btn-text">
                                         <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectStaff(<?php echo $p['staff_id']; ?>, '<?php echo $p['source_table']; ?>')">
+                                    </span></button>
+                                    <button class="btn-icon btn btn-danger btn-sm" onclick="rejectStaff(<?php echo $p['staff_id']; ?>, '<?php echo $p['source_table']; ?>')"><span class="btn-text">
                                         <i class="fas fa-times"></i> Reject
-                                    </button>
+                                    </span></button>
                                 </div>
                             </td>
                         </tr>

@@ -70,10 +70,10 @@ if ($tbl_exists) {
                 <p>Track consultation fees, receipts, and payment statuses.</p>
             </div>
             <?php if ($tbl_exists): ?>
-                <button class="adm-btn adm-btn-primary"
-                    onclick="document.getElementById('addPayModal').style.display='flex'">
+                <button class="btn btn-primary"
+                    onclick="document.getElementById('addPayModal').style.display='flex'"><span class="btn-text">
                     <i class="fas fa-plus"></i> Add Payment
-                </button>
+                </span></button>
             <?php endif; ?>
         </div>
 
@@ -158,8 +158,8 @@ if ($tbl_exists) {
                         value="<?php echo htmlspecialchars($_GET['date'] ?? ''); ?>">
                 </div>
                 <div style="display:flex;gap:.5rem;">
-                    <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-search"></i> Filter</button>
-                    <a href="payment.php" class="adm-btn adm-btn-back"><i class="fas fa-times"></i> Clear</a>
+                    <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-search"></i> Filter</span></button>
+                    <a href="payment.php" class="btn btn-danger btn-sm btn-icon btn btn-back"><span class="btn-text"><i class="fas fa-times"></i> Clear</span></a>
                 </div>
             </form>
 
@@ -222,9 +222,9 @@ if ($tbl_exists) {
                                         <td>
                                             <div class="adm-table-actions">
                                                 <?php if ($pm['status'] !== 'Paid'): ?>
-                                                    <button class="adm-btn adm-btn-success adm-btn-sm"
-                                                        onclick="markPaid(<?php echo $pm['id']; ?>, this)" title="Mark as Paid"><i
-                                                            class="fas fa-check"></i></button>
+                                                    <button class="btn btn-success btn-sm"
+                                                        onclick="markPaid(<?php echo $pm['id']; ?>, this)" title="Mark as Paid"><span class="btn-text"><i
+                                                            class="fas fa-check"></i></span></button>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -245,7 +245,7 @@ if ($tbl_exists) {
                         <h3 style="margin:0;"><i class="fas fa-plus"
                                 style="color:var(--primary);margin-right:.5rem;"></i>Add Payment</h3>
                         <button onclick="document.getElementById('addPayModal').style.display='none'"
-                            style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+                            style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);" class="btn btn-primary"><span class="btn-text">&times;</span></button>
                     </div>
                     <form id="addPayForm">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
@@ -291,9 +291,9 @@ if ($tbl_exists) {
                         <div id="addPayError" style="display:none;" class="adm-alert adm-alert-danger"></div>
                         <div style="display:flex;gap:.75rem;justify-content:flex-end;">
                             <button type="button" onclick="document.getElementById('addPayModal').style.display='none'"
-                                class="adm-btn adm-btn-back">Cancel</button>
-                            <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save
-                                Payment</button>
+                                class="btn btn-ghost btn btn-back"><span class="btn-text">Cancel</span></button>
+                            <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save
+                                Payment</span></button>
                         </div>
                     </form>
                 </div>

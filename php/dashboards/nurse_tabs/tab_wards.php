@@ -83,9 +83,9 @@ if ($q_avail) {
                     <div style="font-size:1.4rem; font-weight:800; color:var(--primary);"><?= $total_beds > 0 ? round(($occupied / $total_beds) * 100) : 0 ?>%</div>
                  </div>
             </div>
-            <button class="adm-btn adm-btn-ghost" onclick="location.reload();" style="width:45px; height:45px; border-radius:12px; padding:0;">
+            <button class="btn btn-ghost" onclick="location.reload();" style="width:45px; height:45px; border-radius:12px; padding:0;"><span class="btn-text">
                 <i class="fas fa-sync-alt"></i>
-            </button>
+            </span></button>
         </div>
     </div>
 
@@ -142,17 +142,17 @@ if ($q_avail) {
                         
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem;">
                             <?php if($bed['is_isolated'] == 0): ?>
-                                <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="openIsolationModal(<?= $bed['patient_pk'] ?>, <?= $bed['bed_id'] ?>)" style="color:var(--danger); border-color:rgba(231,76,60,0.2); background:rgba(231,76,60,0.03);">
+                                <button class="btn btn-ghost btn-sm" onclick="openIsolationModal(<?= $bed['patient_pk'] ?>, <?= $bed['bed_id'] ?>)" style="color:var(--danger); border-color:rgba(231,76,60,0.2); background:rgba(231,76,60,0.03);"><span class="btn-text">
                                     <i class="fas fa-shield-virus"></i> Isolate
-                                </button>
+                                </span></button>
                             <?php else: ?>
-                                <button class="adm-btn adm-btn-ghost adm-btn-sm" disabled style="opacity:0.5;">
+                                <button class="btn btn-ghost btn-sm" disabled style="opacity:0.5;"><span class="btn-text">
                                     <i class="fas fa-biohazard"></i> Isolated
-                                </button>
+                                </span></button>
                             <?php endif; ?>
-                            <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="openTransferModal(<?= $bed['patient_pk'] ?>, <?= $bed['bed_id'] ?>, '<?= e($bed['bed_number']) ?>')">
+                            <button class="btn btn-primary btn-sm" onclick="openTransferModal(<?= $bed['patient_pk'] ?>, <?= $bed['bed_id'] ?>, '<?= e($bed['bed_number']) ?>')"><span class="btn-text">
                                 <i class="fas fa-exchange-alt"></i> Transfer
-                            </button>
+                            </span></button>
                         </div>
                     <?php else: ?>
                         <div style="text-align:center; padding:2rem 0; opacity:0.4;">
@@ -182,7 +182,7 @@ if ($q_avail) {
     <div class="modal-box" style="max-width:620px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--primary); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-exchange-alt" style="margin-right:.8rem;"></i> Bed Transfer Request</h3>
-            <button class="modal-close" onclick="closeTransferModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeTransferModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         
         <div style="padding:2.5rem;">
@@ -223,10 +223,10 @@ if ($q_avail) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeTransferModal()" style="font-weight:600;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnTransfer" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);">
+                    <button type="button" class="btn btn-ghost" onclick="closeTransferModal()" style="font-weight:600;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary" id="btnTransfer" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);"><span class="btn-text">
                         <i class="fas fa-paper-plane"></i> Submit Request
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>
@@ -240,7 +240,7 @@ if ($q_avail) {
     <div class="modal-box" style="max-width:620px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--danger); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-biohazard" style="margin-right:.8rem;"></i> Isolation Protocol</h3>
-            <button class="modal-close" onclick="closeIsolationModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeIsolationModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         
         <div style="padding:2.5rem;">
@@ -279,10 +279,10 @@ if ($q_avail) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeIsolationModal()" style="font-weight:600;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-danger" id="btnIsolate" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--danger-rgb), 0.3);">
+                    <button type="button" class="btn btn-ghost" onclick="closeIsolationModal()" style="font-weight:600;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-danger" id="btnIsolate" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--danger-rgb), 0.3);"><span class="btn-text">
                         <i class="fas fa-biohazard"></i> Activate Protocol
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

@@ -30,9 +30,9 @@ $students    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM patien
                 <h1>Manage Patients</h1>
                 <p>View and manage all registered patients in the sickbay system.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/patient/add-patient.php" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/patient/add-patient.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-user-plus"></i> Add Patient
-            </a>
+            </span></a>
         </div>
 
         <!-- Triage Legend -->
@@ -72,7 +72,7 @@ $students    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM patien
                                placeholder="Search by name, ID, or blood group..."
                                value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
                     </div>
-                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm">Search</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><span class="btn-text">Search</span></button>
                 </form>
             </div>
             <div class="adm-table-wrap table-container">
@@ -143,10 +143,10 @@ $students    = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM patien
                             <td>
                                 <div class="adm-table-actions">
                                     <a href="/RMU-Medical-Management-System/php/patient/update.php?id=<?php echo $pat['id']; ?>"
-                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                       class="btn btn-warning btn-sm"><span class="btn-text"><i class="fas fa-edit"></i> Edit</span></a>
                                     <a href="/RMU-Medical-Management-System/php/patient/Delete.php?id=<?php echo $pat['id']; ?>"
-                                       class="adm-btn adm-btn-danger adm-btn-sm"
-                                       onclick="return confirm('Remove this patient?');"><i class="fas fa-trash"></i></a>
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Remove this patient?');"><span class="btn-text"><i class="fas fa-trash"></i></span></a>
                                 </div>
                             </td>
                         </tr>

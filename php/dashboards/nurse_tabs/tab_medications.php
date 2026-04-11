@@ -68,9 +68,9 @@ if ($q) {
                 <i class="far fa-calendar-alt text-primary"></i>
                 <span style="font-size:1.2rem; font-weight:700; color:var(--text-primary);"><?= date('D, d M Y') ?></span>
             </div>
-            <button class="adm-btn adm-btn-ghost" onclick="location.reload();" style="width:42px; height:42px; padding:0; border-radius:12px;">
+            <button class="btn btn-ghost" onclick="location.reload();" style="width:42px; height:42px; padding:0; border-radius:12px;"><span class="btn-text">
                 <i class="fas fa-sync-alt"></i>
-            </button>
+            </span></button>
         </div>
     </div>
 
@@ -191,13 +191,13 @@ if ($q) {
                                 </td>
                                 <td style="text-align:right;">
                                     <?php if($m['status'] == 'Pending'): ?>
-                                        <button class="adm-btn adm-btn-primary" onclick="openAdministerModal(<?= $m['admin_pk'] ?>, '<?= e(addslashes($m['patient_name'])) ?>', '<?= e(addslashes($m['medicine_name'])) ?>', '<?= e(addslashes($m['dosage'])) ?>', '<?= e(addslashes($m['route'])) ?>')" style="padding:.6rem 1.5rem; border-radius:10px; font-weight:700;">
+                                        <button class="btn btn-primary" onclick="openAdministerModal(<?= $m['admin_pk'] ?>, '<?= e(addslashes($m['patient_name'])) ?>', '<?= e(addslashes($m['medicine_name'])) ?>', '<?= e(addslashes($m['dosage'])) ?>', '<?= e(addslashes($m['route'])) ?>')" style="padding:.6rem 1.5rem; border-radius:10px; font-weight:700;"><span class="btn-text">
                                             <i class="fas fa-syringe"></i> Verify
-                                        </button>
+                                        </span></button>
                                     <?php else: ?>
-                                        <button class="adm-btn adm-btn-ghost" style="opacity:0.6;" disabled>
+                                        <button class="btn btn-ghost" style="opacity:0.6;" disabled><span class="btn-text">
                                             <i class="fas fa-lock-open"></i> Archive
-                                        </button>
+                                        </span></button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -219,7 +219,7 @@ if ($q) {
     <div class="modal-box" style="max-width:680px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--primary); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-prescription-bottle-alt" style="margin-right:.8rem;"></i> Medication Verification</h3>
-            <button class="modal-close" onclick="closeAdministerModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeAdministerModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         
         <div style="padding:2.5rem;">
@@ -284,10 +284,10 @@ if ($q) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeAdministerModal()" style="font-weight:600;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnAdminSave" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);">
+                    <button type="button" class="btn btn-ghost" onclick="closeAdministerModal()" style="font-weight:600;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn-icon btn btn-primary" id="btnAdminSave" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);"><span class="btn-text">
                         <i class="fas fa-check-double"></i> Confirm Administration
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

@@ -7,15 +7,15 @@
     <h2><i class="fas fa-bell"></i> Notifications</h2>
     <div style="display:flex;gap:.8rem;">
       <?php if($stats['unread_notifs']>0):?>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="markAllRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
+      <button class="btn-icon btn btn-primary btn-sm" onclick="markAllRead()"><span class="btn-text"><i class="fas fa-check-double"></i> Mark All Read</span></button>
       <?php endif;?>
     </div>
   </div>
 
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterNotifs('all',this)">All</button>
-    <button class="ftab" onclick="filterNotifs('unread',this)">Unread (<?=$stats['unread_notifs']?>)</button>
-    <button class="ftab" onclick="filterNotifs('read',this)">Read</button>
+    <button class="btn btn-primary ftab active" onclick="filterNotifs('all',this)"><span class="btn-text">All</span></button>
+    <button class="btn btn-outline btn-icon ftab" onclick="filterNotifs('unread',this)"><span class="btn-text">Unread (<?=$stats['unread_notifs']?>)</span></button>
+    <button class="btn btn-outline btn-icon ftab" onclick="filterNotifs('read',this)"><span class="btn-text">Read</span></button>
   </div>
 
   <div id="notifList">
@@ -43,7 +43,7 @@
             <span style="font-size:1.1rem;color:var(--text-muted);"><i class="fas fa-clock" style="margin-right:.3rem;"></i><?=date('d M Y, g:i A',strtotime($n['created_at']))?></span>
           </div>
           <?php if(!$isRead):?>
-          <button class="adm-btn adm-btn-sm" onclick="markRead(<?=$n['id']?>)" style="background:var(--role-accent-light);color:var(--role-accent);border-color:var(--role-accent);flex-shrink:0;" title="Mark as read"><i class="fas fa-check"></i></button>
+          <button class="btn btn-primary btn btn-sm" onclick="markRead(<?=$n['id']?>)" style="background:var(--role-accent-light);color:var(--role-accent);border-color:var(--role-accent);flex-shrink:0;" title="Mark as read"><span class="btn-text"><i class="fas fa-check"></i></span></button>
           <?php endif;?>
         </div>
       </div>

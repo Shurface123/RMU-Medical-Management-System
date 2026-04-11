@@ -58,9 +58,9 @@ $avail_status = $prof['availability_status'] ?? 'Offline';
       ['security','Account & Security','fa-shield-halved'],['notifications','Notifications','fa-bell'],
       ['documents','Documents','fa-file-upload'],['completeness','Completeness','fa-tasks']
     ] as [$id,$label,$icon]):?>
-    <button class="ftab prof-nav <?=$id==='header'?'active':''?>" onclick="showProfSection('<?=$id?>',this)">
+    <button class="btn btn-primary ftab prof-nav <?=$id==='header'?'active':''?>" onclick="showProfSection('<?=$id?>',this)"><span class="btn-text">
       <i class="fas <?=$icon?>"></i> <?=$label?>
-    </button>
+    </span></button>
     <?php endforeach;?>
   </div>
 

@@ -243,7 +243,7 @@ if ($is_logged_in) {
                         </div>
                         <div class="bk-nav-btn">
                             <div></div>
-                            <button type="button" class="lp-btn lp-btn-solid" onclick="nextStep(1)">Next Step <i class="fas fa-arrow-right"></i></button>
+                            <button type="button" class="btn btn-primary lp-btn lp-btn-solid" onclick="nextStep(1)"><span class="btn-text">Next Step <i class="fas fa-arrow-right"></i></span></button>
                         </div>
                     </div>
 
@@ -263,8 +263,8 @@ if ($is_logged_in) {
                             <?php endforeach; ?>
                         </div>
                         <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
-                            <button type="button" class="lp-btn lp-btn-solid" onclick="nextStep(2)">Next Step <i class="fas fa-arrow-right"></i></button>
+                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(2)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
+                            <button type="button" class="btn btn-primary lp-btn lp-btn-solid" onclick="nextStep(2)"><span class="btn-text">Next Step <i class="fas fa-arrow-right"></i></span></button>
                         </div>
                     </div>
 
@@ -291,8 +291,8 @@ if ($is_logged_in) {
                             </div>
                         </div>
                         <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(3)"><i class="fas fa-arrow-left"></i> Back</button>
-                            <button type="button" class="lp-btn lp-btn-solid" onclick="nextStep(3)">Next Step <i class="fas fa-arrow-right"></i></button>
+                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(3)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
+                            <button type="button" class="btn btn-primary lp-btn lp-btn-solid" onclick="nextStep(3)"><span class="btn-text">Next Step <i class="fas fa-arrow-right"></i></span></button>
                         </div>
                     </div>
 
@@ -303,8 +303,8 @@ if ($is_logged_in) {
                         <textarea name="reason" id="reason_text" class="lp-input" rows="4" placeholder="Optional brief description..."></textarea>
                         
                         <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(4)"><i class="fas fa-arrow-left"></i> Back</button>
-                            <button type="button" class="lp-btn lp-btn-solid" onclick="nextStep(4)">Review <i class="fas fa-arrow-right"></i></button>
+                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(4)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
+                            <button type="button" class="btn btn-outline btn-icon lp-btn lp-btn-solid" onclick="nextStep(4)"><span class="btn-text">Review <i class="fas fa-arrow-right"></i></span></button>
                         </div>
                     </div>
 
@@ -319,8 +319,8 @@ if ($is_logged_in) {
                         </div>
                         
                         <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(5)"><i class="fas fa-arrow-left"></i> Back</button>
-                            <button type="submit" class="lp-btn lp-btn-solid" style="background:#10b981; border-color:#10b981;"><i class="fas fa-paper-plane"></i> Confirm Booking</button>
+                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(5)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
+                            <button type="submit" class="btn btn-primary btn-lg btn-icon lp-btn lp-btn-solid" style="background:#10b981; border-color:#10b981;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Confirm Booking</span></button>
                         </div>
                     </div>
                 </form>
@@ -344,7 +344,7 @@ if ($is_logged_in) {
                             <?php if ($b['status'] === 'pending'): ?>
                             <form method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
                                 <input type="hidden" name="booking_id" value="<?php echo $b['booking_id']; ?>">
-                                <button type="submit" name="cancel_booking" class="lp-btn lp-btn-outline" style="padding:0.4rem 1rem; border-color:#ef4444; color:#ef4444; font-size:0.85rem;"><i class="fas fa-times"></i> Cancel</button>
+                                <button type="submit" name="cancel_booking" class="lp-btn lp-btn-outline" style="padding:0.4rem 1rem; border-color:#ef4444; color:#ef4444; font-size:0.85rem;"><span class="btn-text"><i class="fas fa-times"></i> Cancel</span></button>
                             </form>
                             <?php endif; ?>
                         </div>

@@ -59,8 +59,8 @@ function nav_active(string $page, string $current): string {
         <div class="toggle-icon icon-moon active"><i class="fas fa-moon"></i></div>
         <div class="toggle-icon icon-sun"><i class="fas fa-sun"></i></div>
       </button>
-      <a href="<?= $_base ?>/php/index.php" class="lp-nav-btn lp-nav-btn-outline">Login</a>
-      <a href="<?= $_base ?>/php/register.php" class="lp-nav-btn lp-nav-btn-solid">Register</a>
+      <a href="<?= $_base ?>/php/index.php" class="lp-nav-btn lp-nav-btn-outline"><span class="btn-text">Login</span></a>
+      <a href="<?= $_base ?>/php/register.php" class="btn btn-primary lp-nav-btn lp-nav-btn-solid"><span class="btn-text">Register</span></a>
       <div class="lp-hamburger" id="lpHamburger" role="button" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </div>
@@ -82,7 +82,7 @@ function nav_active(string $page, string $current): string {
   </ul>
   <div class="lp-mobile-actions">
     <a href="tel:153" class="lp-emergency-pill"><i class="fas fa-phone-volume"></i> Emergency: 153</a>
-    <a href="<?= $_base ?>/php/index.php" class="lp-nav-btn lp-nav-btn-outline">Login</a>
-    <a href="<?= $_base ?>/php/register.php" class="lp-nav-btn lp-nav-btn-solid">Register</a>
+    <a href="<?= $_base ?>/php/index.php" class="lp-nav-btn lp-nav-btn-outline"><span class="btn-text">Login</span></a>
+    <a href="<?= $_base ?>/php/register.php" class="btn btn-primary lp-nav-btn lp-nav-btn-solid"><span class="btn-text">Register</span></a>
   </div>
 </div>

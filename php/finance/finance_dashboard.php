@@ -339,9 +339,9 @@ $method_data_j   = json_encode(array_map('floatval', array_column($rev_method, '
   </nav>
 
   <div class="adm-sidebar-footer">
-    <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn">
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text">
       <i class="fas fa-right-from-bracket"></i><span>Logout</span>
-    </a>
+    </span></a>
   </div>
 </aside>
 <div class="adm-overlay" id="admOverlay"></div>
@@ -361,10 +361,10 @@ $method_data_j   = json_encode(array_map('floatval', array_column($rev_method, '
     <div class="adm-topbar-right">
       <span class="adm-topbar-datetime"><i class="fas fa-calendar-day"></i><?=date('D, d M Y')?></span>
       <div style="position:relative;">
-        <button id="rmuBellBtn" class="adm-notif-btn <?=$kpi['unread_notifs']>0?'has-unread':''?>" title="Notifications">
+        <button id="rmuBellBtn" class="btn btn-outline btn-icon adm-notif-btn <?=$kpi['unread_notifs']>0?'has-unread':''?>" title="Notifications"><span class="btn-text">
           <i class="fas fa-bell"></i>
           <span id="rmuBellCount" style="display:<?=$kpi['unread_notifs']>0?'flex':'none'?>"><?=$kpi['unread_notifs']>99?'99+':$kpi['unread_notifs']?></span>
-        </button>
+        </span></button>
       </div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
       <div class="adm-avatar" style="background:linear-gradient(135deg,var(--role-accent),var(--role-gold));" title="<?=htmlspecialchars($fs_row['name'])?>">

@@ -13,11 +13,11 @@
   <?php endif;?>
 
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterMed('all',this)">All</button>
-    <button class="ftab" onclick="filterMed('In Stock',this)">In Stock</button>
-    <button class="ftab" onclick="filterMed('Low Stock',this)">Low Stock</button>
-    <button class="ftab" onclick="filterMed('Out of Stock',this)">Out of Stock</button>
-    <button class="ftab" onclick="filterMed('Expiring Soon',this)">Expiring Soon</button>
+    <button class="btn btn-primary ftab active" onclick="filterMed('all',this)"><span class="btn-text">All</span></button>
+    <button class="btn btn-primary ftab" onclick="filterMed('In Stock',this)"><span class="btn-text">In Stock</span></button>
+    <button class="btn btn-primary ftab" onclick="filterMed('Low Stock',this)"><span class="btn-text">Low Stock</span></button>
+    <button class="btn btn-primary ftab" onclick="filterMed('Out of Stock',this)"><span class="btn-text">Out of Stock</span></button>
+    <button class="btn btn-primary ftab" onclick="filterMed('Expiring Soon',this)"><span class="btn-text">Expiring Soon</span></button>
   </div>
 
   <div style="margin-bottom:1.2rem;">

@@ -68,9 +68,9 @@ if ($q_alerts) {
                 <span style="width:10px; height:10px; border-radius:50%; background:var(--success); display:inline-block;"></span>
                 <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);">System <small style="font-weight:700; color:var(--success);">READY</small></div>
             </div>
-            <button class="adm-btn adm-btn-ghost" onclick="location.reload();" style="border-radius:12px; font-weight:700;">
+            <button class="btn btn-ghost" onclick="location.reload();" style="border-radius:12px; font-weight:700;"><span class="btn-text">
                 <i class="fas fa-sync-alt"></i> Refresh Feed
-            </button>
+            </span></button>
         </div>
     </div>
 
@@ -96,19 +96,19 @@ if ($q_alerts) {
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem;">
-                        <button class="adm-btn adm-btn-ghost" onclick="showTriggerModal('Rapid Response')" style="border-color:var(--danger); color:var(--danger); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;">
+                        <button class="btn btn-ghost" onclick="showTriggerModal('Rapid Response')" style="border-color:var(--danger); color:var(--danger); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;"><span class="btn-text">
                             <i class="fas fa-user-md" style="font-size:1.8rem;"></i>
                             <span>Rapid Response</span>
-                        </button>
-                        <button class="adm-btn adm-btn-ghost" onclick="showTriggerModal('Fall')" style="border-color:var(--warning); color:var(--warning); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;">
+                        </span></button>
+                        <button class="btn btn-ghost" onclick="showTriggerModal('Fall')" style="border-color:var(--warning); color:var(--warning); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;"><span class="btn-text">
                             <i class="fas fa-user-injured" style="font-size:1.8rem;"></i>
                             <span>Patient Fall</span>
-                        </button>
-                        <button class="adm-btn adm-btn-ghost" onclick="showTriggerModal('Security')" style="border-color:var(--text-primary); color:var(--text-primary); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;">
+                        </span></button>
+                        <button class="btn btn-ghost" onclick="showTriggerModal('Security')" style="border-color:var(--text-primary); color:var(--text-primary); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;"><span class="btn-text">
                             <i class="fas fa-shield-alt" style="font-size:1.8rem;"></i>
                             <span>Security Alert</span>
-                        </button>
-                        <button class="adm-btn adm-btn-ghost" onclick="showTriggerModal('General Emergency')" style="border-color:var(--text-muted); color:var(--text-muted); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;">
+                        </span></button>
+                        <button class="btn btn-ghost" onclick="showTriggerModal('General Emergency')" style="border-color:var(--text-muted); color:var(--text-muted); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;"><span class="btn-text">
                             <i class="fas fa-exclamation-circle" style="font-size        <!-- REAL-TIME ALERTS FEED -->
         <div>
             <div class="adm-card shadow-sm">
@@ -210,13 +210,13 @@ if ($q_alerts) {
                                             <?php if($is_active): ?>
                                                 <button class="adm-btn adm-btn-warning" onclick="updateAlert(<?= $a['id'] ?>, 'Responded')" style="font-weight:800; font-size:1.1rem; padding:.6rem 1.4rem;">
                                                     <i class="fas fa-running"></i> I AM RESPONDING
-                                                </button>
+                                                </span></button>
                                             <?php endif; ?>
                                             
                                             <?php if($is_active || $is_responded): ?>
-                                                <button class="adm-btn adm-btn-success" onclick="showResolveModal(<?= $a['id'] ?>)" style="font-weight:800; font-size:1.1rem; padding:.6rem 1.4rem;">
+                                                <button class="btn btn-success" onclick="showResolveModal(<?= $a['id'] ?>)" style="font-weight:800; font-size:1.1rem; padding:.6rem 1.4rem;"><span class="btn-text">
                                                     <i class="fas fa-check"></i> RESOLVE
-                                                </button>
+                                                </span></button>
                                             <?php endif; ?>
 
                                             <?php if($is_resolved): ?>
@@ -270,7 +270,7 @@ if ($q_alerts) {
     <div class="modal-box" style="max-width:550px; border:2px solid var(--danger); box-shadow:0 25px 50px -12px rgba(231,76,60,0.4);">
         <div class="modal-header" style="background:var(--danger); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:0.02em; margin:0;"><i class="fas fa-bullhorn" style="margin-right:.8rem;"></i> TRIGGER ALERT: <span id="lblAlertType" style="text-decoration:underline;">CODE BLUE</span></h3>
-            <button class="modal-close" onclick="closeTriggerModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeTriggerModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         
         <div style="padding:2.5rem;">
@@ -307,10 +307,10 @@ if ($q_alerts) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeTriggerModal()" style="font-weight:700;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-danger pulse-fade" id="btnTriggerConfirm" style="padding:.8rem 3rem; font-weight:900; border-radius:12px; font-size:1.2rem; letter-spacing:0.05em;">
+                    <button type="button" class="btn btn-ghost" onclick="closeTriggerModal()" style="font-weight:700;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-danger pulse-fade" id="btnTriggerConfirm" style="padding:.8rem 3rem; font-weight:900; border-radius:12px; font-size:1.2rem; letter-spacing:0.05em;"><span class="btn-text">
                         <i class="fas fa-satellite-dish"></i> BROADCAST ALERT
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>
@@ -324,7 +324,7 @@ if ($q_alerts) {
     <div class="modal-box" style="max-width:480px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--success); padding:1.5rem 2rem;">
             <h3 style="color:#fff; font-size:1.5rem; font-weight:800; margin:0;"><i class="fas fa-check-circle" style="margin-right:.6rem;"></i> Clear Emergency Status</h3>
-            <button class="modal-close" onclick="closeResolveModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeResolveModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         
         <div style="padding:2rem;">
@@ -337,12 +337,12 @@ if ($q_alerts) {
                 <p style="font-size:1.3rem; color:var(--text-secondary); margin-bottom:2rem; text-align:center; font-weight:600;">Select the appropriate outcome for this emergency event:</p>
                 
                 <div style="display:grid; grid-template-columns:1fr; gap:1.2rem;">
-                    <button type="button" class="adm-btn adm-btn-success" onclick="submitResolve('Resolved')" style="padding:1.5rem; font-weight:800; font-size:1.3rem;">
+                    <button type="button" class="btn btn-success" onclick="submitResolve('Resolved')" style="padding:1.5rem; font-weight:800; font-size:1.3rem;"><span class="btn-text">
                         <i class="fas fa-check-double"></i> SECURED / RESOLVED
-                    </button>
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="submitResolve('False Alarm')" style="padding:1.5rem; font-weight:800; font-size:1.3rem; border-color:var(--text-muted); color:var(--text-muted);">
+                    </span></button>
+                    <button type="button" class="btn btn-ghost" onclick="submitResolve('False Alarm')" style="padding:1.5rem; font-weight:800; font-size:1.3rem; border-color:var(--text-muted); color:var(--text-muted);"><span class="btn-text">
                         <i class="fas fa-undo"></i> FALSE ALARM
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

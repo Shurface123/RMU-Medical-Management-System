@@ -14,7 +14,7 @@ $current_sid = session_id();
           <div class="form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" required></div>
           <div class="form-group"><label>New Password</label><input type="password" name="new_password" id="newPwdProf" class="form-control" required minlength="8" oninput="checkStrength(this)"><div id="pwdStrength" style="margin-top:.4rem;font-size:1.1rem;font-weight:600;"></div></div>
           <div class="form-group"><label>Confirm Password</label><input type="password" name="confirm_password" class="form-control" required></div>
-          <button type="submit" class="adm-btn adm-btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-key"></i> Update Password</button>
+          <button type="submit" class="btn btn-warning" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-key"></i> Update Password</span></button>
         </form>
       </div>
     </div>
@@ -27,7 +27,7 @@ $current_sid = session_id();
             <div class="form-group"><label>Current Email</label><input type="email" class="form-control" value="<?=htmlspecialchars($prof['email']??'')?>" readonly style="background:var(--surface-2);"></div>
             <div class="form-group"><label>New Email</label><input type="email" name="new_email" class="form-control" required></div>
             <div class="form-group"><label>Password Confirmation</label><input type="password" name="password" class="form-control" required></div>
-            <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Update Email</button>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Update Email</span></button>
           </form>
         </div>
       </div>
@@ -38,7 +38,7 @@ $current_sid = session_id();
           <p style="font-size:1.2rem;color:var(--text-muted);margin-bottom:1rem;">Request temporary account deactivation. This will be reviewed by admin. Your data will not be deleted.</p>
           <form onsubmit="requestDeact(event)">
             <div class="form-group"><label>Reason</label><textarea name="reason" class="form-control" rows="2" required placeholder="Please provide a reason"></textarea></div>
-            <button type="submit" class="adm-btn adm-btn-danger" style="width:100%;justify-content:center;"><i class="fas fa-power-off"></i> Request Deactivation</button>
+            <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-power-off"></i> Request Deactivation</span></button>
           </form>
         </div>
       </div>
@@ -50,7 +50,7 @@ $current_sid = session_id();
     <div class="adm-card-header">
         <h3><i class="fas fa-laptop-house"></i> Active Devices & Sessions</h3>
         <?php if (count($active_sessions_list) > 1): ?>
-        <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="revokeSession('all')"><i class="fas fa-sign-out-alt"></i> Logout All Other Devices</button>
+        <button class="btn btn-danger btn-sm" onclick="revokeSession('all')"><span class="btn-text"><i class="fas fa-sign-out-alt"></i> Logout All Other Devices</span></button>
         <?php endif; ?>
     </div>
     <div style="padding:1.5rem;overflow-x:auto;">
@@ -84,7 +84,7 @@ $current_sid = session_id();
               </td>
               <td>
                   <?php if(!$is_current): ?>
-                  <button class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--danger);" onclick="revokeSession('<?= htmlspecialchars($s['session_id']) ?>')"><i class="fas fa-times-circle"></i> Revoke</button>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="revokeSession('<?= htmlspecialchars($s['session_id']) ?>')"><span class="btn-text"><i class="fas fa-times-circle"></i> Revoke</span></button>
                   <?php else: ?>
                   <span style="color:var(--text-muted);font-size:0.85rem;">Active</span>
                   <?php endif; ?>
@@ -99,7 +99,7 @@ $current_sid = session_id();
   <!-- Activity Log -->
   <div class="adm-card" style="margin-top:1.5rem;">
     <div class="adm-card-header"><h3><i class="fas fa-clipboard-list"></i> Activity Log</h3>
-      <button class="adm-btn adm-btn-sm" onclick="loadActivityLog()"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary btn btn-sm" onclick="loadActivityLog()"><span class="btn-text"><i class="fas fa-sync-alt"></i> Refresh</span></button>
     </div>
     <div style="padding:1.5rem;overflow-x:auto;">
       <table class="adm-table" id="activityTable">

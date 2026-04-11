@@ -62,12 +62,12 @@ if (!isset($conn)) exit;
                 </div>
 
                 <div style="display:flex; justify-content:center; gap:2.5rem; padding-top:4.5rem; border-top:1.5px solid var(--border);">
-                    <button type="submit" name="export_format" value="csv" class="adm-btn adm-btn-ghost" style="padding:1.4rem 4rem; border-radius:15px; font-weight:800; font-size:1.4rem; border-width:2px; display:flex; align-items:center; gap:1.2rem;">
+                    <button type="submit" name="export_format" value="csv" class="btn-icon btn btn-ghost" style="padding:1.4rem 4rem; border-radius:15px; font-weight:800; font-size:1.4rem; border-width:2px; display:flex; align-items:center; gap:1.2rem;"><span class="btn-text">
                         <i class="fas fa-file-csv" style="font-size:1.8rem; color:var(--success);"></i> Export to CSV
-                    </button>
-                    <button type="submit" name="export_format" value="print" class="adm-btn adm-btn-primary" style="padding:1.4rem 6rem; border-radius:15px; font-weight:900; font-size:1.4rem; box-shadow:0 10px 25px rgba(var(--primary-rgb),0.3); display:flex; align-items:center; gap:1.2rem;">
+                    </span></button>
+                    <button type="submit" name="export_format" value="print" class="btn-icon btn btn-primary" style="padding:1.4rem 6rem; border-radius:15px; font-weight:900; font-size:1.4rem; box-shadow:0 10px 25px rgba(var(--primary-rgb),0.3); display:flex; align-items:center; gap:1.2rem;"><span class="btn-text">
                         <i class="fas fa-print" style="font-size:1.8rem;"></i> GENERATE AUDIT VIEW
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

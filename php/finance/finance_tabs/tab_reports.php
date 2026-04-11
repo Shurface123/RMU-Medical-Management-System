@@ -82,9 +82,9 @@ $report_month_waivers= (float)fval($conn, "SELECT COALESCE(SUM(waived_amount),0)
           <option value="csv">CSV</option>
         </select>
       </div>
-      <button onclick="generateReport()" class="adm-btn adm-btn-primary" style="white-space:nowrap;">
+      <button onclick="generateReport()" class="btn-icon btn btn-primary" style="white-space:nowrap;"><span class="btn-text">
         <i class="fas fa-file-export"></i> Generate
-      </button>
+      </span></button>
     </div>
 
     <!-- Custom Date Range (hidden by default) -->

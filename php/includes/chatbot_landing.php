@@ -23,14 +23,14 @@ $_placeholder = $chatbot_placeholder ?? 'Ask me anything…';
       <div class="lp-chat-header-status"><span class="lp-chat-online-dot"></span> Online</div>
     </div>
     <div class="lp-chat-header-actions">
-      <button class="lp-chat-header-btn" id="lpChatMinimize" title="Minimize"><i class="fas fa-minus"></i></button>
-      <button class="lp-chat-header-btn" id="lpChatClose" title="Close"><i class="fas fa-times"></i></button>
+      <button class="btn btn-primary lp-chat-header-btn" id="lpChatMinimize" title="Minimize"><span class="btn-text"><i class="fas fa-minus"></i></span></button>
+      <button class="btn btn-primary lp-chat-header-btn" id="lpChatClose" title="Close"><span class="btn-text"><i class="fas fa-times"></i></span></button>
     </div>
   </div>
   <div class="lp-chat-messages" id="lpChatMessages"></div>
   <div class="lp-chat-suggestions" id="lpChatSuggestions"></div>
   <div class="lp-chat-input-area">
     <textarea class="lp-chat-input" id="lpChatInput" placeholder="<?= htmlspecialchars($_placeholder) ?>" rows="1"></textarea>
-    <button class="lp-chat-send" id="lpChatSend" title="Send"><i class="fas fa-paper-plane"></i></button>
+    <button class="btn btn-primary lp-chat-send" id="lpChatSend" title="Send"><span class="btn-text"><i class="fas fa-paper-plane"></i></span></button>
   </div>
 </div>

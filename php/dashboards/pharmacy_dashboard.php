@@ -398,7 +398,7 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <a href="#" class="adm-nav-item <?=($active_tab==='system_settings')?'active':''?>" onclick="showTab('system_settings',this)"><i class="fas fa-sliders"></i><span>System Settings</span></a>
   </nav>
   <div class="adm-sidebar-footer">
-    <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text"><i class="fas fa-right-from-bracket"></i><span>Logout</span></span></a>
   </div>
 </aside>
 <div class="adm-overlay" id="admOverlay"></div>
@@ -421,10 +421,10 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
         $bell_label      = $stats['unread_notifs'] > 99 ? '99+' : $stats['unread_notifs'];
       ?>
       <div style="position:relative;">
-        <button id="rmuBellBtn" class="<?=$bell_class?>" title="Notifications">
+        <button id="rmuBellBtn" class="btn btn-primary <?=$bell_class?>" title="Notifications"><span class="btn-text">
           <i class="fas fa-bell"></i>
           <span id="rmuBellCount" style="display:<?=$bell_display?>"><?=$bell_label?></span>
-        </button>
+        </span></button>
       </div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
       <div class="adm-avatar" style="background:linear-gradient(135deg,var(--role-accent),#2F80ED);" title="<?=htmlspecialchars($pharm_row['full_name']??$pharmacistName)?>">

@@ -13,9 +13,9 @@ $base = "/RMU-Medical-Management-System";
   <div class="adm-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
     <h3><i class="fas fa-desktop" style="color:var(--primary); margin-right:0.5rem;"></i> Active Devices & Sessions</h3>
     <?php if(count($user_sessions) > 1): ?>
-    <button type="button" class="adm-btn adm-btn-danger adm-btn-sm" onclick="logoutAllOtherSessions()" style="white-space:nowrap;">
+    <button type="button" class="btn btn-danger btn-sm" onclick="logoutAllOtherSessions()" style="white-space:nowrap;"><span class="btn-text">
       <i class="fas fa-sign-out-alt"></i> Sign out all other devices
-    </button>
+    </span></button>
     <?php endif; ?>
   </div>
   <div style="padding:2rem;">
@@ -49,9 +49,9 @@ $base = "/RMU-Medical-Management-System";
               <i class="fas fa-clock"></i> Active: <?= date('M d, g:i A', strtotime($s['last_active'])) ?>
             </div>
             <?php if(!$is_curr): ?>
-            <button type="button" class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--danger); border:1px solid var(--danger-light); padding:0.4rem 1rem;" onclick="logoutSpecificSession('<?=$s['session_id']?>')">
+            <button type="button" class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid var(--danger-light); padding:0.4rem 1rem;" onclick="logoutSpecificSession('<?=$s['session_id']?>')"><span class="btn-text">
             Termnate Session
-            </button>
+            </span></button>
             <?php endif; ?>
         </div>
       </div>

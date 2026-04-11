@@ -50,7 +50,7 @@
           </select>
         </div>
 
-        <button type="submit" class="adm-btn adm-btn-success" style="width:100%;justify-content:center;margin-top:1rem;"><i class="fas fa-save"></i> Save Notification Settings</button>
+        <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;margin-top:1rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Notification Settings</span></button>
       </form>
     </div>
 
@@ -79,7 +79,7 @@
           <div class="form-group"><label>Current Password</label><input type="password" class="form-control" name="current_password" required></div>
           <div class="form-group"><label>New Password</label><input type="password" class="form-control" name="new_password" required minlength="6"></div>
           <div class="form-group"><label>Confirm New Password</label><input type="password" class="form-control" name="confirm_password" required></div>
-          <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-lock"></i> Change Password</button>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-lock"></i> Change Password</span></button>
         </form>
         <hr style="margin:1.5rem 0;border:none;border-bottom:1px solid var(--border);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -112,7 +112,7 @@
             <div style="font-size:1.1rem;color:var(--text-muted);">IP: <?=htmlspecialchars($sess['ip_address']??'—')?> · <?=$sess['last_active']?date('d M, g:i A',strtotime($sess['last_active'])):'—'?></div>
           </div>
           <?php if($sess['is_current']):?><span class="adm-badge adm-badge-success">Current</span>
-          <?php else:?><button class="adm-btn adm-btn-danger adm-btn-sm" onclick="revokeSession(<?=$sess['id']?>)"><i class="fas fa-times"></i></button><?php endif;?>
+          <?php else:?><button class="btn btn-danger btn-sm" onclick="revokeSession(<?=$sess['id']?>)"><span class="btn-text"><i class="fas fa-times"></i></span></button><?php endif;?>
         </div>
         <?php endforeach; endif;?>
       <?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>

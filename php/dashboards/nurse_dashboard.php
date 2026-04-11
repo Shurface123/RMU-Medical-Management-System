@@ -276,9 +276,9 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
 
     <!-- Footer / Logout -->
     <div class="adm-sidebar-footer">
-        <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn">
+        <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text">
             <i class="fas fa-sign-out-alt"></i><span>Logout</span>
-        </a>
+        </span></a>
     </div>
 </aside>
 
@@ -302,9 +302,9 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
                 </span>
             <?php endif; ?>
 
-            <a href="?tab=emergency" class="adm-btn adm-btn-danger adm-btn-sm" style="animation: pulse-red 2s infinite; margin-right: 15px; border-radius: 20px;">
+            <a href="?tab=emergency" class="btn btn-danger btn-sm" style="animation: pulse-red 2s infinite; margin-right: 15px; border-radius: 20px;"><span class="btn-text">
                 <i class="fas fa-exclamation-triangle"></i> CODE BLUE
-            </a>
+            </span></a>
 
             <!-- Notifications -->
             <a href="?tab=overview#notifications" style="text-decoration: none; color: var(--text-muted); position: relative; margin-right: 20px; font-size: 1.2rem;">

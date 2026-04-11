@@ -250,7 +250,7 @@ while($d = mysqli_fetch_assoc($depts_res)) $depts[] = $d;
     <div class="info-card" style="padding:2.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800; font-size:1.6rem;"><i class="fas fa-address-card" style="color:var(--primary); margin-right:.8rem;"></i> Personal Dossier</h3>
-            <button class="adm-btn adm-btn-primary" onclick="savePersonalInfo()"><i class="fas fa-save"></i> Synchronize Data</button>
+            <button class="btn btn-primary" onclick="savePersonalInfo()"><span class="btn-text"><i class="fas fa-save"></i> Synchronize Data</span></button>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
             <div class="form-group">
@@ -324,7 +324,7 @@ while($d = mysqli_fetch_assoc($depts_res)) $depts[] = $d;
     <div class="info-card" style="padding:2.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border);">
             <h3 style="margin:0; font-weight:800; font-size:1.6rem;"><i class="fas fa-microscope" style="color:var(--primary); margin-right:.8rem;"></i> Professional Expertise Profile</h3>
-            <button class="adm-btn adm-btn-primary" onclick="saveProfessionalProfile()"><i class="fas fa-save"></i> Update Registry</button>
+            <button class="btn btn-primary" onclick="saveProfessionalProfile()"><span class="btn-text"><i class="fas fa-save"></i> Update Registry</span></button>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
             <div class="form-group">

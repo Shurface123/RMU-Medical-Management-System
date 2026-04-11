@@ -399,9 +399,9 @@ select.form-control { cursor:pointer; }
     </nav>
 
     <div class="adm-sidebar-footer">
-        <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn">
+        <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text">
             <i class="fas fa-right-from-bracket"></i><span>Logout</span>
-        </a>
+        </span></a>
     </div>
 </aside>
 <div class="adm-overlay" id="admOverlay"></div>
@@ -424,25 +424,25 @@ select.form-control { cursor:pointer; }
             </span>
 
             <!-- Notification Bell -->
-            <button class="adm-notif-btn" id="notifBtn" onclick="showTab('notifications',null)" title="Notifications" style="position:relative;">
+            <button class="btn btn-outline btn-icon adm-notif-btn" id="notifBtn" onclick="showTab('notifications',null)" title="Notifications" style="position:relative;"><span class="btn-text">
                 <i class="fas fa-bell"></i>
                 <?php if ($unread_notifs > 0): ?>
                 <span class="adm-notif-badge" id="notifBadge"><?= $unread_notifs ?></span>
                 <?php endif; ?>
-            </button>
+            </span></button>
 
             <!-- Messages -->
-            <button class="adm-notif-btn" onclick="showTab('messages',null)" title="Messages" style="position:relative;">
+            <button class="btn btn-outline btn-icon adm-notif-btn" onclick="showTab('messages',null)" title="Messages" style="position:relative;"><span class="btn-text">
                 <i class="fas fa-envelope"></i>
                 <?php if ($unread_msgs > 0): ?>
                 <span class="adm-notif-badge"><?= $unread_msgs ?></span>
                 <?php endif; ?>
-            </button>
+            </span></button>
 
             <!-- Theme Toggle -->
-            <button class="adm-notif-btn" id="themeToggle" title="Toggle Theme">
+            <button class="btn btn-primary adm-notif-btn" id="themeToggle" title="Toggle Theme"><span class="btn-text">
                 <i class="fas fa-moon" id="themeIcon"></i>
-            </button>
+            </span></button>
 
             <!-- Role Badge + Avatar -->
             <span class="badge" style="background:var(--role-accent-light);color:var(--role-accent);font-size:1.1rem;">

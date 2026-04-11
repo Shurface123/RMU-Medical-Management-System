@@ -48,9 +48,9 @@ if ($q)
                 <h1>Maintenance & Repairs</h1>
                 <p>Log and track facility repair requirements for the maintenance team.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('maintModal').classList.add('active')">
+            <button class="btn btn-primary" onclick="document.getElementById('maintModal').classList.add('active')"><span class="btn-text">
                 <i class="fas fa-plus"></i> Report Issue
-            </button>
+            </span></button>
         </div>
 
         <?php if (isset($_GET['success'])): ?>
@@ -98,7 +98,7 @@ endif; ?>
     <div class="adm-modal-content" style="max-height:90vh;overflow-y:auto;max-width:800px;">
         <div class="adm-modal-header" style="background:var(--primary);color:#fff;">
             <h3 style="color:#fff;"><i class="fas fa-wrench"></i> Report Maintenance Issue</h3>
-            <button class="adm-modal-close" style="color:#fff;" onclick="document.getElementById('maintModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary adm-modal-close" style="color:#fff;" onclick="document.getElementById('maintModal').classList.remove('active')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <div class="adm-modal-body">
             <form id="maintForm" enctype="multipart/form-data">
@@ -185,8 +185,8 @@ endif; ?>
                 </div>
 
                 <div style="display:flex;gap:1rem;">
-                    <button type="submit" class="adm-btn adm-btn-primary" style="flex:1;font-size:1.1rem;padding:0.75rem;"><i class="fas fa-paper-plane"></i> Submit Report</button>
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('maintModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;font-size:1.1rem;padding:0.75rem;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Report</span></button>
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('maintModal').classList.remove('active')"><span class="btn-text">Cancel</span></button>
                 </div>
             </form>
         </div>

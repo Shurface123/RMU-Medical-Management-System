@@ -37,11 +37,11 @@ $completed_today= dbSelect($conn,"SELECT * FROM maintenance_requests WHERE assig
                 <td>
                     <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
                         <?php if($st==='assigned'||$st==='on hold'): ?>
-                        <button class="btn btn-outline btn-sm" onclick="updateMaint(<?=$r['id']?>,'in progress')"><i class="fas fa-play"></i> Start</button>
+                        <button class="btn btn-outline btn-sm" onclick="updateMaint(<?=$r['id']?>,'in progress')"><span class="btn-text"><i class="fas fa-play"></i> Start</span></button>
                         <?php endif; ?>
                         <?php if($st==='in progress'): ?>
-                        <button class="btn btn-outline btn-sm" onclick="updateMaint(<?=$r['id']?>,'on hold')"><i class="fas fa-pause"></i> Hold</button>
-                        <button class="btn btn-success btn-sm" onclick="openComplMaint(<?=$r['id']?>)"><i class="fas fa-check"></i> Complete</button>
+                        <button class="btn btn-outline btn-sm" onclick="updateMaint(<?=$r['id']?>,'on hold')"><span class="btn-text"><i class="fas fa-pause"></i> Hold</span></button>
+                        <button class="btn btn-success btn-sm" onclick="openComplMaint(<?=$r['id']?>)"><span class="btn-text"><i class="fas fa-check"></i> Complete</span></button>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -77,7 +77,7 @@ $completed_today= dbSelect($conn,"SELECT * FROM maintenance_requests WHERE assig
                 <td><span class="badge" style="background:color-mix(in srgb,<?=$pri_c?> 15%,#fff 85%);color:<?=$pri_c?>;"><?=ucfirst($pri)?></span></td>
                 <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?=e(mb_strimwidth($r['issue_description']??'',0,60,'…'))?></td>
                 <td><?=date('d M, H:i',strtotime($r['reported_at']??'now'))?></td>
-                <td><button class="btn btn-primary btn-sm" onclick="acceptMaint(<?=$r['id']?>)"><i class="fas fa-hand-pointer"></i> Accept</button></td>
+                <td><button class="btn btn-primary btn-sm" onclick="acceptMaint(<?=$r['id']?>)"><span class="btn-text"><i class="fas fa-hand-pointer"></i> Accept</span></button></td>
             </tr>
             <?php endforeach; ?>
             </tbody>
@@ -114,7 +114,7 @@ $completed_today= dbSelect($conn,"SELECT * FROM maintenance_requests WHERE assig
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-check-circle" style="color:var(--success);"></i> Complete Repair</h3>
-            <button class="modal-close" onclick="closeModal('complMaintModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('complMaintModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmComplMaint" onsubmit="event.preventDefault();submitComplMaint();">
             <input type="hidden" name="action" value="update_maintenance_status">
@@ -125,7 +125,7 @@ $completed_today= dbSelect($conn,"SELECT * FROM maintenance_requests WHERE assig
                 <div class="form-group"><label>Before Photo</label><input type="file" name="before_photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
                 <div class="form-group"><label>After Photo</label><input type="file" name="after_photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
             </div>
-            <button type="submit" class="btn btn-success btn-wide" id="btnComplMaint"><i class="fas fa-check"></i> Submit Completion</button>
+            <button type="submit" class="btn btn-success btn-wide" id="btnComplMaint"><span class="btn-text"><i class="fas fa-check"></i> Submit Completion</span></button>
         </form>
     </div>
 </div>

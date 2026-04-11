@@ -72,7 +72,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
             <div class="adm-badge shadow-sm" style="background:rgba(var(--success-rgb),0.1); color:var(--success); border:1px solid rgba(var(--success-rgb),0.2); font-weight:800; padding:.6rem 1.2rem; border-radius:10px; display:flex; align-items:center; gap:.8rem;">
                 <i class="fas fa-check-circle"></i> SYSTEM STATUS: <?= strtoupper(e($core['status'])) ?>
             </div>
-            <button class="adm-btn adm-btn-ghost" onclick="location.reload();" style="border-radius:10px; padding:.5rem 1rem;"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn btn-ghost" onclick="location.reload();" style="border-radius:10px; padding:.5rem 1rem;"><span class="btn-text"><i class="fas fa-sync-alt"></i></span></button>
         </div>
     </div>
 
@@ -93,9 +93,9 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                         ?>
                         <div style="position:relative;">
                             <img src="<?= e($photoPath) ?>" alt="Profile" style="width:130px; height:130px; border-radius:40px; border:6px solid #fff; box-shadow:0 15px 35px rgba(0,0,0,0.15); object-fit:cover; background:#fff;">
-                            <button class="adm-btn adm-btn-primary" style="position:absolute; bottom:5px; right:5px; width:42px; height:42px; border-radius:14px; padding:0; border:4px solid #fff; box-shadow:0 5px 15px rgba(var(--primary-rgb),0.3);" onclick="$('#avatarUploadInput').click()">
+                            <button class="btn btn-primary" style="position:absolute; bottom:5px; right:5px; width:42px; height:42px; border-radius:14px; padding:0; border:4px solid #fff; box-shadow:0 5px 15px rgba(var(--primary-rgb),0.3);" onclick="$('#avatarUploadInput').click()"><span class="btn-text">
                                 <i class="fas fa-camera" style="font-size:1.4rem;"></i>
-                            </button>
+                            </span></button>
                         </div>
                      </div>
                 </div>
@@ -164,11 +164,11 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
         <!-- Right Column: Tabbed Content -->
         <div class="adm-card shadow-sm" style="min-height:800px; border-radius:24px; border:none; overflow:hidden;">
             <div class="adm-card-header" style="justify-content:flex-start; overflow-x:auto; padding:0 3rem; gap:3.5rem; white-space:nowrap; background:var(--surface-2); border-bottom:1.5px solid var(--border); height:80px;">
-                <button class="adm-tab-btn active" onclick="switchProfileTab('personal', this)" style="font-size:1.4rem; letter-spacing:0.02em;">IDENTITY</button>
-                <button class="adm-tab-btn" onclick="switchProfileTab('professional', this)" style="font-size:1.4rem; letter-spacing:0.02em;">CLINICAL</button>
-                <button class="adm-tab-btn" onclick="switchProfileTab('credentials', this)" style="font-size:1.4rem; letter-spacing:0.02em;">ACADEMIC</button>
-                <button class="adm-tab-btn" onclick="switchProfileTab('documents', this)" style="font-size:1.4rem; letter-spacing:0.02em;">HR VAULT</button>
-                <button class="adm-tab-btn" onclick="switchProfileTab('security', this)" style="font-size:1.4rem; letter-spacing:0.02em; color:var(--danger);">SECURITY</button>
+                <button class="btn btn-primary adm-tab-btn active" onclick="switchProfileTab('personal', this)" style="font-size:1.4rem; letter-spacing:0.02em;"><span class="btn-text">IDENTITY</span></button>
+                <button class="btn btn-primary adm-tab-btn" onclick="switchProfileTab('professional', this)" style="font-size:1.4rem; letter-spacing:0.02em;"><span class="btn-text">CLINICAL</span></button>
+                <button class="btn btn-primary adm-tab-btn" onclick="switchProfileTab('credentials', this)" style="font-size:1.4rem; letter-spacing:0.02em;"><span class="btn-text">ACADEMIC</span></button>
+                <button class="btn btn-primary adm-tab-btn" onclick="switchProfileTab('documents', this)" style="font-size:1.4rem; letter-spacing:0.02em;"><span class="btn-text">HR VAULT</span></button>
+                <button class="btn btn-primary adm-tab-btn" onclick="switchProfileTab('security', this)" style="font-size:1.4rem; letter-spacing:0.02em; color:var(--danger);"><span class="btn-text">SECURITY</span></button>
             </div>
 
             <div class="adm-card-body" style="padding:4rem 5rem;">
@@ -216,7 +216,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                             <input type="text" class="form-control" name="address" value="<?= e($core['address']) ?>" style="height:55px; border-radius:12px; font-weight:700; font-size:1.4rem;">
                         </div>
                         <div style="margin-top:3rem; padding-top:2rem; border-top:1.5px solid var(--border); display:flex; justify-content:flex-end;">
-                            <button type="submit" class="adm-btn adm-btn-primary" style="padding:1.4rem 4rem; border-radius:14px; font-weight:900; font-size:1.4rem; box-shadow:0 10px 20px rgba(var(--primary-rgb),0.2);">UPDATE IDENTITY PROFILE</button>
+                            <button type="submit" class="btn btn-primary" style="padding:1.4rem 4rem; border-radius:14px; font-weight:900; font-size:1.4rem; box-shadow:0 10px 20px rgba(var(--primary-rgb),0.2);"><span class="btn-text">UPDATE IDENTITY PROFILE</span></button>
                         </div>
                     </form>
                 </div>
@@ -251,7 +251,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                             <textarea class="form-control" name="bio" rows="6" style="border-radius:12px; font-weight:500; font-size:1.4rem; padding:1.5rem; border:1.5px solid var(--border);"><?= e($prof['bio']) ?></textarea>
                         </div>
                         <div style="margin-top:3rem; padding-top:2rem; border-top:1.5px solid var(--border); display:flex; justify-content:flex-end;">
-                            <button type="submit" class="adm-btn adm-btn-primary" style="padding:1.4rem 4rem; border-radius:14px; font-weight:900; font-size:1.4rem; box-shadow:0 10px 20px rgba(var(--primary-rgb),0.2);">SAVE CLINICAL COMPETENCIES</button>
+                            <button type="submit" class="btn btn-primary" style="padding:1.4rem 4rem; border-radius:14px; font-weight:900; font-size:1.4rem; box-shadow:0 10px 20px rgba(var(--primary-rgb),0.2);"><span class="btn-text">SAVE CLINICAL COMPETENCIES</span></button>
                         </div>
                     </form>
                 </div>
@@ -261,7 +261,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                     <div style="margin-bottom:5rem;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem;">
                             <h4 style="margin:0; font-weight:900; font-size:1.8rem; color:var(--text-primary);"><i class="fas fa-graduation-cap text-primary"></i> Academic Credentials</h4>
-                            <button class="adm-btn adm-btn-primary" onclick="openQualModal()" style="border-radius:12px; font-weight:800; padding:.8rem 1.8rem;"><i class="fas fa-plus"></i> Add Qualification</button>
+                            <button class="btn btn-primary" onclick="openQualModal()" style="border-radius:12px; font-weight:800; padding:.8rem 1.8rem;"><span class="btn-text"><i class="fas fa-plus"></i> Add Qualification</span></button>
                         </div>
                         <div class="adm-table-wrap" style="border-radius:18px; border:1.5px solid var(--border); overflow:hidden;">
                             <table class="adm-table">
@@ -282,7 +282,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                                             <td style="padding:1.8rem 2rem;"><span class="adm-badge" style="background:rgba(var(--info-rgb),0.1); color:var(--info); font-weight:800;"><?= e($q['year_awarded']) ?></span></td>
                                             <td style="padding:1.8rem 2rem;"><span class="adm-badge" style="background:rgba(var(--success-rgb),0.1); color:var(--success); font-weight:800;"><i class="fas fa-check-double"></i> VERIFIED</span></td>
                                             <td style="text-align:right; padding:1.8rem 2rem;">
-                                                <button class="adm-btn-ghost text-danger" onclick="delRecord('qualification', <?= $q['qualification_id'] ?>)" style="padding:.5rem; border-radius:8px;"><i class="fas fa-trash"></i></button>
+                                                <button class="btn btn-ghost text-danger" onclick="delRecord('qualification', <?= $q['qualification_id'] ?>)" style="padding:.5rem; border-radius:8px;"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
                                             </td>
                                         </tr>
                                     <?php endwhile; else: ?>
@@ -296,7 +296,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem;">
                             <h4 style="margin:0; font-weight:900; font-size:1.8rem; color:var(--text-primary);"><i class="fas fa-certificate text-warning"></i> Professional Boards & Certs</h4>
-                            <button class="adm-btn adm-btn-primary" onclick="openCertModal()" style="border-radius:12px; font-weight:800; padding:.8rem 1.8rem;"><i class="fas fa-plus"></i> Add Certification</button>
+                            <button class="btn btn-primary" onclick="openCertModal()" style="border-radius:12px; font-weight:800; padding:.8rem 1.8rem;"><span class="btn-text"><i class="fas fa-plus"></i> Add Certification</span></button>
                         </div>
                         <div class="adm-table-wrap" style="border-radius:18px; border:1.5px solid var(--border); overflow:hidden;">
                             <table class="adm-table">
@@ -321,7 +321,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                                                 ?>
                                             </td>
                                             <td style="text-align:right; padding:1.8rem 2rem;">
-                                                <button class="adm-btn-ghost text-danger" onclick="delRecord('certification', <?= $c['certification_id'] ?>)" style="padding:.5rem; border-radius:8px;"><i class="fas fa-trash"></i></button>
+                                                <button class="btn btn-ghost text-danger" onclick="delRecord('certification', <?= $c['certification_id'] ?>)" style="padding:.5rem; border-radius:8px;"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
                                             </td>
                                         </tr>
                                     <?php endwhile; else: ?>
@@ -340,7 +340,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                             <h4 style="margin:0; font-weight:900; font-size:1.8rem; color:var(--text-primary);"><i class="fas fa-folder-open text-primary"></i> HR Repository</h4>
                             <p style="margin:0.5rem 0 0; font-size:1.2rem; color:var(--text-muted); font-weight:600;">Secure digitized copies of clinical credentials.</p>
                         </div>
-                        <button class="adm-btn adm-btn-primary" onclick="openDocModal()" style="border-radius:12px; font-weight:800; padding:.8rem 1.8rem;"><i class="fas fa-cloud-upload-alt"></i> Upload Files</button>
+                        <button class="btn btn-primary" onclick="openDocModal()" style="border-radius:12px; font-weight:800; padding:.8rem 1.8rem;"><span class="btn-text"><i class="fas fa-cloud-upload-alt"></i> Upload Files</span></button>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:2.5rem;">
                         <?php if(mysqli_num_rows($documents) > 0): while($doc = mysqli_fetch_assoc($documents)): ?>
@@ -354,8 +354,8 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                                         <div style="font-size:1.15rem; color:var(--text-muted); font-weight:700;"><?= strtoupper(substr(strrchr($doc['file_path'], "."), 1)) ?> &bull; <?= round($doc['file_size']/1024) ?> KB</div>
                                     </div>
                                     <div style="display:flex; flex-direction:column; gap:0.8rem;">
-                                        <a href="<?= e($doc['file_path']) ?>" download class="adm-btn-ghost text-primary" style="padding:.5rem; border-radius:8px;"><i class="fas fa-download"></i></a>
-                                        <button class="adm-btn-ghost text-danger" onclick="delRecord('document', <?= $doc['document_id'] ?>)" style="padding:.5rem; border-radius:8px;"><i class="fas fa-trash"></i></button>
+                                        <a href="<?= e($doc['file_path']) ?>" download class="btn btn-icon btn-ghost text-primary" style="padding:.5rem; border-radius:8px;"><span class="btn-text"><i class="fas fa-download"></i></span></a>
+                                        <button class="btn btn-ghost text-danger" onclick="delRecord('document', <?= $doc['document_id'] ?>)" style="padding:.5rem; border-radius:8px;"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
                                     </div>
                                 </div>
                             </div>
@@ -403,7 +403,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                                 </div>
                             </div>
                             <div style="display:flex; justify-content:flex-end;">
-                                <button type="submit" class="adm-btn adm-btn-danger" style="padding:1.4rem 4.5rem; border-radius:14px; font-weight:900; font-size:1.3rem; box-shadow:0 10px 20px rgba(var(--danger-rgb),0.2);">UPDATE ACCESS CREDENTIALS</button>
+                                <button type="submit" class="btn btn-danger" style="padding:1.4rem 4.5rem; border-radius:14px; font-weight:900; font-size:1.3rem; box-shadow:0 10px 20px rgba(var(--danger-rgb),0.2);"><span class="btn-text">UPDATE ACCESS CREDENTIALS</span></button>
                             </div>
                         </form>
                     </div>
@@ -472,7 +472,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                         </div>
 
                         <div style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--border);">
-                            <button type="submit" class="adm-btn adm-btn-primary">Preserve Preferences</button>
+                            <button type="submit" class="btn btn-primary"><span class="btn-text">Preserve Preferences</span></button>
                         </div>
                     </form>
                 </div>
@@ -511,7 +511,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                 </div>
                 <h3 style="margin:0; font-weight:900; font-size:1.8rem; letter-spacing:-0.5px;">Add Academic Credential</h3>
             </div>
-            <button class="modal-close" onclick="closeQualModal()" type="button" style="font-size:2.5rem;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeQualModal()" type="button" style="font-size:2.5rem;"><span class="btn-text">×</span></button>
         </div>
         <form id="form-qual" class="ajax-profile-form" style="padding:3rem;">
             <?= csrfField() ?>
@@ -529,8 +529,8 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                 <input type="number" class="form-control" name="year_awarded" required min="1960" max="<?= date('Y') ?>" style="height:55px; border-radius:12px; font-weight:700; font-size:1.4rem;">
             </div>
             <div style="display:flex; justify-content:flex-end; gap:1.5rem; margin-top:4rem; padding-top:2rem; border-top:1.5px solid var(--border);">
-                <button type="button" class="adm-btn adm-btn-ghost" onclick="closeQualModal()" style="padding:1.2rem 3rem; border-radius:12px; font-weight:800;">DISCARD</button>
-                <button type="submit" class="adm-btn adm-btn-primary" style="padding:1.2rem 4rem; border-radius:12px; font-weight:900; box-shadow:0 8px 15px rgba(var(--primary-rgb),0.2);">ADD CREDENTIAL</button>
+                <button type="button" class="btn btn-ghost" onclick="closeQualModal()" style="padding:1.2rem 3rem; border-radius:12px; font-weight:800;"><span class="btn-text">DISCARD</span></button>
+                <button type="submit" class="btn btn-primary" style="padding:1.2rem 4rem; border-radius:12px; font-weight:900; box-shadow:0 8px 15px rgba(var(--primary-rgb),0.2);"><span class="btn-text">ADD CREDENTIAL</span></button>
             </div>
         </form>
     </div>
@@ -546,7 +546,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                 </div>
                 <h3 style="margin:0; font-weight:900; font-size:1.8rem; letter-spacing:-0.5px;">Add Professional Cert</h3>
             </div>
-            <button class="modal-close" onclick="closeCertModal()" type="button" style="font-size:2.5rem;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeCertModal()" type="button" style="font-size:2.5rem;"><span class="btn-text">×</span></button>
         </div>
         <form id="form-cert" class="ajax-profile-form" style="padding:3rem;">
             <?= csrfField() ?>
@@ -570,8 +570,8 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                 </div>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:1.5rem; margin-top:4rem; padding-top:2rem; border-top:1.5px solid var(--border);">
-                <button type="button" class="adm-btn adm-btn-ghost" onclick="closeCertModal()" style="padding:1.2rem 3rem; border-radius:12px; font-weight:800;">DISCARD</button>
-                <button type="submit" class="adm-btn adm-btn-primary" style="padding:1.2rem 4rem; border-radius:12px; font-weight:900; box-shadow:0 8px 15px rgba(var(--primary-rgb),0.2);">REGISTER RECORD</button>
+                <button type="button" class="btn btn-ghost" onclick="closeCertModal()" style="padding:1.2rem 3rem; border-radius:12px; font-weight:800;"><span class="btn-text">DISCARD</span></button>
+                <button type="submit" class="btn btn-primary" style="padding:1.2rem 4rem; border-radius:12px; font-weight:900; box-shadow:0 8px 15px rgba(var(--primary-rgb),0.2);"><span class="btn-text">REGISTER RECORD</span></button>
             </div>
         </form>
     </div>
@@ -587,7 +587,7 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                 </div>
                 <h3 style="margin:0; font-weight:900; font-size:1.8rem; letter-spacing:-0.5px;">Secure File Transfer</h3>
             </div>
-            <button class="modal-close" onclick="closeDocModal()" type="button" style="font-size:2.5rem;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeDocModal()" type="button" style="font-size:2.5rem;"><span class="btn-text">×</span></button>
         </div>
         <form id="form-doc" class="ajax-profile-form" style="padding:3rem;">
             <?= csrfField() ?>
@@ -605,8 +605,8 @@ if($comp_pct == 100) $comp_color = 'var(--success)';
                 </div>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:1.5rem; margin-top:4rem; padding-top:2rem; border-top:1.5px solid var(--border);">
-                <button type="button" class="adm-btn adm-btn-ghost" onclick="closeDocModal()" style="padding:1.2rem 3rem; border-radius:12px; font-weight:800;">CANCEL</button>
-                <button type="submit" class="adm-btn adm-btn-primary" style="padding:1.2rem 4rem; border-radius:12px; font-weight:900; box-shadow:0 8px 15px rgba(var(--primary-rgb),0.2);">START UPLOAD</button>
+                <button type="button" class="btn btn-ghost" onclick="closeDocModal()" style="padding:1.2rem 3rem; border-radius:12px; font-weight:800;"><span class="btn-text">CANCEL</span></button>
+                <button type="submit" class="btn btn-primary" style="padding:1.2rem 4rem; border-radius:12px; font-weight:900; box-shadow:0 8px 15px rgba(var(--primary-rgb),0.2);"><span class="btn-text">START UPLOAD</span></button>
             </div>
         </form>
     </div>
@@ -657,7 +657,7 @@ function loadActiveSessions() {
             let html = '';
             res.data.forEach(s => {
                 let badge = s.is_current_session ? '<span class="adm-badge" style="background:rgba(var(--success-rgb),0.1); color:var(--success); border:1px solid rgba(var(--success-rgb),0.2); font-weight:800; padding:.4rem .8rem; font-size:.9rem; border-radius:6px;">LIVE NOW</span>' : '';
-                let btn = s.is_current_session ? '' : `<button class="adm-btn adm-btn-ghost text-danger" onclick="killSession(${s.session_id})" style="padding:.4rem 1rem; border-radius:8px; font-size:1.1rem;"><i class="fas fa-sign-out-alt"></i></button>`;
+                let btn = s.is_current_session ? '' : `<button class="btn btn-ghost text-danger" onclick="killSession(${s.session_id})" style="padding:.4rem 1rem; border-radius:8px; font-size:1.1rem;"><span class="btn-text"><i class="fas fa-sign-out-alt"></i></span></button>`;
                 html += `<tr>
                     <td style="padding:1.8rem 2rem;"><strong style="font-size:1.4rem; color:var(--text-primary);">${s.browser}</strong><br><small style="font-weight:600; color:var(--text-muted); opacity:0.8;">${s.device_info}</small> ${badge}</td>
                     <td style="padding:1.8rem 2rem; font-weight:700; color:var(--primary);">${s.ip_address}</td>

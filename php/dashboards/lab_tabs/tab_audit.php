@@ -32,8 +32,8 @@ $mods_q = mysqli_query($conn, "SELECT DISTINCT module_affected FROM lab_audit_tr
 <div class="sec-header">
     <h2 style="font-size: 1.8rem; font-weight: 700;"><i class="fas fa-history"></i> Immutable Security Ledger</h2>
     <div style="display:flex; gap:1.2rem;">
-        <button class="adm-btn adm-btn-danger" onclick="exportAuditTrail()"><i class="fas fa-file-csv"></i> Export Security Log</button>
-        <button class="adm-btn adm-btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Records</button>
+        <button class="btn-icon btn btn-danger" onclick="exportAuditTrail()"><span class="btn-text"><i class="fas fa-file-csv"></i> Export Security Log</span></button>
+        <button class="btn-icon btn btn-primary" onclick="window.print()"><span class="btn-text"><i class="fas fa-print"></i> Print Records</span></button>
     </div>
 </div>
 
@@ -107,7 +107,7 @@ $mods_q = mysqli_query($conn, "SELECT DISTINCT module_affected FROM lab_audit_tr
                         <div style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="<?= e($row['device_info']) ?>"><?= e($row['device_info']) ?></div>
                     </td>
                     <td>
-                        <button class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick='viewDiff(<?= json_encode($row['old_value']) ?>, <?= json_encode($row['new_value']) ?>)'><i class="fas fa-microchip"></i> Diff</button>
+                        <button class="btn btn-primary btn btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick='viewDiff(<?= json_encode($row['old_value']) ?>, <?= json_encode($row['new_value']) ?>)'><span class="btn-text"><i class="fas fa-microchip"></i> Diff</span></button>
                     </td>
                 </tr>
                 <?php endwhile; ?>
@@ -137,7 +137,7 @@ $mods_q = mysqli_query($conn, "SELECT DISTINCT module_affected FROM lab_audit_tr
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Close Inspector</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal"><span class="btn-text">Close Inspector</span></button>
             </div>
         </div>
     </div>

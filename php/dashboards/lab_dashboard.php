@@ -327,9 +327,9 @@ if ($lic_q) {
 
     <!-- Footer / Logout -->
     <div class="adm-sidebar-footer">
-        <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn">
+        <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text">
             <i class="fas fa-sign-out-alt"></i><span>Logout</span>
-        </a>
+        </span></a>
     </div>
 </aside>
 

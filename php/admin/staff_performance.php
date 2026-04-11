@@ -52,9 +52,9 @@ if ($q_staff) {
                 <h1>KPIs & Performance Tracking</h1>
                 <p>Monitor completion rates and performance ratings for all hospital staff.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="alert('Review cycle initiation is not fully configured in this demo.')">
+            <button class="btn-icon btn btn-primary" onclick="alert('Review cycle initiation is not fully configured in this demo.')"><span class="btn-text">
                 <i class="fas fa-star-half-alt"></i> Start Review Cycle
-            </button>
+            </span></button>
         </div>
 
         <!-- Performance Dashboard Grid -->
@@ -127,9 +127,9 @@ if ($q_staff) {
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <button class="adm-btn adm-btn-back adm-btn-sm" title="Add Performance Review (Demo)" onclick="alert('Feature under construction.')">
+                                <button class="btn btn-outline btn-icon btn btn-back btn-sm" title="Add Performance Review (Demo)" onclick="alert('Feature under construction.')"><span class="btn-text">
                                     <i class="fas fa-pen-nib"></i> Review
-                                </button>
+                                </span></button>
                             </td>
                         </tr>
                         <?php endforeach; endif; ?>

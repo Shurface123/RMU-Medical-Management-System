@@ -56,7 +56,7 @@ body { font-family: 'Poppins', sans-serif; background: #f4f8ff; display: flex; a
     <div class="card-footer">
         <form method="POST">
             <input type="hidden" name="accept_terms" value="1">
-            <button type="submit" class="btn" id="btnAccept" disabled>I have read and accept</button>
+            <button type="submit" class="btn btn-outline btn-icon btn" id="btnAccept" disabled><span class="btn-text">I have read and accept</span></button>
         </form>
     </div>
 </div>

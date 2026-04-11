@@ -36,17 +36,17 @@ function getEquipStatusBadge($s, $next_calib) {
 <div class="sec-header">
     <h2 style="font-size: 1.8rem; font-weight: 700;"><i class="fas fa-microscope"></i> Equipment Management</h2>
     <div style="display:flex; gap:1.2rem;">
-        <button class="adm-btn" style="background:var(--role-accent); color:#fff;" onclick="logQCModal()"><i class="fas fa-clipboard-check"></i> Log Daily QC</button>
-        <button class="adm-btn adm-btn-primary" onclick="addEquipmentModal()"><i class="fas fa-plus"></i> Add Equipment</button>
+        <button class="btn btn-primary btn" style="background:var(--role-accent); color:#fff;" onclick="logQCModal()"><span class="btn-text"><i class="fas fa-clipboard-check"></i> Log Daily QC</span></button>
+        <button class="btn btn-primary" onclick="addEquipmentModal()"><span class="btn-text"><i class="fas fa-plus"></i> Add Equipment</span></button>
     </div>
 </div>
 
 <div class="info-card">
     <div style="display: flex; gap: 0.8rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
-        <a href="?tab=equipment&filter_status=All" class="adm-btn adm-btn-sm <?= $filter=='All'?'adm-btn-primary':'adm-btn-ghost' ?>">All Units</a>
-        <a href="?tab=equipment&filter_status=Operational" class="adm-btn adm-btn-sm <?= $filter=='Operational'?'adm-btn-success':'adm-btn-ghost' ?>">Operational</a>
-        <a href="?tab=equipment&filter_status=Calibration+Due" class="adm-btn adm-btn-sm <?= $filter=='Calibration Due'?'adm-btn-warning':'adm-btn-ghost' ?>">Calibration Due</a>
-        <a href="?tab=equipment&filter_status=Out+of+Service" class="adm-btn adm-btn-sm <?= $filter=='Out of Service'?'adm-btn-danger':'adm-btn-ghost' ?>">Out of Service</a>
+        <a href="?tab=equipment&filter_status=All" class="btn btn-sm <?= $filter=='All'?'btn-primary':'btn-ghost' ?>"><span class="btn-text">All Units</span></a>
+        <a href="?tab=equipment&filter_status=Operational" class="btn btn-sm <?= $filter=='Operational'?'btn-success':'btn-ghost' ?>"><span class="btn-text">Operational</span></a>
+        <a href="?tab=equipment&filter_status=Calibration+Due" class="btn btn-sm <?= $filter=='Calibration Due'?'btn-warning':'btn-ghost' ?>"><span class="btn-text">Calibration Due</span></a>
+        <a href="?tab=equipment&filter_status=Out+of+Service" class="btn btn-sm <?= $filter=='Out of Service'?'btn-danger':'btn-ghost' ?>"><span class="btn-text">Out of Service</span></a>
     </div>
 
     <div class="adm-table-wrap">
@@ -87,9 +87,9 @@ function getEquipStatusBadge($s, $next_calib) {
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick="viewEquip(<?= $row['id'] ?>)" title="View History"><i class="fas fa-eye"></i></button>
-                            <button class="adm-btn adm-btn-sm" style="background:var(--primary-light); color:var(--primary);" title="Log Calibration" onclick="logCalibration(<?= $row['id'] ?>)"><i class="fas fa-sliders-h"></i></button>
-                            <button class="adm-btn adm-btn-sm" style="background:var(--warning-light); color:var(--warning);" title="Schedule Maintenance" onclick="schedMaint(<?= $row['id'] ?>)"><i class="fas fa-wrench"></i></button>
+                            <button class="btn btn-primary btn btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick="viewEquip(<?= $row['id'] ?>)" title="View History"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
+                            <button class="btn btn-primary btn btn-sm" style="background:var(--primary-light); color:var(--primary);" title="Log Calibration" onclick="logCalibration(<?= $row['id'] ?>)"><span class="btn-text"><i class="fas fa-sliders-h"></i></span></button>
+                            <button class="btn btn-primary btn btn-sm" style="background:var(--warning-light); color:var(--warning);" title="Schedule Maintenance" onclick="schedMaint(<?= $row['id'] ?>)"><span class="btn-text"><i class="fas fa-wrench"></i></span></button>
                         </div>
                     </td>
                 </tr>
@@ -132,8 +132,8 @@ function getEquipStatusBadge($s, $next_calib) {
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn" style="background:var(--primary); color:#fff;" onclick="submitCalibration()"><i class="fas fa-save"></i> Save Record</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal"><span class="btn-text">Cancel</span></button>
+                <button type="button" class="btn btn-primary btn" style="background:var(--primary); color:#fff;" onclick="submitCalibration()"><span class="btn-text"><i class="fas fa-save"></i> Save Record</span></button>
             </div>
         </div>
     </div>

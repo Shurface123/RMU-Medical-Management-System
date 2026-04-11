@@ -99,9 +99,9 @@ include '../includes/_sidebar.php';
                 <h1>Assign Patient to Bed</h1>
                 <p>Dashboard &rarr; Bed Management &rarr; Assign Bed</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="adm-btn adm-btn-ghost">
+            <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="btn btn-ghost"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Beds
-            </a>
+            </span></a>
         </div>
 
         <?php if ($error): ?>
@@ -124,9 +124,9 @@ include '../includes/_sidebar.php';
                             <i class="fas fa-exclamation-triangle"></i>
                             <div>No patients available for assignment. All registered patients are already assigned to a bed, or no patients have been registered yet.</div>
                         </div>
-                        <a href="/RMU-Medical-Management-System/php/patient/add-patient.php" class="adm-btn adm-btn-primary">
+                        <a href="/RMU-Medical-Management-System/php/patient/add-patient.php" class="btn btn-primary"><span class="btn-text">
                             <i class="fas fa-user-plus"></i> Register a Patient First
-                        </a>
+                        </span></a>
                         <?php else: ?>
                         <form method="POST" action="?bed_id=<?php echo $bed_id; ?>" novalidate onsubmit="return handleFormSubmit(this);">
                             <div class="adm-form-group" style="margin-bottom:2rem;">
@@ -172,9 +172,9 @@ include '../includes/_sidebar.php';
                                           placeholder="Reason for admission, special requirements, doctor's note..."><?php echo htmlspecialchars($_POST['notes'] ?? ''); ?></textarea>
                             </div>
 
-                            <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;">
+                            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;"><span class="btn-text">
                                 <i class="fas fa-save"></i> Complete Assignment
-                            </button>
+                            </span></button>
                         </form>
                         <?php endif; ?>
                     </div>

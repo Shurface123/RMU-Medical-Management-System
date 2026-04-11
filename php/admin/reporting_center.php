@@ -37,12 +37,12 @@ $hospitalLogo = $hospital['logo_path'] ?? 'image/logo-ju-small.png';
                 <p>Generate high-fidelity medical reports, audit logs, and institutional performance metrics.</p>
             </div>
             <div style="display:flex; gap:1rem;">
-                <button class="adm-btn adm-btn-outline" style="background:var(--surface); border:1px solid var(--border);">
+                <button class="btn btn-outline" style="background:var(--surface); border:1px solid var(--border);"><span class="btn-text">
                     <i class="fas fa-history"></i> Report History
-                </button>
-                <button class="adm-btn adm-btn-primary" onclick="window.print()">
+                </span></button>
+                <button class="btn-icon btn btn-primary" onclick="window.print()"><span class="btn-text">
                     <i class="fas fa-print"></i> Print View
-                </button>
+                </span></button>
             </div>
         </div>
 
@@ -82,16 +82,16 @@ $hospitalLogo = $hospital['logo_path'] ?? 'image/logo-ju-small.png';
                                 </div>
                             </div>
 
-                            <button type="submit" id="genBtn" class="adm-btn adm-btn-primary" style="width:100%; justify-content:center; height:50px;">
+                            <button type="submit" id="genBtn" class="btn btn-primary" style="width:100%; justify-content:center; height:50px;"><span class="btn-text">
                                 <i class="fas fa-sync-alt"></i> Generate Intelligence
-                            </button>
+                            </span></button>
                         </form>
 
                         <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
                             <h3 style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:1.2rem; text-transform:uppercase; letter-spacing:1px;">Export Options</h3>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
-                                <button id="exportCsv" class="adm-btn adm-btn-outline" style="justify-content:center; background:var(--bg); border:1px solid var(--border); color:var(--success);"><i class="fas fa-file-csv"></i> CSV</button>
-                                <button id="exportXlsx" class="adm-btn adm-btn-outline" style="justify-content:center; background:var(--bg); border:1px solid var(--border); color:var(--primary);"><i class="fas fa-file-excel"></i> XLSX</button>
+                                <button id="exportCsv" class="btn btn-outline" style="justify-content:center; background:var(--bg); border:1px solid var(--border); color:var(--success);"><span class="btn-text"><i class="fas fa-file-csv"></i> CSV</span></button>
+                                <button id="exportXlsx" class="btn btn-outline" style="justify-content:center; background:var(--bg); border:1px solid var(--border); color:var(--primary);"><span class="btn-text"><i class="fas fa-file-excel"></i> XLSX</span></button>
                             </div>
                         </div>
                     </div>

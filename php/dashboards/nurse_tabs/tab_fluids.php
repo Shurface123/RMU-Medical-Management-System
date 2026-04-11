@@ -76,23 +76,23 @@ if ($q_io) {
                 <span style="width:10px; height:10px; border-radius:50%; background:var(--info); display:inline-block;"></span>
                 <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);">Monitoring <small style="font-weight:700; color:var(--info);">ACTIVE</small></div>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('ioForm').reset(); document.getElementById('ioModal').style.display='flex';" style="border-radius:12px; font-weight:700;">
+            <button class="btn btn-primary" onclick="document.getElementById('ioForm').reset(); document.getElementById('ioModal').style.display='flex';" style="border-radius:12px; font-weight:700;"><span class="btn-text">
                 <i class="fas fa-plus"></i> Record I&O
-            </button>
-            <button class="adm-btn adm-btn-ghost" onclick="document.getElementById('ivForm').reset(); document.getElementById('ivModal').style.display='flex';" style="border-radius:12px; font-weight:700; border-color:var(--info); color:var(--info);">
+            </span></button>
+            <button class="btn btn-ghost" onclick="document.getElementById('ivForm').reset(); document.getElementById('ivModal').style.display='flex';" style="border-radius:12px; font-weight:700; border-color:var(--info); color:var(--info);"><span class="btn-text">
                 <i class="fas fa-syringe"></i> Start IV
-            </button>
+            </span></button>
         </div>
     </div>
 
     <!-- Sub-Navigation -->
     <div style="margin-bottom:2.5rem; border-bottom:2px solid var(--border); display:flex; gap:3rem;">
-        <button class="tab-link active" onclick="switchFluidSubTab('iv')" id="btn-iv-tab" style="padding:1rem 0; font-weight:800; font-size:1.3rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+        <button class="btn btn-primary tab-link active" onclick="switchFluidSubTab('iv')" id="btn-iv-tab" style="padding:1rem 0; font-weight:800; font-size:1.3rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;"><span class="btn-text">
             <i class="fas fa-syringe"></i> ACTIVE INFUSIONS
-        </button>
-        <button class="tab-link" onclick="switchFluidSubTab('io')" id="btn-io-tab" style="padding:1rem 0; font-weight:700; font-size:1.3rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+        </span></button>
+        <button class="btn btn-primary tab-link" onclick="switchFluidSubTab('io')" id="btn-io-tab" style="padding:1rem 0; font-weight:700; font-size:1.3rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border-top:none; border-left:none; border-right:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;"><span class="btn-text">
             <i class="fas fa-balance-scale"></i> CLINICAL I&O CHARTS
-        </button>
+        </span></button>
     </div>
 
     <div id="fluid-sub-content">
@@ -156,9 +156,9 @@ if ($q_io) {
                                         </td>
                                         <td style="padding:1.5rem 2rem;">
                                             <div class="dropdown">
-                                                <button class="adm-btn adm-btn-ghost adm-btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius:8px; font-weight:700; border-color:var(--border);">
+                                                <button class="btn btn-ghost btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius:8px; font-weight:700; border-color:var(--border);"><span class="btn-text">
                                                     Actions
-                                                </button>
+                                                </span></button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius:12px; padding:.8rem;">
                                                     <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Running')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--success);"><i class="fas fa-play" style="width:20px;"></i> Start / Resume</a></li>
                                                     <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Paused')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--warning);"><i class="fas fa-pause" style="width:20px;"></i> Pause</a></li>
@@ -266,12 +266,12 @@ if ($q_io) {
                             </div>
 
                             <div style="display:flex; gap:1rem;">
-                                <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="showIoQuickAdd(<?= $io['patient_id'] ?>, '<?= e($io['patient_name']) ?>')" style="flex:1; border-radius:8px; font-weight:700;">
+                                <button class="btn-icon btn btn-ghost btn-sm" onclick="showIoQuickAdd(<?= $io['patient_id'] ?>, '<?= e($io['patient_name']) ?>')" style="flex:1; border-radius:8px; font-weight:700;"><span class="btn-text">
                                     <i class="fas fa-plus"></i> View Full Chart
-                                </button>
-                                <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="showIoFormWithPatient(<?= $io['patient_id'] ?>)" style="flex:1; border-radius:8px; font-weight:700; border-color:var(--primary); color:var(--primary);">
+                                </span></button>
+                                <button class="btn btn-ghost btn-sm" onclick="showIoFormWithPatient(<?= $io['patient_id'] ?>)" style="flex:1; border-radius:8px; font-weight:700; border-color:var(--primary); color:var(--primary);"><span class="btn-text">
                                     <i class="fas fa-edit"></i> Update Balance
-                                </button>
+                                </span></button>
                             </div>
                         </div>
                     </div>
@@ -289,7 +289,7 @@ if ($q_io) {
     <div class="modal-box" style="max-width:550px;">
         <div class="modal-header" style="background:var(--info);">
             <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-syringe"></i> Initiate IV Infusion</h3>
-            <button class="modal-close" onclick="document.getElementById('ivModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="document.getElementById('ivModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         <div style="padding:2.5rem;">
             <form id="ivForm">
@@ -337,10 +337,10 @@ if ($q_io) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('ivModal').style.display='none'" style="font-weight:700;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-info" style="padding:.8rem 3rem; font-weight:800; border-radius:12px;">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('ivModal').style.display='none'" style="font-weight:700;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-success btn-icon btn btn-info" style="padding:.8rem 3rem; font-weight:800; border-radius:12px;"><span class="btn-text">
                         <i class="fas fa-play"></i> CONFIRM & START
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>
@@ -354,7 +354,7 @@ if ($q_io) {
     <div class="modal-box" style="max-width:650px;">
         <div class="modal-header" style="background:var(--primary);">
             <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-balance-scale"></i> Update Fluid Balance</h3>
-            <button class="modal-close" onclick="document.getElementById('ioModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="document.getElementById('ioModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         <div style="padding:2.5rem;">
             <form id="ioForm">
@@ -419,10 +419,10 @@ if ($q_io) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('ioModal').style.display='none'" style="font-weight:700;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSaveIo" style="padding:.8rem 3.5rem; font-weight:900; border-radius:12px; font-size:1.2rem;">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('ioModal').style.display='none'" style="font-weight:700;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveIo" style="padding:.8rem 3.5rem; font-weight:900; border-radius:12px; font-size:1.2rem;"><span class="btn-text">
                         <i class="fas fa-save" style="margin-right:.6rem;"></i> UPDATE LOG
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

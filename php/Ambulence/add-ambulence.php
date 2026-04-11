@@ -60,9 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h1><i class="fas fa-plus-circle" style="color:var(--primary);margin-right:.6rem;"></i>Register New Ambulance</h1>
                 <p>Add a new vehicle to the emergency fleet with driver and service details.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="adm-btn adm-btn-ghost">
+            <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="btn btn-ghost"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Fleet
-            </a>
+            </span></a>
         </div>
 
         <?php if ($error): ?>
@@ -178,13 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;">
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;"><span class="btn-text">
                         <i class="fas fa-save"></i> Register Ambulance
-                    </button>
+                    </span></button>
                     <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php"
-                       class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;margin-top:1rem;">
+                       class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:1rem;"><span class="btn-text">
                         <i class="fas fa-times"></i> Cancel
-                    </a>
+                    </span></a>
                 </div>
             </div>
         </form>

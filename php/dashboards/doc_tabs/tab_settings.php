@@ -22,7 +22,7 @@
           </div>
           <div class="form-group"><label>Bio / About</label><textarea name="bio" class="form-control" rows="3"><?=htmlspecialchars($doc_row['bio']??'')?></textarea></div>
           <div class="form-group"><label>License Number</label><input type="text" name="license_number" class="form-control" value="<?=htmlspecialchars($doc_row['license_number']??'')?>"></div>
-          <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Save Profile</button>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Profile</span></button>
         </form>
       </div>
     </div>
@@ -37,7 +37,7 @@
             <div class="form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" placeholder="Current password" required></div>
             <div class="form-group"><label>New Password</label><input type="password" name="new_password" id="newPwd" class="form-control" placeholder="Min 8 characters" required minlength="8"></div>
             <div class="form-group"><label>Confirm New Password</label><input type="password" name="confirm_password" id="confPwd" class="form-control" placeholder="Repeat new password" required></div>
-            <button type="submit" class="adm-btn adm-btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-key"></i> Update Password</button>
+            <button type="submit" class="btn btn-warning" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-key"></i> Update Password</span></button>
           </form>
         </div>
       </div>
@@ -78,7 +78,7 @@
                 </label>
               </div>
             </div>
-            <button type="submit" class="adm-btn adm-btn-success" style="width:100%;justify-content:center;"><i class="fas fa-calendar-check"></i> Update Schedule</button>
+            <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-calendar-check"></i> Update Schedule</span></button>
           </form>
         </div>
       </div>

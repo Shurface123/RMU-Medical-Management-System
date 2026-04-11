@@ -85,11 +85,11 @@ $age=$dob?((int)date_diff(date_create($dob),date_create('today'))->y):null;
       <!-- Upcoming Appointments -->
       <div class="adm-card">
         <div class="adm-card-header"><h3><i class="fas fa-calendar-alt" style="color:var(--primary);"></i> Upcoming Appointments</h3>
-          <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="showTab('book',document.querySelector('.adm-nav-item[onclick*=book]'))"><i class="fas fa-plus"></i> Book</button>
+          <button class="btn-icon btn btn-primary btn-sm" onclick="showTab('book',document.querySelector('.adm-nav-item[onclick*=book]'))"><span class="btn-text"><i class="fas fa-plus"></i> Book</span></button>
         </div>
         <?php if(empty($upcoming)):?>
         <div style="text-align:center;padding:3rem;color:var(--text-muted);"><i class="fas fa-calendar-times" style="font-size:2.5rem;margin-bottom:1rem;opacity:.4;display:block;"></i><p>No upcoming appointments</p>
-          <button class="adm-btn adm-btn-primary" style="margin-top:1rem;" onclick="showTab('book',document.querySelector('.adm-nav-item[onclick*=book]'))"><i class="fas fa-calendar-plus"></i> Book Now</button>
+          <button class="btn-icon btn btn-primary" style="margin-top:1rem;" onclick="showTab('book',document.querySelector('.adm-nav-item[onclick*=book]'))"><span class="btn-text"><i class="fas fa-calendar-plus"></i> Book Now</span></button>
         </div>
         <?php else:?>
         <div style="padding:.5rem;">

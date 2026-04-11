@@ -442,9 +442,9 @@ $stats = $stmt->get_result()->fetch_assoc();
                         </option>
                     <?php endfor; ?>
                 </select>
-                <button class="btn btn-success" onclick="openModal('addModal')">
+                <button class="btn btn-success" onclick="openModal('addModal')"><span class="btn-text">
                     <i class="fas fa-plus"></i> Add Holiday
-                </button>
+                </span></button>
             </div>
         </div>
         
@@ -520,12 +520,12 @@ $stats = $stmt->get_result()->fetch_assoc();
                                 <?php endif; ?>
                             </div>
                             <div class="actions">
-                                <button class="btn btn-warning btn-sm" onclick='editHoliday(<?php echo json_encode($holiday); ?>)'>
+                                <button class="btn btn-warning btn-sm" onclick='editHoliday(<?php echo json_encode($holiday); ?>)'><span class="btn-text">
                                     <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteHoliday(<?php echo $holiday['id']; ?>, '<?php echo htmlspecialchars($holiday['holiday_name']); ?>')">
+                                </span></button>
+                                <button class="btn-icon btn btn-danger btn-sm" onclick="deleteHoliday(<?php echo $holiday['id']; ?>, '<?php echo htmlspecialchars($holiday['holiday_name']); ?>')"><span class="btn-text">
                                     <i class="fas fa-trash"></i> Delete
-                                </button>
+                                </span></button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -534,9 +534,9 @@ $stats = $stmt->get_result()->fetch_assoc();
         </div>
         
         <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary">
+            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            </span></a>
         </div>
     </div>
     
@@ -545,7 +545,7 @@ $stats = $stmt->get_result()->fetch_assoc();
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Add Holiday</h2>
-                <button class="close-modal" onclick="closeModal('addModal')">&times;</button>
+                <button class="btn btn-primary close-modal" onclick="closeModal('addModal')"><span class="btn-text">&times;</span></button>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="add_holiday">
@@ -584,9 +584,9 @@ $stats = $stmt->get_result()->fetch_assoc();
                     </small>
                 </div>
                 
-                <button type="submit" class="btn btn-success" style="width: 100%;">
+                <button type="submit" class="btn btn-success" style="width: 100%;"><span class="btn-text">
                     <i class="fas fa-plus"></i> Add Holiday
-                </button>
+                </span></button>
             </form>
         </div>
     </div>
@@ -596,7 +596,7 @@ $stats = $stmt->get_result()->fetch_assoc();
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Edit Holiday</h2>
-                <button class="close-modal" onclick="closeModal('editModal')">&times;</button>
+                <button class="btn btn-primary close-modal" onclick="closeModal('editModal')"><span class="btn-text">&times;</span></button>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="update_holiday">
@@ -633,9 +633,9 @@ $stats = $stmt->get_result()->fetch_assoc();
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;"><span class="btn-text">
                     <i class="fas fa-save"></i> Update Holiday
-                </button>
+                </span></button>
             </form>
         </div>
     </div>

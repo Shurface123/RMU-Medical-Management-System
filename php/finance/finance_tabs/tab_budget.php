@@ -22,7 +22,7 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
     <p>Track and manage budgets for each department and revenue category</p>
   </div>
   <?php if($user_role==='finance_manager'): ?>
-  <button onclick="openModal('modalNewBudget')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> New Allocation</button>
+  <button onclick="openModal('modalNewBudget')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> New Allocation</span></button>
   <?php endif;?>
 </div>
 <div class="adm-card">
@@ -66,7 +66,7 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
     <p>Manage billable service prices used for invoice generation</p>
   </div>
   <?php if($user_role==='finance_manager'): ?>
-  <button onclick="openModal('modalNewFee')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> Add New Fee</button>
+  <button onclick="openModal('modalNewFee')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> Add New Fee</span></button>
   <?php endif;?>
 </div>
 <div class="fin-filter-row">
@@ -106,10 +106,10 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
           <td><span class="adm-badge <?=$f['is_active']?'adm-badge-success':'adm-badge-danger'?>"><?=$f['is_active']?'Active':'Inactive'?></span></td>
           <td>
             <div class="adm-table-actions">
-              <button onclick="editFee(<?=json_encode($f)?>)" class="adm-btn adm-btn-sm adm-btn-ghost" title="Edit"><i class="fas fa-pen"></i></button>
-              <button onclick="toggleFeeActive(<?=$f['fee_id']?>,<?=$f['is_active']?>)" class="adm-btn adm-btn-sm <?=$f['is_active']?'adm-btn-danger':'adm-btn-success'?>" title="<?=$f['is_active']?'Deactivate':'Activate'?>">
+              <button onclick="editFee(<?=json_encode($f)?>)" class="btn btn-sm btn-ghost" title="Edit"><span class="btn-text"><i class="fas fa-pen"></i></span></button>
+              <button onclick="toggleFeeActive(<?=$f['fee_id']?>,<?=$f['is_active']?>)" class="btn btn-sm <?=$f['is_active']?'btn-danger':'btn-success'?>" title="<?=$f['is_active']?'Deactivate':'Activate'?>"><span class="btn-text">
                 <i class="fas fa-<?=$f['is_active']?'ban':'check'?>"></i>
-              </button>
+              </span></button>
             </div>
           </td>
         </tr>
@@ -130,8 +130,8 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
   <div style="display:flex;gap:1rem;align-items:center;">
     <input type="date" id="analyticsFrom" value="<?=$month_start?>" class="adm-search-input" style="width:160px;">
     <input type="date" id="analyticsTo" value="<?=$today?>" class="adm-search-input" style="width:160px;">
-    <button onclick="loadAnalytics()" class="adm-btn adm-btn-primary"><i class="fas fa-rotate"></i> Apply</button>
-    <button onclick="exportAnalytics()" class="adm-btn adm-btn-ghost"><i class="fas fa-file-export"></i> Export</button>
+    <button onclick="loadAnalytics()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-rotate"></i> Apply</span></button>
+    <button onclick="exportAnalytics()" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-file-export"></i> Export</span></button>
   </div>
 </div>
 <div class="adm-charts-grid">
@@ -148,9 +148,9 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
   <div class="adm-chart-card" style="grid-column:1/-1;">
     <h3><i class="fas fa-chart-line"></i> Revenue Trend
       <div style="display:flex;gap:.5rem;margin-left:auto;">
-        <button onclick="setAnalyticsPeriod('daily')" class="adm-btn adm-btn-sm adm-btn-ghost" id="btnDaily">Daily</button>
-        <button onclick="setAnalyticsPeriod('weekly')" class="adm-btn adm-btn-sm adm-btn-ghost" id="btnWeekly">Weekly</button>
-        <button onclick="setAnalyticsPeriod('monthly')" class="adm-btn adm-btn-sm adm-btn-ghost" id="btnMonthly">Monthly</button>
+        <button onclick="setAnalyticsPeriod('daily')" class="btn btn-sm btn-ghost" id="btnDaily"><span class="btn-text">Daily</span></button>
+        <button onclick="setAnalyticsPeriod('weekly')" class="btn btn-sm btn-ghost" id="btnWeekly"><span class="btn-text">Weekly</span></button>
+        <button onclick="setAnalyticsPeriod('monthly')" class="btn btn-sm btn-ghost" id="btnMonthly"><span class="btn-text">Monthly</span></button>
       </div>
     </h3>
     <div style="height:280px;"><canvas id="chartRevTrend2"></canvas></div>
@@ -231,9 +231,9 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
       <input type="date" id="rpt_to_<?=$type?>" value="<?=$today?>" class="adm-search-input" style="flex:1;font-size:1.2rem;padding:.6rem .8rem;">
     </div>
     <div style="display:flex;gap:.6rem;margin-top:.8rem;">
-      <button onclick="generateReport('<?=$type?>','pdf')" class="adm-btn adm-btn-sm adm-btn-danger" style="flex:1;"><i class="fas fa-file-pdf"></i> PDF</button>
-      <button onclick="generateReport('<?=$type?>','csv')" class="adm-btn adm-btn-sm adm-btn-ghost" style="flex:1;"><i class="fas fa-file-csv"></i> CSV</button>
-      <button onclick="generateReport('<?=$type?>','xlsx')" class="adm-btn adm-btn-sm adm-btn-success" style="flex:1;"><i class="fas fa-file-excel"></i> Excel</button>
+      <button onclick="generateReport('<?=$type?>','pdf')" class="btn btn-sm btn-danger" style="flex:1;"><span class="btn-text"><i class="fas fa-file-pdf"></i> PDF</span></button>
+      <button onclick="generateReport('<?=$type?>','csv')" class="btn btn-sm btn-ghost" style="flex:1;"><span class="btn-text"><i class="fas fa-file-csv"></i> CSV</span></button>
+      <button onclick="generateReport('<?=$type?>','xlsx')" class="btn btn-sm btn-success" style="flex:1;"><span class="btn-text"><i class="fas fa-file-excel"></i> Excel</span></button>
     </div>
   </div>
   <?php endforeach;?>
@@ -261,7 +261,7 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
           <td><?=date('d M Y, g:i A',strtotime($rp['created_at']))?></td>
           <td>
             <?php if(!empty($rp['file_path'])): ?>
-            <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($rp['file_path'])?>" target="_blank" class="adm-btn adm-btn-sm adm-btn-ghost"><i class="fas fa-download"></i></a>
+            <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($rp['file_path'])?>" target="_blank" class="btn-icon btn btn-sm btn-ghost"><span class="btn-text"><i class="fas fa-download"></i></span></a>
             <?php endif;?>
           </td>
         </tr>
@@ -277,7 +277,7 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
   <div class="adm-modal-content" style="max-width:580px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-chart-pie" style="color:var(--role-accent);"></i> New Budget Allocation</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalNewBudget')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalNewBudget')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formNewBudget">
@@ -317,8 +317,8 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalNewBudget')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="saveBudget()" class="adm-btn adm-btn-primary"><i class="fas fa-check"></i> Create Allocation</button>
+      <button onclick="closeModal('modalNewBudget')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="saveBudget()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-check"></i> Create Allocation</span></button>
     </div>
   </div>
 </div>
@@ -328,7 +328,7 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
   <div class="adm-modal-content" style="max-width:620px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-list-ol" style="color:var(--role-accent);"></i> <span id="feeModalTitle">Add Fee Entry</span></h3>
-      <button class="adm-modal-close" onclick="closeModal('modalNewFee')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalNewFee')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formNewFee">
@@ -379,8 +379,8 @@ if($rcq) while($r=mysqli_fetch_assoc($rcq)) $rev_cats[]=$r;
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalNewFee')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="saveFee()" class="adm-btn adm-btn-primary"><i class="fas fa-check"></i> Save Fee</button>
+      <button onclick="closeModal('modalNewFee')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="saveFee()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-check"></i> Save Fee</span></button>
     </div>
   </div>
 </div>

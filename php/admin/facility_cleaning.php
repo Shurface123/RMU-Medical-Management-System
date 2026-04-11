@@ -64,9 +64,9 @@ if ($qa)
                 <h1>Infection Control Command</h1>
                 <p>Manage cleaning tasks, isolation wards, and biological contamination reports.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('cleanModal').classList.add('active')">
+            <button class="btn btn-primary" onclick="document.getElementById('cleanModal').classList.add('active')"><span class="btn-text">
                 <i class="fas fa-plus"></i> Dispatch Cleaner
-            </button>
+            </span></button>
         </div>
 
         <?php if (!empty($alerts)): ?>
@@ -181,9 +181,9 @@ if ($qa)
                     <p style="margin:0; opacity:0.8; font-size:0.85rem;">Initiate infection control and cleaning protocols.</p>
                 </div>
             </div>
-            <button class="adm-modal-close" onclick="document.getElementById('cleanModal').classList.remove('active')" style="color:#fff; opacity:0.7; transition:opacity 0.3s;">
+            <button class="btn btn-primary adm-modal-close" onclick="document.getElementById('cleanModal').classList.remove('active')" style="color:#fff; opacity:0.7; transition:opacity 0.3s;"><span class="btn-text">
                 <i class="fas fa-times"></i>
-            </button>
+            </span></button>
         </div>
         <div class="adm-modal-body" style="padding: 2rem;">
             <form id="cleaningDispatchForm" onsubmit="submitCleaningDispatch(event)">
@@ -350,10 +350,10 @@ if ($qa)
                 </div>
                 
                 <div class="adm-modal-footer" style="padding-top: 2rem; border-top: 1px solid var(--border); margin-top: 2rem; gap: 1rem;">
-                    <button type="button" class="adm-btn" onclick="document.getElementById('cleanModal').classList.remove('active')" style="padding: 0.8rem 2rem;">Dismiss</button>
-                    <button type="button" id="submitDispatchBtn" class="adm-btn adm-btn-primary" onclick="validateAndOpenConfirm()" style="padding: 0.8rem 3rem; font-weight: 600;">
+                    <button type="button" class="btn btn-primary btn" onclick="document.getElementById('cleanModal').classList.remove('active')" style="padding: 0.8rem 2rem;"><span class="btn-text">Dismiss</span></button>
+                    <button type="button" id="submitDispatchBtn" class="btn btn-primary" onclick="validateAndOpenConfirm()" style="padding: 0.8rem 3rem; font-weight: 600;"><span class="btn-text">
                         <i class="fas fa-paper-plane"></i> Execute Dispatch
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>
@@ -379,8 +379,8 @@ if ($qa)
             </div>
             <p style="font-size:1.1rem; line-height:1.6;">Are you certain you want to initiate this high-risk dispatch?</p>
             <div class="adm-modal-footer" style="padding: 0; border: none; margin-top: 2rem;">
-                <button type="button" class="adm-btn" onclick="document.getElementById('biohazardConfirmModal').classList.remove('active')" style="flex:1;">Abort</button>
-                <button type="button" class="adm-btn adm-btn-danger" onclick="executeDispatchPost()" style="flex:2; padding: 1rem;">Confirm & Execute</button>
+                <button type="button" class="btn btn-primary btn" onclick="document.getElementById('biohazardConfirmModal').classList.remove('active')" style="flex:1;"><span class="btn-text">Abort</span></button>
+                <button type="button" class="btn-icon btn btn-danger" onclick="executeDispatchPost()" style="flex:2; padding: 1rem;"><span class="btn-text">Confirm & Execute</span></button>
             </div>
         </div>
     </div>

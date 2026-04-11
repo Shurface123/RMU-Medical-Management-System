@@ -94,9 +94,9 @@ include '../includes/_sidebar.php';
         <div class="adm-card">
             <div class="adm-card-header">
                 <h3><i class="fas fa-bullhorn"></i> Manage Health & Logout Messages</h3>
-                <button class="adm-btn adm-btn-primary" onclick="document.getElementById('msgModal').classList.add('open')">
+                <button class="btn btn-primary" onclick="document.getElementById('msgModal').classList.add('open')"><span class="btn-text">
                     <i class="fas fa-plus"></i> New Message
-                </button>
+                </span></button>
             </div>
             <div style="padding:1.5rem;overflow-x:auto;">
                 <table class="adm-table">
@@ -126,11 +126,11 @@ include '../includes/_sidebar.php';
                             </td>
                             <td><?= date('M j, Y', strtotime($m['updated_at'])) ?></td>
                             <td>
-                                <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick='editMsg(<?= json_encode($m) ?>)'><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-ghost btn-sm" onclick='editMsg(<?= json_encode($m) ?>)'><span class="btn-text"><i class="fas fa-edit"></i> Edit</span></button>
                                 <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this message permanently?');">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="message_id" value="<?= $m['message_id'] ?>">
-                                    <button class="adm-btn adm-btn-ghost adm-btn-sm" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+                                    <button class="btn btn-ghost btn-sm" style="color:var(--danger);"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
                                 </form>
                             </td>
                         </tr>
@@ -204,8 +204,8 @@ include '../includes/_sidebar.php';
             </div>
             
             <div style="display:flex;justify-content:flex-end;gap:1rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('msgModal').classList.remove('open')">Cancel</button>
-                <button type="submit" class="adm-btn adm-btn-primary">Save Message</button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('msgModal').classList.remove('open')"><span class="btn-text">Cancel</span></button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text">Save Message</span></button>
             </div>
         </form>
     </div>

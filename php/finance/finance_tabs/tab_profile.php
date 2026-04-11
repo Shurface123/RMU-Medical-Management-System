@@ -59,14 +59,14 @@ $complete_pct = (int) round((count(array_filter($completeness_fields)) / count($
 
   <!-- Profile Sections via Tabs -->
   <div class="adm-tabs" style="margin-bottom:2rem;">
-    <button class="adm-tab-btn active" onclick="showProfileSection('profPersonal',this)"><i class="fas fa-user"></i>
-      Personal</button>
-    <button class="adm-tab-btn" onclick="showProfileSection('profProfessional',this)"><i class="fas fa-briefcase"></i>
-      Professional</button>
-    <button class="adm-tab-btn" onclick="showProfileSection('profSecurity',this)"><i class="fas fa-shield-halved"></i>
-      Security</button>
-    <button class="adm-tab-btn" onclick="showProfileSection('profNotifPrefs',this)"><i class="fas fa-bell"></i>
-      Notifications</button>
+    <button class="btn btn-primary adm-tab-btn active" onclick="showProfileSection('profPersonal',this)"><span class="btn-text"><i class="fas fa-user"></i>
+      Personal</span></button>
+    <button class="btn btn-primary adm-tab-btn" onclick="showProfileSection('profProfessional',this)"><span class="btn-text"><i class="fas fa-briefcase"></i>
+      Professional</span></button>
+    <button class="btn btn-primary adm-tab-btn" onclick="showProfileSection('profSecurity',this)"><span class="btn-text"><i class="fas fa-shield-halved"></i>
+      Security</span></button>
+    <button class="btn btn-primary adm-tab-btn" onclick="showProfileSection('profNotifPrefs',this)"><span class="btn-text"><i class="fas fa-bell"></i>
+      Notifications</span></button>
   </div>
 
   <!-- Section A: Personal -->
@@ -74,8 +74,8 @@ $complete_pct = (int) round((count(array_filter($completeness_fields)) / count($
     <div class="adm-card">
       <div class="adm-card-header">
         <h3><i class="fas fa-user"></i> Personal Information</h3>
-        <button onclick="toggleEdit('profPersonalForm')" class="adm-btn adm-btn-ghost adm-btn-sm" id="editProfBtn"><i
-            class="fas fa-pen"></i> Edit</button>
+        <button onclick="toggleEdit('profPersonalForm')" class="btn btn-ghost btn-sm" id="editProfBtn"><span class="btn-text"><i
+            class="fas fa-pen"></i> Edit</span></button>
       </div>
       <div class="adm-card-body">
         <form id="profPersonalForm">
@@ -104,9 +104,9 @@ $complete_pct = (int) round((count(array_filter($completeness_fields)) / count($
       </div>
       <div id="savePersonalWrap"
         style="display:none;padding:1.5rem 2.5rem;border-top:1px solid var(--border);display:none;justify-content:flex-end;gap:1rem;">
-        <button onclick="cancelEditProfile()" class="adm-btn adm-btn-ghost">Cancel</button>
+        <button onclick="cancelEditProfile()" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
         <button onclick="saveProfileSection('profPersonalForm','update_personal_info')"
-          class="adm-btn adm-btn-primary"><i class="fas fa-check"></i> Save Changes</button>
+          class="btn btn-primary"><span class="btn-text"><i class="fas fa-check"></i> Save Changes</span></button>
       </div>
     </div>
   </div><!-- /profPersonal -->
@@ -148,7 +148,7 @@ $complete_pct = (int) round((count(array_filter($completeness_fields)) / count($
                 style="font-size:1.3rem;color:var(--<?= $done ? 'text-primary' : 'text-muted' ?>);"><?= ucfirst(str_replace('_', ' ', $field)) ?></span>
               <?php if (!$done): ?><a href="#"
                   onclick="showProfileSection('profPersonal',document.querySelector('.adm-tab-btn'));toggleEdit('profPersonalForm')"
-                  style="color:var(--role-accent);font-size:1.1rem;margin-left:auto;">Complete Now</a><?php endif; ?>
+                  style="color:var(--role-accent);font-size:1.1rem;margin-left:auto;"><span class="btn-text">Complete Now</span></a><?php endif; ?>
             </div>
           <?php endforeach; ?>
         </div>
@@ -181,8 +181,8 @@ $complete_pct = (int) round((count(array_filter($completeness_fields)) / count($
             <label>Confirm New Password</label>
             <input type="password" name="confirm_password" class="adm-search-input" required>
           </div>
-          <button type="button" onclick="submitPasswordChange()" class="adm-btn adm-btn-primary"><i
-              class="fas fa-lock"></i> Update Password</button>
+          <button type="button" onclick="submitPasswordChange()" class="btn btn-primary"><span class="btn-text"><i
+              class="fas fa-lock"></i> Update Password</span></button>
         </form>
       </div>
     </div>

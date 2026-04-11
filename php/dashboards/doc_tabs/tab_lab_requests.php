@@ -28,7 +28,7 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
 <div id="sec-lab_requests" class="dash-section">
     <div class="sec-header">
         <h2><i class="fas fa-flask"></i> Lab Test Requests</h2>
-        <button class="adm-btn adm-btn-primary" onclick="openModal('modalNewLabReq')"><i class="fas fa-plus"></i> Request New Test</button>
+        <button class="btn btn-primary" onclick="openModal('modalNewLabReq')"><span class="btn-text"><i class="fas fa-plus"></i> Request New Test</span></button>
     </div>
 
     <!-- Active Orders Table -->
@@ -67,7 +67,7 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
                             </td>
                             <td><span class="adm-badge adm-badge-primary"><?= e($o['status']) ?></span></td>
                             <td>
-                                <button class="adm-btn adm-btn-sm" style="background:var(--surface-2);color:var(--primary);" onclick="viewLabOrder(<?= $o['id'] ?>)"><i class="fas fa-eye"></i> Details</button>
+                                <button class="btn btn-primary btn btn-sm" style="background:var(--surface-2);color:var(--primary);" onclick="viewLabOrder(<?= $o['id'] ?>)"><span class="btn-text"><i class="fas fa-eye"></i> Details</span></button>
                             </td>
                         </tr>
                     <?php endforeach; endif; ?>
@@ -82,7 +82,7 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
   <div class="modal-box wide">
     <div class="modal-header">
         <h3><i class="fas fa-flask" style="color:var(--role-accent);"></i> Request Lab Test</h3>
-        <button class="modal-close" onclick="closeModal('modalNewLabReq')">&times;</button>
+        <button class="btn btn-primary modal-close" onclick="closeModal('modalNewLabReq')"><span class="btn-text">&times;</span></button>
     </div>
     <form id="formNewLabReq" onsubmit="submitLabRequest(event)">
         <div class="form-row">
@@ -128,7 +128,7 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
             <textarea name="clinical_notes" class="form-control" rows="3" placeholder="Provide clinical context for the lab technician..."></textarea>
         </div>
 
-        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%; justify-content:center; margin-top:.5rem;"><i class="fas fa-paper-plane"></i> Send Request to Lab</button>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:.5rem;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Send Request to Lab</span></button>
     </form>
   </div>
 </div>

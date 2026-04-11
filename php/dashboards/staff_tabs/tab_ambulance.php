@@ -41,17 +41,17 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
                         $disabled=($active_trip['trip_status']===$st);
                     ?>
                     <button class="btn <?=$disabled?'btn-primary':'btn-outline'?>" <?=$disabled?'disabled':''?>
-                        onclick="updateTripStatus(<?=$active_trip['trip_id']?>,'<?=$st?>')">
+                        onclick="updateTripStatus(<?=$active_trip['trip_id']?>,'<?=$st?>')"><span class="btn-text">
                         <i class="fas <?=$icon?>"></i> <?=ucwords($st)?>
-                    </button>
+                    </span></button>
                     <?php endforeach; ?>
                 </div>
             </div>
 
             <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                <button class="btn btn-outline" onclick="openModal('tripNotesModal')"><i class="fas fa-sticky-note"></i> Add Notes</button>
+                <button class="btn btn-outline" onclick="openModal('tripNotesModal')"><span class="btn-text"><i class="fas fa-sticky-note"></i> Add Notes</span></button>
                 <?php if($vehicle): ?>
-                <button class="btn btn-outline" onclick="openModal('fuelModal')"><i class="fas fa-gas-pump"></i> Log Fuel</button>
+                <button class="btn btn-outline" onclick="openModal('fuelModal')"><span class="btn-text"><i class="fas fa-gas-pump"></i> Log Fuel</span></button>
                 <?php endif; ?>
             </div>
         </div>
@@ -84,8 +84,8 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
                 <p style="font-size:1.2rem;margin-bottom:1rem;"><i class="fas fa-hospital" style="width:14px;color:var(--text-muted);"></i> <?=e($r['destination']??'—')?></p>
                 <p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:1rem;"><i class="far fa-clock"></i> <?=date('d M, H:i',strtotime($r['requested_at']??'now'))?></p>
                 <div style="display:flex;gap:.8rem;">
-                    <button class="btn btn-success btn-sm" style="flex:1;" onclick="acceptTrip(<?=$r['id']?>)"><i class="fas fa-check"></i> Accept</button>
-                    <button class="btn btn-danger btn-sm" style="flex:1;" onclick="openRejectModal(<?=$r['id']?>)"><i class="fas fa-times"></i> Reject</button>
+                    <button class="btn btn-success btn-sm" style="flex:1;" onclick="acceptTrip(<?=$r['id']?>)"><span class="btn-text"><i class="fas fa-check"></i> Accept</span></button>
+                    <button class="btn-icon btn btn-danger btn-sm" style="flex:1;" onclick="openRejectModal(<?=$r['id']?>)"><span class="btn-text"><i class="fas fa-times"></i> Reject</span></button>
                 </div>
             </div>
             <?php endforeach; endif; ?>
@@ -108,8 +108,8 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
                     <?php endif; endforeach; ?>
                 </div>
                 <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-outline btn-sm" onclick="openModal('vehicleIssueModal')"><i class="fas fa-exclamation-triangle"></i> Report Issue</button>
-                    <button class="btn btn-outline btn-sm" onclick="openModal('fuelModal')"><i class="fas fa-gas-pump"></i> Log Fuel</button>
+                    <button class="btn btn-outline btn-sm" onclick="openModal('vehicleIssueModal')"><span class="btn-text"><i class="fas fa-exclamation-triangle"></i> Report Issue</span></button>
+                    <button class="btn btn-outline btn-sm" onclick="openModal('fuelModal')"><span class="btn-text"><i class="fas fa-gas-pump"></i> Log Fuel</span></button>
                 </div>
             <?php else: ?>
                 <p style="text-align:center;padding:3rem;color:var(--text-muted);">No vehicle currently assigned to you.</p>
@@ -153,11 +153,11 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
     <div class="modal-box" style="max-width:420px;">
         <div class="modal-header">
             <h3><i class="fas fa-times-circle" style="color:var(--danger);"></i> Reject Request</h3>
-            <button class="modal-close" onclick="closeModal('rejectModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('rejectModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <input type="hidden" id="reject_req_id">
         <div class="form-group"><label>Reason (Required)</label><textarea id="reject_reason" class="form-control" rows="3" placeholder="Provide reason for rejection..."></textarea></div>
-        <button class="btn btn-danger btn-wide" onclick="submitReject()"><i class="fas fa-times"></i> Confirm Rejection</button>
+        <button class="btn-icon btn btn-danger btn-wide" onclick="submitReject()"><span class="btn-text"><i class="fas fa-times"></i> Confirm Rejection</span></button>
     </div>
 </div>
 
@@ -166,14 +166,14 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> Report Vehicle Issue</h3>
-            <button class="modal-close" onclick="closeModal('vehicleIssueModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('vehicleIssueModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmVehicleIssue" onsubmit="event.preventDefault();submitVehicleIssue();">
             <input type="hidden" name="action" value="report_vehicle_issue">
             <input type="hidden" name="vehicle_id" value="<?=$vehicle['id']??0?>">
             <div class="form-group"><label>Issue Description *</label><textarea name="description" class="form-control" rows="4" required placeholder="Describe the issue in detail..."></textarea></div>
             <div class="form-group"><label>Photo (Optional)</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnVehicleIssue"><i class="fas fa-paper-plane"></i> Report Issue</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnVehicleIssue"><span class="btn-text"><i class="fas fa-paper-plane"></i> Report Issue</span></button>
         </form>
     </div>
 </div>
@@ -183,7 +183,7 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
     <div class="modal-box" style="max-width:420px;">
         <div class="modal-header">
             <h3><i class="fas fa-gas-pump" style="color:var(--role-accent);"></i> Log Fuel Top-up</h3>
-            <button class="modal-close" onclick="closeModal('fuelModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('fuelModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmFuel" onsubmit="event.preventDefault();submitFuel();">
             <input type="hidden" name="action" value="log_fuel">
@@ -193,7 +193,7 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
                 <div class="form-group"><label>Cost (GHS) *</label><input type="number" name="cost" step="0.01" class="form-control" required min="0"></div>
             </div>
             <div class="form-group"><label>Mileage at Top-up (km)</label><input type="number" name="mileage" step="0.1" class="form-control" min="0"></div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnFuel"><i class="fas fa-plus"></i> Log Fuel</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnFuel"><span class="btn-text"><i class="fas fa-plus"></i> Log Fuel</span></button>
         </form>
     </div>
 </div>
@@ -203,10 +203,10 @@ $fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_sta
     <div class="modal-box" style="max-width:420px;">
         <div class="modal-header">
             <h3><i class="fas fa-sticky-note" style="color:var(--role-accent);"></i> Add Trip Notes</h3>
-            <button class="modal-close" onclick="closeModal('tripNotesModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('tripNotesModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <div class="form-group"><label>Notes</label><textarea id="tripNotesText" class="form-control" rows="4" placeholder="Any additional notes for this trip..."></textarea></div>
-        <button class="btn btn-primary btn-wide" onclick="saveNotes()"><i class="fas fa-save"></i> Save Notes</button>
+        <button class="btn btn-primary btn-wide" onclick="saveNotes()"><span class="btn-text"><i class="fas fa-save"></i> Save Notes</span></button>
     </div>
 </div>
 

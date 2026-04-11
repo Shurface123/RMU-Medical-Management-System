@@ -48,9 +48,9 @@ if ($q_shifts) while ($r = mysqli_fetch_assoc($q_shifts)) $shifts[] = $r;
                 <h1>Shift Roster (Next 7 Days)</h1>
                 <p>Manage and allocate shifts for all hospital staff.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('shiftModal').classList.add('active')">
+            <button class="btn btn-primary" onclick="document.getElementById('shiftModal').classList.add('active')"><span class="btn-text">
                 <i class="fas fa-plus"></i> Add New Shift
-            </button>
+            </span></button>
         </div>
 
         <div class="adm-card">
@@ -86,7 +86,7 @@ if ($q_shifts) while ($r = mysqli_fetch_assoc($q_shifts)) $shifts[] = $r;
     <div class="adm-modal-content">
         <div class="adm-modal-header">
             <h3><i class="fas fa-calendar-plus"></i> Assign New Shift</h3>
-            <button class="adm-modal-close" onclick="document.getElementById('shiftModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary adm-modal-close" onclick="document.getElementById('shiftModal').classList.remove('active')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <div class="adm-modal-body">
             <form id="addShiftForm">
@@ -176,7 +176,7 @@ if ($q_shifts) while ($r = mysqli_fetch_assoc($q_shifts)) $shifts[] = $r;
                     </div>
                 </div>
 
-                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;"><i class="fas fa-check"></i> Assign Shift</button>
+                <button type="submit" class="btn btn-primary" style="width:100%;"><span class="btn-text"><i class="fas fa-check"></i> Assign Shift</span></button>
             </form>
         </div>
     </div>

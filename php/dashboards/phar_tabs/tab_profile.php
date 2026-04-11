@@ -33,7 +33,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
   'qualifications'=>'Qualifications','security'=>'Security','notifprefs'=>'Notifications',
   'documents'=>'Documents','completeness'=>'Completeness'
 ] as $k=>$v): ?>
-  <button class="prof-tab <?=$k==='header'?'active':''?>" onclick="showProfSection('<?=$k?>',this)"><?=$v?></button>
+  <button class="btn btn-primary prof-tab <?=$k==='header'?'active':''?>" onclick="showProfSection('<?=$k?>',this)"><span class="btn-text"><?=$v?></span></button>
 <?php endforeach; ?>
 </div>
 
@@ -69,14 +69,14 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
       <?php if($compPct<100): ?><small class="text-muted">Complete all sections to reach 100%</small><?php endif; ?>
     </div>
   </div>
-  <button class="btn btn-outline-primary btn-sm" onclick="showProfSection('personal',document.querySelector('.prof-tab:nth-child(2)'))"><i class="fas fa-pen"></i> Edit Profile</button>
+  <button class="btn btn-outline-primary btn-sm" onclick="showProfSection('personal',document.querySelector('.prof-tab:nth-child(2)'))"><span class="btn-text"><i class="fas fa-pen"></i> Edit Profile</span></button>
 </div>
 </div>
 
 <!-- ════════════════ SECTION B: PERSONAL INFO ════════════ -->
 <div class="prof-section" id="prof-personal">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-user"></i> Personal Information</h3><button class="btn btn-sm btn-primary" onclick="savePersonalInfo()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-user"></i> Personal Information</h3><button class="btn btn-sm btn-primary" onclick="savePersonalInfo()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <div class="form-grid-2">
     <div class="form-group"><label>Full Name</label><input id="pf_name" class="form-control" value="<?=e($prof['full_name'])?>"></div>
     <div class="form-group"><label>Date of Birth</label><input id="pf_dob" type="date" class="form-control" value="<?=e($prof['date_of_birth']??'')?>"></div>
@@ -104,7 +104,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
 <!-- ════════════════ SECTION C: PROFESSIONAL ═════════════ -->
 <div class="prof-section" id="prof-professional">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-briefcase"></i> Professional Profile</h3><button class="btn btn-sm btn-primary" onclick="saveProfessional()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-briefcase"></i> Professional Profile</h3><button class="btn btn-sm btn-primary" onclick="saveProfessional()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <div class="form-grid-2">
     <div class="form-group"><label>License Number</label><input id="pp_license" class="form-control" value="<?=e($prof['license_number']??'')?>"></div>
     <div class="form-group"><label>Issuing Body</label><input id="pp_issuer" class="form-control" value="<?=e($prof['license_issuing_body']??'')?>"></div>
@@ -127,14 +127,14 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
 
   <!-- Qualifications -->
   <h4 style="margin:1rem 0 .6rem;"><i class="fas fa-award"></i> Qualifications</h4>
-  <button class="btn btn-sm btn-primary" onclick="openModal('addQualModal')"><i class="fas fa-plus"></i> Add Qualification</button>
+  <button class="btn btn-sm btn-primary" onclick="openModal('addQualModal')"><span class="btn-text"><i class="fas fa-plus"></i> Add Qualification</span></button>
   <div class="table-responsive" style="margin-top:.8rem;">
     <table class="data-table"><thead><tr><th>Degree</th><th>Institution</th><th>Year</th><th>Certificate</th><th>Actions</th></tr></thead><tbody id="qualTable">
     <?php foreach($quals as $q): ?>
       <tr id="qual-<?=$q['id']?>">
         <td><?=e($q['degree_name'])?></td><td><?=e($q['institution'])?></td><td><?=e($q['year_awarded']??'')?></td>
-        <td><?php if($q['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$q['id']?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a><?php else: ?>—<?php endif; ?></td>
-        <td><button class="btn btn-xs btn-danger" onclick="deleteQual(<?=$q['id']?>)"><i class="fas fa-trash"></i></button></td>
+        <td><?php if($q['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$q['id']?>" class="btn-icon btn btn-xs btn-outline"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php else: ?>—<?php endif; ?></td>
+        <td><button class="btn btn-xs btn-danger" onclick="deleteQual(<?=$q['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
       </tr>
     <?php endforeach; if(!$quals): ?><tr><td colspan="5" class="text-center text-muted">No qualifications added</td></tr><?php endif; ?>
     </tbody></table>
@@ -142,7 +142,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
 
   <!-- Certifications -->
   <h4 style="margin:1.5rem 0 .6rem;"><i class="fas fa-certificate"></i> Certifications</h4>
-  <button class="btn btn-sm btn-primary" onclick="openModal('addCertModal')"><i class="fas fa-plus"></i> Add Certification</button>
+  <button class="btn btn-sm btn-primary" onclick="openModal('addCertModal')"><span class="btn-text"><i class="fas fa-plus"></i> Add Certification</span></button>
   <div class="table-responsive" style="margin-top:.8rem;">
     <table class="data-table"><thead><tr><th>Name</th><th>Issuing Body</th><th>Issued</th><th>Expires</th><th>Status</th><th>File</th><th>Actions</th></tr></thead><tbody id="certTable">
     <?php foreach($certs as $c):
@@ -155,8 +155,8 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
         <td><?=$c['issue_date']?date('d M Y',strtotime($c['issue_date'])):''?></td>
         <td><?=$c['expiry_date']?date('d M Y',strtotime($c['expiry_date'])):''?></td>
         <td><span class="badge <?=$cb?>"><?=$cl?></span></td>
-        <td><?php if($c['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$c['id']?>" class="btn btn-xs btn-outline"><i class="fas fa-download"></i></a><?php else: ?>—<?php endif; ?></td>
-        <td><button class="btn btn-xs btn-danger" onclick="deleteCert(<?=$c['id']?>)"><i class="fas fa-trash"></i></button></td>
+        <td><?php if($c['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$c['id']?>" class="btn-icon btn btn-xs btn-outline"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php else: ?>—<?php endif; ?></td>
+        <td><button class="btn btn-xs btn-danger" onclick="deleteCert(<?=$c['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
       </tr>
     <?php endforeach; if(!$certs): ?><tr><td colspan="7" class="text-center text-muted">No certifications added</td></tr><?php endif; ?>
     </tbody></table>
@@ -177,7 +177,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
       <div class="form-group"><label>New Password</label><input id="sec_new" type="password" class="form-control" oninput="checkPwStrength(this.value)"></div>
       <div id="pwStrengthBar" class="pw-strength"><div class="pw-bar"></div><span class="pw-label"></span></div>
       <div class="form-group"><label>Confirm New Password</label><input id="sec_confirm" type="password" class="form-control"></div>
-      <button class="btn btn-primary btn-sm" onclick="changePharmPassword()"><i class="fas fa-lock"></i> Update Password</button>
+      <button class="btn btn-primary btn-sm" onclick="changePharmPassword()"><span class="btn-text"><i class="fas fa-lock"></i> Update Password</span></button>
     </div>
 
     <!-- 2FA -->
@@ -200,7 +200,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
         <td><code><?=e($s['ip_address']??'')?></code></td>
         <td><?=date('d M Y, g:i A',strtotime($s['login_time']))?></td>
         <td><?php if($s['is_current']): ?><span class="badge badge-success">Current</span><?php else: ?><span class="badge badge-secondary">Active</span><?php endif; ?></td>
-        <td><?php if(!$s['is_current']): ?><button class="btn btn-xs btn-danger" onclick="revokeSession(<?=$s['id']?>)"><i class="fas fa-sign-out-alt"></i></button><?php else: ?>—<?php endif; ?></td>
+        <td><?php if(!$s['is_current']): ?><button class="btn btn-xs btn-danger" onclick="revokeSession(<?=$s['id']?>)"><span class="btn-text"><i class="fas fa-sign-out-alt"></i></span></button><?php else: ?>—<?php endif; ?></td>
       </tr>
     <?php endforeach; if(!$sessions): ?><tr><td colspan="6" class="text-center text-muted">No active sessions</td></tr><?php endif; ?>
     </tbody></table>
@@ -225,7 +225,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
   <div class="section-card" style="margin-top:1.5rem;padding:1.2rem;border-left:4px solid var(--danger);">
     <h4 style="color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> Account Deactivation</h4>
     <p class="text-muted" style="font-size:.88rem;">Request account deactivation. Your data will be preserved and the request must be approved by an administrator.</p>
-    <button class="btn btn-danger btn-sm" onclick="requestDeactivation()"><i class="fas fa-user-times"></i> Request Deactivation</button>
+    <button class="btn btn-danger btn-sm" onclick="requestDeactivation()"><span class="btn-text"><i class="fas fa-user-times"></i> Request Deactivation</span></button>
   </div>
 </div>
 </div>
@@ -233,7 +233,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
 <!-- ════════════════ SECTION F: NOTIF PREFS ══════════════ -->
 <div class="prof-section" id="prof-notifprefs">
 <div class="section-card">
-  <div class="sc-head"><h3><i class="fas fa-bell"></i> Notification Preferences</h3><button class="btn btn-sm btn-primary" onclick="saveNotifPrefs()"><i class="fas fa-save"></i> Save</button></div>
+  <div class="sc-head"><h3><i class="fas fa-bell"></i> Notification Preferences</h3><button class="btn btn-sm btn-primary" onclick="saveNotifPrefs()"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button></div>
   <div class="notif-toggles">
     <?php $nPrefs = [
       'notif_new_prescription'=>['New prescription from doctor','fa-prescription'],
@@ -282,8 +282,8 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
         <td><?=round(($d['file_size']??0)/1024)?>KB</td>
         <td><?=date('d M Y',strtotime($d['uploaded_at']))?></td>
         <td>
-          <a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$d['id']?>" class="btn btn-xs btn-outline" title="Download"><i class="fas fa-download"></i></a>
-          <button class="btn btn-xs btn-danger" onclick="deleteDoc(<?=$d['id']?>)" title="Delete"><i class="fas fa-trash"></i></button>
+          <a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$d['id']?>" class="btn-icon btn btn-xs btn-outline" title="Download"><span class="btn-text"><i class="fas fa-download"></i></span></a>
+          <button class="btn btn-xs btn-danger" onclick="deleteDoc(<?=$d['id']?>)" title="Delete"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
         </td>
       </tr>
     <?php endforeach; if(!$docs): ?><tr><td colspan="5" class="text-center text-muted">No documents uploaded</td></tr><?php endif; ?>
@@ -316,7 +316,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
     <div class="comp-item">
       <span class="comp-check <?=$done?'done':''?>"><i class="fas <?=$done?'fa-check-circle':'fa-exclamation-circle'?>"></i></span>
       <span class="comp-label"><?=$label?></span>
-      <?php if(!$done): ?><button class="btn btn-xs btn-outline" onclick="showProfSection('<?=$sect?>',null)">Complete Now</button><?php else: ?><span class="badge badge-success" style="font-size:.75rem;">Done</span><?php endif; ?>
+      <?php if(!$done): ?><button class="btn btn-xs btn-outline" onclick="showProfSection('<?=$sect?>',null)"><span class="btn-text">Complete Now</span></button><?php else: ?><span class="badge badge-success" style="font-size:.75rem;">Done</span><?php endif; ?>
     </div>
     <?php endforeach; ?>
   </div>
@@ -327,18 +327,18 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
 <!-- Add Qualification -->
 <div class="modal-bg" id="addQualModal">
 <div class="modal-content">
-  <div class="modal-head"><h3>Add Qualification</h3><button onclick="closeModal('addQualModal')"><i class="fas fa-times"></i></button></div>
+  <div class="modal-head"><h3>Add Qualification</h3><button onclick="closeModal('addQualModal')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-times"></i></span></button></div>
   <div class="form-group"><label>Degree Name *</label><input id="aq_degree" class="form-control" placeholder="e.g. B.Pharm, PharmD"></div>
   <div class="form-group"><label>Institution *</label><input id="aq_inst" class="form-control"></div>
   <div class="form-group"><label>Year Awarded</label><input id="aq_year" type="number" min="1950" max="2030" class="form-control"></div>
   <div class="form-group"><label>Certificate File (optional)</label><input id="aq_file" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control"></div>
-  <button class="btn btn-primary" onclick="addQualification()"><i class="fas fa-plus"></i> Add</button>
+  <button class="btn btn-primary" onclick="addQualification()"><span class="btn-text"><i class="fas fa-plus"></i> Add</span></button>
 </div>
 </div>
 <!-- Add Certification -->
 <div class="modal-bg" id="addCertModal">
 <div class="modal-content">
-  <div class="modal-head"><h3>Add Certification</h3><button onclick="closeModal('addCertModal')"><i class="fas fa-times"></i></button></div>
+  <div class="modal-head"><h3>Add Certification</h3><button onclick="closeModal('addCertModal')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-times"></i></span></button></div>
   <div class="form-group"><label>Certification Name *</label><input id="ac_name" class="form-control"></div>
   <div class="form-group"><label>Issuing Body</label><input id="ac_issuer" class="form-control"></div>
   <div class="form-grid-2">
@@ -346,7 +346,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
     <div class="form-group"><label>Expiry Date</label><input id="ac_expiry" type="date" class="form-control"></div>
   </div>
   <div class="form-group"><label>Certificate File (optional)</label><input id="ac_file" type="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control"></div>
-  <button class="btn btn-primary" onclick="addCertification()"><i class="fas fa-plus"></i> Add</button>
+  <button class="btn btn-primary" onclick="addCertification()"><span class="btn-text"><i class="fas fa-plus"></i> Add</span></button>
 </div>
 </div>
 

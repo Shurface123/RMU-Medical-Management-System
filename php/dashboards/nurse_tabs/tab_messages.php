@@ -70,9 +70,9 @@ if ($q_sent) {
             <h2 style="font-size:2.4rem; font-weight:800; color:var(--primary); margin-bottom:.3rem;"><i class="fas fa-comments pulse-fade"></i> Clinical Communications</h2>
             <p style="font-size:1.3rem; color:var(--text-muted);">Secure messaging between nursing staff, physicians, and administration.</p>
         </div>
-        <button class="adm-btn adm-btn-primary" onclick="document.getElementById('composeForm').reset(); document.getElementById('composeModal').style.display='flex';" style="border-radius:12px; font-weight:700;">
+        <button class="btn btn-primary" onclick="document.getElementById('composeForm').reset(); document.getElementById('composeModal').style.display='flex';" style="border-radius:12px; font-weight:700;"><span class="btn-text">
             <i class="fas fa-pen"></i> New Message
-        </button>
+        </span></button>
     </div>
 
     <!-- Messages Layout Grid -->
@@ -86,16 +86,16 @@ if ($q_sent) {
                      <i class="fas fa-search" style="color:var(--text-muted); cursor:pointer; opacity:0.5;"></i>
                 </div>
                 <div style="display:flex; gap:1.5rem; border-bottom:1.5px solid var(--border);">
-                    <button class="tab-link active" id="inbox-ftab" onclick="switchFolder('inbox')" style="padding:1rem 0; font-weight:800; font-size:1.2rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+                    <button class="btn btn-ghost tab-link active" id="inbox-ftab" onclick="switchFolder('inbox')" style="padding:1rem 0; font-weight:800; font-size:1.2rem; color:var(--primary); border-bottom:3px solid var(--primary); background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;"><span class="btn-text">
                         <i class="fas fa-inbox"></i> Inbox
                         <?php 
                             $unread = array_reduce($inbox, fn($c,$m) => $c + ($m['is_read']?0:1), 0);
                             if($unread > 0) echo "<span style='background:var(--danger); color:#fff; font-size:.9rem; padding:.2rem .6rem; border-radius:10px; font-weight:900;'>$unread</span>";
                         ?>
-                    </button>
-                    <button class="tab-link" id="sent-ftab" onclick="switchFolder('sent')" style="padding:1rem 0; font-weight:700; font-size:1.2rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;">
+                    </span></button>
+                    <button class="btn btn-primary tab-link" id="sent-ftab" onclick="switchFolder('sent')" style="padding:1rem 0; font-weight:700; font-size:1.2rem; color:var(--text-muted); border-bottom:3px solid transparent; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:.8rem;"><span class="btn-text">
                         <i class="fas fa-paper-plane"></i> Sent
-                    </button>
+                    </span></button>
                 </div>
             </div>
             
@@ -179,8 +179,8 @@ if ($q_sent) {
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2.5rem;">
                              <h4 id="msgSubject" style="font-size:2.2rem; font-weight:800; color:var(--text-primary); margin:0;">Subject</h4>
                              <div style="display:flex; gap:1rem;">
-                                 <button class="adm-btn adm-btn-ghost" style="padding:.5rem 1rem; border-radius:10px;"><i class="fas fa-print"></i></button>
-                                 <button class="adm-btn adm-btn-ghost text-danger" style="padding:.5rem 1rem; border-radius:10px; border-color:rgba(231,76,60,0.2);"><i class="fas fa-trash"></i></button>
+                                 <button class="btn-icon btn btn-ghost" style="padding:.5rem 1rem; border-radius:10px;"><span class="btn-text"><i class="fas fa-print"></i></span></button>
+                                 <button class="btn btn-ghost text-danger" style="padding:.5rem 1rem; border-radius:10px; border-color:rgba(231,76,60,0.2);"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
                              </div>
                         </div>
                         
@@ -192,7 +192,7 @@ if ($q_sent) {
                                     <small id="msgDate" style="color:var(--text-muted); font-size:1.2rem; font-weight:600;">Date Time</small>
                                 </div>
                             </div>
-                            <button class="adm-btn adm-btn-primary" id="btnReply" onclick="replyMessage()" style="padding:.8rem 2.5rem; border-radius:12px; font-weight:700;"><i class="fas fa-reply" style="margin-right:.6rem;"></i> Reply</button>
+                            <button class="btn btn-primary" id="btnReply" onclick="replyMessage()" style="padding:.8rem 2.5rem; border-radius:12px; font-weight:700;"><span class="btn-text"><i class="fas fa-reply" style="margin-right:.6rem;"></i> Reply</span></button>
                         </div>
                     </div>
 
@@ -223,7 +223,7 @@ if ($q_sent) {
     <div class="modal-box" style="max-width:800px;">
         <div class="modal-header" style="background:var(--primary);">
             <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-pen-nib"></i> Compose Secure Clinical Message</h3>
-            <button class="modal-close" onclick="document.getElementById('composeModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="document.getElementById('composeModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
         <div style="padding:3rem;">
             <form id="composeForm">
@@ -262,10 +262,10 @@ if ($q_sent) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="document.getElementById('composeModal').style.display='none'" style="font-weight:700;">Discard</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSendMsg" style="padding:.8rem 5rem; font-weight:900; border-radius:12px; font-size:1.4rem;">
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('composeModal').style.display='none'" style="font-weight:700;"><span class="btn-text">Discard</span></button>
+                    <button type="submit" class="btn btn-primary" id="btnSendMsg" style="padding:.8rem 5rem; font-weight:900; border-radius:12px; font-size:1.4rem;"><span class="btn-text">
                         <i class="fas fa-paper-plane" style="margin-right:.8rem;"></i> TRANSMIT MESSAGE
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

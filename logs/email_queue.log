@@ -10,3 +10,6 @@
 2026-04-04 09:37:26 | failed | password_reset | atakorahe57@gmail.com | ERR: SMTP Error: Could not authenticate.
 2026-04-09 18:53:03 | failed | password_reset | jefferson.forson@st.rmu.edu.gh | ERR: SMTP Error: Could not authenticate.
 2026-04-09 18:57:06 | failed | password_reset | atakorahe57@gmail.com | ERR: SMTP Error: Could not authenticate.
+2026-04-11 00:13:17 | failed | password_reset | lovelace.baidoo@st.rmu.edu.gh | ERR: SMTP Error: Could not authenticate.
+2026-04-11 21:32:00 | failed | password_reset | lovelace.baidoo@st.rmu.edu.gh | ERR: SMTP Error: Could not authenticate.
+2026-04-11 21:46:02 | failed | password_reset | lovelace.baidoo@st.rmu.edu.gh | ERR: SMTP Error: Could not authenticate.

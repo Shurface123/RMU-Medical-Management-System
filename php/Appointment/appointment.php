@@ -60,9 +60,9 @@ $doctors_dd = mysqli_query($conn, "SELECT d.id, u.name FROM doctors d JOIN users
                 <h1>Appointment Management</h1>
                 <p>View, filter, and update the status of all patient appointments.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/booking.php" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/booking.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-plus"></i> New Appointment
-            </a>
+            </span></a>
         </div>
 
         <!-- Stats -->
@@ -114,8 +114,8 @@ $doctors_dd = mysqli_query($conn, "SELECT d.id, u.name FROM doctors d JOIN users
                 </select>
             </div>
             <div style="display:flex;gap:.5rem;">
-                <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-search"></i> Filter</button>
-                <a href="appointment.php" class="adm-btn adm-btn-back"><i class="fas fa-times"></i> Clear</a>
+                <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-search"></i> Filter</span></button>
+                <a href="appointment.php" class="btn btn-danger btn-sm btn-icon btn btn-back"><span class="btn-text"><i class="fas fa-times"></i> Clear</span></a>
             </div>
         </form>
 
@@ -198,7 +198,7 @@ $doctors_dd = mysqli_query($conn, "SELECT d.id, u.name FROM doctors d JOIN users
                                         <option value="<?php echo $opt; ?>" <?php echo ($status===$opt)?'selected':''; ?>><?php echo $opt; ?></option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <button type="submit" name="toggle_status" class="adm-btn adm-btn-primary adm-btn-sm" title="Update Status"><i class="fas fa-check"></i></button>
+                                    <button type="submit" name="toggle_status" class="btn btn-primary btn-sm" title="Update Status"><span class="btn-text"><i class="fas fa-check"></i></span></button>
                                 </form>
                             </td>
                         </tr>

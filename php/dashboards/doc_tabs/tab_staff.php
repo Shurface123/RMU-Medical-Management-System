@@ -5,9 +5,9 @@
   </div>
 
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterStaff('all',this)">All Staff</button>
+    <button class="btn btn-primary ftab active" onclick="filterStaff('all',this)"><span class="btn-text">All Staff</span></button>
     <?php foreach(['Doctor','Nurse','Lab Technician','Pharmacist','Admin'] as $sr):?>
-    <button class="ftab" onclick="filterStaff('<?=$sr?>',this)"><?=$sr?></button>
+    <button class="btn btn-primary ftab" onclick="filterStaff('<?=$sr?>',this)"><span class="btn-text"><?=$sr?></span></button>
     <?php endforeach;?>
   </div>
 
@@ -47,9 +47,9 @@
       <?php if($s['email']??''):?><div style="font-size:1.1rem;color:var(--text-secondary);margin-bottom:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><i class="fas fa-envelope" style="color:var(--primary);margin-right:.5rem;"></i><?=htmlspecialchars($s['email']??'')?></div><?php endif;?>
       <div style="display:flex;gap:.5rem;">
         <?php if(in_array($role,['Nurse','Lab Technician'])):?>
-        <button onclick='openStaffMsg(<?=$sj?>)' class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-paper-plane"></i> Send Note</button>
+        <button onclick='openStaffMsg(<?=$sj?>)' class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-paper-plane"></i> Send Note</span></button>
         <?php endif;?>
-        <button onclick='viewStaff(<?=$sj?>)' class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-eye"></i> View</button>
+        <button onclick='viewStaff(<?=$sj?>)' class="btn-icon btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-eye"></i> View</span></button>
       </div>
     </div>
     <?php endforeach; endif;?>
@@ -61,7 +61,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-address-card" style="color:var(--role-accent);"></i> Staff Profile</h3>
-      <button class="modal-close" onclick="closeModal('modalViewStaff')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalViewStaff')"><span class="btn-text">&times;</span></button>
     </div>
     <div id="staffDetail" style="font-size:1.3rem;line-height:2.2;"></div>
   </div>
@@ -72,14 +72,14 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-paper-plane" style="color:var(--role-accent);"></i> Send Instruction</h3>
-      <button class="modal-close" onclick="closeModal('modalStaffMsg')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalStaffMsg')"><span class="btn-text">&times;</span></button>
     </div>
     <p id="staffMsgTarget" style="font-weight:600;font-size:1.4rem;margin-bottom:1.2rem;"></p>
     <input type="hidden" id="staffMsgUserId">
     <div class="form-group"><label>Message / Instruction</label>
       <textarea id="staffMsgContent" class="form-control" rows="4" placeholder="e.g. Please administer 500mg Paracetamol to Patient P001 at 2PM…"></textarea>
     </div>
-    <button onclick="sendStaffMsg()" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Send Instruction</button>
+    <button onclick="sendStaffMsg()" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Send Instruction</span></button>
   </div>
 </div>
 

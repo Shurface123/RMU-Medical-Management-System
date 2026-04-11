@@ -14,7 +14,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $waivers[]=$r;
     <h1><i class="fas fa-percent" style="color:var(--role-accent);"></i> Waivers & Discounts</h1>
     <p>Request, approve, and track payment waivers for patients</p>
   </div>
-  <button onclick="openModal('modalNewWaiver')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> New Waiver Request</button>
+  <button onclick="openModal('modalNewWaiver')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> New Waiver Request</span></button>
 </div>
 
 <div class="adm-summary-strip">
@@ -67,8 +67,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $waivers[]=$r;
           <td>
             <?php if($w['status']==='Pending'&&$user_role==='finance_manager'): ?>
             <div class="adm-table-actions">
-              <button onclick="approveWaiver(<?=$w['waiver_id']?>)" class="adm-btn adm-btn-sm adm-btn-success"><i class="fas fa-check"></i> Approve</button>
-              <button onclick="rejectWaiver(<?=$w['waiver_id']?>)" class="adm-btn adm-btn-sm adm-btn-danger"><i class="fas fa-xmark"></i> Reject</button>
+              <button onclick="approveWaiver(<?=$w['waiver_id']?>)" class="btn-icon btn btn-sm btn-success"><span class="btn-text"><i class="fas fa-check"></i> Approve</span></button>
+              <button onclick="rejectWaiver(<?=$w['waiver_id']?>)" class="btn-icon btn btn-sm btn-danger"><span class="btn-text"><i class="fas fa-xmark"></i> Reject</span></button>
             </div>
             <?php elseif($w['status']==='Pending'): ?>
             <span style="font-size:1.2rem;color:var(--text-muted);">Awaiting manager</span>
@@ -89,7 +89,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $waivers[]=$r;
   <div class="adm-modal-content" style="max-width:620px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-percent" style="color:var(--role-accent);"></i> New Waiver Request</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalNewWaiver')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalNewWaiver')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formNewWaiver">
@@ -127,8 +127,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $waivers[]=$r;
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalNewWaiver')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="submitWaiverRequest()" class="adm-btn adm-btn-primary"><i class="fas fa-paper-plane"></i> Submit for Approval</button>
+      <button onclick="closeModal('modalNewWaiver')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="submitWaiverRequest()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit for Approval</span></button>
     </div>
   </div>
 </div>

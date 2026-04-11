@@ -267,7 +267,7 @@
                 <h2>MANAGE <b>TEST</b></h2>
             </div>
             <div style="margin-left: 82%; margin-top: 3%;">
-                <button><a href="/php/test/add-test.php">ADD TEST</a></button>
+                <button class="btn btn-primary"><span class="btn-text"><a href="/php/test/add-test.php">ADD TEST</a></span></button>
             </div>
         </div>
     </div>
@@ -311,8 +311,8 @@
 
                             <td style="width: 140px;">
 
-                                <button> <a href="/php/test/update.php?T_ID=<?php echo $Patient_data['T_ID'];  ?>" class="btn btn-success"><b>UPDATE</b></a></button>
-                                <button><a href="/php/test/Delete.php?T_ID=<?php echo $Patient_data['T_ID']; ?>" class="btn btn-danger"><b>DELETE</b></a></button>
+                                <button class="btn btn-primary"><span class="btn-text"> <a href="/php/test/update.php?T_ID=<?php echo $Patient_data['T_ID'];  ?>" class="btn btn-success"><span class="btn-text"><b>UPDATE</b></span></a></span></button>
+                                <button class="btn btn-danger btn-sm btn-icon"><span class="btn-text"><a href="/php/test/Delete.php?T_ID=<?php echo $Patient_data['T_ID']; ?>" class="btn-icon btn btn-danger"><span class="btn-text"><b>DELETE</b></span></a></span></button>
 
 
 

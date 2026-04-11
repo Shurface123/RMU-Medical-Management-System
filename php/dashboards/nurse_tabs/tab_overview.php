@@ -112,15 +112,15 @@ $greeting    = date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Eve
                 <small style="display:block; text-transform:uppercase; font-size:.9rem; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:.05em;">Quick Entry</small>
                 <span style="font-weight:600; color:#fff;">Record Data</span>
             </div>
-            <a href="?tab=patients" class="adm-btn adm-btn-sm" style="background:#fff; color:var(--primary); font-weight:700; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+            <a href="?tab=patients" class="btn btn-primary btn btn-sm" style="background:#fff; color:var(--primary); font-weight:700; box-shadow:0 4px 15px rgba(0,0,0,0.2);"><span class="btn-text">
                 <i class="fas fa-heartbeat"></i> Vitals
-            </a>
-            <a href="?tab=medications" class="adm-btn adm-btn-sm" style="background:var(--info); color:#fff; font-weight:700;">
+            </span></a>
+            <a href="?tab=medications" class="btn btn-primary btn btn-sm" style="background:var(--info); color:#fff; font-weight:700;"><span class="btn-text">
                 <i class="fas fa-pills"></i> Meds
-            </a>
-            <a href="?tab=notes" class="adm-btn adm-btn-sm" style="background:rgba(255,255,255,0.15); color:#fff; font-weight:600; border:1px solid rgba(255,255,255,0.2);">
+            </span></a>
+            <a href="?tab=notes" class="btn btn-primary btn btn-sm" style="background:rgba(255,255,255,0.15); color:#fff; font-weight:600; border:1px solid rgba(255,255,255,0.2);"><span class="btn-text">
                 <i class="fas fa-pen-nib"></i> Note
-            </a>
+            </span></a>
         </div>
     </div>
 

@@ -30,7 +30,7 @@ $tasks = dbSelect($conn,"SELECT * FROM staff_tasks WHERE assigned_to=? ORDER BY 
             <div class="filter-tabs" id="taskFilterTabs">
                 <?php foreach(['all','pending','in progress','in_progress','overdue','completed','cancelled'] as $st): ?>
                 <?php if(in_array($st,['in_progress'])) continue; ?>
-                <button class="ftab <?= ($st==='all')?'active':'' ?>" onclick="filterByStatus('<?= e($st) ?>')"><?= ucfirst($st) ?></button>
+                <button class="btn btn-primary ftab <?= ($st==='all')?'active':'' ?>" onclick="filterByStatus('<?= e($st) ?>')"><span class="btn-text"><?= ucfirst($st) ?></span></button>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -117,13 +117,13 @@ $tasks = dbSelect($conn,"SELECT * FROM staff_tasks WHERE assigned_to=? ORDER BY 
 
         <!-- Actions -->
         <?php if ($s === 'pending' || $s === 'overdue'): ?>
-        <button class="btn btn-primary" style="width:100%;" onclick="startTask(<?= $t['task_id'] ?>)">
+        <button class="btn btn-primary" style="width:100%;" onclick="startTask(<?= $t['task_id'] ?>)"><span class="btn-text">
             <i class="fas fa-play"></i> Start Task
-        </button>
+        </span></button>
         <?php elseif ($s === 'in progress'): ?>
-        <button class="btn btn-success" style="width:100%;" onclick="openCompleteModal(<?= $t['task_id'] ?>)">
+        <button class="btn btn-success" style="width:100%;" onclick="openCompleteModal(<?= $t['task_id'] ?>)"><span class="btn-text">
             <i class="fas fa-check"></i> Mark Complete
-        </button>
+        </span></button>
         <?php elseif ($s === 'completed'): ?>
         <div style="background:var(--success-light);color:var(--success);padding:1rem;border-radius:8px;text-align:center;font-weight:600;font-size:1.2rem;">
             <i class="fas fa-check-double"></i> Completed <?= $t['completed_at'] ? date('d M, H:i',strtotime($t['completed_at'])) : '' ?>
@@ -145,7 +145,7 @@ $tasks = dbSelect($conn,"SELECT * FROM staff_tasks WHERE assigned_to=? ORDER BY 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-check-circle" style="color:var(--success);"></i> Complete Task</h3>
-            <button class="modal-close" onclick="closeModal('completeTaskModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('completeTaskModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmCompleteTask" onsubmit="event.preventDefault();submitCompleteTask();">
             <input type="hidden" name="action" value="update_task_status">
@@ -159,9 +159,9 @@ $tasks = dbSelect($conn,"SELECT * FROM staff_tasks WHERE assigned_to=? ORDER BY 
                 <label>Photo Proof (Optional)</label>
                 <input type="file" name="proof" class="form-control" accept=".jpg,.jpeg,.png">
             </div>
-            <button type="submit" class="btn btn-success btn-wide" id="btnCompleteSubmit">
+            <button type="submit" class="btn btn-success btn-wide" id="btnCompleteSubmit"><span class="btn-text">
                 <i class="fas fa-check"></i> Submit Completion
-            </button>
+            </span></button>
         </form>
     </div>
 </div>

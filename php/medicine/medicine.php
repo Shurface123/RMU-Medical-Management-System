@@ -30,9 +30,9 @@ $exp_meds   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM medicin
                 <h1>Medicine Inventory</h1>
                 <p>Manage pharmacy stock, expiry dates, and reorder levels using FEFO principles.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/medicine/add-medicine.php" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/medicine/add-medicine.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-plus"></i> Add Medicine
-            </a>
+            </span></a>
         </div>
 
         <?php if ($low_stock > 0 || $out_stock > 0): ?>
@@ -80,7 +80,7 @@ $exp_meds   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM medicin
                                placeholder="Search by name or category..."
                                value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
                     </div>
-                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm">Search</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><span class="btn-text">Search</span></button>
                 </form>
             </div>
             <div class="adm-table-wrap table-container">
@@ -144,10 +144,10 @@ $exp_meds   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM medicin
                             <td>
                                 <div class="adm-table-actions">
                                     <a href="/RMU-Medical-Management-System/php/medicine/update.php?id=<?php echo $med['id']; ?>"
-                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i></a>
+                                       class="btn btn-warning btn-sm"><span class="btn-text"><i class="fas fa-edit"></i></span></a>
                                     <a href="/RMU-Medical-Management-System/php/medicine/Delete.php?id=<?php echo $med['id']; ?>"
-                                       class="adm-btn adm-btn-danger adm-btn-sm"
-                                       onclick="return confirm('Delete this medicine?');"><i class="fas fa-trash"></i></a>
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Delete this medicine?');"><span class="btn-text"><i class="fas fa-trash"></i></span></a>
                                 </div>
                             </td>
                         </tr>

@@ -24,7 +24,7 @@
         </div>
         <?php endforeach;?>
         </div>
-        <button type="submit" class="adm-btn adm-btn-success" style="width:100%;justify-content:center;margin-top:1.5rem;"><i class="fas fa-save"></i> Save Availability</button>
+        <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;margin-top:1.5rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Availability</span></button>
       </form>
     </div>
   </div>
@@ -32,7 +32,7 @@
   <!-- Leave Exceptions -->
   <div class="adm-card">
     <div class="adm-card-header"><h3><i class="fas fa-plane-departure"></i> Leave / Unavailable Dates</h3>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="document.getElementById('addLeaveForm').style.display='block'"><i class="fas fa-plus"></i> Add</button>
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('addLeaveForm').style.display='block'"><span class="btn-text"><i class="fas fa-plus"></i> Add</span></button>
     </div>
     <div style="padding:1.5rem;">
       <div id="addLeaveForm" style="display:none;background:var(--surface-2);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;">
@@ -41,7 +41,7 @@
             <div class="form-group"><label>Date *</label><input type="date" name="exception_date" class="form-control" required min="<?=date('Y-m-d')?>"></div>
             <div class="form-group"><label>Reason</label><input type="text" name="reason" class="form-control" placeholder="e.g. Conference, Personal leave"></div>
           </div>
-          <div style="display:flex;gap:.8rem;"><button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Add</button><button type="button" class="adm-btn" onclick="this.closest('div[id]').style.display='none'">Cancel</button></div>
+          <div style="display:flex;gap:.8rem;"><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Add</span></button><button type="button" class="btn btn-ghost btn" onclick="this.closest('div[id]').style.display='none'"><span class="btn-text">Cancel</span></button></div>
         </form>
       </div>
       <div id="leaveList">
@@ -50,7 +50,7 @@
         <div class="file-row" data-id="<?=$le['id']?>">
           <div class="file-icon-box" style="background:var(--warning);"><i class="fas fa-calendar-xmark"></i></div>
           <div style="flex:1;"><strong><?=date('D, d M Y',strtotime($le['exception_date']))?></strong><br><span style="font-size:1.1rem;color:var(--text-muted);"><?=htmlspecialchars($le['reason']??'No reason')?></span></div>
-          <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delLeave(<?=$le['id']?>,this)"><i class="fas fa-trash"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="delLeave(<?=$le['id']?>,this)"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
         </div>
       <?php endforeach; endif;?>
       </div>

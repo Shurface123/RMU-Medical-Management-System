@@ -54,7 +54,7 @@
               <?php endforeach;?>
             </div>
           </div>
-          <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><i class="fas fa-download"></i> Generate &amp; Download Report</button>
+          <button type="submit" class="btn-icon btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><span class="btn-text"><i class="fas fa-download"></i> Generate &amp; Download Report</span></button>
         </form>
       </div>
     </div>
@@ -76,9 +76,9 @@
             <input type="hidden" name="date_from" value="<?=$today?>">
             <input type="hidden" name="date_to" value="<?=$today?>">
             <input type="hidden" name="export_format" value="pdf">
-            <button type="submit" class="adm-btn adm-btn-<?=$col?> adm-btn-sm" style="width:100%;justify-content:flex-start;gap:.8rem;">
+            <button type="submit" class="btn btn-primary btn btn-<?=$col?> btn-sm" style="width:100%;justify-content:flex-start;gap:.8rem;"><span class="btn-text">
               <i class="fas <?=$icon?>"></i> <?=$label?>
-            </button>
+            </span></button>
           </form>
           <?php endforeach;?>
         </div>

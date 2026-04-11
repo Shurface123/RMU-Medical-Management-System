@@ -9,11 +9,11 @@
   </div>
 
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterByAttr('all','alertsList',this)">All (<?=$stats['active_alerts']?>)</button>
-    <button class="ftab" onclick="filterByAttr('low_stock','alertsList',this)">Low Stock</button>
-    <button class="ftab" onclick="filterByAttr('out_of_stock','alertsList',this)">Out of Stock</button>
-    <button class="ftab" onclick="filterByAttr('expiring_soon','alertsList',this)">Expiring Soon</button>
-    <button class="ftab" onclick="filterByAttr('expired','alertsList',this)">Expired</button>
+    <button class="btn btn-primary ftab active" onclick="filterByAttr('all','alertsList',this)"><span class="btn-text">All (<?=$stats['active_alerts']?>)</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('low_stock','alertsList',this)"><span class="btn-text">Low Stock</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('out_of_stock','alertsList',this)"><span class="btn-text">Out of Stock</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('expiring_soon','alertsList',this)"><span class="btn-text">Expiring Soon</span></button>
+    <button class="btn btn-primary ftab" onclick="filterByAttr('expired','alertsList',this)"><span class="btn-text">Expired</span></button>
   </div>
 
   <div id="alertsList">
@@ -31,7 +31,7 @@
             <span class="adm-badge adm-badge-<?=$aInfo[1]==='red'?'danger':'warning'?>"><?=$aInfo[0]?></span>
             <h4 style="font-size:1.4rem;font-weight:700;margin:.4rem 0 .2rem;"><?=htmlspecialchars($al['medicine_name'])?></h4>
           </div>
-          <button class="adm-btn adm-btn-success adm-btn-sm" onclick="resolveAlert(<?=$al['id']?>)"><i class="fas fa-check"></i> Resolve</button>
+          <button class="btn btn-success btn-sm" onclick="resolveAlert(<?=$al['id']?>)"><span class="btn-text"><i class="fas fa-check"></i> Resolve</span></button>
         </div>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;color:var(--text-secondary);font-size:1.2rem;margin-top:.5rem;">
           <span><i class="fas fa-box" style="margin-right:.3rem;"></i>Current: <strong style="color:var(--<?=$al['stock_quantity']<=($al['reorder_level']??10)?'danger':'text-primary'?>);"><?=$al['stock_quantity']?></strong></span>

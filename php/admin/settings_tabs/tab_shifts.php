@@ -32,9 +32,9 @@
         </div>
 
         <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem;"><span class="btn-text">
                 <i class="fas fa-save"></i> Save Shift Schedule
-            </button>
+            </span></button>
         </div>
     </form>
 

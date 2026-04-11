@@ -70,7 +70,7 @@
           </div>
         </div>
         <div class="form-group"><label>Professional Bio / Summary</label><textarea name="bio" class="form-control" rows="4" placeholder="Shown on public staff page"><?=htmlspecialchars($prof['bio']??'')?></textarea></div>
-        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Save Professional Profile</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Professional Profile</span></button>
       </form>
     </div>
   </div>

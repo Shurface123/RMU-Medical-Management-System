@@ -3,7 +3,7 @@
   <!-- Qualifications -->
   <div class="adm-card" style="margin-bottom:1.5rem;">
     <div class="adm-card-header"><h3><i class="fas fa-graduation-cap"></i> Qualifications</h3>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="document.getElementById('addQualForm').style.display='block'"><i class="fas fa-plus"></i> Add</button>
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('addQualForm').style.display='block'"><span class="btn-text"><i class="fas fa-plus"></i> Add</span></button>
     </div>
     <div style="padding:1.5rem;">
       <!-- Add form (hidden) -->
@@ -18,7 +18,7 @@
             <div class="form-group"><label>Year Awarded</label><input type="number" name="year_awarded" class="form-control" min="1950" max="<?=date('Y')?>"></div>
             <div class="form-group"><label>Certificate File</label><input type="file" name="cert_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div>
           </div>
-          <div style="display:flex;gap:.8rem;"><button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save</button><button type="button" class="adm-btn" onclick="this.closest('div[id]').style.display='none'">Cancel</button></div>
+          <div style="display:flex;gap:.8rem;"><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button><button type="button" class="btn btn-ghost btn" onclick="this.closest('div[id]').style.display='none'"><span class="btn-text">Cancel</span></button></div>
         </form>
       </div>
       <!-- List -->
@@ -31,8 +31,8 @@
             <div style="font-weight:600;font-size:1.3rem;"><?=htmlspecialchars($q['degree_name'])?></div>
             <div style="font-size:1.15rem;color:var(--text-muted);"><?=htmlspecialchars($q['institution'])?> <?=$q['year_awarded']?' &middot; '.$q['year_awarded']:''?></div>
           </div>
-          <?php if(!empty($q['cert_file_path'])):?><a href="/RMU-Medical-Management-System/<?=htmlspecialchars($q['cert_file_path'])?>" target="_blank" class="adm-btn adm-btn-sm" title="Download"><i class="fas fa-download"></i></a><?php endif;?>
-          <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delQual(<?=$q['id']?>,this)" title="Delete"><i class="fas fa-trash"></i></button>
+          <?php if(!empty($q['cert_file_path'])):?><a href="/RMU-Medical-Management-System/<?=htmlspecialchars($q['cert_file_path'])?>" target="_blank" class="btn btn-outline btn-icon btn btn-sm" title="Download"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php endif;?>
+          <button class="btn btn-danger btn-sm" onclick="delQual(<?=$q['id']?>,this)" title="Delete"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
         </div>
       <?php endforeach; endif;?>
       </div>
@@ -42,7 +42,7 @@
   <!-- Certifications -->
   <div class="adm-card">
     <div class="adm-card-header"><h3><i class="fas fa-certificate"></i> Professional Certifications</h3>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="document.getElementById('addCertForm').style.display='block'"><i class="fas fa-plus"></i> Add</button>
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('addCertForm').style.display='block'"><span class="btn-text"><i class="fas fa-plus"></i> Add</span></button>
     </div>
     <div style="padding:1.5rem;">
       <div id="addCertForm" style="display:none;background:var(--surface-2);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;">
@@ -57,7 +57,7 @@
             <div class="form-group"><label>Expiry Date</label><input type="date" name="expiry_date" class="form-control"></div>
           </div>
           <div class="form-group"><label>Certificate File</label><input type="file" name="cert_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div>
-          <div style="display:flex;gap:.8rem;"><button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save</button><button type="button" class="adm-btn" onclick="this.closest('div[id]').style.display='none'">Cancel</button></div>
+          <div style="display:flex;gap:.8rem;"><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save</span></button><button type="button" class="btn btn-ghost btn" onclick="this.closest('div[id]').style.display='none'"><span class="btn-text">Cancel</span></button></div>
         </form>
       </div>
       <div id="certList">
@@ -72,8 +72,8 @@
             <div style="font-weight:600;font-size:1.3rem;"><?=htmlspecialchars($c['cert_name'])?> <?=$cExpired?'<span style="color:var(--danger);font-size:1.1rem;">(EXPIRED)</span>':($cExpWarn?'<span style="color:var(--warning);font-size:1.1rem;">(Expiring Soon)</span>':'')?></div>
             <div style="font-size:1.15rem;color:var(--text-muted);"><?=htmlspecialchars($c['issuing_org'])?> <?=$c['expiry_date']?' &middot; Exp: '.date('d M Y',strtotime($c['expiry_date'])):''?></div>
           </div>
-          <?php if(!empty($c['cert_file_path'])):?><a href="/RMU-Medical-Management-System/<?=htmlspecialchars($c['cert_file_path'])?>" target="_blank" class="adm-btn adm-btn-sm"><i class="fas fa-download"></i></a><?php endif;?>
-          <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="delCert(<?=$c['id']?>,this)"><i class="fas fa-trash"></i></button>
+          <?php if(!empty($c['cert_file_path'])):?><a href="/RMU-Medical-Management-System/<?=htmlspecialchars($c['cert_file_path'])?>" target="_blank" class="btn btn-outline btn-icon btn btn-sm"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php endif;?>
+          <button class="btn btn-danger btn-sm" onclick="delCert(<?=$c['id']?>,this)"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
         </div>
       <?php endforeach; endif;?>
       </div>

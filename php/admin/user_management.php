@@ -448,9 +448,9 @@ $stats = mysqli_fetch_assoc($statsResult);
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-users"></i> User Management</h1>
-            <button class="btn btn-primary" onclick="openModal('createModal')">
+            <button class="btn btn-primary" onclick="openModal('createModal')"><span class="btn-text">
                 <i class="fas fa-plus"></i> Add New User
-            </button>
+            </span></button>
         </div>
         
         <?php if ($message): ?>
@@ -539,16 +539,16 @@ $stats = mysqli_fetch_assoc($statsResult);
                             <td><?php echo $user['login_count']; ?></td>
                             <td><?php echo $user['last_activity'] ? date('M j, Y', strtotime($user['last_activity'])) : 'Never'; ?></td>
                             <td>
-                                <button class="btn btn-primary btn-sm" onclick='editUser(<?php echo json_encode($user); ?>)'>
+                                <button class="btn btn-primary btn-sm" onclick='editUser(<?php echo json_encode($user); ?>)'><span class="btn-text">
                                     <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-warning btn-sm" onclick="openResetPassword(<?php echo $user['id']; ?>)">
+                                </span></button>
+                                <button class="btn btn-warning btn-sm" onclick="openResetPassword(<?php echo $user['id']; ?>)"><span class="btn-text">
                                     <i class="fas fa-key"></i>
-                                </button>
+                                </span></button>
                                 <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                                    <button class="btn btn-danger btn-sm" onclick="deleteUser(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['user_name']); ?>')">
+                                    <button class="btn btn-danger btn-sm" onclick="deleteUser(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['user_name']); ?>')"><span class="btn-text">
                                         <i class="fas fa-trash"></i>
-                                    </button>
+                                    </span></button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -558,9 +558,9 @@ $stats = mysqli_fetch_assoc($statsResult);
         </div>
         
         <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary">
+            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            </span></a>
         </div>
     </div>
     
@@ -569,7 +569,7 @@ $stats = mysqli_fetch_assoc($statsResult);
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Create New User</h2>
-                <button class="close-modal" onclick="closeModal('createModal')">&times;</button>
+                <button class="btn btn-primary close-modal" onclick="closeModal('createModal')"><span class="btn-text">&times;</span></button>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="create_user">
@@ -617,9 +617,9 @@ $stats = mysqli_fetch_assoc($statsResult);
                     </select>
                 </div>
                 
-                <button type="submit" class="btn btn-success" style="width: 100%;">
+                <button type="submit" class="btn btn-success" style="width: 100%;"><span class="btn-text">
                     <i class="fas fa-plus"></i> Create User
-                </button>
+                </span></button>
             </form>
         </div>
     </div>
@@ -629,7 +629,7 @@ $stats = mysqli_fetch_assoc($statsResult);
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Edit User</h2>
-                <button class="close-modal" onclick="closeModal('editModal')">&times;</button>
+                <button class="btn btn-primary close-modal" onclick="closeModal('editModal')"><span class="btn-text">&times;</span></button>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="update_user">
@@ -665,9 +665,9 @@ $stats = mysqli_fetch_assoc($statsResult);
                     </select>
                 </div>
                 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;"><span class="btn-text">
                     <i class="fas fa-save"></i> Update User
-                </button>
+                </span></button>
             </form>
         </div>
     </div>
@@ -677,7 +677,7 @@ $stats = mysqli_fetch_assoc($statsResult);
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Reset Password</h2>
-                <button class="close-modal" onclick="closeModal('resetPasswordModal')">&times;</button>
+                <button class="btn btn-primary close-modal" onclick="closeModal('resetPasswordModal')"><span class="btn-text">&times;</span></button>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="reset_password">
@@ -689,9 +689,9 @@ $stats = mysqli_fetch_assoc($statsResult);
                     <small style="color: #7f8c8d;">Min 8 chars, uppercase, lowercase, number, special char</small>
                 </div>
                 
-                <button type="submit" class="btn btn-warning" style="width: 100%;">
+                <button type="submit" class="btn btn-warning" style="width: 100%;"><span class="btn-text">
                     <i class="fas fa-key"></i> Reset Password
-                </button>
+                </span></button>
             </form>
         </div>
     </div>

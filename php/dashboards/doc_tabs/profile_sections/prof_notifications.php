@@ -47,7 +47,7 @@
             </select>
           </div>
         </div>
-        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;margin-top:1rem;"><i class="fas fa-save"></i> Save Preferences</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Preferences</span></button>
       </form>
     </div>
   </div>

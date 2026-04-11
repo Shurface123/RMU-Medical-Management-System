@@ -63,10 +63,10 @@ if ($qt)
                 <p>Assign trips to drivers and monitor fleet movements in real-time.</p>
             </div>
             <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="adm-btn adm-btn-ghost"><i class="fas fa-car-side"></i> View Fleet</a>
-                <button class="adm-btn adm-btn-danger" onclick="document.getElementById('dispModal').classList.add('active')">
+                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-car-side"></i> View Fleet</span></a>
+                <button class="btn btn-danger" onclick="document.getElementById('dispModal').classList.add('active')"><span class="btn-text">
                     <i class="fas fa-plus"></i> Dispatch Ambulance
-                </button>
+                </span></button>
             </div>
         </div>
 
@@ -116,7 +116,7 @@ endif; ?>
     <div class="adm-modal-content">
         <div class="adm-modal-header" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff;">
             <h3><i class="fas fa-ambulance"></i> Emergency Dispatch</h3>
-            <button class="adm-modal-close" style="background:rgba(255,255,255,0.2);color:#fff;" onclick="document.getElementById('dispModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary adm-modal-close" style="background:rgba(255,255,255,0.2);color:#fff;" onclick="document.getElementById('dispModal').classList.remove('active')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <div class="adm-modal-body">
             <form id="dispatchForm">
@@ -225,10 +225,10 @@ endif; ?>
                 </div>
 
                 <div style="display:flex;gap:1rem;">
-                    <button type="submit" class="adm-btn adm-btn-danger" style="flex:2;padding:1.2rem;" <?php if(empty($drivers)||empty($ambulances)) echo 'disabled'; ?>>
+                    <button type="submit" class="btn btn-danger" style="flex:2;padding:1.2rem;" <?php if(empty($drivers)||empty($ambulances)) echo 'disabled'; ?>><span class="btn-text">
                         <i class="fas fa-paper-plane"></i> EXECUTE DISPATCH
-                    </button>
-                    <button type="button" class="adm-btn adm-btn-ghost" style="flex:1;" onclick="document.getElementById('dispModal').classList.remove('active')">Abort</button>
+                    </span></button>
+                    <button type="button" class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('dispModal').classList.remove('active')"><span class="btn-text">Abort</span></button>
                 </div>
             </form>
         </div>

@@ -80,7 +80,7 @@ $default_view = $settings['default_view'] ?? 'overview';
             </div>
 
             <div style="margin-top:auto; padding-top:2rem; border-top:1px solid var(--border); text-align:right;">
-                <button type="submit" class="adm-btn adm-btn-primary" style="padding:0.9rem 2.5rem;"><i class="fas fa-save"></i> Synchronize Preferences</button>
+                <button type="submit" class="btn btn-primary" style="padding:0.9rem 2.5rem;"><span class="btn-text"><i class="fas fa-save"></i> Synchronize Preferences</span></button>
             </div>
         </form>
     </div>
@@ -121,7 +121,7 @@ $default_view = $settings['default_view'] ?? 'overview';
             </div>
 
             <div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:2rem; text-align:right;">
-                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%; padding:1rem; justify-content:center;"><i class="fas fa-key"></i> Commit Credential Rotation</button>
+                <button type="submit" class="btn btn-primary" style="width:100%; padding:1rem; justify-content:center;"><span class="btn-text"><i class="fas fa-key"></i> Commit Credential Rotation</span></button>
             </div>
         </form>
     </div>

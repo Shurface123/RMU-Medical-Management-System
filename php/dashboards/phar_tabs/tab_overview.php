@@ -60,10 +60,10 @@
 
   <!-- Quick Actions -->
   <div class="quick-actions">
-    <button class="quick-action-btn" onclick="showTab('prescriptions',null)"><i class="fas fa-prescription-bottle-medical" style="color:var(--primary);"></i> Dispense Prescription</button>
-    <button class="quick-action-btn" onclick="openModal('modalAddStock')"><i class="fas fa-plus-circle" style="color:var(--success);"></i> Add Stock</button>
-    <button class="quick-action-btn" onclick="showTab('alerts',null)"><i class="fas fa-bell" style="color:var(--warning);"></i> View Alerts</button>
-    <button class="quick-action-btn" onclick="showTab('reports',null)"><i class="fas fa-file-export" style="color:var(--info);"></i> Generate Report</button>
+    <button class="btn btn-primary quick-action-btn" onclick="showTab('prescriptions',null)"><span class="btn-text"><i class="fas fa-prescription-bottle-medical" style="color:var(--primary);"></i> Dispense Prescription</span></button>
+    <button class="btn btn-primary quick-action-btn" onclick="openModal('modalAddStock')"><span class="btn-text"><i class="fas fa-plus-circle" style="color:var(--success);"></i> Add Stock</span></button>
+    <button class="btn btn-warning btn-icon quick-action-btn" onclick="showTab('alerts',null)"><span class="btn-text"><i class="fas fa-bell" style="color:var(--warning);"></i> View Alerts</span></button>
+    <button class="btn btn-outline btn-icon quick-action-btn" onclick="showTab('reports',null)"><span class="btn-text"><i class="fas fa-file-export" style="color:var(--info);"></i> Generate Report</span></button>
   </div>
 
   <!-- Charts Row -->

@@ -40,8 +40,8 @@
           <td><?=$pt['is_student']?'<span class="adm-badge adm-badge-primary">Student</span>':'<span class="adm-badge adm-badge-info">Non-Student</span>'?></td>
           <td>
             <div class="action-btns">
-              <button onclick='viewPatient(<?=$pj?>)' class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-eye"></i> View</button>
-              <button onclick='openNoteModal(<?=$pt["id"]?>,<?=json_encode($pt["name"])?>)' class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-note-sticky"></i> Note</button>
+              <button onclick='viewPatient(<?=$pj?>)' class="btn-icon btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-eye"></i> View</span></button>
+              <button onclick='openNoteModal(<?=$pt["id"]?>,<?=json_encode($pt["name"])?>)' class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-note-sticky"></i> Note</span></button>
             </div>
           </td>
         </tr>
@@ -57,7 +57,7 @@
   <div class="modal-box wide">
     <div class="modal-header">
       <h3><i class="fas fa-user" style="color:var(--role-accent);"></i> Patient Profile</h3>
-      <button class="modal-close" onclick="closeModal('modalViewPatient')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalViewPatient')"><span class="btn-text">&times;</span></button>
     </div>
     <div id="patientDetail"></div>
   </div>
@@ -68,7 +68,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-note-sticky" style="color:var(--role-accent);"></i> Add Consultation Note</h3>
-      <button class="modal-close" onclick="closeModal('modalAddNote')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="closeModal('modalAddNote')"><span class="btn-text">&times;</span></button>
     </div>
     <p id="notePatientName" style="font-weight:600;font-size:1.4rem;margin-bottom:1.5rem;"></p>
     <div class="form-group"><label>Note Type</label>
@@ -79,7 +79,7 @@
       </select>
     </div>
     <div class="form-group"><label>Note</label><textarea id="noteContent" class="form-control" rows="4" placeholder="Enter your clinical note…"></textarea></div>
-    <button onclick="submitNote()" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Save Note</button>
+    <button onclick="submitNote()" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Note</span></button>
   </div>
 </div>
 
@@ -99,8 +99,8 @@ function viewPatient(p){
     ${p.chronic_conditions?`<div style="background:var(--info-light);border-left:3px solid var(--info);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1rem;"><strong>Chronic Conditions:</strong> ${p.chronic_conditions}</div>`:''}
     ${p.emergency_contact_name?`<div style="background:var(--surface-2);border-radius:8px;padding:1rem 1.2rem;"><strong>Emergency Contact:</strong> ${p.emergency_contact_name}</div>`:''}
     <div style="margin-top:1.5rem;display:flex;gap:.8rem;">
-      <button onclick="closeModal('modalViewPatient');openNoteModal(${p.id},'${p.name}')" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-note-sticky"></i> Add Note</button>
-      <button onclick="closeModal('modalViewPatient');openModal('modalNewRx')" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-prescription-bottle-medical"></i> Prescribe</button>
+      <button onclick="closeModal('modalViewPatient');openNoteModal(${p.id},'${p.name}')" class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-note-sticky"></i> Add Note</span></button>
+      <button onclick="closeModal('modalViewPatient');openModal('modalNewRx')" class="btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-prescription-bottle-medical"></i> Prescribe</span></button>
     </div>
   `;
   openModal('modalViewPatient');

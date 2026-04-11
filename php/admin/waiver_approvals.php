@@ -102,12 +102,12 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                             <td><?php echo htmlspecialchars(substr($p['reason'], 0, 50)); ?>...</td>
                             <td style="text-align:right;">
                                 <div style="display:inline-flex;gap:.5rem;">
-                                    <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveWaiver(<?php echo $p['waiver_id']; ?>)">
+                                    <button class="btn-icon btn btn-success btn-sm" onclick="approveWaiver(<?php echo $p['waiver_id']; ?>)"><span class="btn-text">
                                         <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectWaiver(<?php echo $p['waiver_id']; ?>)">
+                                    </span></button>
+                                    <button class="btn-icon btn btn-danger btn-sm" onclick="rejectWaiver(<?php echo $p['waiver_id']; ?>)"><span class="btn-text">
                                         <i class="fas fa-times"></i> Reject
-                                    </button>
+                                    </span></button>
                                 </div>
                             </td>
                         </tr>

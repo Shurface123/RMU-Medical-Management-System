@@ -61,9 +61,9 @@ include '../includes/_sidebar.php';
                 <h1>Register New Bed</h1>
                 <p>Add a new bed to the facility inventory with ward and type details.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="adm-btn adm-btn-ghost">
+            <a href="/RMU-Medical-Management-System/php/bed/bed.php" class="btn btn-ghost"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Beds
-            </a>
+            </span></a>
         </div>
 
         <?php if ($error): ?>
@@ -155,13 +155,13 @@ include '../includes/_sidebar.php';
                         </div>
                     </div>
                     
-                    <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;margin-bottom:1rem;">
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;margin-bottom:1rem;"><span class="btn-text">
                         <i class="fas fa-save"></i> Add Bed
-                    </button>
+                    </span></button>
                     <a href="/RMU-Medical-Management-System/php/bed/bed.php"
-                       class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;">
+                       class="btn btn-ghost" style="width:100%;justify-content:center;"><span class="btn-text">
                         Cancel
-                    </a>
+                    </span></a>
                 </div>
             </div>
         </form>

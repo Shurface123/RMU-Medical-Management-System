@@ -110,9 +110,9 @@ include '../includes/_sidebar.php';
                 <h1>Add New Doctor</h1>
                 <p>Dashboard &rarr; Doctor Management &rarr; Add Doctor</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="adm-btn adm-btn-ghost">
+            <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="btn btn-ghost"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Doctors
-            </a>
+            </span></a>
         </div>
 
         <?php if ($error): ?>
@@ -244,12 +244,12 @@ include '../includes/_sidebar.php';
                                 <span style="font-size:1.4rem;font-weight:600;color:var(--text-primary);">Available for appointments</span>
                             </label>
 
-                            <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;margin-bottom:1rem;">
+                            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:1rem;"><span class="btn-text">
                                 <i class="fas fa-save"></i> Save Doctor
-                            </button>
-                            <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;">
+                            </span></button>
+                            <a href="/RMU-Medical-Management-System/php/Doctor/doctor.php" class="btn btn-ghost" style="width:100%;justify-content:center;"><span class="btn-text">
                                 Cancel
-                            </a>
+                            </span></a>
                         </div>
                     </div>
                 </div>

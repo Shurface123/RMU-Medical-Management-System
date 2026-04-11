@@ -72,9 +72,9 @@ include '../includes/_sidebar.php';
                 <h1>Add New Diagnostic Test</h1>
                 <p>Dashboard &rarr; Lab Management &rarr; Add Test</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/test/test.php" class="adm-btn adm-btn-ghost">
+            <a href="/RMU-Medical-Management-System/php/test/test.php" class="btn btn-ghost"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Tests
-            </a>
+            </span></a>
         </div>
 
         <?php if ($error): ?>
@@ -159,13 +159,13 @@ include '../includes/_sidebar.php';
                         </div>
                     </div>
 
-                    <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;margin-bottom:1rem;">
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.4rem;font-size:1.5rem;margin-bottom:1rem;"><span class="btn-text">
                         <i class="fas fa-save"></i> Add Test
-                    </button>
+                    </span></button>
                     <a href="/RMU-Medical-Management-System/php/test/test.php"
-                       class="adm-btn adm-btn-ghost" style="width:100%;justify-content:center;">
+                       class="btn btn-ghost" style="width:100%;justify-content:center;"><span class="btn-text">
                         Cancel
-                    </a>
+                    </span></a>
                 </div>
             </div>
         </form>

@@ -22,7 +22,7 @@ function genderBadge($g) {
 <div class="sec-header">
     <h2 style="font-size: 1.8rem; font-weight: 700;"><i class="fas fa-sliders-h"></i> Reference Range Management</h2>
     <div style="display:flex; gap:1rem;">
-        <button class="adm-btn adm-btn-success" onclick="newRangeModal()"><i class="fas fa-plus-circle"></i> Add Reference Range</button>
+        <button class="btn btn-success" onclick="newRangeModal()"><span class="btn-text"><i class="fas fa-plus-circle"></i> Add Reference Range</span></button>
     </div>
 </div>
 
@@ -58,7 +58,7 @@ function genderBadge($g) {
                     <td><span style="font-weight: 700; color: var(--danger);"><?= e($row['critical_high']) ?: '-' ?></span></td>
                     <td><span style="font-weight: 600; color: var(--text-secondary);"><?= e($row['unit']) ?></span></td>
                     <td>
-                        <button class="adm-btn adm-btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick="editRange(<?= $row['id'] ?>)" title="Edit Range"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-primary btn btn-sm" style="background:var(--surface-2); color:var(--text-primary);" onclick="editRange(<?= $row['id'] ?>)" title="Edit Range"><span class="btn-text"><i class="fas fa-edit"></i> Edit</span></button>
                     </td>
                 </tr>
                 <?php endwhile; ?>
@@ -144,8 +144,8 @@ function genderBadge($g) {
 
             </div>
             <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-primary" onclick="saveRange()"><i class="fas fa-save"></i> Save Configuration</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal"><span class="btn-text">Cancel</span></button>
+                <button type="button" class="btn btn-primary" onclick="saveRange()"><span class="btn-text"><i class="fas fa-save"></i> Save Configuration</span></button>
             </div>
         </div>
     </div>

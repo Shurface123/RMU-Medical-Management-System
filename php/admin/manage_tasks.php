@@ -63,9 +63,9 @@ $completed_tasks = array_filter($tasks, fn($t) => $t['status'] === 'completed');
                 <h1>Current Task Board</h1>
                 <p>Assign and track operational and clinical tasks across all hospital roles.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="document.getElementById('taskModal').classList.add('active')">
+            <button class="btn btn-primary" onclick="document.getElementById('taskModal').classList.add('active')"><span class="btn-text">
                 <i class="fas fa-plus"></i> Assign New Task
-            </button>
+            </span></button>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
@@ -156,7 +156,7 @@ endif; ?>
     <div class="adm-modal-content">
         <div class="adm-modal-header">
             <h3><i class="fas fa-tasks"></i> Assign New Staff Task</h3>
-            <button class="adm-modal-close" onclick="document.getElementById('taskModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary adm-modal-close" onclick="document.getElementById('taskModal').classList.remove('active')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <div class="adm-modal-body">
             <form id="assignTaskForm">
@@ -215,7 +215,7 @@ endforeach; ?>
                         <input type="time" name="due_time" class="adm-search-input" required>
                     </div>
                 </div>
-                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;"><i class="fas fa-paper-plane"></i> Dispatch Task</button>
+                <button type="submit" class="btn btn-primary" style="width:100%;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Dispatch Task</span></button>
             </form>
         </div>
     </div>

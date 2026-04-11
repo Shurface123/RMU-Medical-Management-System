@@ -142,9 +142,9 @@ body::before{content:'';position:absolute;width:200%;height:200%;background:radi
                 <i class="fas fa-envelope fi"></i>
             </div>
         </div>
-        <button type="submit" class="btn-login" id="fpBtn">
+        <button type="submit" class="btn btn-primary btn-login" id="fpBtn"><span class="btn-text">
             <i class="fas fa-paper-plane"></i> Send Reset Link
-        </button>
+        </span></button>
     </form>
     <div class="login-footer">
         <p class="back-to-login"><a href="index.php"><i class="fas fa-arrow-left"></i> Back to Login</a></p>

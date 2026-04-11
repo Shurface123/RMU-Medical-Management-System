@@ -20,12 +20,12 @@
     </div>
   </div>
   <div style="display:flex;gap:.6rem;flex-wrap:wrap;position:relative;z-index:1;">
-    <button onclick="openModal('modalCreateInvoice')" class="adm-btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);">
+    <button onclick="openModal('modalCreateInvoice')" class="btn btn-primary btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);"><span class="btn-text">
       <i class="fas fa-file-plus"></i> Create Invoice
-    </button>
-    <button onclick="openModal('modalRecordPayment')" class="adm-btn" style="background:rgba(212,160,23,.4);color:#fff;border:1px solid rgba(212,160,23,.5);">
+    </span></button>
+    <button onclick="openModal('modalRecordPayment')" class="btn btn-primary btn" style="background:rgba(212,160,23,.4);color:#fff;border:1px solid rgba(212,160,23,.5);"><span class="btn-text">
       <i class="fas fa-money-bill-wave"></i> Record Payment
-    </button>
+    </span></button>
   </div>
 </div>
 
@@ -90,18 +90,18 @@
 
 <!-- ── Quick Actions ──────────────────────────────────────── -->
 <div class="fin-quick-actions">
-  <button onclick="openModal('modalCreateInvoice')" class="fin-action-tile">
+  <button onclick="openModal('modalCreateInvoice')" class="btn btn-ghost fin-action-tile"><span class="btn-text">
     <i class="fas fa-file-plus" style="background:linear-gradient(135deg,#1a9e6e,#27AE60);"></i>Create Invoice
-  </button>
-  <button onclick="openModal('modalRecordPayment')" class="fin-action-tile">
+  </span></button>
+  <button onclick="openModal('modalRecordPayment')" class="btn btn-ghost fin-action-tile"><span class="btn-text">
     <i class="fas fa-money-bill-wave" style="background:linear-gradient(135deg,#d4a017,#E67E22);"></i>Record Payment
-  </button>
-  <button onclick="showTab('insurance',document.querySelector('.adm-nav-item[onclick*=insurance]'))" class="fin-action-tile">
+  </span></button>
+  <button onclick="showTab('insurance',document.querySelector('.adm-nav-item[onclick*=insurance]'))" class="btn btn-ghost fin-action-tile"><span class="btn-text">
     <i class="fas fa-shield-halved" style="background:linear-gradient(135deg,#7D3C98,#9B59B6);"></i>Process Claim
-  </button>
-  <button onclick="showTab('reports',document.querySelector('.adm-nav-item[onclick*=reports]'))" class="fin-action-tile">
+  </span></button>
+  <button onclick="showTab('reports',document.querySelector('.adm-nav-item[onclick*=reports]'))" class="btn btn-ghost fin-action-tile"><span class="btn-text">
     <i class="fas fa-file-chart-column" style="background:linear-gradient(135deg,#2F80ED,#56CCF2);"></i>Generate Report
-  </button>
+  </span></button>
   <a href="https://dashboard.paystack.com" target="_blank" class="fin-action-tile">
     <i class="fas fa-arrow-up-right-from-square" style="background:linear-gradient(135deg,#1a9e6e,#0d3b2e);"></i>Paystack Dashboard
   </a>
@@ -131,7 +131,7 @@
       <div style="font-size:1.15rem;color:var(--text-secondary);"><?=htmlspecialchars($ov['invoice_number'])?> &middot; Due <?=date('d M Y',strtotime($ov['due_date']))?></div>
     </div>
     <div style="font-weight:700;color:var(--danger);font-size:1.4rem;">GHS <?=number_format($ov['balance_due'],2)?></div>
-    <button onclick="viewInvoice('<?=htmlspecialchars($ov['invoice_number'])?>')" class="adm-btn adm-btn-sm adm-btn-danger">View</button>
+    <button onclick="viewInvoice('<?=htmlspecialchars($ov['invoice_number'])?>')" class="btn-icon btn btn-sm btn-danger"><span class="btn-text">View</span></button>
   </div>
   <?php endforeach; ?>
 </div>
@@ -141,7 +141,7 @@
 <div class="adm-card">
   <div class="adm-card-header">
     <h3><i class="fas fa-receipt"></i>Recent Transactions</h3>
-    <button onclick="showTab('payments',document.querySelector('.adm-nav-item[onclick*=payments]'))" class="adm-btn adm-btn-ghost adm-btn-sm">View All</button>
+    <button onclick="showTab('payments',document.querySelector('.adm-nav-item[onclick*=payments]'))" class="btn-icon btn btn-ghost btn-sm"><span class="btn-text">View All</span></button>
   </div>
   <div class="adm-table-wrap">
     <table class="adm-table">

@@ -3,8 +3,8 @@
     <div class="settings-card-header">
         <h2 class="settings-card-title"><i class="fas fa-users-cog"></i> User Accounts & Role Permissions</h2>
         <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-sm btn-outline-primary" onclick="openModal('importModal')"><i class="fas fa-file-import"></i> CSV Import</button>
-            <button class="btn btn-sm btn-primary" onclick="openModal('userModal')"><i class="fas fa-user-plus"></i> Create User</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="openModal('importModal')"><span class="btn-text"><i class="fas fa-file-import"></i> CSV Import</span></button>
+            <button class="btn btn-sm btn-primary" onclick="openModal('userModal')"><span class="btn-text"><i class="fas fa-user-plus"></i> Create User</span></button>
         </div>
     </div>
 
@@ -55,8 +55,8 @@
                     </td>
                     <td style="font-size: 0.85rem;"><?= $u['last_active_at'] ? date('d M, H:i', strtotime($u['last_active_at'])) : 'Never' ?></td>
                     <td>
-                        <button class="btn btn-sm btn-icon btn-outline-secondary"><i class="fas fa-key"></i></button>
-                        <button class="btn btn-sm btn-icon btn-outline-danger"><i class="fas fa-user-slash"></i></button>
+                        <button class="btn btn-sm btn-icon btn-outline-secondary"><span class="btn-text"><i class="fas fa-key"></i></span></button>
+                        <button class="btn btn-sm btn-icon btn-outline-danger"><span class="btn-text"><i class="fas fa-user-slash"></i></span></button>
                     </td>
                 </tr>
                 <?php endwhile; ?>
@@ -110,8 +110,8 @@
                 <small class="text-muted">User will be forced to change password on first login.</small>
             </div>
             <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top:2rem;">
-                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('userModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create Account</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('userModal')"><span class="btn-text">Cancel</span></button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text">Create Account</span></button>
             </div>
         </form>
     </div>
@@ -127,8 +127,8 @@
                 <input type="file" name="csv_file" class="form-control" accept=".csv" required>
             </div>
             <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top:2rem;">
-                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('importModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Start Import</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('importModal')"><span class="btn-text">Cancel</span></button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text">Start Import</span></button>
             </div>
         </form>
     </div>
@@ -189,10 +189,10 @@
 </div>
 
 <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-    <button class="btn btn-outline-secondary" onclick="location.reload()">Reset to Default</button>
-    <button class="btn btn-primary" style="padding: 0.8rem 2.5rem;" onclick="alert('Permission matrix updated successfully!')">
+    <button class="btn btn-outline-secondary" onclick="location.reload()"><span class="btn-text">Reset to Default</span></button>
+    <button class="btn btn-primary" style="padding: 0.8rem 2.5rem;" onclick="alert('Permission matrix updated successfully!')"><span class="btn-text">
         <i class="fas fa-save"></i> Save Global Permissions
-    </button>
+    </span></button>
 </div>
 
 <script>

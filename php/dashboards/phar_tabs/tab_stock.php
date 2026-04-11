@@ -6,18 +6,18 @@
   <div class="sec-header">
     <h2><i class="fas fa-boxes-stacked"></i> Stock Management</h2>
     <div style="display:flex;gap:.8rem;flex-wrap:wrap;">
-      <button class="adm-btn adm-btn-success adm-btn-sm" onclick="openModal('modalAddStock')"><i class="fas fa-plus"></i> Receive Stock</button>
-      <button class="adm-btn adm-btn-sm" onclick="openModal('modalAdjustStock')" style="background:var(--warning-light);color:var(--warning);border-color:var(--warning);"><i class="fas fa-sliders"></i> Adjust Stock</button>
-      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="openModal('modalCreatePO')"><i class="fas fa-file-invoice"></i> New Purchase Order</button>
-      <button class="adm-btn adm-btn-sm" onclick="openModal('modalAddSupplier')" style="background:var(--info-light);color:var(--info);border-color:var(--info);"><i class="fas fa-truck"></i> Add Supplier</button>
+      <button class="btn btn-success btn-sm" onclick="openModal('modalAddStock')"><span class="btn-text"><i class="fas fa-plus"></i> Receive Stock</span></button>
+      <button class="btn btn-primary btn btn-sm" onclick="openModal('modalAdjustStock')" style="background:var(--warning-light);color:var(--warning);border-color:var(--warning);"><span class="btn-text"><i class="fas fa-sliders"></i> Adjust Stock</span></button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modalCreatePO')"><span class="btn-text"><i class="fas fa-file-invoice"></i> New Purchase Order</span></button>
+      <button class="btn btn-primary btn btn-sm" onclick="openModal('modalAddSupplier')" style="background:var(--info-light);color:var(--info);border-color:var(--info);"><span class="btn-text"><i class="fas fa-truck"></i> Add Supplier</span></button>
     </div>
   </div>
 
   <!-- Sub-tabs within Stock Management -->
   <div class="filter-tabs" id="stockSubTabs">
-    <button class="ftab active" onclick="showStockSub('transactions',this)">Transaction History</button>
-    <button class="ftab" onclick="showStockSub('orders',this)">Purchase Orders (<?=$stats['pending_orders']?>)</button>
-    <button class="ftab" onclick="showStockSub('suppliers',this)">Suppliers (<?=count($suppliers)?>)</button>
+    <button class="btn btn-primary ftab active" onclick="showStockSub('transactions',this)"><span class="btn-text">Transaction History</span></button>
+    <button class="btn btn-warning btn-icon ftab" onclick="showStockSub('orders',this)"><span class="btn-text">Purchase Orders (<?=$stats['pending_orders']?>)</span></button>
+    <button class="btn btn-primary ftab" onclick="showStockSub('suppliers',this)"><span class="btn-text">Suppliers (<?=count($suppliers)?>)</span></button>
   </div>
 
   <!-- Stock Transactions -->
@@ -78,10 +78,10 @@
             <td>
               <div class="action-btns">
                 <?php if($po['status']==='draft'||$po['status']==='sent'):?>
-                <button class="adm-btn adm-btn-success adm-btn-sm" onclick="receiveOrder(<?=$po['id']?>)" title="Mark Received"><i class="fas fa-check"></i></button>
+                <button class="btn btn-success btn-sm" onclick="receiveOrder(<?=$po['id']?>)" title="Mark Received"><span class="btn-text"><i class="fas fa-check"></i></span></button>
                 <?php endif;?>
                 <?php if($po['status']==='draft'):?>
-                <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="cancelPO(<?=$po['id']?>)" title="Cancel"><i class="fas fa-times"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="cancelPO(<?=$po['id']?>)" title="Cancel"><span class="btn-text"><i class="fas fa-times"></i></span></button>
                 <?php endif;?>
               </div>
             </td>
@@ -119,8 +119,8 @@
             <td><span class="adm-badge adm-badge-<?=$sp['is_active']?'success':'danger'?>"><?=$sp['is_active']?'Active':'Inactive'?></span></td>
             <td>
               <div class="action-btns">
-                <button class="adm-btn adm-btn-sm" onclick="editSupplier(<?=$sp['supplier_id']?>)" style="background:var(--warning-light);color:var(--warning);border-color:var(--warning);"><i class="fas fa-edit"></i></button>
-                <button class="adm-btn adm-btn-sm" onclick="toggleSupplier(<?=$sp['supplier_id']?>,<?=$sp['is_active']?>)" style="background:var(--<?=$sp['is_active']?'danger':'success'?>-light);color:var(--<?=$sp['is_active']?'danger':'success'?>);border-color:var(--<?=$sp['is_active']?'danger':'success'?>);"><i class="fas fa-<?=$sp['is_active']?'ban':'check'?>"></i></button>
+                <button class="btn btn-primary btn btn-sm" onclick="editSupplier(<?=$sp['supplier_id']?>)" style="background:var(--warning-light);color:var(--warning);border-color:var(--warning);"><span class="btn-text"><i class="fas fa-edit"></i></span></button>
+                <button class="btn btn-primary btn btn-sm" onclick="toggleSupplier(<?=$sp['supplier_id']?>,<?=$sp['is_active']?>)" style="background:var(--<?=$sp['is_active']?'danger':'success'?>-light);color:var(--<?=$sp['is_active']?'danger':'success'?>);border-color:var(--<?=$sp['is_active']?'danger':'success'?>);"><span class="btn-text"><i class="fas fa-<?=$sp['is_active']?'ban':'check'?>"></i></span></button>
               </div>
             </td>
           </tr>
@@ -135,7 +135,7 @@
 <!-- ══ Receive Stock Modal ══ -->
 <div class="modal-bg" id="modalAddStock">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-plus-circle" style="color:var(--success);"></i> Receive Stock</h3><button class="modal-close" onclick="closeModal('modalAddStock')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-plus-circle" style="color:var(--success);"></i> Receive Stock</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalAddStock')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="submitReceiveStock(event)">
       <div class="form-group"><label>Medicine *</label>
         <select class="form-control" name="medicine_id" required>
@@ -157,7 +157,7 @@
         <div class="form-group"><label>Expiry Date</label><input type="date" class="form-control" name="expiry_date"></div>
       </div>
       <div class="form-group"><label>Notes</label><textarea class="form-control" name="notes" rows="2" placeholder="Purchase order ref, invoice #, etc."></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-success" style="width:100%;justify-content:center;"><i class="fas fa-plus"></i> Add Stock</button>
+      <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-plus"></i> Add Stock</span></button>
     </form>
   </div>
 </div>
@@ -165,7 +165,7 @@
 <!-- ══ Adjust Stock Modal ══ -->
 <div class="modal-bg" id="modalAdjustStock">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-sliders" style="color:var(--warning);"></i> Adjust Stock</h3><button class="modal-close" onclick="closeModal('modalAdjustStock')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-sliders" style="color:var(--warning);"></i> Adjust Stock</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalAdjustStock')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="submitAdjustStock(event)">
       <div class="form-group"><label>Medicine *</label>
         <select class="form-control" name="medicine_id" required>
@@ -185,7 +185,7 @@
         <div class="form-group"><label>Quantity *</label><input type="number" class="form-control" name="quantity" min="1" required></div>
       </div>
       <div class="form-group"><label>Reason *</label><textarea class="form-control" name="notes" rows="2" required placeholder="Mandatory reason for adjustment"></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Save Adjustment</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Adjustment</span></button>
     </form>
   </div>
 </div>
@@ -193,7 +193,7 @@
 <!-- ══ Create Purchase Order Modal ══ -->
 <div class="modal-bg" id="modalCreatePO">
   <div class="modal-box wide">
-    <div class="modal-header"><h3><i class="fas fa-file-invoice" style="color:var(--primary);"></i> New Purchase Order</h3><button class="modal-close" onclick="closeModal('modalCreatePO')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-file-invoice" style="color:var(--primary);"></i> New Purchase Order</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalCreatePO')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="submitPurchaseOrder(event)">
       <div class="form-row">
         <div class="form-group"><label>Supplier *</label>
@@ -215,7 +215,7 @@
         <div class="form-group"><label>Unit Price (GH₵)</label><input type="number" class="form-control" name="unit_price" step="0.01" min="0" required></div>
       </div>
       <div class="form-group"><label>Notes</label><textarea class="form-control" name="notes" rows="2"></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Create Order</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Create Order</span></button>
     </form>
   </div>
 </div>
@@ -223,7 +223,7 @@
 <!-- ══ Add Supplier Modal ══ -->
 <div class="modal-bg" id="modalAddSupplier">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-truck" style="color:var(--info);"></i> Add Supplier</h3><button class="modal-close" onclick="closeModal('modalAddSupplier')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-truck" style="color:var(--info);"></i> Add Supplier</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalAddSupplier')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="submitAddSupplier(event)">
       <div class="form-group"><label>Supplier Name *</label><input class="form-control" name="supplier_name" required></div>
       <div class="form-row">
@@ -236,7 +236,7 @@
         <div class="form-group"><label>Supply Categories</label><input class="form-control" name="supply_categories" placeholder="Antibiotics, Analgesics…"></div>
         <div class="form-group"><label>Payment Terms</label><input class="form-control" name="payment_terms" value="Net 30"></div>
       </div>
-      <button type="submit" class="adm-btn adm-btn-success" style="width:100%;justify-content:center;"><i class="fas fa-plus"></i> Add Supplier</button>
+      <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-plus"></i> Add Supplier</span></button>
     </form>
   </div>
 </div>

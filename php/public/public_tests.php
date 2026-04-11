@@ -108,9 +108,9 @@ require_once '../db_conn.php';
             </div>
             <div class="filter-buttons">
                 <?php foreach ($categories as $key => $val): ?>
-                <button class="filter-btn <?php echo $key==='all'?'active':''; ?>" onclick="filterTests(this, '<?php echo htmlspecialchars($key); ?>')">
+                <button class="btn btn-primary filter-btn <?php echo $key==='all'?'active':''; ?>" onclick="filterTests(this, '<?php echo htmlspecialchars($key); ?>')"><span class="btn-text">
                     <?php echo htmlspecialchars($val); ?>
-                </button>
+                </span></button>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -189,9 +189,9 @@ require_once '../db_conn.php';
             </div>
             
             <div style="text-align: center; margin-top: 4rem;">
-                <a href="/RMU-Medical-Management-System/php/index.php" class="lp-btn lp-btn-primary">
+                <a href="/RMU-Medical-Management-System/php/index.php" class="btn-icon lp-btn lp-btn-primary"><span class="btn-text">
                     <i class="fas fa-sign-in-alt"></i> Login to Book a Test
-                </a>
+                </span></a>
             </div>
         </div>
     </section>

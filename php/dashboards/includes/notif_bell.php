@@ -25,10 +25,10 @@ if (in_array($notif_part, ['bell','all'])):
   $notif_display    = $notif_unread > 0 ? 'flex' : 'none';
   $notif_label      = $notif_unread > 99 ? '99+' : $notif_unread;
 ?>
-<button id="rmuBellBtn" class="<?=$notif_class?>" title="Notifications" aria-label="Notifications">
+<button id="rmuBellBtn" class="btn btn-primary <?=$notif_class?>" title="Notifications" aria-label="Notifications"><span class="btn-text">
   <i class="fas fa-bell"></i>
   <span id="rmuBellCount" style="display:<?=$notif_display?>"><?=$notif_label?></span>
-</button>
+</span></button>
 <?php endif;
 
 if (in_array($notif_part, ['scripts','all'])): ?>

@@ -53,9 +53,9 @@ if ($q) {
                 <i class="fas fa-hospital-alt text-primary"></i>
                 <span style="font-size:1.2rem; font-weight:600; color:var(--text-secondary);">Active Ward: <strong style="color:var(--text-primary);"><?= e($ward_assigned) ?></strong></span>
             </div>
-            <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="location.reload();" style="border-radius:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="location.reload();" style="border-radius:12px;"><span class="btn-text">
                 <i class="fas fa-sync-alt"></i>
-            </button>
+            </span></button>
         </div>
     </div>
 
@@ -136,12 +136,12 @@ if ($q) {
                                 </td>
                                 <td style="text-align:right;">
                                     <div style="display:flex; gap:.6rem; justify-content:flex-end;">
-                                        <button class="adm-btn adm-btn-primary" onclick="openVitalsModal(<?= $p['patient_pk'] ?>, '<?= e(addslashes($p['patient_name'])) ?>', '<?= e($p['patient_id']) ?>')" style="padding:.6rem 1.2rem; border-radius:10px; font-weight:700;">
+                                        <button class="btn btn-primary" onclick="openVitalsModal(<?= $p['patient_pk'] ?>, '<?= e(addslashes($p['patient_name'])) ?>', '<?= e($p['patient_id']) ?>')" style="padding:.6rem 1.2rem; border-radius:10px; font-weight:700;"><span class="btn-text">
                                             <i class="fas fa-file-medical"></i> Log
-                                        </button>
-                                        <button class="adm-btn adm-btn-ghost" onclick="viewVitalsHistory(<?= $p['patient_pk'] ?>)" style="padding:.6rem 1rem; border-radius:10px;">
+                                        </span></button>
+                                        <button class="btn btn-ghost" onclick="viewVitalsHistory(<?= $p['patient_pk'] ?>)" style="padding:.6rem 1rem; border-radius:10px;"><span class="btn-text">
                                             <i class="fas fa-history"></i>
-                                        </button>
+                                        </span></button>
                                     </div>
                                 </td>
                             </tr>
@@ -160,7 +160,7 @@ if ($q) {
     <div class="modal-box" style="max-width:720px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--primary); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-heartbeat" style="margin-right:.8rem;"></i> Vital Signs Entry</h3>
-            <button class="modal-close" onclick="closeVitalsModal()" type="button" style="color:#fff; opacity:0.8;">×</button>
+            <button class="btn btn-primary modal-close" onclick="closeVitalsModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
         </div>
 
         <div style="padding:2.5rem;">
@@ -248,10 +248,10 @@ if ($q) {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-                    <button type="button" class="adm-btn adm-btn-ghost" onclick="closeVitalsModal()" style="font-weight:600;">Cancel</button>
-                    <button type="submit" class="adm-btn adm-btn-primary" id="btnSaveVitals" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);">
+                    <button type="button" class="btn btn-ghost" onclick="closeVitalsModal()" style="font-weight:600;"><span class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveVitals" style="padding:.8rem 2.5rem; font-weight:700; border-radius:12px; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);"><span class="btn-text">
                         <i class="fas fa-check-circle"></i> Authenticate &amp; Save
-                    </button>
+                    </span></button>
                 </div>
             </form>
         </div>

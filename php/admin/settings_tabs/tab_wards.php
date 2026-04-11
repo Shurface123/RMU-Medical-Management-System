@@ -2,7 +2,7 @@
 <div class="settings-card">
     <div class="settings-card-header">
         <h2 class="settings-card-title"><i class="fas fa-procedures"></i> Department & Ward Configuration</h2>
-        <button class="btn btn-sm btn-primary" onclick="openModal('deptModal')"><i class="fas fa-plus"></i> New Department</button>
+        <button class="btn btn-sm btn-primary" onclick="openModal('deptModal')"><span class="btn-text"><i class="fas fa-plus"></i> New Department</span></button>
     </div>
 
     <!-- Departments List -->
@@ -23,8 +23,8 @@
             </div>
             <p style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-secondary);"><?= htmlspecialchars($d['description'] ?? 'No description.') ?></p>
             <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-sm btn-outline-secondary">Edit</button>
-                <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('ward_dept_id').value='<?= $d['id'] ?>'; openModal('wardModal');">Add Ward</button>
+                <button class="btn btn-sm btn-outline-secondary"><span class="btn-text">Edit</span></button>
+                <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('ward_dept_id').value='<?= $d['id'] ?>'; openModal('wardModal');"><span class="btn-text">Add Ward</span></button>
             </div>
         </div>
         <?php endwhile; ?>
@@ -77,8 +77,8 @@
                 <textarea name="description" class="form-control"></textarea>
             </div>
             <div style="display:flex; gap:1rem; justify-content:flex-end;">
-                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('deptModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('deptModal')"><span class="btn-text">Cancel</span></button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text">Create</span></button>
             </div>
         </form>
     </div>
@@ -98,8 +98,8 @@
                 <input type="number" name="capacity" class="form-control" min="1" required>
             </div>
             <div style="display:flex; gap:1rem; justify-content:flex-end;">
-                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('wardModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Add Ward</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('wardModal')"><span class="btn-text">Cancel</span></button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text">Add Ward</span></button>
             </div>
         </form>
     </div>

@@ -173,6 +173,6 @@ if($format === 'csv'){
         </div>
     </div>
 
-    <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
+    <button class="btn btn-outline btn-icon print-btn" onclick="window.print()"><span class="btn-text">🖨️ Print Report</span></button>
 </body>
 </html>

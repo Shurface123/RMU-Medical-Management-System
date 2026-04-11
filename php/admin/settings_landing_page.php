@@ -516,9 +516,9 @@ $counts = $tables_ok ? [
       <a href="/RMU-Medical-Management-System/html/index.html" target="_blank" class="la-preview-link">
         <i class="fas fa-external-link-alt"></i> Preview Site
       </a>
-      <a href="/RMU-Medical-Management-System/php/admin/settings_health_messages.php" class="la-btn la-btn-outline">
+      <a href="/RMU-Medical-Management-System/php/admin/settings_health_messages.php" class="la-btn la-btn-outline"><span class="btn-text">
         <i class="fas fa-arrow-left"></i> Back to Settings
-      </a>
+      </span></a>
     </div>
   </div>
 
@@ -530,9 +530,9 @@ $counts = $tables_ok ? [
       <strong>Database tables missing!</strong> The following tables need to be created first by running the migration script:
       <code style="font-size:.82rem"><?= implode(', ', $missing) ?></code>
       <br>
-      <a href="/RMU-Medical-Management-System/run_landing_migration.php" class="la-btn la-btn-danger" style="margin-top:.8rem">
+      <a href="/RMU-Medical-Management-System/run_landing_migration.php" class="la-btn la-btn-danger" style="margin-top:.8rem"><span class="btn-text">
         <i class="fas fa-database"></i> Run Migration Now
-      </a>
+      </span></a>
     </div>
   </div>
   <?php else: ?>
@@ -586,45 +586,45 @@ $counts = $tables_ok ? [
 
     <!-- Tab Navigation -->
     <div class="la-tabs-nav" id="laTabNav">
-      <button class="la-tab-btn" data-tab="general">
+      <button class="btn btn-primary la-tab-btn" data-tab="general"><span class="btn-text">
         <i class="fas fa-sliders"></i> General
-      </button>
-      <button class="la-tab-btn" data-tab="stats">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="stats"><span class="btn-text">
         <i class="fas fa-chart-bar"></i> Stats
-      </button>
-      <button class="la-tab-btn" data-tab="announcements">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="announcements"><span class="btn-text">
         <i class="fas fa-bullhorn"></i> Announcements
-      </button>
-      <button class="la-tab-btn" data-tab="services">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="services"><span class="btn-text">
         <i class="fas fa-stethoscope"></i> Services
-      </button>
-      <button class="la-tab-btn" data-tab="faq">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="faq"><span class="btn-text">
         <i class="fas fa-circle-question"></i> FAQ
-      </button>
-      <button class="la-tab-btn" data-tab="gallery">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="gallery"><span class="btn-text">
         <i class="fas fa-images"></i> Gallery
-      </button>
-      <button class="la-tab-btn" data-tab="testimonials">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="testimonials"><span class="btn-text">
         <i class="fas fa-star"></i> Testimonials
-      </button>
-      <button class="la-tab-btn" data-tab="team">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="team"><span class="btn-text">
         <i class="fas fa-users"></i> Team
-      </button>
-      <button class="la-tab-btn" data-tab="director">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="director"><span class="btn-text">
         <i class="fas fa-user-tie"></i> Director
-      </button>
-      <button class="la-tab-btn" data-tab="chatbot">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="chatbot"><span class="btn-text">
         <i class="fas fa-robot"></i> Chatbot KB
-      </button>
-      <button class="la-tab-btn" data-tab="logs">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="logs"><span class="btn-text">
         <i class="fas fa-comments"></i> Chat Logs
-      </button>
-      <button class="la-tab-btn" data-tab="bookings">
+      </span></button>
+      <button class="btn btn-primary btn-lg btn-icon la-tab-btn" data-tab="bookings"><span class="btn-text">
         <i class="fas fa-calendar-check"></i> Bookings
-      </button>
-      <button class="la-tab-btn" data-tab="config">
+      </span></button>
+      <button class="btn btn-primary la-tab-btn" data-tab="config"><span class="btn-text">
         <i class="fas fa-cog"></i> Config
-      </button>
+      </span></button>
     </div>
 
     <!-- Tab Panels -->
@@ -694,14 +694,14 @@ $counts = $tables_ok ? [
   <div class="la-modal">
     <div class="la-modal-header">
       <h3 id="laModalTitle">Edit</h3>
-      <button class="la-modal-close" id="laModalClose"><i class="fas fa-times"></i></button>
+      <button class="btn btn-primary la-modal-close" id="laModalClose"><span class="btn-text"><i class="fas fa-times"></i></span></button>
     </div>
     <div class="la-modal-body" id="laModalBody"></div>
     <div class="la-modal-footer">
-      <button class="la-btn la-btn-outline" id="laModalCancelBtn">Cancel</button>
-      <button class="la-btn la-btn-primary" id="laModalSaveBtn">
+      <button class="la-btn la-btn-outline" id="laModalCancelBtn"><span class="btn-text">Cancel</span></button>
+      <button class="la-btn la-btn-primary" id="laModalSaveBtn"><span class="btn-text">
         <i class="fas fa-save"></i> Save
-      </button>
+      </span></button>
     </div>
   </div>
 </div>

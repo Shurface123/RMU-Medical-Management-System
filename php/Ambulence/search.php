@@ -131,7 +131,7 @@
                 <h2>MANAGE <b>AMBULANCE</b></h2>
             </div>
             <div style="margin-left: 80%; margin-top: 3%;">
-                <button><a href="/php/Ambulence/add-ambulence.php">ADD AMBULANCE</a></button>
+                <button class="btn btn-primary"><span class="btn-text"><a href="/php/Ambulence/add-ambulence.php">ADD AMBULANCE</a></span></button>
             </div>
         </div>
     </div>
@@ -175,9 +175,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['search'])) {
                             <td><?php echo htmlspecialchars($row['driver_name'] ?? 'Unassigned'); ?></td>
                             <td><?php echo htmlspecialchars($row['status']); ?></td>
                             <td style="width: 160px;">
-                                <button><a href="/php/Ambulence/update.php?id=<?php echo $row['id']; ?>"><b>UPDATE</b></a></button>
-                                <button><a href="/php/Ambulence/Delete.php?id=<?php echo $row['id']; ?>"
-                                    onclick="return confirm('Delete this ambulance?');"><b>DELETE</b></a></button>
+                                <button class="btn btn-primary"><span class="btn-text"><a href="/php/Ambulence/update.php?id=<?php echo $row['id']; ?>"><b>UPDATE</b></a></span></button>
+                                <button class="btn btn-success btn-icon"><span class="btn-text"><a href="/php/Ambulence/Delete.php?id=<?php echo $row['id']; ?>"
+                                    onclick="return confirm('Delete this ambulance?');"><b>DELETE</b></a></span></button>
                             </td>
                         </tr>
                     <?php

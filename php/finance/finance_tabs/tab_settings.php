@@ -20,7 +20,7 @@ $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').
 <div class="adm-card" style="grid-column:1/-1;">
   <div class="adm-card-header">
     <h3><i class="fas fa-plug" style="color:var(--role-accent);"></i> Paystack API Configuration</h3>
-    <button onclick="testPaystackConn()" class="adm-btn adm-btn-ghost adm-btn-sm" id="testConnBtn"><i class="fas fa-wifi"></i> Test Connection</button>
+    <button onclick="testPaystackConn()" class="btn btn-ghost btn-sm" id="testConnBtn"><span class="btn-text"><i class="fas fa-wifi"></i> Test Connection</span></button>
   </div>
   <div class="adm-card-body">
     <?php if($user_role!=='finance_manager'): ?>
@@ -32,7 +32,7 @@ $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').
         <label><i class="fas fa-key"></i> Public Key</label>
         <div style="position:relative;">
           <input type="text" id="cfgPublicKey" name="paystack_public_key" class="adm-search-input" value="<?=!empty($ps_config['paystack_public_key'])?'pk_••••••••••••••••':''?>" placeholder="pk_test_..." <?=$user_role!=='finance_manager'?'readonly':''?>>
-          <button type="button" onclick="toggleReveal('cfgPublicKey','paystack_public_key')" class="adm-btn adm-btn-sm" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;color:var(--text-muted);" title="Reveal"><i class="fas fa-eye"></i></button>
+          <button type="button" onclick="toggleReveal('cfgPublicKey','paystack_public_key')" class="btn btn-primary btn btn-sm" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;color:var(--text-muted);" title="Reveal"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
         </div>
         <div style="font-size:1.15rem;color:var(--text-muted);margin-top:.3rem;">Starts with pk_test_ or pk_live_</div>
       </div>
@@ -40,14 +40,14 @@ $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').
         <label><i class="fas fa-shield-keyhole"></i> Secret Key <span style="color:var(--danger);">⚠ Never expose</span></label>
         <div style="position:relative;">
           <input type="password" id="cfgSecretKey" name="paystack_secret_key" class="adm-search-input" value="<?=!empty($ps_config['paystack_secret_key'])?'sk_••••••••••••••••':''?>" placeholder="sk_test_..." <?=$user_role!=='finance_manager'?'readonly':''?>>
-          <button type="button" onclick="togglePwdReveal('cfgSecretKey')" class="adm-btn adm-btn-sm" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;color:var(--text-muted);" title="Show"><i class="fas fa-eye"></i></button>
+          <button type="button" onclick="togglePwdReveal('cfgSecretKey')" class="btn btn-primary btn btn-sm" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;color:var(--text-muted);" title="Show"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
         </div>
       </div>
       <div class="adm-form-group">
         <label><i class="fas fa-webhook"></i> Webhook Secret</label>
         <div style="position:relative;">
           <input type="password" id="cfgWebhookSecret" name="paystack_webhook_secret" class="adm-search-input" value="<?=!empty($ps_config['paystack_webhook_secret'])?'whsec_••••••••••••••':''?>" placeholder="Webhook signing secret" <?=$user_role!=='finance_manager'?'readonly':''?>>
-          <button type="button" onclick="togglePwdReveal('cfgWebhookSecret')" class="adm-btn adm-btn-sm" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;color:var(--text-muted);" title="Show"><i class="fas fa-eye"></i></button>
+          <button type="button" onclick="togglePwdReveal('cfgWebhookSecret')" class="btn btn-primary btn btn-sm" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;color:var(--text-muted);" title="Show"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
         </div>
       </div>
       <div class="adm-form-group">
@@ -74,7 +74,7 @@ $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').
     </form>
     <?php if($user_role==='finance_manager'): ?>
     <div style="margin-top:1.5rem;">
-      <button onclick="savePaystackConfig()" class="adm-btn adm-btn-primary"><i class="fas fa-floppy-disk"></i> Save Paystack Config</button>
+      <button onclick="savePaystackConfig()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-floppy-disk"></i> Save Paystack Config</span></button>
     </div>
     <?php endif;?>
   </div>
@@ -104,7 +104,7 @@ $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').
           <option value="USD">USD — US Dollar</option>
         </select>
       </div>
-      <button type="button" onclick="saveFinanceSettings('formInvSettings','invoice')" class="adm-btn adm-btn-primary"><i class="fas fa-floppy-disk"></i> Save</button>
+      <button type="button" onclick="saveFinanceSettings('formInvSettings','invoice')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-floppy-disk"></i> Save</span></button>
     </form>
   </div>
 </div>
@@ -128,7 +128,7 @@ $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').
         <label>Maximum Refund Percentage (%)</label>
         <input type="number" name="max_refund_pct" class="adm-search-input" value="<?=htmlspecialchars($fs_settings['max_refund_pct']??'100')?>" min="1" max="100">
       </div>
-      <button type="button" onclick="saveFinanceSettings('formWaiverSettings','waiver_refund')" class="adm-btn adm-btn-primary"><i class="fas fa-floppy-disk"></i> Save</button>
+      <button type="button" onclick="saveFinanceSettings('formWaiverSettings','waiver_refund')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-floppy-disk"></i> Save</span></button>
     </form>
   </div>
 </div>
@@ -148,7 +148,7 @@ $base_url = (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!='off'?'https':'http').
         <div style="font-size:1.2rem;color:var(--text-muted);margin-bottom:.5rem;">Alert when budget utilization hits this percentage</div>
         <input type="number" name="budget_alert_pct" class="adm-search-input" value="<?=htmlspecialchars($fs_settings['budget_alert_pct']??'80')?>" min="1" max="100">
       </div>
-      <button type="button" onclick="saveFinanceSettings('formAlertSettings','alerts')" class="adm-btn adm-btn-primary"><i class="fas fa-floppy-disk"></i> Save</button>
+      <button type="button" onclick="saveFinanceSettings('formAlertSettings','alerts')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-floppy-disk"></i> Save</span></button>
     </form>
   </div>
 </div>

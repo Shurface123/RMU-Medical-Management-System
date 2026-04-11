@@ -40,7 +40,7 @@ $total_outstanding = (float)mysqli_fetch_row(mysqli_query($conn, "SELECT SUM(bal
             <h4 style="font-size:1.4rem; font-weight:700; color:var(--warning); margin-bottom:0.2rem;">Pending Payments</h4>
             <p style="font-size:1.2rem; color:var(--text-secondary);">You have <?=count($unpaid_invoices)?> invoice(s) awaiting payment. Please settle them to ensure uninterrupted service.</p>
         </div>
-        <button onclick="document.getElementById('unpaidList').scrollIntoView({behavior:'smooth'})" class="adm-btn adm-btn-warning">View Bills</button>
+        <button onclick="document.getElementById('unpaidList').scrollIntoView({behavior:'smooth'})" class="btn-icon btn btn-warning"><span class="btn-text">View Bills</span></button>
     </div>
     <?php endif; ?>
 
@@ -80,10 +80,10 @@ $total_outstanding = (float)mysqli_fetch_row(mysqli_query($conn, "SELECT SUM(bal
                             <td style="font-weight:700; color:<?=$inv['balance_due']>0?'var(--danger)':'var(--success)'?>">GHS <?=number_format($inv['balance_due'], 2)?></td>
                             <td>
                                 <div style="display:flex; gap:0.6rem;">
-                                    <button onclick="viewInvoice(<?=$inv['invoice_id']?>)" class="adm-btn adm-btn-sm adm-btn-ghost" title="View Detail"><i class="fas fa-eye"></i></button>
-                                    <button onclick="window.open('/RMU-Medical-Management-System/php/finance/print_invoice.php?id=<?=$inv['invoice_id']?>','_blank')" class="adm-btn adm-btn-sm adm-btn-ghost" title="Print/Download"><i class="fas fa-download"></i></button>
+                                    <button onclick="viewInvoice(<?=$inv['invoice_id']?>)" class="btn btn-sm btn-ghost" title="View Detail"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
+                                    <button onclick="window.open('/RMU-Medical-Management-System/php/finance/print_invoice.php?id=<?=$inv['invoice_id']?>','_blank')" class="btn-icon btn btn-sm btn-ghost" title="Print/Download"><span class="btn-text"><i class="fas fa-download"></i></span></button>
                                     <?php if($inv['balance_due'] > 0): ?>
-                                    <button onclick="initializePayment(<?=$inv['invoice_id']?>, <?=$inv['balance_due']?>)" class="adm-btn adm-btn-sm adm-btn-primary" style="background:#1a9e6e; border-color:#1a1a1a;">Pay Now</button>
+                                    <button onclick="initializePayment(<?=$inv['invoice_id']?>, <?=$inv['balance_due']?>)" class="btn btn-sm btn-primary" style="background:#1a9e6e; border-color:#1a1a1a;"><span class="btn-text">Pay Now</span></button>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -99,14 +99,14 @@ $total_outstanding = (float)mysqli_fetch_row(mysqli_query($conn, "SELECT SUM(bal
         <div class="modal-box" style="max-width:800px;">
             <div class="modal-header">
                 <h3>Invoice Details</h3>
-                <button class="modal-close" onclick="closeModal('modalViewInvoice')">&times;</button>
+                <button class="btn btn-primary modal-close" onclick="closeModal('modalViewInvoice')"><span class="btn-text">&times;</span></button>
             </div>
             <div id="invoiceDetailContent" style="min-height:200px;">
                 <!-- Loaded via AJAX -->
             </div>
             <div style="margin-top:2rem; text-align:right;">
-                <button onclick="closeModal('modalViewInvoice')" class="adm-btn adm-btn-ghost">Close</button>
-                <button id="modalPrintBtn" class="adm-btn adm-btn-primary"><i class="fas fa-print"></i> Print</button>
+                <button onclick="closeModal('modalViewInvoice')" class="btn btn-ghost"><span class="btn-text">Close</span></button>
+                <button id="modalPrintBtn" class="btn-icon btn btn-primary"><span class="btn-text"><i class="fas fa-print"></i> Print</span></button>
             </div>
         </div>
     </div>

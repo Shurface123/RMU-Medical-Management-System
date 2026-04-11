@@ -43,9 +43,9 @@
         </div>
 
         <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem;"><span class="btn-text">
                 <i class="fas fa-lock"></i> Update Security Policies
-            </button>
+            </span></button>
         </div>
     </form>
 
@@ -77,7 +77,7 @@
                     <td><?= htmlspecialchars($ip['label'] ?? 'N/A') ?></td>
                     <td><?= htmlspecialchars($ip['admin_name'] ?? 'System') ?></td>
                     <td><?= date('d M Y, H:i', strtotime($ip['created_at'])) ?></td>
-                    <td><button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button></td>
+                    <td><button class="btn btn-sm btn-outline-danger"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
                 </tr>
                 <?php endwhile; ?>
                 <?php if(mysqli_num_rows($ip_res) == 0): ?>
@@ -96,7 +96,7 @@
             <label>IP Label / Location</label>
             <div style="display: flex; gap: 0.5rem;">
                 <input type="text" name="label" class="form-control" placeholder="Admin Office PC" required>
-                <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Add</button>
+                <button type="submit" class="btn btn-success"><span class="btn-text"><i class="fas fa-plus"></i> Add</span></button>
             </div>
         </div>
     </form>

@@ -9,10 +9,10 @@
   </div>
 
   <div class="filter-tabs">
-    <button class="ftab active" onclick="filterDispPay('all',this)">All</button>
-    <button class="ftab" onclick="filterDispPay('paid',this)">Paid</button>
-    <button class="ftab" onclick="filterDispPay('unpaid',this)">Unpaid</button>
-    <button class="ftab" onclick="filterDispPay('insurance',this)">Insurance</button>
+    <button class="btn btn-primary ftab active" onclick="filterDispPay('all',this)"><span class="btn-text">All</span></button>
+    <button class="btn btn-primary ftab" onclick="filterDispPay('paid',this)"><span class="btn-text">Paid</span></button>
+    <button class="btn btn-primary ftab" onclick="filterDispPay('unpaid',this)"><span class="btn-text">Unpaid</span></button>
+    <button class="btn btn-primary ftab" onclick="filterDispPay('insurance',this)"><span class="btn-text">Insurance</span></button>
   </div>
 
   <div class="adm-card">
@@ -39,7 +39,7 @@
           <td>
             <div class="action-btns">
               <?php if($dr['payment_status']==='unpaid'):?>
-              <button class="adm-btn adm-btn-success adm-btn-sm" onclick="markPaid(<?=$dr['id']?>)" title="Mark Paid"><i class="fas fa-check"></i></button>
+              <button class="btn btn-success btn-sm" onclick="markPaid(<?=$dr['id']?>)" title="Mark Paid"><span class="btn-text"><i class="fas fa-check"></i></span></button>
               <?php endif;?>
             </div>
           </td>

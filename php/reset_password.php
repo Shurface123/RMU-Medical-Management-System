@@ -148,9 +148,9 @@ body::before{content:'';position:absolute;width:200%;height:200%;background:radi
             <div class="match-msg" id="matchMsg"></div>
         </div>
 
-        <button type="submit" class="btn-submit" id="submitBtn" disabled>
+        <button type="submit" class="btn btn-primary btn-submit" id="submitBtn" disabled><span class="btn-text">
             <i class="fas fa-save"></i> Set New Password
-        </button>
+        </span></button>
     </form>
     <?php endif; ?>
 </div>

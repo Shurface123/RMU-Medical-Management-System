@@ -126,7 +126,7 @@ while($r = mysqli_fetch_assoc($q_stf)) $staffs[] = $r;
                 <label class="lbl">Qualifications (comma separated)</label>
                 <input type="text" name="q" class="inp" value="<?= htmlspecialchars($director['qualifications']??'') ?>">
                 
-                <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save Director Profile</button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save Director Profile</span></button>
             </form>
         </div>
 
@@ -166,7 +166,7 @@ while($r = mysqli_fetch_assoc($q_stf)) $staffs[] = $r;
                     <div style="flex:1;"><label class="lbl">Name</label><input type="text" name="n" class="inp" style="margin-bottom:0;" required></div>
                     <div style="flex:1;"><label class="lbl">Role / Title</label><input type="text" name="r" class="inp" style="margin-bottom:0;" required></div>
                     <div style="flex:1;"><label class="lbl">Department</label><input type="text" name="d" class="inp" style="margin-bottom:0;"></div>
-                    <div><button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i></button></div>
+                    <div><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i></span></button></div>
                 </form>
             </div>
             
@@ -178,7 +178,7 @@ while($r = mysqli_fetch_assoc($q_stf)) $staffs[] = $r;
                     <td><?= htmlspecialchars($s['role_title']) ?></td>
                     <td><?= htmlspecialchars($s['department']) ?></td>
                     <td>
-                        <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_staff"><input type="hidden" name="entry_id" value="<?= $s['entry_id'] ?>"><button class="adm-btn adm-btn-ghost" style="color:var(--danger);"><i class="fas fa-trash"></i></button></form>
+                        <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_staff"><input type="hidden" name="entry_id" value="<?= $s['entry_id'] ?>"><button class="btn btn-ghost" style="color:var(--danger);"><span class="btn-text"><i class="fas fa-trash"></i></span></button></form>
                     </td>
                 </tr>
                 <?php endforeach; ?>

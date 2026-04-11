@@ -176,7 +176,7 @@ function display_interceptor_modal($title, $message, $redirectUrl, $type) {
             <div class="rmu-icon">'.$symbol.'</div>
             <h3>'.htmlspecialchars($title).'</h3>
             <p>'.htmlspecialchars($message).'</p>
-            <a href="'.$redirectUrl.'" class="rmu-btn">Go to Login</a>
+            <a href="'.$redirectUrl.'" class="btn btn-primary rmu-btn"><span class="btn-text">Go to Login</span></a>
         </div>
         <script>setTimeout(function(){ window.location.href = "'.$redirectUrl.'"; }, 5000);</script>
     </body>

@@ -43,11 +43,11 @@ if($q) while($r=mysqli_fetch_assoc($q)) $my_rx[]=$r;
             <td><span class="adm-badge adm-badge-<?=$sc?>"><?=$rx['status']?></span></td>
             <td>
               <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                <button class="adm-btn adm-btn-sm" onclick='viewRxDetail(<?=json_encode($rx)?>)' title="View"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-primary btn btn-sm" onclick='viewRxDetail(<?=json_encode($rx)?>)' title="View"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
                 <?php if(in_array($rx['status'],['Active','Dispensed','Completed'])):?>
-                <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="requestRefill(<?=$rx['id']?>)" title="Request Refill"><i class="fas fa-redo"></i></button>
+                <button class="btn btn-primary btn-sm" onclick="requestRefill(<?=$rx['id']?>)" title="Request Refill"><span class="btn-text"><i class="fas fa-redo"></i></span></button>
                 <?php endif;?>
-                <button class="adm-btn adm-btn-sm" onclick='printRx(<?=json_encode($rx)?>)' title="Print"><i class="fas fa-print"></i></button>
+                <button class="btn btn-outline btn-icon btn btn-sm" onclick='printRx(<?=json_encode($rx)?>)' title="Print"><span class="btn-text"><i class="fas fa-print"></i></span></button>
               </div>
             </td>
           </tr>
@@ -61,20 +61,20 @@ if($q) while($r=mysqli_fetch_assoc($q)) $my_rx[]=$r;
 <!-- Rx Detail Modal -->
 <div class="modal-bg" id="modalRxDetail">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-prescription" style="color:var(--warning);margin-right:.5rem;"></i>Prescription Details</h3><button class="modal-close" onclick="closeModal('modalRxDetail')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-prescription" style="color:var(--warning);margin-right:.5rem;"></i>Prescription Details</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalRxDetail')"><span class="btn-text">&times;</span></button></div>
     <div id="rxDetailBody" style="font-size:1.3rem;line-height:2;"></div>
-    <div style="margin-top:1.5rem;text-align:right;"><button class="adm-btn adm-btn-primary adm-btn-sm" onclick="printCurrentRx()"><i class="fas fa-print"></i> Print</button></div>
+    <div style="margin-top:1.5rem;text-align:right;"><button class="btn-icon btn btn-primary btn-sm" onclick="printCurrentRx()"><span class="btn-text"><i class="fas fa-print"></i> Print</span></button></div>
   </div>
 </div>
 
 <!-- Refill Modal -->
 <div class="modal-bg" id="modalRefill">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-redo" style="color:var(--info);margin-right:.5rem;"></i>Request Refill</h3><button class="modal-close" onclick="closeModal('modalRefill')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-redo" style="color:var(--info);margin-right:.5rem;"></i>Request Refill</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalRefill')"><span class="btn-text">&times;</span></button></div>
     <form onsubmit="confirmRefill(event)">
       <input type="hidden" id="refillRxId" name="prescription_id">
       <div class="form-group"><label>Notes (optional)</label><textarea name="notes" class="form-control" rows="2" placeholder="Any notes for your doctor..."></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Send Refill Request</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Send Refill Request</span></button>
     </form>
   </div>
 </div>

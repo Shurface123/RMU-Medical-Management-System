@@ -28,8 +28,8 @@ if ($iq) while ($r = mysqli_fetch_assoc($iq)) $inv_for_pay[] = $r;
     <p>Record manual payments and view all transaction history</p>
   </div>
   <div style="display:flex;gap:1rem;">
-    <button onclick="openModal('modalRecordPayment')" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> Record Payment</button>
-    <button onclick="exportPayments()" class="adm-btn adm-btn-ghost"><i class="fas fa-file-export"></i> Export CSV</button>
+    <button onclick="openModal('modalRecordPayment')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> Record Payment</span></button>
+    <button onclick="exportPayments()" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-file-export"></i> Export CSV</span></button>
   </div>
 </div>
 
@@ -65,7 +65,7 @@ if ($iq) while ($r = mysqli_fetch_assoc($iq)) $inv_for_pay[] = $r;
   </select>
   <input type="date" id="payDateFrom" onchange="applyPayFilters()">
   <input type="date" id="payDateTo" onchange="applyPayFilters()">
-  <button onclick="clearPayFilters()" class="adm-btn adm-btn-ghost adm-btn-sm"><i class="fas fa-xmark"></i></button>
+  <button onclick="clearPayFilters()" class="btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
 </div>
 
 <div class="adm-card">
@@ -99,12 +99,12 @@ if ($iq) while ($r = mysqli_fetch_assoc($iq)) $inv_for_pay[] = $r;
           <td>
             <div class="adm-table-actions">
               <?php if(!empty($pay['receipt_path'])): ?>
-              <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($pay['receipt_path'])?>" target="_blank" class="adm-btn adm-btn-sm adm-btn-ghost" title="Download Receipt"><i class="fas fa-receipt"></i></a>
+              <a href="/RMU-Medical-Management-System/<?=htmlspecialchars($pay['receipt_path'])?>" target="_blank" class="btn btn-sm btn-ghost" title="Download Receipt"><span class="btn-text"><i class="fas fa-receipt"></i></span></a>
               <?php else: ?>
-              <button onclick="generateReceipt(<?=$pay['payment_id']?>)" class="adm-btn adm-btn-sm adm-btn-ghost" title="Generate Receipt"><i class="fas fa-receipt"></i></button>
+              <button onclick="generateReceipt(<?=$pay['payment_id']?>)" class="btn btn-sm btn-ghost" title="Generate Receipt"><span class="btn-text"><i class="fas fa-receipt"></i></span></button>
               <?php endif; ?>
               <?php if($pay['status']==='Completed'&&!empty($pay['paystack_reference'])): ?>
-              <button onclick="viewPaystackTxn('<?=htmlspecialchars($pay['paystack_reference'])?>')" class="adm-btn adm-btn-sm" style="background:var(--role-accent-light);color:var(--role-accent);" title="Paystack Details"><i class="fas fa-credit-card"></i></button>
+              <button onclick="viewPaystackTxn('<?=htmlspecialchars($pay['paystack_reference'])?>')" class="btn btn-primary btn btn-sm" style="background:var(--role-accent-light);color:var(--role-accent);" title="Paystack Details"><span class="btn-text"><i class="fas fa-credit-card"></i></span></button>
               <?php endif; ?>
             </div>
           </td>
@@ -121,7 +121,7 @@ if ($iq) while ($r = mysqli_fetch_assoc($iq)) $inv_for_pay[] = $r;
   <div class="adm-modal-content" style="max-width:640px;">
     <div class="adm-modal-header">
       <h3><i class="fas fa-money-bill-wave" style="color:var(--role-accent);"></i> Record Manual Payment</h3>
-      <button class="adm-modal-close" onclick="closeModal('modalRecordPayment')"><i class="fas fa-xmark"></i></button>
+      <button class="btn btn-primary adm-modal-close" onclick="closeModal('modalRecordPayment')"><span class="btn-text"><i class="fas fa-xmark"></i></span></button>
     </div>
     <div class="adm-modal-body">
       <form id="formRecordPayment">
@@ -171,8 +171,8 @@ if ($iq) while ($r = mysqli_fetch_assoc($iq)) $inv_for_pay[] = $r;
       </form>
     </div>
     <div class="adm-modal-footer">
-      <button onclick="closeModal('modalRecordPayment')" class="adm-btn adm-btn-ghost">Cancel</button>
-      <button onclick="submitPayment()" class="adm-btn adm-btn-primary"><i class="fas fa-check-circle"></i> Record & Generate Receipt</button>
+      <button onclick="closeModal('modalRecordPayment')" class="btn btn-ghost"><span class="btn-text">Cancel</span></button>
+      <button onclick="submitPayment()" class="btn btn-primary"><span class="btn-text"><i class="fas fa-check-circle"></i> Record & Generate Receipt</span></button>
     </div>
   </div>
 </div>

@@ -13,7 +13,7 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
 <div id="sec-cleaning" class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
         <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-broom" style="color:var(--role-accent);"></i> Cleaning Log</h2>
-        <button class="btn btn-danger" onclick="openModal('contamReportModal')"><i class="fas fa-biohazard"></i> Report Contamination</button>
+        <button class="btn btn-danger" onclick="openModal('contamReportModal')"><span class="btn-text"><i class="fas fa-biohazard"></i> Report Contamination</span></button>
     </div>
 
     <!-- Sanitation Status Board -->
@@ -58,9 +58,9 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
                 <td><span class="badge" style="background:color-mix(in srgb,<?=$st_c?> 15%,#fff 85%);color:<?=$st_c?>;"><?=ucfirst($st)?></span></td>
                 <td>
                     <?php if($st==='scheduled'||$st==='urgent'): ?>
-                    <button class="btn btn-primary btn-sm" onclick="startCleaning(<?=$s['schedule_id']?>)"><i class="fas fa-play"></i> Start</button>
+                    <button class="btn btn-primary btn-sm" onclick="startCleaning(<?=$s['schedule_id']?>)"><span class="btn-text"><i class="fas fa-play"></i> Start</span></button>
                     <?php elseif($st==='in progress'): ?>
-                    <button class="btn btn-success btn-sm" onclick="openCompleteClean(<?=$s['schedule_id']?>, '<?=e($s['ward_room_area']??'')?>')"><i class="fas fa-check"></i> Complete</button>
+                    <button class="btn btn-success btn-sm" onclick="openCompleteClean(<?=$s['schedule_id']?>, '<?=e($s['ward_room_area']??'')?>')"><span class="btn-text"><i class="fas fa-check"></i> Complete</span></button>
                     <?php else: ?>
                     <span style="color:var(--text-muted);font-size:1.2rem;">Done</span>
                     <?php endif; ?>
@@ -109,7 +109,7 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-check-circle" style="color:var(--success);"></i> Complete Cleaning Task</h3>
-            <button class="modal-close" onclick="closeModal('complCleaning')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('complCleaning')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmComplClean" onsubmit="event.preventDefault();submitComplCleaning();">
             <input type="hidden" name="action" value="complete_cleaning">
@@ -124,7 +124,7 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
             </div>
             <div class="form-group"><label>Notes</label><textarea name="notes" class="form-control" rows="2" placeholder="Any remarks..."></textarea></div>
             <div class="form-group"><label>Photo Proof (Required if biohazard)</label><input type="file" name="proof" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-success btn-wide" id="btnComplClean"><i class="fas fa-check"></i> Mark Complete</button>
+            <button type="submit" class="btn btn-success btn-wide" id="btnComplClean"><span class="btn-text"><i class="fas fa-check"></i> Mark Complete</span></button>
         </form>
     </div>
 </div>
@@ -134,7 +134,7 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-biohazard" style="color:var(--danger);"></i> Report Contamination</h3>
-            <button class="modal-close" onclick="closeModal('contamReportModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('contamReportModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmContam" onsubmit="event.preventDefault();submitContam();">
             <input type="hidden" name="action" value="report_contamination">
@@ -157,7 +157,7 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
             </div>
             <div class="form-group"><label>Description *</label><textarea name="description" class="form-control" rows="3" required placeholder="Describe the contamination..."></textarea></div>
             <div class="form-group"><label>Photo Evidence</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-danger btn-wide" id="btnContam"><i class="fas fa-biohazard"></i> Submit Report</button>
+            <button type="submit" class="btn btn-danger btn-wide" id="btnContam"><span class="btn-text"><i class="fas fa-biohazard"></i> Submit Report</span></button>
         </form>
     </div>
 </div>

@@ -45,9 +45,9 @@ $adminName = $_SESSION['name'] ?? 'Admin';
                             <?php endif; ?>
                         </div>
                     </div>
-                    <button id="btnUploadPhoto" class="adm-btn adm-btn-primary" style="position:absolute; bottom:-5px; right:-5px; width:45px; height:45px; border-radius:15px; padding:0; justify-content:center; box-shadow:var(--shadow-md);">
+                    <button id="btnUploadPhoto" class="btn btn-primary" style="position:absolute; bottom:-5px; right:-5px; width:45px; height:45px; border-radius:15px; padding:0; justify-content:center; box-shadow:var(--shadow-md);"><span class="btn-text">
                         <i class="fas fa-camera" style="font-size:1.4rem;"></i>
-                    </button>
+                    </span></button>
                     <input type="file" id="profPhotoInput" style="display:none;" accept="image/*">
                 </div>
                 
@@ -72,10 +72,10 @@ $adminName = $_SESSION['name'] ?? 'Admin';
             </div>
             
             <div class="adm-tabs" style="margin-bottom:0; padding:0 2rem;">
-                <button class="adm-tab-btn active" data-target="tab-overview"><i class="fas fa-id-card"></i> Overview</button>
-                <button class="adm-tab-btn" data-target="tab-security"><i class="fas fa-shield-halved"></i> Security</button>
-                <button class="adm-tab-btn" data-target="tab-notifications"><i class="fas fa-bell"></i> Notifications</button>
-                <button class="adm-tab-btn" data-target="tab-activity"><i class="fas fa-clock-rotate-left"></i> Audit Feed</button>
+                <button class="btn btn-outline btn-icon adm-tab-btn active" data-target="tab-overview"><span class="btn-text"><i class="fas fa-id-card"></i> Overview</span></button>
+                <button class="btn btn-primary adm-tab-btn" data-target="tab-security"><span class="btn-text"><i class="fas fa-shield-halved"></i> Security</span></button>
+                <button class="btn btn-primary adm-tab-btn" data-target="tab-notifications"><span class="btn-text"><i class="fas fa-bell"></i> Notifications</span></button>
+                <button class="btn btn-primary adm-tab-btn" data-target="tab-activity"><span class="btn-text"><i class="fas fa-clock-rotate-left"></i> Audit Feed</span></button>
             </div>
         </div>
 
@@ -108,9 +108,9 @@ $adminName = $_SESSION['name'] ?? 'Admin';
                                     </div>
                                 </div>
                                 <div style="display:flex; justify-content:flex-end; margin-top:1.5rem;">
-                                    <button type="submit" class="adm-btn adm-btn-primary">
+                                    <button type="submit" class="btn btn-primary"><span class="btn-text">
                                         <i class="fas fa-cloud-arrow-up"></i> Save Profile Updates
-                                    </button>
+                                    </span></button>
                                 </div>
                             </form>
                         </div>
@@ -161,9 +161,9 @@ $adminName = $_SESSION['name'] ?? 'Admin';
                                     <label>Confirm Global Access Password</label>
                                     <input type="password" id="pwdConfirm" class="adm-search-input" required>
                                 </div>
-                                <button type="submit" class="adm-btn adm-btn-primary" style="width:100%; margin-top:1.5rem; height:50px; justify-content:center;">
+                                <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1.5rem; height:50px; justify-content:center;"><span class="btn-text">
                                     Confirm Security Credentials Update
-                                </button>
+                                </span></button>
                             </form>
                         </div>
                     </div>
@@ -221,9 +221,9 @@ $adminName = $_SESSION['name'] ?? 'Admin';
                                 </div>
                             </div>
                             <div style="display:flex; justify-content:center; margin-top:3.5rem;">
-                                <button type="submit" class="adm-btn adm-btn-primary" style="padding:1.2rem 4rem; font-size:1.4rem;">
+                                <button type="submit" class="btn btn-primary" style="padding:1.2rem 4rem; font-size:1.4rem;"><span class="btn-text">
                                     Synchronize Preferences
-                                </button>
+                                </span></button>
                             </div>
                         </form>
                     </div>

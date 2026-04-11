@@ -327,9 +327,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-clipboard-list"></i> Audit Log Viewer</h1>
-            <a href="?export=csv<?php echo $filterAction ? '&action=' . urlencode($filterAction) : ''; ?><?php echo $filterUser ? '&user=' . urlencode($filterUser) : ''; ?><?php echo $filterDateFrom ? '&date_from=' . urlencode($filterDateFrom) : ''; ?><?php echo $filterDateTo ? '&date_to=' . urlencode($filterDateTo) : ''; ?>" class="btn btn-success">
+            <a href="?export=csv<?php echo $filterAction ? '&action=' . urlencode($filterAction) : ''; ?><?php echo $filterUser ? '&user=' . urlencode($filterUser) : ''; ?><?php echo $filterDateFrom ? '&date_from=' . urlencode($filterDateFrom) : ''; ?><?php echo $filterDateTo ? '&date_to=' . urlencode($filterDateTo) : ''; ?>" class="btn-icon btn btn-success"><span class="btn-text">
                 <i class="fas fa-download"></i> Export CSV
-            </a>
+            </span></a>
         </div>
         
         <!-- Statistics -->
@@ -393,12 +393,12 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary"><span class="btn-text">
                         <i class="fas fa-search"></i> Apply Filters
-                    </button>
-                    <a href="audit_log_viewer.php" class="btn btn-secondary">
+                    </span></button>
+                    <a href="audit_log_viewer.php" class="btn btn-danger btn-sm btn-icon btn btn-secondary"><span class="btn-text">
                         <i class="fas fa-times"></i> Clear Filters
-                    </a>
+                    </span></a>
                 </div>
             </form>
         </div>
@@ -490,9 +490,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         </div>
         
         <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary">
+            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
+            </span></a>
         </div>
     </div>
 </body>

@@ -96,10 +96,10 @@ while($r = mysqli_fetch_assoc($q_bk)) $bookings[] = $r;
                     <td>
                         <div style="display:flex; gap:0.5rem;">
                             <?php if($b['status'] === 'pending'): ?>
-                                <form method="POST" style="margin:0;"><input type="hidden" name="action" value="confirm"><input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>"><button title="Confirm" class="adm-btn adm-btn-success adm-btn-sm" style="padding:6px; font-size:12px;"><i class="fas fa-check"></i></button></form>
-                                <form method="POST" style="margin:0;"><input type="hidden" name="action" value="cancel"><input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>"><button title="Cancel Request" class="adm-btn adm-btn-outline adm-btn-sm" style="padding:6px; font-size:12px; border-color:var(--danger); color:var(--danger);"><i class="fas fa-times"></i></button></form>
+                                <form method="POST" style="margin:0;"><input type="hidden" name="action" value="confirm"><input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>"><button title="Confirm" class="btn btn-success btn-sm" style="padding:6px; font-size:12px;"><span class="btn-text"><i class="fas fa-check"></i></span></button></form>
+                                <form method="POST" style="margin:0;"><input type="hidden" name="action" value="cancel"><input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>"><button title="Cancel Request" class="btn btn-outline btn-sm" style="padding:6px; font-size:12px; border-color:var(--danger); color:var(--danger);"><span class="btn-text"><i class="fas fa-times"></i></span></button></form>
                             <?php else: ?>
-                                <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this record permanently?');"><input type="hidden" name="action" value="delete"><input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>"><button title="Delete Record" class="adm-btn adm-btn-ghost adm-btn-sm" style="padding:6px; font-size:12px; color:var(--text-muted);"><i class="fas fa-trash"></i></button></form>
+                                <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this record permanently?');"><input type="hidden" name="action" value="delete"><input type="hidden" name="booking_id" value="<?= $b['booking_id'] ?>"><button title="Delete Record" class="btn btn-ghost btn-sm" style="padding:6px; font-size:12px; color:var(--text-muted);"><span class="btn-text"><i class="fas fa-trash"></i></span></button></form>
                             <?php endif; ?>
                         </div>
                     </td>

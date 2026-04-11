@@ -40,9 +40,9 @@ if ($q) while ($row = mysqli_fetch_assoc($q)) $logs[] = $row;
                 <p>Read-only timeline of all financial transactions, waivers, and approvals.</p>
             </div>
             <div>
-                <button class="adm-btn adm-btn-outline" onclick="window.print()">
+                <button class="btn-icon btn btn-outline" onclick="window.print()"><span class="btn-text">
                     <i class="fas fa-print"></i> Print Log
-                </button>
+                </span></button>
             </div>
         </div>
 

@@ -102,7 +102,7 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
     <?php endif;?>
   </nav>
   <div class="adm-sidebar-footer">
-    <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text"><i class="fas fa-right-from-bracket"></i><span>Logout</span></span></a>
   </div>
 </aside>
 <div class="adm-overlay" id="admOverlay"></div>
@@ -117,9 +117,9 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
     <div class="adm-topbar-right">
       <?php $bd=$unread>0?'flex':'none'; $bl=$unread>99?'99+':$unread; $bc=$unread>0?'adm-notif-btn has-unread':'adm-notif-btn'; ?>
       <div style="position:relative;">
-        <button id="rmuBellBtn" class="<?=$bc?>" title="Notifications"><i class="fas fa-bell"></i>
+        <button id="rmuBellBtn" class="btn btn-primary <?=$bc?>" title="Notifications"><span class="btn-text"><i class="fas fa-bell"></i>
           <span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span>
-        </button>
+        </span></button>
       </div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
       <div class="adm-avatar" style="background:linear-gradient(135deg,var(--role-accent),var(--primary));"><?=strtoupper(substr($_SESSION['user_name']??$_SESSION['name']??'U',0,1))?></div>
@@ -197,9 +197,9 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
               </div>
             </div>
             <div style="display:flex;gap:.5rem;">
-              <a href="/RMU-Medical-Management-System/php/download_attachment.php?id=<?=$att['attachment_id']?>" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-download"></i> Download</a>
+              <a href="/RMU-Medical-Management-System/php/download_attachment.php?id=<?=$att['attachment_id']?>" class="btn-icon btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-download"></i> Download</span></a>
               <?php if(in_array($userRole,['doctor','admin'])):?>
-              <a href="?delete=<?=$att['attachment_id']?>" class="adm-btn adm-btn-danger adm-btn-sm" onclick="return confirm('Delete this file?')"><i class="fas fa-trash"></i></a>
+              <a href="?delete=<?=$att['attachment_id']?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this file?')"><span class="btn-text"><i class="fas fa-trash"></i></span></a>
               <?php endif;?>
             </div>
           </div>
@@ -217,7 +217,7 @@ $unread = (int)(mysqli_fetch_row(mysqli_query($conn,"SELECT COUNT(*) FROM notifi
             </div>
             <div id="ud<?=$recId?>" style="display:none;margin-top:1rem;">
               <div class="form-group"><label>File Description (optional)</label><textarea name="description" class="form-control" rows="2" placeholder="Brief note about this file…"></textarea></div>
-              <button type="submit" class="adm-btn adm-btn-success"><i class="fas fa-upload"></i> Upload File</button>
+              <button type="submit" class="btn btn-success"><span class="btn-text"><i class="fas fa-upload"></i> Upload File</span></button>
             </div>
           </form>
           <?php endif;?>

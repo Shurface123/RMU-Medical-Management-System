@@ -75,7 +75,7 @@ if (get_setting('maintenance_mode', '0') === '0') {
         <p>We are currently upgrading the RMU Medical Sickbay System to serve you better. We'll be back online in a few minutes.</p>
         
         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-            <a href="admin/settings_v2.php" class="btn-admin">Continue to Admin Panel</a>
+            <a href="admin/settings_v2.php" class="btn btn-primary btn-admin"><span class="btn-text">Continue to Admin Panel</span></a>
         <?php else: ?>
             <div class="footer-note">
                 Reference ID: <?= strtoupper(substr(md5(time()),0,8)) ?> | &copy; <?= date('Y') ?> RMU Medical Unit

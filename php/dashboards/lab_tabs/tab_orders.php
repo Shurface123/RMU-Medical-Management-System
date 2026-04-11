@@ -51,7 +51,7 @@ function getTestStatusBadge($s) {
             <option value="Processing" <?= $status_filter=='Processing'?'selected':'' ?>>Processing</option>
             <option value="Completed" <?= $status_filter=='Completed'?'selected':'' ?>>Completed</option>
         </select>
-        <button class="adm-btn adm-btn-primary" onclick="refreshTable()"><i class="fas fa-sync-alt"></i> Refresh Queue</button>
+        <button class="btn btn-primary" onclick="refreshTable()"><span class="btn-text"><i class="fas fa-sync-alt"></i> Refresh Queue</span></button>
     </div>
 </div>
 
@@ -87,19 +87,19 @@ function getTestStatusBadge($s) {
                     <td><?= getTestStatusBadge($row['order_status']) ?></td>
                     <td>
                         <div class="action-btns">
-                            <button class="adm-btn adm-btn-sm" style="background:var(--surface-2);color:var(--text-primary);" onclick="viewOrder(<?= $row['id'] ?>)"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn btn-outline btn-icon btn btn-sm" style="background:var(--surface-2);color:var(--text-primary);" onclick="viewOrder(<?= $row['id'] ?>)"><span class="btn-text"><i class="fas fa-eye"></i> View</span></button>
                             
                             <?php if($row['order_status'] === 'Pending'): ?>
-                                <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="processOrder(<?= $row['id'] ?>, 'Accepted')"><i class="fas fa-check"></i> Accept</button>
-                                <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectOrder(<?= $row['id'] ?>)"><i class="fas fa-times"></i> Reject</button>
+                                <button class="btn btn-primary btn-sm" onclick="processOrder(<?= $row['id'] ?>, 'Accepted')"><span class="btn-text"><i class="fas fa-check"></i> Accept</span></button>
+                                <button class="btn-icon btn btn-danger btn-sm" onclick="rejectOrder(<?= $row['id'] ?>)"><span class="btn-text"><i class="fas fa-times"></i> Reject</span></button>
                             <?php endif; ?>
                             
                             <?php if($row['order_status'] === 'Accepted'): ?>
-                                <button class="adm-btn adm-btn-sm" style="background:var(--role-accent); color:#fff;" onclick="processOrder(<?= $row['id'] ?>, 'Processing')"><i class="fas fa-vials"></i> Mark Processing</button>
+                                <button class="btn btn-primary btn btn-sm" style="background:var(--role-accent); color:#fff;" onclick="processOrder(<?= $row['id'] ?>, 'Processing')"><span class="btn-text"><i class="fas fa-vials"></i> Mark Processing</span></button>
                             <?php endif; ?>
 
                             <?php if($row['order_status'] === 'Processing'): ?>
-                                <button class="adm-btn adm-btn-success adm-btn-sm" onclick="window.location.href='?tab=results&order_id=<?= $row['id'] ?>'"><i class="fas fa-edit"></i> Enter Results</button>
+                                <button class="btn btn-success btn-sm" onclick="window.location.href='?tab=results&order_id=<?= $row['id'] ?>'"><span class="btn-text"><i class="fas fa-edit"></i> Enter Results</span></button>
                             <?php endif; ?>
                         </div>
                     </td>
@@ -126,8 +126,8 @@ function getTestStatusBadge($s) {
                 </div>
             </div>
             <div class="modal-footer" style="border-top:1px solid var(--border); padding:1.5rem 2rem;">
-                <button type="button" class="adm-btn adm-btn-ghost" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="adm-btn adm-btn-danger" onclick="submitRejection()"><i class="fas fa-trash-alt"></i> Confirm Rejection</button>
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal"><span class="btn-text">Cancel</span></button>
+                <button type="button" class="btn-icon btn btn-danger" onclick="submitRejection()"><span class="btn-text"><i class="fas fa-trash-alt"></i> Confirm Rejection</span></button>
             </div>
         </div>
     </div>

@@ -52,7 +52,7 @@
           <div class="form-group"><label>Postal Code</label><input type="text" name="postal_code" class="form-control" value="<?=htmlspecialchars($prof['postal_code']??'')?>"></div>
         </div>
         <div class="form-group"><label>Office/Room Location</label><input type="text" name="office_location" class="form-control" value="<?=htmlspecialchars($prof['office_location']??'')?>" placeholder="e.g. Room 204, Block B"></div>
-        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;margin-top:1rem;"><i class="fas fa-save"></i> Save Personal Information</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1rem;"><span class="btn-text"><i class="fas fa-save"></i> Save Personal Information</span></button>
       </form>
     </div>
   </div>

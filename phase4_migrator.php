@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2>Confirm Logout</h2>
                 <p style="color:#64748b;margin-bottom:2rem;">Are you sure you want to log out of the system?</p>
                 <div class="logout-actions">
-                    <button class="logout-btn-cancel" id="logoutCancelBtn">Cancel</button>
-                    <button class="logout-btn-confirm" id="logoutConfirmBtn">Logout</button>
+                    <button class="btn btn-ghost logout-btn-cancel" id="logoutCancelBtn"><span class="btn-text">Cancel</span></button>
+                    <button class="btn btn-primary logout-btn-confirm" id="logoutConfirmBtn"><span class="btn-text">Logout</span></button>
                 </div>
             </div>
             <div id="logoutCountdownView" class="logout-countdown-wrapper" style="position:relative;">

@@ -41,7 +41,7 @@ $qc_m2sd    = round($qc_mean - 2*$qc_sd, 1);
 <div class="sec-header">
     <h2><i class="fas fa-chart-line"></i> Lab Analytics Dashboard</h2>
     <div style="display:flex; gap:1rem;">
-        <button class="adm-btn adm-btn-primary" onclick="window.location.href='?tab=reports'"><i class="fas fa-file-pdf"></i> Full Reports</button>
+        <button class="btn btn-primary" onclick="window.location.href='?tab=reports'"><span class="btn-text"><i class="fas fa-file-pdf"></i> Full Reports</span></button>
     </div>
 </div>
 

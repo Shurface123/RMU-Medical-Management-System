@@ -153,7 +153,7 @@ if (!$row) {
                 </div>
                 
                 <div style="margin-top: 2rem; display: flex; gap: 1rem; align-items: center;">
-                    <button type="submit" name="update_staff" class="btn-primary"><i class="fas fa-save"></i> Update Record</button>
+                    <button type="submit" name="update_staff" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Update Record</span></button>
                     <?php if ($row['is_active']): ?>
                         <a href="deactivate_staff.php?id=<?php echo $row['id']; ?>" class="back-link" style="color: #e74c3c; margin: 0;" onclick="return confirm('Are you sure you want to deactivate this staff member?');"><i class="fas fa-ban"></i> Deactivate Account</a>
                     <?php else: ?>

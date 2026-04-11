@@ -23,7 +23,7 @@ $unread_msg_count = (int)dbVal($conn,"SELECT COUNT(*) FROM staff_messages WHERE 
         <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-envelope" style="color:var(--role-accent);"></i> Messages
             <?php if($unread_msg_count>0): ?><span class="badge badge-urgent" style="font-size:1.2rem;margin-left:.8rem;"><?=$unread_msg_count?> unread</span><?php endif; ?>
         </h2>
-        <button class="btn btn-primary" onclick="openModal('composeModal')"><i class="fas fa-pen"></i> Compose Message</button>
+        <button class="btn btn-primary" onclick="openModal('composeModal')"><span class="btn-text"><i class="fas fa-pen"></i> Compose Message</span></button>
     </div>
 
     <div class="card">
@@ -33,7 +33,7 @@ $unread_msg_count = (int)dbVal($conn,"SELECT COUNT(*) FROM staff_messages WHERE 
                     <i class="fas fa-envelope-open" style="font-size:5rem;color:var(--text-muted);display:block;margin-bottom:1.5rem;"></i>
                     <h3 style="color:var(--text-secondary);">No Messages Yet</h3>
                     <p style="color:var(--text-muted);">Compose a message to your admin or supervisor.</p>
-                    <button class="btn btn-primary" style="margin-top:1.5rem;" onclick="openModal('composeModal')"><i class="fas fa-pen"></i> Compose Message</button>
+                    <button class="btn btn-primary" style="margin-top:1.5rem;" onclick="openModal('composeModal')"><span class="btn-text"><i class="fas fa-pen"></i> Compose Message</span></button>
                 </div>
             <?php else: foreach($conversations as $m):
                 $is_mine = ((int)$m['sender_id'] === $staff_id);
@@ -74,7 +74,7 @@ $unread_msg_count = (int)dbVal($conn,"SELECT COUNT(*) FROM staff_messages WHERE 
     <div class="modal-box">
         <div class="modal-header">
             <h3><i class="fas fa-pen" style="color:var(--role-accent);"></i> Compose Message</h3>
-            <button class="modal-close" onclick="closeModal('composeModal')"><i class="fas fa-times"></i></button>
+            <button class="btn btn-primary modal-close" onclick="closeModal('composeModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
         </div>
         <form id="frmCompose" onsubmit="event.preventDefault();sendMessage();">
             <input type="hidden" name="action" value="send_message">
@@ -109,7 +109,7 @@ $unread_msg_count = (int)dbVal($conn,"SELECT COUNT(*) FROM staff_messages WHERE 
                 <label>Message *</label>
                 <textarea name="body" class="form-control" rows="5" required placeholder="Type your message here..."></textarea>
             </div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnSendMsg"><i class="fas fa-paper-plane"></i> Send Message</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="btnSendMsg"><span class="btn-text"><i class="fas fa-paper-plane"></i> Send Message</span></button>
         </form>
     </div>
 </div>

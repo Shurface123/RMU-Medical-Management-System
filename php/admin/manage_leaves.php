@@ -76,8 +76,8 @@ else:
                             </td>
                             <td>
                                 <div style="display:inline-flex;gap:.5rem;">
-                                    <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveLeave(<?php echo $l['leave_id']; ?>)" title="Approve"><i class="fas fa-check"></i></button>
-                                    <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectLeave(<?php echo $l['leave_id']; ?>)" title="Reject"><i class="fas fa-times"></i></button>
+                                    <button class="btn btn-success btn-sm" onclick="approveLeave(<?php echo $l['leave_id']; ?>)" title="Approve"><span class="btn-text"><i class="fas fa-check"></i></span></button>
+                                    <button class="btn btn-danger btn-sm" onclick="rejectLeave(<?php echo $l['leave_id']; ?>)" title="Reject"><span class="btn-text"><i class="fas fa-times"></i></span></button>
                                 </div>
                             </td>
                         </tr>

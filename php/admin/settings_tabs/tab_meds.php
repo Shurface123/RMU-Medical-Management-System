@@ -2,7 +2,7 @@
 <div class="settings-card">
     <div class="settings-card-header">
         <h2 class="settings-card-title"><i class="fas fa-pills"></i> Medication Formulary & Drug Settings</h2>
-        <button class="btn btn-sm btn-primary" onclick="openModal('medModal')"><i class="fas fa-plus"></i> Add Medication</button>
+        <button class="btn btn-sm btn-primary" onclick="openModal('medModal')"><span class="btn-text"><i class="fas fa-plus"></i> Add Medication</span></button>
     </div>
 
     <!-- Medications Filter & Stats -->
@@ -59,8 +59,8 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-icon btn-outline-primary"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-icon btn-outline-danger"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-sm btn-icon btn-outline-primary"><span class="btn-text"><i class="fas fa-edit"></i></span></button>
+                        <button class="btn btn-sm btn-icon btn-outline-danger"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
                     </td>
                 </tr>
                 <?php endwhile; ?>
@@ -95,8 +95,8 @@
                 </div>
             </div>
             <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top: 2rem;">
-                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('medModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Add to Formulary</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="closeModal('medModal')"><span class="btn-text">Cancel</span></button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text">Add to Formulary</span></button>
             </div>
         </form>
     </div>

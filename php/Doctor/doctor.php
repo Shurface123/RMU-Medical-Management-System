@@ -30,9 +30,9 @@ $avail_doc = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors 
                 <h1>Manage Doctors</h1>
                 <p>View and manage all registered medical staff in the sickbay.</p>
             </div>
-            <a href="/RMU-Medical-Management-System/php/Doctor/add-doctor.php" class="adm-btn adm-btn-primary">
+            <a href="/RMU-Medical-Management-System/php/Doctor/add-doctor.php" class="btn btn-primary"><span class="btn-text">
                 <i class="fas fa-user-plus"></i> Add New Doctor
-            </a>
+            </span></a>
         </div>
 
         <div class="adm-summary-strip">
@@ -64,7 +64,7 @@ $avail_doc = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors 
                                placeholder="Search by name or specialization..."
                                value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
                     </div>
-                    <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm">Search</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><span class="btn-text">Search</span></button>
                 </form>
             </div>
             <div class="adm-table-wrap">
@@ -117,10 +117,10 @@ $avail_doc = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM doctors 
                             <td>
                                 <div class="adm-table-actions">
                                     <a href="/RMU-Medical-Management-System/php/Doctor/update.php?id=<?php echo $doc['id']; ?>"
-                                       class="adm-btn adm-btn-warning adm-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                       class="btn btn-warning btn-sm"><span class="btn-text"><i class="fas fa-edit"></i> Edit</span></a>
                                     <a href="/RMU-Medical-Management-System/php/Doctor/Delete.php?id=<?php echo $doc['id']; ?>"
-                                       class="adm-btn adm-btn-danger adm-btn-sm"
-                                       onclick="return confirm('Remove Dr. <?php echo addslashes($doc['name']); ?>?');"><i class="fas fa-trash"></i> Delete</a>
+                                       class="btn-icon btn btn-danger btn-sm"
+                                       onclick="return confirm('Remove Dr. <?php echo addslashes($doc['name']); ?>?');"><span class="btn-text"><i class="fas fa-trash"></i> Delete</span></a>
                                 </div>
                             </td>
                         </tr>

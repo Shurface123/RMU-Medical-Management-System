@@ -137,7 +137,7 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
                         <div><label class="lbl">Instagram</label><input type="url" class="inp" name="config[social_instagram]" value="<?= htmlspecialchars($configs['social_instagram']??'') ?>"></div>
                     </div>
                 </div>
-                <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save General Configuration</button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save General Configuration</span></button>
             </form>
         </div>
 
@@ -165,7 +165,7 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
                         <div><label class="lbl"><input type="checkbox" name="is_active" <?= $hero['is_active']?'checked':'' ?>> Active on Public Site</label></div>
                     </div>
                 </div>
-                <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Save Hero Content</button>
+                <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save Hero Content</span></button>
             </form>
         </div>
 
@@ -180,7 +180,7 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
                     <div style="width:100%; flex:auto;"><textarea name="content_text" class="inp" rows="5"><?= htmlspecialchars($a['content_text']) ?></textarea></div>
                 </div>
                 <label style="margin-bottom:1rem; display:block;"><input type="checkbox" name="is_active" <?= $a['is_active']?'checked':'' ?>> Visible</label>
-                <button type="submit" class="adm-btn adm-btn-primary adm-btn-sm"><i class="fas fa-save"></i> Update Block</button>
+                <button type="submit" class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-save"></i> Update Block</span></button>
             </form>
             <?php endforeach; ?>
         </div>
@@ -194,7 +194,7 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
                     <div><label class="lbl">Label (e.g. Years Experience)</label><input type="text" name="l" class="inp" required></div>
                     <div><label class="lbl">Value (e.g. 50+)</label><input type="text" name="v" class="inp" required></div>
                     <div><label class="lbl">FontAwesome Icon (e.g. fas fa-star)</label><input type="text" name="i" class="inp" required></div>
-                    <div><button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i></button></div>
+                    <div><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i></span></button></div>
                 </form>
             </div>
             
@@ -206,7 +206,7 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
                     <td><b><?= htmlspecialchars($s['stat_value']) ?></b></td>
                     <td><?= htmlspecialchars($s['label']) ?></td>
                     <td>
-                        <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_stat"><input type="hidden" name="stat_id" value="<?= $s['stat_id'] ?>"><button class="adm-btn adm-btn-ghost" style="color:var(--danger);"><i class="fas fa-trash"></i></button></form>
+                        <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_stat"><input type="hidden" name="stat_id" value="<?= $s['stat_id'] ?>"><button class="btn btn-ghost" style="color:var(--danger);"><span class="btn-text"><i class="fas fa-trash"></i></span></button></form>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -228,7 +228,7 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
                     <div class="form-row">
                         <div style="width:100%;flex:auto;"><label class="lbl">Answer</label><textarea name="a" class="inp" rows="3" required></textarea></div>
                     </div>
-                    <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-plus"></i> Add FAQ</button>
+                    <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> Add FAQ</span></button>
                 </form>
             </div>
             
@@ -240,7 +240,7 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
                         <p style="margin-top:5px; color:var(--text-muted);">A: <?= htmlspecialchars($f['answer']) ?></p>
                         <span style="font-size:0.8rem; background:var(--bg-secondary); padding:2px 8px; border-radius:4px;"><?= htmlspecialchars($f['category']) ?></span>
                     </div>
-                    <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_faq"><input type="hidden" name="faq_id" value="<?= $f['faq_id'] ?>"><button class="adm-btn adm-btn-ghost" style="color:var(--danger);"><i class="fas fa-trash"></i></button></form>
+                    <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_faq"><input type="hidden" name="faq_id" value="<?= $f['faq_id'] ?>"><button class="btn btn-ghost" style="color:var(--danger);"><span class="btn-text"><i class="fas fa-trash"></i></span></button></form>
                 </div>
             </div>
             <?php endforeach; ?>

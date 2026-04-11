@@ -135,7 +135,7 @@ function checkStock($conn, $medName) {
     <a href="patient_dashboard.php?tab=settings" class="adm-nav-item"><i class="fas fa-gear"></i><span>Settings</span></a>
   </nav>
   <div class="adm-sidebar-footer">
-    <a href="/RMU-Medical-Management-System/php/logout.php" class="adm-logout-btn"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text"><i class="fas fa-right-from-bracket"></i><span>Logout</span></span></a>
   </div>
 </aside>
 <div class="adm-overlay" id="admOverlay"></div>
@@ -149,7 +149,7 @@ function checkStock($conn, $medName) {
     <div class="adm-topbar-right">
       <span style="font-size:1.2rem;color:var(--text-secondary);"><?=date('D, d M Y')?></span>
       <?php $bd=$unread>0?'flex':'none'; $bl=$unread>99?'99+':$unread; $bc=$unread>0?'adm-notif-btn has-unread':'adm-notif-btn'; ?>
-      <div style="position:relative;"><button id="rmuBellBtn" class="<?=$bc?>" title="Notifications"><i class="fas fa-bell"></i><span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span></button></div>
+      <div style="position:relative;"><button id="rmuBellBtn" class="btn btn-primary <?=$bc?>" title="Notifications"><span class="btn-text"><i class="fas fa-bell"></i><span id="rmuBellCount" style="display:<?=$bd?>"><?=$bl?></span></span></button></div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
       <div class="adm-avatar" style="background:var(--role-accent);"><?=strtoupper(substr($_SESSION['user_name']??$_SESSION['name']??'P',0,1))?></div>
     </div>
@@ -161,8 +161,8 @@ function checkStock($conn, $medName) {
 
     <!-- Tabs -->
     <div style="display:flex;gap:.5rem;margin-bottom:1.8rem;">
-      <button class="tab-btn active" onclick="switchTab('active',this)"><i class="fas fa-pills"></i> Active Prescriptions</button>
-      <button class="tab-btn" onclick="switchTab('history',this)"><i class="fas fa-clock-rotate-left"></i> Refill History</button>
+      <button class="btn btn-primary tab-btn active" onclick="switchTab('active',this)"><span class="btn-text"><i class="fas fa-pills"></i> Active Prescriptions</span></button>
+      <button class="btn btn-primary tab-btn" onclick="switchTab('history',this)"><span class="btn-text"><i class="fas fa-clock-rotate-left"></i> Refill History</span></button>
     </div>
 
     <!-- Active Prescriptions -->
@@ -208,7 +208,7 @@ function checkStock($conn, $medName) {
         <?php if($rx['instructions']??''):?><div style="font-size:1.2rem;color:var(--text-secondary);background:var(--surface-2);border-radius:8px;padding:.8rem 1rem;margin-bottom:1rem;"><i class="fas fa-note-sticky" style="color:var(--role-accent);margin-right:.4rem;"></i><?=htmlspecialchars($rx['instructions'])?></div><?php endif;?>
         <div style="display:flex;gap:.8rem;flex-wrap:wrap;">
           <?php if(!$has_pending_refill && in_array($rx['status'],['Dispensed','Active','Completed']) && $stock['stock_quantity']>0 && $refills_left>0):?>
-          <button onclick="openRefill(<?=$rx['id']?>,<?=json_encode($rx['medication_name'])?>,<?=json_encode('Dr. '.$rx['doctor_name'])?>)" class="adm-btn adm-btn-primary"><i class="fas fa-rotate-right"></i> Request Refill</button>
+          <button onclick="openRefill(<?=$rx['id']?>,<?=json_encode($rx['medication_name'])?>,<?=json_encode('Dr. '.$rx['doctor_name'])?>)" class="btn btn-primary"><span class="btn-text"><i class="fas fa-rotate-right"></i> Request Refill</span></button>
           <?php elseif($has_pending_refill):?>
           <span class="adm-btn adm-btn-ghost" style="pointer-events:none;opacity:.7;"><i class="fas fa-clock"></i> Refill Pending Review</span>
           <?php elseif($refills_left<=0 && (int)$rx['refills_allowed']>0):?>
@@ -260,7 +260,7 @@ function checkStock($conn, $medName) {
   <div class="modal-box">
     <div class="modal-header">
       <h3><i class="fas fa-rotate-right" style="color:var(--role-accent);"></i> Request Prescription Refill</h3>
-      <button class="modal-close" onclick="this.closest('.modal-bg').classList.remove('open')">&times;</button>
+      <button class="btn btn-primary modal-close" onclick="this.closest('.modal-bg').classList.remove('open')"><span class="btn-text">&times;</span></button>
     </div>
     <div id="refillMedInfo" style="background:var(--surface-2);border-radius:10px;padding:1rem 1.4rem;margin-bottom:1.5rem;"></div>
     <div style="background:rgba(142,68,173,.08);border-left:4px solid var(--role-accent);border-radius:0 10px 10px 0;padding:1rem 1.4rem;margin-bottom:1.2rem;font-size:1.2rem;">
@@ -270,7 +270,7 @@ function checkStock($conn, $medName) {
       <input type="hidden" name="action" value="request_refill">
       <input type="hidden" name="prescription_id" id="refillRxId">
       <div class="form-group"><label>Notes (optional)</label><textarea name="notes" id="refillNotes" class="form-control" rows="3" placeholder="Any specific instructions or notes for your doctor…"></textarea></div>
-      <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Submit Refill Request</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Refill Request</span></button>
     </form>
   </div>
 </div>

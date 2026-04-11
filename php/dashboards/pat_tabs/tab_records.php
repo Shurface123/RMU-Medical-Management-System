@@ -39,8 +39,8 @@ if($q) while($r=mysqli_fetch_assoc($q)) $my_records[]=$r;
             <td><?php if($mr['severity']):?><span class="adm-badge adm-badge-<?=$sevCls?>"><?=$mr['severity']?></span><?php else:?>—<?php endif;?></td>
             <td>
               <div style="display:flex;gap:.4rem;">
-                <button class="adm-btn adm-btn-sm" onclick='viewRecordDetail(<?=json_encode($mr)?>)' title="View"><i class="fas fa-eye"></i></button>
-                <button class="adm-btn adm-btn-sm" onclick='printRecord(<?=json_encode($mr)?>)' title="Print"><i class="fas fa-print"></i></button>
+                <button class="btn btn-primary btn btn-sm" onclick='viewRecordDetail(<?=json_encode($mr)?>)' title="View"><span class="btn-text"><i class="fas fa-eye"></i></span></button>
+                <button class="btn btn-outline btn-icon btn btn-sm" onclick='printRecord(<?=json_encode($mr)?>)' title="Print"><span class="btn-text"><i class="fas fa-print"></i></span></button>
               </div>
             </td>
           </tr>
@@ -54,9 +54,9 @@ if($q) while($r=mysqli_fetch_assoc($q)) $my_records[]=$r;
 <!-- Record Detail Modal -->
 <div class="modal-bg" id="modalRecordDetail">
   <div class="modal-box">
-    <div class="modal-header"><h3><i class="fas fa-file-medical" style="color:var(--primary);margin-right:.5rem;"></i>Medical Record</h3><button class="modal-close" onclick="closeModal('modalRecordDetail')">&times;</button></div>
+    <div class="modal-header"><h3><i class="fas fa-file-medical" style="color:var(--primary);margin-right:.5rem;"></i>Medical Record</h3><button class="btn btn-primary modal-close" onclick="closeModal('modalRecordDetail')"><span class="btn-text">&times;</span></button></div>
     <div id="recordDetailBody" style="font-size:1.3rem;line-height:2;"></div>
-    <div style="margin-top:1.5rem;text-align:right;"><button class="adm-btn adm-btn-primary adm-btn-sm" id="printRecBtn"><i class="fas fa-print"></i> Print</button></div>
+    <div style="margin-top:1.5rem;text-align:right;"><button class="btn-icon btn btn-primary btn-sm" id="printRecBtn"><span class="btn-text"><i class="fas fa-print"></i> Print</span></button></div>
   </div>
 </div>
 
