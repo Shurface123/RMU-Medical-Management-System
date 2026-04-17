@@ -4,7 +4,7 @@
 // /php/dashboards/patient_profile_actions.php
 // Handles all Section A-H actions for Module 10
 // ============================================================
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once '../db_conn.php';
 

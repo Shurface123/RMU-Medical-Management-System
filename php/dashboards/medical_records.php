@@ -3,7 +3,7 @@
 // MEDICAL RECORDS — File Attachment Manager
 // Updated: Phase 4 — uses new schema, admin-dashboard.css
 // ============================================================
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../db_conn.php';
 require_once '../classes/FileUploadManager.php';
 

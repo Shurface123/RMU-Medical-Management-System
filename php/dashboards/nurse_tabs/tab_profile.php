@@ -643,7 +643,7 @@ function uploadProfilePhoto() {
         success: function(res) {
             if(res.success) {
                 Swal.fire({ icon: 'success', title: 'Identity Verified', text: 'Profile photograph updated successfully.', timer: 1500, showConfirmButton: false });
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => window.location.href = '?tab=profile', 1500);
             } else {
                 Swal.fire({ icon: 'error', title: 'Upload Failed', text: res.message });
             }
@@ -703,7 +703,7 @@ function delRecord(type, id) {
             $.post('../nurse/process_profile_advanced.php', {action: 'delete_record', type: type, id: id, csrf_token: '<?= generateCsrfToken() ?>'}, function(res) {
                 if(res.success) {
                     Swal.fire({ icon: 'success', title: 'Record Expunged', showConfirmButton: false, timer: 1000 });
-                    setTimeout(() => location.reload(), 1000);
+                    setTimeout(() => window.location.href = '?tab=profile', 1000);
                 }
             }, 'json');
         }
@@ -732,7 +732,7 @@ $(document).ready(function() {
                         timer: 1500,
                         showConfirmButton: false
                     });
-                    setTimeout(() => location.reload(), 1500);
+                    setTimeout(() => window.location.href = '?tab=profile', 1500);
                 } else {
                     Swal.fire({ icon: 'error', title: 'Constraint Violation', text: res.message });
                     btn.prop('disabled', false).html(origHtml);

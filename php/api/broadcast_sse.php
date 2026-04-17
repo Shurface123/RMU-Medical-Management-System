@@ -9,7 +9,7 @@ header('Connection: keep-alive');
 header('X-Accel-Buffering: no'); // Disable buffering for Nginx/WAMP
 
 require_once '../db_conn.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (!isset($_SESSION['user_id'])) {
     echo "data: " . json_encode(['error' => 'Unauthorized']) . "\n\n";
@@ -17,6 +17,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = (int)$_SESSION['user_id'];
+session_write_close(); // Release session lock for long-running process
 $last_id = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
 
 // Function to send event

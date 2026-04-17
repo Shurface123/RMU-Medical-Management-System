@@ -5,7 +5,7 @@
 // new columns (patient_notified, refill_count),
 // unified notification system, consistent sidebar
 // ============================================================
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../db_conn.php';
 require_once '../classes/PrescriptionRefillManager.php';
 

@@ -1,6 +1,6 @@
 <?php
 require_once '../db_conn.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['nurse', 'doctor', 'admin'])) {
     die("Unauthorized access.");
 }

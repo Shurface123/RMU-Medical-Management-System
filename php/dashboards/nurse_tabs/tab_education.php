@@ -384,7 +384,7 @@ $(document).ready(function() {
                         timer: 1500,
                         showConfirmButton: false
                     });
-                    setTimeout(() => location.reload(), 1500);
+                    setTimeout(() => window.location.href = '?tab=education', 1500);
                 } else {
                     Swal.fire({
                         icon: 'error',

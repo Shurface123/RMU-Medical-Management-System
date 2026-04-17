@@ -178,11 +178,15 @@ input:checked+.notif-slider::before{transform:translateX(18px);}
       </button>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
       <div class="adm-avatar" style="background:var(--role-accent);">
-        <?php $pimg=$pat_row['profile_image']??''; if(!empty($pimg)&&$pimg!=='default-avatar.png'):?>
-        <img src="/RMU-Medical-Management-System/<?=htmlspecialchars($pimg)?>" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-        <?php else:?>
-        <?=strtoupper(substr($pat_row['name']??'P',0,1))?>
-        <?php endif;?>
+        <?php 
+        $g = strtolower($pat_row['gender'] ?? '');
+        $is_female = ($g === 'female' || $g === 'f');
+        $av_bg = $is_female ? 'linear-gradient(135deg, #FF6B6B, #FF8E53)' : 'linear-gradient(135deg, #2F80ED, #56CCF2)';
+        $av_icon = $is_female ? 'fa-person-dress' : 'fa-person';
+        ?>
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:<?=$av_bg?>;color:#fff;font-size:1.4rem;">
+          <i class="fas <?=$av_icon?>"></i>
+        </div>
       </div>
     </div>
   </div>

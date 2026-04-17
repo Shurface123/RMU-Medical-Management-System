@@ -173,6 +173,7 @@ if($q) while($r=mysqli_fetch_assoc($q)) $activity_log[]=$r;
     <?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
   </div>
 </div>
+</div><!-- end sec-settings -->
 
 <script>
 function checkPwdStr(inp){

@@ -329,7 +329,7 @@ $(document).ready(function() {
                     success: function(res) {
                         if(res.success) {
                             Swal.fire({ icon: 'success', title: 'Requested!', text: res.message, timer: 1500, showConfirmButton: false });
-                            setTimeout(() => location.reload(), 1500);
+                            setTimeout(() => window.location.href = '?tab=wards', 1500);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Failed', text: res.message });
                             btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Submit Request');
@@ -364,7 +364,7 @@ $(document).ready(function() {
                     success: function(res) {
                         if(res.success) {
                             Swal.fire({ icon: 'success', title: 'Activated!', text: res.message, timer: 1500, showConfirmButton: false });
-                            setTimeout(() => location.reload(), 1500);
+                            setTimeout(() => window.location.href = '?tab=wards', 1500);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Failed', text: res.message });
                             btn.prop('disabled', false).html('<i class="fas fa-biohazard"></i> Activate Protocol');

@@ -88,52 +88,51 @@ if ($q_shifts) {
                             <div style="width:60px; height:60px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:2.5rem; color:var(--success); opacity:0.4;">
                                 <i class="fas fa-check-circle"></i>
                             </div>
-                            <div>
-                                <h4 style="font-weight:700; color:var(--text-primary); margin:0;">All Tasks Completed</h4>
-                                <p style="font-size:1.2rem; color:var(--text-muted);">No pending clinical duties for this shift.</p>
-                            </div>
+                            <h4 style="font-weight:700; color:var(--text-primary); margin:0;">All Tasks Completed</h4>
+                            <p style="font-size:1.2rem; color:var(--text-muted);">No pending clinical duties for this shift.</p>
                         </div>
                     <?php else: ?>
-                        <div style="display:flex; flex-direction:column;">
-                            <?php foreach($tasks as $t): 
+                        <div style="padding:1.5rem 1.8rem; display:flex;flex-direction:column;gap:0;">
+                            <?php foreach($tasks as $idx => $t):
                                 $is_overdue = (strtotime($t['due_time']) < time());
-                                $accent = 'var(--primary)';
-                                if($t['priority'] == 'High') $accent = 'var(--danger)';
-                                elseif($t['priority'] == 'Medium') $accent = 'var(--warning)';
+                                $p = $t['priority'];
+                                $accent     = 'var(--primary)';
+                                $chip_bg    = 'var(--info-gradient)';
+                                $dot_color  = 'var(--primary)';
+                                if($p == 'High')   { $accent = 'var(--danger)'; $chip_bg = 'var(--danger-gradient)'; $dot_color='var(--danger)'; }
+                                elseif($p == 'Medium') { $accent = 'var(--warning)'; $chip_bg = 'var(--role-gradient)'; $dot_color='var(--warning)'; }
+                                if($is_overdue)    { $accent = 'var(--danger)'; }
+                                $is_last = ($idx === count($tasks) - 1);
                             ?>
-                                <div style="padding:2rem; border-bottom:1.5px solid var(--border); border-left:4px solid <?= $is_overdue ? 'var(--danger)' : $accent ?>; background:<?= $is_overdue ? 'rgba(231,76,60,0.02)' : 'transparent' ?>; display:flex; gap:1.8rem; align-items:center;">
-                                    <div style="flex:1;">
-                                        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:.5rem;">
-                                            <h4 style="font-weight:800; font-size:1.5rem; color:var(--text-primary); margin:0;"><?= e($t['task_title']) ?></h4>
-                                            <span class="adm-badge" style="background:<?= $is_overdue ? 'var(--danger)' : 'var(--surface-2)' ?>; color:<?= $is_overdue ? '#fff' : 'var(--text-secondary)' ?>; font-weight:700; border:1px solid var(--border);">
-                                                <i class="fas fa-exclamation-circle" style="margin-right:.4rem;"></i><?= strtoupper(e($t['priority'])) ?>
-                                            </span>
-                                        </div>
-                                        <div style="margin-bottom:1rem;">
-                                            <?php if($t['patient_name']): ?>
-                                                <span style="font-weight:700; color:var(--text-secondary); font-size:1.2rem;">
-                                                    <i class="fas fa-user-circle" style="color:var(--primary); opacity:0.7;"></i> <?= e($t['patient_name']) ?> <small style="font-weight:500; opacity:0.6;">(PT ID: <?= e($t['patient_id']) ?>)</small>
-                                                </span>
-                                            <?php else: ?>
-                                                <span style="font-weight:700; color:var(--text-muted); font-size:1.2rem;">
-                                                    <i class="fas fa-hospital-alt"></i> Ward Operational Task
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <p style="font-size:1.3rem; color:var(--text-primary); line-height:1.5; margin:0; opacity:0.8;"><?= nl2br(e($t['task_description'])) ?></p>
+                                <!-- Timeline Item -->
+                                <div style="display:flex;gap:1.4rem;">
+                                    <!-- Timeline Track -->
+                                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:18px;">
+                                        <div class="ov-timeline-dot" style="background:<?= $dot_color ?>;width:14px;height:14px;margin-top:1.8rem;"></div>
+                                        <?php if(!$is_last): ?><div class="ov-timeline-line" style="flex:1;min-height:40px;"></div><?php endif; ?>
                                     </div>
-                                    <div style="text-align:right; min-width:140px;">
-                                        <div style="margin-bottom:1rem;">
-                                            <div style="font-size:1.3rem; font-weight:800; color:<?= $is_overdue ? 'var(--danger)' : 'var(--text-primary)' ?>;">
-                                                <i class="far fa-clock"></i> <?= date('H:i', strtotime($t['due_time'])) ?>
-                                            </div>
-                                            <?php if($is_overdue): ?>
-                                                <small style="color:var(--danger); font-weight:700; font-size:1rem; text-transform:uppercase; letter-spacing:0.05em;">Overdue</small>
-                                            <?php endif; ?>
+                                    <!-- Card Body -->
+                                    <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-left:4px solid <?= $is_overdue ? 'var(--danger)' : $accent ?>;border-radius:12px;padding:1.5rem 1.8rem;margin-bottom:1.2rem;box-shadow:var(--shadow-sm);transition:var(--transition);">
+                                        <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;flex-wrap:wrap;">
+                                            <span class="rec-diag-chip" style="background:<?= $chip_bg ?>;font-size:1.05rem;padding:.2rem .8rem;"><?= strtoupper(e($p)) ?></span>
+                                            <?php if($is_overdue): ?><span class="adm-badge adm-badge-danger pulse-fade" style="font-size:1rem;"><i class="fas fa-clock"></i> OVERDUE</span><?php endif; ?>
+                                            <?php if($t['status'] == 'In Progress'): ?><span class="adm-badge" style="background:var(--info-gradient);color:#fff;font-size:1rem;"><i class="fas fa-spinner fa-spin"></i> IN PROGRESS</span><?php endif; ?>
                                         </div>
-                                        <button class="btn btn-ghost" onclick="completeTask(<?= $t['id'] ?>)" style="padding:.6rem 1.5rem; border-radius:8px; font-weight:700; width:100%;"><span class="btn-text">
-                                            <i class="fas fa-check"></i> Mark Done
-                                        </span></button>
+                                        <div style="font-size:1.5rem;font-weight:800;color:var(--text-primary);margin-bottom:.4rem;"><?= e($t['task_title']) ?></div>
+                                        <?php if($t['patient_name']): ?>
+                                            <span style="font-size:1.2rem;color:var(--text-secondary);font-weight:600;"><i class="fas fa-user-circle" style="color:var(--primary);margin-right:.3rem;"></i> <?= e($t['patient_name']) ?> <small style="opacity:.6;">(<?= e($t['patient_id']) ?>)</small></span>
+                                        <?php else: ?>
+                                            <span style="font-size:1.2rem;color:var(--text-muted);"><i class="fas fa-hospital-alt"></i> Ward Task</span>
+                                        <?php endif; ?>
+                                        <?php if(!empty($t['task_description'])): ?>
+                                        <p style="font-size:1.25rem;color:var(--text-primary);opacity:.8;margin:1rem 0 1.2rem;line-height:1.5;"><?= nl2br(e($t['task_description'])) ?></p>
+                                        <?php endif; ?>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.8rem;">
+                                            <span style="font-size:1.15rem;color:<?= $is_overdue ? 'var(--danger)' : 'var(--text-muted)' ?>;font-weight:700;"><i class="far fa-clock"></i> Due: <?= date('H:i · d M', strtotime($t['due_time'])) ?></span>
+                                            <button class="btn btn-ghost btn-sm" onclick="completeTask(<?= $t['id'] ?>)" style="border-radius:8px;font-weight:700;">
+                                                <span class="btn-text"><i class="fas fa-check"></i> Mark Done</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -154,22 +153,18 @@ if ($q_shifts) {
                             No tasks have been finalized during this shift session.
                         </div>
                     <?php else: ?>
-                        <div style="display:flex; flex-direction:column;">
+                        <div style="padding:1.5rem 1.8rem;">
                             <?php foreach($completed_tasks as $t): ?>
-                                <div style="padding:1.2rem 2rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; opacity:0.75;">
-                                    <div style="display:flex; align-items:center; gap:1.2rem;">
-                                        <i class="fas fa-check-circle text-success" style="font-size:1.4rem;"></i>
-                                        <div>
-                                            <div style="font-weight:700; font-size:1.3rem; color:var(--text-primary); text-decoration:line-through;">
+                                <div class="activity-item" style="opacity:.8;">
+                                    <div class="ov-timeline-dot" style="background:var(--success);"></div>
+                                    <div style="flex:1;margin-left:1rem;">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                                            <span style="font-weight:700;font-size:1.3rem;color:var(--text-primary);text-decoration:line-through;">
                                                 <?= e($t['task_title']) ?>
-                                                <?php if($t['patient_name']): ?>
-                                                    <small style="text-decoration:none; display:inline-block; margin-left:.5rem; opacity:0.6;">· <?= e($t['patient_name']) ?></small>
-                                                <?php endif; ?>
-                                            </div>
+                                                <?php if($t['patient_name']): ?><small style="text-decoration:none;opacity:.6;"> · <?= e($t['patient_name']) ?></small><?php endif; ?>
+                                            </span>
+                                            <small style="font-weight:700;color:var(--text-muted);white-space:nowrap;margin-left:1rem;"><i class="far fa-clock"></i> <?= date('H:i', strtotime($t['completed_at'])) ?></small>
                                         </div>
-                                    </div>
-                                    <div style="font-size:1.1rem; font-weight:700; color:var(--text-muted);">
-                                        <i class="far fa-clock"></i> <?= date('H:i', strtotime($t['completed_at'])) ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -264,7 +259,7 @@ if ($q_shifts) {
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <small style="text-transform:uppercase; font-size:0.9rem; font-weight:700; color:var(--text-muted);">Current Active Shift</small>
-                            <div style="font-weight:800; font-size:1.4rem; color:var(--text-primary);"><?= e($current_shift['shift_type']??'N/A') ?> — <?= e($ward_assigned) ?></div>
+                            <div style="font-weight:800; font-size:1.4rem; color:var(--text-primary);"><?= e($current_shift['shift_type']??'N/A') ?> — <?= e($current_shift['ward_assigned'] ?? 'Unknown Ward') ?></div>
                         </div>
                         <i class="fas fa-file-signature text-warning" style="font-size:2rem; opacity:0.5;"></i>
                     </div>
@@ -322,7 +317,7 @@ function completeTask(taskId) {
             }, function(res) {
                 if(res.success) {
                     Swal.fire({ icon: 'success', title: 'Task Finalized!', timer: 1000, showConfirmButton: false });
-                    setTimeout(() => location.reload(), 1000);
+                    setTimeout(() => window.location.href = '?tab=tasks', 1000);
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: res.message });
                 }
@@ -363,7 +358,7 @@ $(document).ready(function() {
                     success: function(res) {
                         if(res.success) {
                             Swal.fire({ icon: 'success', title: 'Handover Successful', text: 'Clinical session closed and secured.', timer: 2000, showConfirmButton: false });
-                            setTimeout(() => location.reload(), 2000);
+                            setTimeout(() => window.location.href = '?tab=tasks', 2000);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Submission Failed', text: res.message });
                             btn.prop('disabled', false).html('<i class="fas fa-check-double"></i> Sign Off & Submit');

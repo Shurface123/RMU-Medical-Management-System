@@ -10,7 +10,7 @@
 // All other triggers (approve/reschedule/cancel/prescribe) are
 // handled inline in doctor_actions.php / Phase 4 files.
 // ============================================================
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once '../db_conn.php';
 

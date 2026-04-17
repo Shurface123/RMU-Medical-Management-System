@@ -3,7 +3,7 @@
  * RMU Medical Sickbay — System Settings v2.0
  * Comprehensive Configuration Center
  */
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../db_conn.php';
 
 // Authentication Guard

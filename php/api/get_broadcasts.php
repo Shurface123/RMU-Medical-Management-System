@@ -3,7 +3,7 @@
  * get_broadcasts.php
  * Fetch active broadcasts for the current user.
  */
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../db_conn.php';
 require_once '../classes/BroadcastManager.php';
 
@@ -14,8 +14,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$bm = new BroadcastManager($conn);
 $user_id = (int)$_SESSION['user_id'];
+session_write_close(); // Release lock for polling
 $role = $_SESSION['user_role'] ?? $_SESSION['role'] ?? '';
 
 $broadcasts = $bm->getActiveForUser($user_id, $role);

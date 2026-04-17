@@ -4,12 +4,12 @@
 // ============================================================
 if (!isset($conn)) exit;
 
-// ── GET SHIFT & WARD ─────────────────────────────────────────
+// â”€â”€ GET SHIFT & WARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $shift_q = mysqli_query($conn, "SELECT ward_assigned FROM nurse_shifts WHERE nurse_id=$nurse_pk AND shift_date='$today' AND status='Active' LIMIT 1");
 $current_shift = mysqli_fetch_assoc($shift_q);
 $ward_assigned = $current_shift['ward_assigned'] ?? 'All Wards';
 
-// ── FETCH MEDS FOR TODAY ─────────────────────────────────────
+// â”€â”€ FETCH MEDS FOR TODAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // We fetch records from `medication_administration` for today 
 // matching patients in the nurse's ward.
 $meds = [];
@@ -74,140 +74,138 @@ if ($q) {
         </div>
     </div>
 
-    <!-- Stats Summary -->
+    <!-- Advanced Stats Strip -->
     <?php
         $t_pending = array_reduce($meds, fn($c,$m) => $c + ($m['status']=='Pending'?1:0), 0);
         $t_admin   = array_reduce($meds, fn($c,$m) => $c + ($m['status']=='Administered'?1:0), 0);
         $t_missed  = array_reduce($meds, fn($c,$m) => $c + (in_array($m['status'],['Missed','Refused','Held'])?1:0), 0);
         $overdue_count = array_reduce($meds, fn($c,$m) => $c + ($m['is_overdue']?1:0), 0);
+        $total = count($meds);
+        $admin_pct = $total > 0 ? round(($t_admin / $total) * 100) : 0;
     ?>
-    <div class="adm-summary-strip" style="margin-bottom:2.5rem;">
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num orange"><?= $t_pending ?></div>
-            <div class="adm-mini-card-label">
-                <i class="fas fa-clock text-warning" style="margin-right:.5rem;"></i>Scheduled
-                <?php if($overdue_count > 0): ?>
-                    <span class="adm-badge adm-badge-danger pulse-fade" style="margin-left:.8rem; font-size:1rem;"><?= $overdue_count ?> OVERDUE</span>
-                <?php endif; ?>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-bottom:2.5rem;">
+        <div class="ov-stat-card" style="border-left:4px solid var(--warning);">
+            <div class="ov-stat-icon" style="background:var(--role-gradient);"><i class="fas fa-clock"></i></div>
+            <div>
+                <div class="ov-stat-num" style="color:var(--warning);"><?= $t_pending ?></div>
+                <div class="ov-stat-label">Scheduled <?= $overdue_count > 0 ? '<span class="adm-badge adm-badge-danger" style="margin-left:.5rem;font-size:.9rem;">'.$overdue_count.' OVERDUE</span>' : '' ?></div>
             </div>
         </div>
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num green"><?= $t_admin ?></div>
-            <div class="adm-mini-card-label"><i class="fas fa-check-double text-success" style="margin-right:.5rem;"></i>Administered</div>
+        <div class="ov-stat-card" style="border-left:4px solid var(--success);">
+            <div class="ov-stat-icon" style="background:var(--success-gradient);"><i class="fas fa-check-double"></i></div>
+            <div>
+                <div class="ov-stat-num" style="color:var(--success);"><?= $t_admin ?></div>
+                <div class="ov-stat-label">Administered</div>
+            </div>
         </div>
-        <div class="adm-mini-card" style="background:<?= $t_missed > 0 ? 'rgba(231,76,60,0.03)' : '' ?>;">
-            <div class="adm-mini-card-num red"><?= $t_missed ?></div>
-            <div class="adm-mini-card-label"><i class="fas fa-exclamation-circle text-danger" style="margin-right:.5rem;"></i>Missed / Held</div>
+        <div class="ov-stat-card" style="border-left:4px solid <?= $t_missed > 0 ? 'var(--danger)' : 'var(--border)' ?>;">
+            <div class="ov-stat-icon" style="background:<?= $t_missed > 0 ? 'var(--danger-gradient)' : 'linear-gradient(135deg,#636e72,#b2bec3)' ?>;"><i class="fas fa-ban"></i></div>
+            <div>
+                <div class="ov-stat-num" style="color:<?= $t_missed > 0 ? 'var(--danger)' : 'var(--text-muted)' ?>;"><?= $t_missed ?></div>
+                <div class="ov-stat-label">Missed / Held</div>
+            </div>
+        </div>
+        <!-- MAR Progress -->
+        <div class="ov-stat-card" style="border-left:4px solid var(--primary); flex-direction:column; align-items:flex-start; gap:.8rem;">
+            <div style="display:flex;align-items:center;gap:1rem;width:100%;">
+                <div class="ov-stat-icon" style="background:var(--info-gradient);"><i class="fas fa-chart-pie"></i></div>
+                <div>
+                    <div class="ov-stat-num" style="color:var(--primary);"><?= $admin_pct ?>%</div>
+                    <div class="ov-stat-label">MAR Adherence</div>
+                </div>
+            </div>
+            <div class="pay-progress-bar" style="width:100%;">
+                <div class="pay-progress-fill" style="width:<?= $admin_pct ?>%;"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Medication List -->
-    <div class="adm-card shadow-sm">
-        <div class="adm-card-header" style="justify-content:space-between;">
-            <h3 style="font-size:1.5rem; font-weight:700;"><i class="fas fa-list-check text-primary"></i> Daily Administration Record</h3>
-            <span class="adm-badge" style="background:var(--surface-2); color:var(--text-secondary); border:1px solid var(--border); font-weight:700;">WARD MAR · <?= strtoupper($ward_assigned) ?></span>
+    <!-- MAR: Medication Administration Records â€” inv-card Layout -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div style="display:flex;gap:.6rem;" class="filter-tabs" id="medFilters">
+            <span class="ftab active" onclick="filterMeds(this,'all')">All</span>
+            <span class="ftab" onclick="filterMeds(this,'pending')"><i class="fas fa-clock"></i> Pending</span>
+            <span class="ftab" onclick="filterMeds(this,'administered')"><i class="fas fa-check"></i> Given</span>
+            <span class="ftab" onclick="filterMeds(this,'overdue')"><i class="fas fa-exclamation-triangle"></i> Overdue</span>
         </div>
-        <div class="adm-card-body" style="padding:0;">
-            <div class="adm-table-wrap">
-                <table class="adm-table" id="medsTable">
-                    <thead>
-                        <tr>
-                            <th>Sched. Time</th>
-                            <th>Patient Identity</th>
-                            <th>Medication / Route</th>
-                            <th>Dosage</th>
-                            <th>Status</th>
-                            <th style="text-align:right;">Clinical Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if(empty($meds)): ?>
-                            <tr>
-                                <td colspan="6" style="text-align:center; padding:5rem 2rem; color:var(--text-muted);">
-                                    <div style="opacity:0.2; margin-bottom:1.5rem;">
-                                        <i class="fas fa-pills" style="font-size:4rem;"></i>
-                                    </div>
-                                    <h5 style="font-weight:600; font-size:1.4rem;">No Scheduled Medications</h5>
-                                    <p style="font-size:1.2rem;">All clear for the current shift in this ward.</p>
-                                </td>
-                            </tr>
-                        <?php else: foreach($meds as $m): 
-                            $is_high_alert = preg_match('/(Insulin|Warfarin|Heparin|Digoxin|Morphine|Dopamine)/i', $m['medicine_name']);
-                        ?>
-                            <tr class="<?= $m['is_overdue'] ? 'row-overdue' : '' ?>" style="transition:all .2s ease;">
-                                <td>
-                                    <div style="display:flex; align-items:center; gap:.8rem;">
-                                        <i class="fas fa-clock <?= $m['is_overdue']?'text-danger':($m['status']=='Administered'?'text-success':'text-warning') ?>" style="font-size:1.2rem;"></i>
-                                        <span style="font-family:monospace; font-weight:800; font-size:1.4rem; color:var(--text-primary);">
-                                            <?= date('H:i', strtotime($m['scheduled_time'])) ?>
-                                        </span>
-                                    </div>
-                                    <?php if($m['is_overdue']): ?>
-                                        <small class="text-danger" style="font-weight:700; text-transform:uppercase; font-size:0.9rem;">Overdue</small>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div style="display:flex; align-items:center; gap:1.2rem;">
-                                        <div style="width:38px; height:38px; border-radius:10px; background:<?= $m['gender']=='Male' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(231, 76, 60, 0.1)' ?>; color:<?= $m['gender']=='Male' ? 'var(--primary)' : 'var(--danger)' ?>; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; border:1px solid rgba(0,0,0,0.05); flex-shrink:0;">
-                                            <?= strtoupper(substr($m['patient_name'],0,1)) ?>
-                                        </div>
-                                        <div>
-                                            <div style="font-weight:700; font-size:1.35rem; color:var(--text-primary); margin-bottom:.1rem;"><?= e($m['patient_name']) ?></div>
-                                            <small style="color:var(--text-muted); font-weight:600;"><?= e($m['ward']) ?> (Bed <?= e($m['bed_number']) ?>) · <span style="font-family:monospace;">#<?= e($m['patient_id']) ?></span></small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="display:flex; align-items:center; gap:.8rem;">
-                                        <div style="flex:1;">
-                                            <div style="font-weight:700; font-size:1.4rem; color:var(--text-primary); display:flex; align-items:center; gap:.5rem;">
-                                                <?= e($m['medicine_name']) ?>
-                                                <?php if($is_high_alert): ?>
-                                                    <span class="adm-badge adm-badge-danger" style="font-size:0.85rem; padding:.2rem .5rem;" title="High Alert Medication"><i class="fas fa-skull"></i> ALERT</span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <div style="font-size:1.15rem; color:var(--text-muted); font-weight:500;">
-                                                <i class="fas fa-directions"></i> Via: <span style="color:var(--text-secondary); font-weight:600;"><?= e($m['route']) ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span style="font-weight:800; font-size:1.4rem; color:var(--primary); background:rgba(var(--primary-rgb),0.05); padding:.3rem .8rem; border-radius:8px; border:1px solid rgba(var(--primary-rgb),0.1);">
-                                        <?= e($m['dosage']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if($m['status'] == 'Pending'): ?>
-                                        <span class="adm-badge adm-badge-warning" style="font-weight:700; padding:.4rem 1rem;"><i class="fas fa-hourglass-start"></i> PENDING</span>
-                                    <?php elseif($m['status'] == 'Administered'): ?>
-                                        <div style="display:flex; flex-direction:column; gap:.3rem;">
-                                            <span class="adm-badge adm-badge-success" style="font-weight:700; padding:.4rem 1rem;"><i class="fas fa-check-double"></i> GIVEN</span>
-                                            <small style="color:var(--text-muted); font-weight:600; text-align:center; font-size:1rem;"><?= date('H:i', strtotime($m['administered_at'])) ?></small>
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="adm-badge adm-badge-danger" style="font-weight:700; padding:.4rem 1rem;"><i class="fas fa-ban"></i> <?= strtoupper(e($m['status'])) ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="text-align:right;">
-                                    <?php if($m['status'] == 'Pending'): ?>
-                                        <button class="btn btn-primary" onclick="openAdministerModal(<?= $m['admin_pk'] ?>, '<?= e(addslashes($m['patient_name'])) ?>', '<?= e(addslashes($m['medicine_name'])) ?>', '<?= e(addslashes($m['dosage'])) ?>', '<?= e(addslashes($m['route'])) ?>')" style="padding:.6rem 1.5rem; border-radius:10px; font-weight:700;"><span class="btn-text">
-                                            <i class="fas fa-syringe"></i> Verify
-                                        </span></button>
-                                    <?php else: ?>
-                                        <button class="btn btn-ghost" style="opacity:0.6;" disabled><span class="btn-text">
-                                            <i class="fas fa-lock-open"></i> Archive
-                                        </span></button>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; endif; ?>
-                    </tbody>
-                </table>
+    </div>
+
+    <?php if(empty($meds)): ?>
+    <div class="adm-card" style="text-align:center;padding:5rem;">
+        <i class="fas fa-pills" style="font-size:3.5rem;opacity:.2;display:block;margin-bottom:1rem;"></i>
+        <h3 style="color:var(--text-muted);">No Scheduled Medications</h3>
+        <p style="color:var(--text-muted);font-size:1.3rem;margin-top:.5rem;">All clear for the current shift in <?= e($ward_assigned) ?>.</p>
+    </div>
+    <?php else: foreach($meds as $m):
+        $is_high_alert = preg_match('/(Insulin|Warfarin|Heparin|Digoxin|Morphine|Dopamine)/i', $m['medicine_name']);
+        $is_male   = strtolower($m['gender'] ?? '') === 'male';
+        $av_bg     = $is_male ? 'linear-gradient(135deg,#2F80ED,#56CCF2)' : 'linear-gradient(135deg,#FF6B6B,#FF8E53)';
+        $inv_cls   = $m['status'] === 'Administered' ? 'inv-paid' : ($m['is_overdue'] ? 'inv-overdue' : 'inv-pending');
+        $badge_cls = $m['status'] === 'Administered' ? 'success' : ($m['is_overdue'] ? 'danger' : 'warning');
+        $status_label = $m['is_overdue'] ? 'OVERDUE' : strtoupper($m['status']);
+        $med_cat   = $m['status'] === 'Administered' ? 'administered' : ($m['is_overdue'] ? 'overdue' : 'pending');
+    ?>
+    <div class="inv-card <?= $inv_cls ?> med-row" data-cat="<?= $med_cat ?>">
+        <div class="inv-card-header">
+            <!-- Left: Time + Patient Avatar -->
+            <div style="display:flex;align-items:center;gap:1.5rem;flex:1;flex-wrap:wrap;">
+                <!-- Scheduled Time Badge -->
+                <div class="ov-appt-date-badge" style="<?= $m['is_overdue'] ? 'background:var(--danger-gradient)' : ($m['status']==='Administered' ? 'background:var(--success-gradient)' : '') ?>">
+                    <div class="day" style="font-size:1.4rem;"><?= date('H:i', strtotime($m['scheduled_time'])) ?></div>
+                    <div class="mon"><?= $m['is_overdue'] ? 'late' : date('d M', strtotime($m['scheduled_time'])) ?></div>
+                </div>
+                <!-- Patient Avatar + Info -->
+                <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:<?= $av_bg ?>;color:#fff;font-size:1.5rem;flex-shrink:0;">
+                    <i class="fas <?= $is_male ? 'fa-mars' : 'fa-venus' ?>"></i>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);"><?= e($m['patient_name']) ?></div>
+                    <div style="font-size:1.15rem;color:var(--text-muted);display:flex;gap:1rem;flex-wrap:wrap;margin-top:.2rem;">
+                        <span><i class="fas fa-door-open"></i> <?= e($m['ward']) ?> Â· Bed <?= e($m['bed_number']) ?></span>
+                        <span style="font-family:monospace;">#<?= e($m['patient_id']) ?></span>
+                    </div>
+                </div>
+            </div>
+            <!-- Center: Medication Detail -->
+            <div style="flex:1;padding:0 1rem;">
+                <div style="font-size:1.4rem;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                    <?= e($m['medicine_name']) ?>
+                    <?php if($is_high_alert): ?><span class="adm-badge adm-badge-danger" style="font-size:.85rem;"><i class="fas fa-skull"></i> HIGH ALERT</span><?php endif; ?>
+                </div>
+                <div style="display:flex;gap:.8rem;margin-top:.5rem;flex-wrap:wrap;">
+                    <span class="vital-chip"><i class="fas fa-capsules" style="color:var(--primary);"></i> <?= e($m['dosage']) ?></span>
+                    <span class="vital-chip"><i class="fas fa-directions" style="color:var(--info);"></i> <?= e($m['route']) ?></span>
+                </div>
+            </div>
+            <!-- Right: Status + Action -->
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.8rem;flex-shrink:0;">
+                <span class="adm-badge adm-badge-<?= $badge_cls ?>" style="font-size:1.1rem;font-weight:700;"><?= $status_label ?></span>
+                <?php if($m['status'] === 'Administered' && $m['administered_at']): ?>
+                <div style="font-size:1.05rem;color:var(--text-muted);">Given <?= date('H:i', strtotime($m['administered_at'])) ?></div>
+                <?php endif; ?>
+                <?php if($m['status'] === 'Pending'): ?>
+                <button class="btn btn-primary btn-sm" onclick="openAdministerModal(<?= $m['admin_pk'] ?>, '<?= e(addslashes($m['patient_name'])) ?>', '<?= e(addslashes($m['medicine_name'])) ?>', '<?= e(addslashes($m['dosage'])) ?>', '<?= e(addslashes($m['route'])) ?>')">
+                    <span class="btn-text"><i class="fas fa-syringe"></i> Verify & Give</span>
+                </button>
+                <?php else: ?>
+                <button class="btn btn-ghost btn-sm" disabled style="opacity:.5;">
+                    <span class="btn-text"><i class="fas fa-lock"></i> Archived</span>
+                </button>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-</div>
+    <?php endforeach; endif; ?>
+
+<script>
+function filterMeds(el, cat) {
+    document.querySelectorAll('#medFilters .ftab').forEach(f => f.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.med-row').forEach(r => {
+        r.style.display = (cat === 'all' || r.dataset.cat === cat) ? '' : 'none';
+    });
+}
+</script>
 
 <!-- ========================================== -->
 <!-- MODAL: ADMINISTER MEDICATION               -->
@@ -219,7 +217,7 @@ if ($q) {
     <div class="modal-box" style="max-width:680px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
         <div class="modal-header" style="background:var(--primary); padding:1.8rem 2.5rem;">
             <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-prescription-bottle-alt" style="margin-right:.8rem;"></i> Medication Verification</h3>
-            <button class="btn btn-primary modal-close" onclick="closeAdministerModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
+            <button class="btn btn-primary modal-close" onclick="closeAdministerModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">Ã—</span></button>
         </div>
         
         <div style="padding:2.5rem;">
@@ -228,7 +226,7 @@ if ($q) {
                 <i class="fas fa-shield-alt text-danger" style="font-size:2rem;"></i>
                 <div>
                     <strong style="color:var(--danger); font-size:1.2rem; display:block; margin-bottom:.2rem;">SAFETY PROTOCOL: THE 5 RIGHTS</strong>
-                    <p style="margin:0; font-size:1.1rem; color:var(--text-secondary); font-weight:600;">Right Patient · Right Drug · Right Dose · Right Route · Right Time</p>
+                    <p style="margin:0; font-size:1.1rem; color:var(--text-secondary); font-weight:600;">Right Patient Â· Right Drug Â· Right Dose Â· Right Route Â· Right Time</p>
                 </div>
             </div>
 
@@ -354,7 +352,7 @@ $(document).ready(function() {
                     success: function(res) {
                         if(res.success) {
                             Swal.fire({ icon: 'success', title: 'Committed!', text: 'MAR record updated successfully.', timer: 1500, showConfirmButton: false });
-                            setTimeout(() => location.reload(), 1500);
+                            setTimeout(() => window.location.href = '?tab=medications', 1500);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Commit Failed', text: res.message });
                             btn.html('<i class="fas fa-check-double"></i> Confirm Administration').prop('disabled', false);

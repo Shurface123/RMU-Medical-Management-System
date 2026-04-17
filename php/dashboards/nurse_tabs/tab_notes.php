@@ -54,15 +54,9 @@ if ($q_notes) { while ($r = mysqli_fetch_assoc($q_notes)) $notes[] = $r; }
                 <i class="fas fa-file-medical text-muted" style="font-size:1.4rem;"></i>
                 <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);"><?= count($notes) ?> <small style="font-weight:500; font-size:1rem; color:var(--text-muted);">Recent Entries</small></div>
             </div>
-            <?php if($shift_pk): ?>
-                <button class="btn btn-primary" onclick="openNoteModal()" style="padding:.8rem 2rem; border-radius:12px; font-weight:700; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);"><span class="btn-text">
-                    <i class="fas fa-plus"></i> New Note
-                </span></button>
-            <?php else: ?>
-                <button class="btn btn-ghost" disabled title="Active shift required" style="padding:.8rem 2rem; border-radius:12px; opacity:0.6;"><span class="btn-text">
-                    <i class="fas fa-lock"></i> Add Note
-                </span></button>
-            <?php endif; ?>
+            <button class="btn btn-primary" onclick="openNoteModal()" style="padding:.8rem 2rem; border-radius:12px; font-weight:700; box-shadow:0 4px 12px rgba(var(--primary-rgb), 0.3);"><span class="btn-text">
+                <i class="fas fa-plus"></i> New Note
+            </span></button>
         </div>
     </div>
 
@@ -144,7 +138,7 @@ if ($q_notes) { while ($r = mysqli_fetch_assoc($q_notes)) $notes[] = $r; }
             <?php endif; ?>
         </div>
     </div>
-</div>iv>
+</div>
 
 <!-- ══════════════════════════════════════════════ -->
 <!-- MODAL: ADD NURSING NOTE (Native Admin Style)   -->
@@ -247,7 +241,7 @@ $(document).ready(function() {
                     success: function(res) {
                         if(res.success) {
                             Swal.fire({ icon: 'success', title: 'Note Logged!', text: 'Clinical record has been secured.', timer: 1500, showConfirmButton: false });
-                            setTimeout(() => location.reload(), 1500);
+                            setTimeout(() => window.location.href = '?tab=notes', 1500);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Submission Failed', text: res.message });
                             btn.prop('disabled', false).html('<i class="fas fa-check-circle"></i> Complete & Sign');

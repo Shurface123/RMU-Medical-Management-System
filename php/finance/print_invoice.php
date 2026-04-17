@@ -158,7 +158,7 @@ body { font-family: 'Poppins', sans-serif; background: #e0e0e0; margin: 0; paddi
 
     <div class="summary-box" style="position:relative; z-index:1;">
       <div class="summary-row"><span style="color:#888;">Subtotal</span><span style="font-weight:600;">GHS <?=number_format($inv['subtotal'], 2)?></span></div>
-      <?php if($inv['discount_total']>0): ?><div class="summary-row"><span style="color:#27AE60;">Discount</span><span style="color:#27AE60;font-weight:600;">-GHS <?=number_format($inv['discount_total'], 2)?></span></div><?php endif; ?>
+      <?php if(isset($inv['discount_amount']) && $inv['discount_amount']>0): ?><div class="summary-row"><span style="color:#27AE60;">Discount</span><span style="color:#27AE60;font-weight:600;">-GHS <?=number_format($inv['discount_amount'], 2)?></span></div><?php endif; ?>
       <?php if($inv['tax_amount']>0): ?><div class="summary-row"><span style="color:#888;">Tax</span><span style="font-weight:600;">GHS <?=number_format($inv['tax_amount'], 2)?></span></div><?php endif; ?>
       <div class="summary-row total"><span>Total</span><span>GHS <?=number_format($inv['total_amount'], 2)?></span></div>
       

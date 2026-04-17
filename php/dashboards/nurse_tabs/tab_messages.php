@@ -300,7 +300,7 @@ function viewMessage(folder, msg, element) {
     $('#read-pane-content').css('display', 'flex').css('opacity', '0').animate({ opacity: 1 }, 200);
     
     $('#msgSubject').text(msg.subject || '(No Subject)');
-    $('#msgBody').html(msg.message_content.replace(/\n\g, '<br>'));
+    $('#msgBody').html(msg.message_content.replace(/\n/g, '<br>'));
     
     const msgDate = new Date(msg.sent_at);
     $('#msgDate').text(msgDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }));
@@ -370,7 +370,7 @@ $(document).ready(function() {
                         timer: 1500,
                         showConfirmButton: false
                     });
-                    setTimeout(() => location.reload(), 1500);
+                    setTimeout(() => window.location.href = '?tab=messages', 1500);
                 } else {
                     Swal.fire({
                         icon: 'error',

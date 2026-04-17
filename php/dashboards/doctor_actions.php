@@ -3,7 +3,7 @@
 // DOCTOR AJAX ACTIONS HANDLER
 // PHP/dashboards/doctor_actions.php
 // ============================================================
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'doctor') {

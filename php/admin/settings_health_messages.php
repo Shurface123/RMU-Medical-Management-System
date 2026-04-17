@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 // Include authentication middleware
 require_once '../includes/auth_middleware.php';
 requireRole('admin');

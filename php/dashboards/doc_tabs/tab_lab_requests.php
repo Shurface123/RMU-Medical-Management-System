@@ -3,9 +3,14 @@
 // DOCTOR DASHBOARD - TAB LAB REQUESTS
 // ============================================================
 if (!isset($doc_pk)) { exit; }
+if (!function_exists('e')) {
+    function e($str) {
+        return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
+    }
+}
 
 // Fetch Patient List
-$pts_q = mysqli_query($conn, "SELECT id, name, p_ref FROM patients ORDER BY name ASC");
+$pts_q = mysqli_query($conn, "SELECT p.id, u.name AS full_name, p.patient_id FROM patients p JOIN users u ON p.user_id = u.id ORDER BY u.name ASC");
 $pts = [];
 if($pts_q) while($r=mysqli_fetch_assoc($pts_q)) $pts[]=$r;
 
@@ -15,9 +20,10 @@ $catalog = [];
 if($cat_q) while($c=mysqli_fetch_assoc($cat_q)) $catalog[]=$c;
 
 // Fetch Previous Lab Orders from this Doctor
-$ord_q = mysqli_query($conn, "SELECT o.*, p.name AS patient_name, p.p_ref, c.test_name, c.category
+$ord_q = mysqli_query($conn, "SELECT o.*, u.name AS patient_name, p.patient_id, c.test_name, c.category
                               FROM lab_test_orders o 
                               JOIN patients p ON o.patient_id = p.id
+                              JOIN users u ON p.user_id = u.id
                               JOIN lab_test_catalog c ON o.test_catalog_id = c.id
                               WHERE o.doctor_id = $doc_pk
                               ORDER BY o.created_at DESC LIMIT 50");
@@ -53,7 +59,7 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
                     <?php else: foreach($orders as $o): ?>
                         <tr>
                             <td><strong>ORD-<?= $o['id'] ?></strong></td>
-                            <td><?= e($o['patient_name']) ?><br><small style="color:var(--text-muted);"><?= e($o['p_ref']) ?></small></td>
+                            <td><?= e($o['patient_name']) ?><br><small style="color:var(--text-muted);"><?= e($o['patient_id'] ?? '') ?></small></td>
                             <td><?= e($o['test_name']) ?> <small>(<?= e($o['category']) ?>)</small></td>
                             <td><?= date('d M Y, h:i A', strtotime($o['created_at'])) ?></td>
                             <td>
@@ -91,7 +97,7 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
                 <select name="patient_id" class="form-control" required>
                     <option value="">-- Choose Patient --</option>
                     <?php foreach($pts as $pt): ?>
-                        <option value="<?= $pt['id'] ?>"><?= e($pt['name']) ?> (<?= e($pt['p_ref']) ?>)</option>
+                        <option value="<?= $pt['id'] ?>"><?= e($pt['full_name']) ?> (<?= e($pt['patient_id']) ?>)</option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -118,7 +124,7 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
                         $cur_cat = $c['category'];
                     }
                 ?>
-                    <option value="<?= $c['id'] ?>"><?= e($c['test_name']) ?> (<?= e($c['sample_type_needed']) ?>)</option>
+                    <option value="<?= $c['id'] ?>"><?= e($c['test_name']) ?> (<?= e($c['sample_type'] ?? '') ?>)</option>
                 <?php endforeach; if($cur_cat !== '') echo '</optgroup>'; ?>
             </select>
         </div>

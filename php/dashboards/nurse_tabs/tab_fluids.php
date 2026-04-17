@@ -4,12 +4,12 @@
 // ============================================================
 if (!isset($conn)) exit;
 
-// ── GET SHIFT & WARD ─────────────────────────────────────────
+// â”€â”€ GET SHIFT & WARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $shift_q = mysqli_query($conn, "SELECT ward_assigned FROM nurse_shifts WHERE nurse_id=$nurse_pk AND shift_date='$today' AND status='Active' LIMIT 1");
 $current_shift = mysqli_fetch_assoc($shift_q);
 $ward_assigned = $current_shift['ward_assigned'] ?? 'Unknown Ward';
 
-// ── FETCH PATIENTS IN WARD ───────────────────────────────────
+// â”€â”€ FETCH PATIENTS IN WARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $patients_in_ward = [];
 $q_pw = mysqli_query($conn, "
     SELECT p.id, p.patient_id, u.name, b.bed_number 
@@ -24,7 +24,7 @@ if ($q_pw) {
     while($r = mysqli_fetch_assoc($q_pw)) $patients_in_ward[] = $r;
 }
 
-// ── FETCH ACTIVE IV INFUSIONS ────────────────────────────────
+// â”€â”€ FETCH ACTIVE IV INFUSIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $iv_records = [];
 $q_iv = mysqli_query($conn, "
     SELECT iv.*, p.patient_id as pid, u.name AS patient_name, b.bed_number 
@@ -41,7 +41,7 @@ if ($q_iv) {
     while($r = mysqli_fetch_assoc($q_iv)) $iv_records[] = $r;
 }
 
-// ── FETCH TODAY'S I&O CHARTS ─────────────────────────────────
+// â”€â”€ FETCH TODAY'S I&O CHARTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $io_records = [];
 $q_io = mysqli_query($conn, "
     SELECT fb.*, p.patient_id as pid, u.name AS patient_name, b.bed_number 
@@ -97,85 +97,88 @@ if ($q_io) {
 
     <div id="fluid-sub-content">
         
-        <!-- ACTIVE IV INFUSIONS -->
+        <!-- ACTIVE IV INFUSIONS â€” Premium Fluid Cards -->
         <div id="iv-content">
-            <div class="adm-card shadow-sm">
-                <div class="adm-card-header" style="background:rgba(52,152,219,0.02); border-bottom:1.5px solid var(--border);">
-                    <h3 style="font-size:1.4rem; font-weight:700; color:var(--info);"><i class="fas fa-list-ul"></i> Active Ward Infusions</h3>
-                </div>
-                <div class="adm-card-body" style="padding:0;">
-                    <div class="adm-table-wrap">
-                        <table class="adm-table">
-                            <thead>
-                                <tr style="background:var(--surface-2);">
-                                    <th style="padding:1.5rem 2rem;">PATIENT / LOCATION</th>
-                                    <th>FLUID TYPE</th>
-                                    <th>VOLUME PROGRESS</th>
-                                    <th>RATE (ml/hr)</th>
-                                    <th>SITE</th>
-                                    <th>STARTED</th>
-                                    <th>STATUS</th>
-                                    <th style="padding:1.5rem 2rem;">MANAGEMENT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if(empty($iv_records)): ?>
-                                    <tr><td colspan="8" style="text-align:center;padding:5rem;color:var(--text-muted); font-weight:600; font-size:1.3rem;"><i class="fas fa-tint-slash" style="font-size:3rem; display:block; margin-bottom:1rem; opacity:0.3;"></i> No active IV infusions reported in this ward.</td></tr>
-                                <?php else: foreach($iv_records as $iv): ?>
-                                    <tr style="border-bottom:1px solid var(--border);">
-                                        <td style="padding:1.5rem 2rem;">
-                                            <div style="font-weight:800; color:var(--text-primary); font-size:1.3rem;"><?= e($iv['patient_name']) ?></div>
-                                            <div style="font-size:1.1rem; color:var(--info); font-weight:700; text-transform:uppercase;">BED <?= e($iv['bed_number']) ?> <span style="color:var(--text-muted); font-weight:500;">| <?= e($iv['pid']) ?></span></div>
-                                        </td>
-                                        <td style="font-weight:700; color:var(--text-primary); font-size:1.2rem;"><?= e($iv['fluid_type']) ?></td>
-                                        <td style="min-width:180px;">
-                                            <div style="display:flex; flex-direction:column; gap:.5rem;">
-                                                <div style="display:flex; justify-content:space-between; align-items:center; font-size:1.1rem; font-weight:700;">
-                                                    <span style="color:var(--text-secondary);"><?= number_format($iv['volume_infused']) ?> ml <small style="font-weight:500; opacity:0.6;">INFUSED</small></span>
-                                                    <span style="color:var(--text-muted);"><?= number_format($iv['volume_ordered']) ?> ml</span>
-                                                </div>
-                                                <div style="height:8px; background:var(--surface-3); border-radius:10px; overflow:hidden;">
-                                                    <?php $pct = min(100, ($iv['volume_ordered']>0) ? ($iv['volume_infused'] / $iv['volume_ordered'] * 100) : 0); ?>
-                                                    <div style="width:<?= $pct ?>%; height:100%; background:var(--info); border-radius:10px;" class="<?= $iv['status']=='Running' ? 'pulse-fade' : '' ?>"></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style="font-weight:800; color:var(--text-primary); font-size:1.3rem;"><?= e($iv['infusion_rate']) ?> <small style="font-size:.9rem; opacity:0.6;">ml/h</small></td>
-                                        <td style="font-weight:600; color:var(--text-secondary);"><?= e($iv['site'] ?: '--') ?></td>
-                                        <td style="font-weight:700; color:var(--text-muted);"><?= date('H:i', strtotime($iv['start_time'])) ?></td>
-                                        <td>
-                                            <?php
-                                                $status = $iv['status'];
-                                                $bg = 'var(--surface-3)';
-                                                $color = 'var(--text-secondary)';
-                                                if($status=='Running') { $bg = 'rgba(46,204,113,0.1)'; $color = 'var(--success)'; }
-                                                elseif($status=='Ordered') { $bg = 'rgba(241,196,15,0.1)'; $color = 'var(--warning)'; }
-                                                elseif($status=='Paused') { $bg = 'rgba(52,152,219,0.1)'; $color = 'var(--info)'; }
-                                            ?>
-                                            <span class="adm-badge" style="background:<?= $bg ?>; color:<?= $color ?>; border:none; font-weight:800; padding:.5rem 1.2rem; font-size:1rem;"><?= strtoupper(e($status)) ?></span>
-                                        </td>
-                                        <td style="padding:1.5rem 2rem;">
-                                            <div class="dropdown">
-                                                <button class="btn btn-ghost btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="border-radius:8px; font-weight:700; border-color:var(--border);"><span class="btn-text">
-                                                    Actions
-                                                </span></button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius:12px; padding:.8rem;">
-                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Running')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--success);"><i class="fas fa-play" style="width:20px;"></i> Start / Resume</a></li>
-                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Paused')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--warning);"><i class="fas fa-pause" style="width:20px;"></i> Pause</a></li>
-                                                    <li><hr class="dropdown-divider" style="margin:.5rem 0;"></li>
-                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Completed')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--info);"><i class="fas fa-check-double" style="width:20px;"></i> Mark Completed</a></li>
-                                                    <li><a class="dropdown-item" href="#" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Stopped')" style="padding:.8rem 1.5rem; border-radius:8px; font-weight:600; color:var(--danger);"><i class="fas fa-stop" style="width:20px;"></i> Stop Early</a></li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; endif; ?>
-                            </tbody>
-                        </table>
+            <?php if(empty($iv_records)): ?>
+            <div class="adm-card" style="text-align:center;padding:6rem;">
+                <i class="fas fa-tint-slash" style="font-size:4rem;opacity:.2;display:block;margin-bottom:1.5rem;color:var(--info);"></i>
+                <h3 style="color:var(--text-muted);font-weight:700;">No Active Infusions</h3>
+                <p style="color:var(--text-muted);font-size:1.3rem;margin-top:.5rem;">All clear â€” no IV infusions currently running in <?= e($ward_assigned) ?>.</p>
+                <button class="btn btn-primary" onclick="document.getElementById('ivForm').reset(); document.getElementById('ivModal').style.display='flex';" style="margin-top:2rem;border-radius:12px;">
+                    <span class="btn-text"><i class="fas fa-plus"></i> Start New IV</span>
+                </button>
+            </div>
+            <?php else: foreach($iv_records as $iv):
+                $pct = ($iv['volume_ordered'] > 0) ? min(100, ($iv['volume_infused'] / $iv['volume_ordered'] * 100)) : 0;
+                $status = $iv['status'];
+                $inv_cls = $status === 'Running' ? 'inv-paid' : ($status === 'Paused' ? 'inv-pending' : 'inv-partially');
+                $status_color = match($status) {
+                    'Running' => 'var(--success)',
+                    'Paused'  => 'var(--info)',
+                    'Ordered' => 'var(--warning)',
+                    default   => 'var(--text-muted)'
+                };
+                $bar_color = match($status) {
+                    'Running' => 'var(--success-gradient)',
+                    'Paused'  => 'linear-gradient(90deg,#2F80ED,#56CCF2)',
+                    default   => 'linear-gradient(90deg,var(--warning),var(--role-accent))'
+                };
+            ?>
+            <div class="inv-card <?= $inv_cls ?>" style="margin-bottom:1.2rem;">
+                <div class="inv-card-header" style="gap:2rem;flex-wrap:wrap;">
+                    <!-- Status Pulse Indicator -->
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;flex-shrink:0;">
+                        <div style="width:14px;height:14px;border-radius:50%;background:<?= $status_color ?>;<?= $status==='Running' ? 'animation:pulse-red 1.5s infinite;box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 20%,transparent);' : '' ?>"></div>
+                        <span style="font-size:.85rem;color:<?= $status_color ?>;font-weight:700;text-transform:uppercase;white-space:nowrap;"><?= e($status) ?></span>
+                    </div>
+                    <!-- Patient ID Block -->
+                    <div style="flex-shrink:0;">
+                        <div style="font-size:1.5rem;font-weight:800;color:var(--text-primary);"><?= e($iv['patient_name']) ?></div>
+                        <div style="font-size:1.1rem;color:var(--info);font-weight:700;text-transform:uppercase;">Bed <?= e($iv['bed_number']) ?> <span style="color:var(--text-muted);font-weight:500;font-family:monospace;font-size:1rem;">| <?= e($iv['pid']) ?></span></div>
+                    </div>
+                    <!-- Fluid Type + Rate Chips -->
+                    <div style="flex:1;padding:0 1rem;">
+                        <div style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin-bottom:.6rem;"><?= e($iv['fluid_type']) ?></div>
+                        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+                            <span class="vital-chip"><i class="fas fa-tint" style="color:var(--info);"></i> <?= number_format($iv['infusion_rate']) ?> ml/hr</span>
+                            <?php if(!empty($iv['site'])): ?><span class="vital-chip"><i class="fas fa-map-pin" style="color:var(--warning);"></i> <?= e($iv['site']) ?></span><?php endif; ?>
+                            <span class="vital-chip"><i class="fas fa-clock" style="color:var(--text-muted);"></i> <?= date('H:i', strtotime($iv['start_time'])) ?></span>
+                        </div>
+                    </div>
+                    <!-- Volume Progress -->
+                    <div style="min-width:180px;flex-shrink:0;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:.5rem;">
+                            <span style="font-size:1.1rem;font-weight:700;color:var(--text-secondary);"><?= number_format($iv['volume_infused']) ?> <small style="opacity:.6;">ml in</small></span>
+                            <span style="font-size:1.1rem;color:var(--text-muted);"><?= number_format($iv['volume_ordered']) ?> ml</span>
+                        </div>
+                        <div class="pay-progress-bar" style="width:100%;height:10px;">
+                            <div class="pay-progress-fill" style="width:<?= $pct ?>%;background:<?= $bar_color ?>;<?= $status==='Running' ? 'animation:width-pulse 2s ease-in-out infinite;' : '' ?>"></div>
+                        </div>
+                        <div style="font-size:1rem;color:var(--text-muted);margin-top:.4rem;text-align:right;"><?= round($pct) ?>% infused</div>
+                    </div>
+                    <!-- Management Actions -->
+                    <div style="flex-shrink:0;display:flex;flex-direction:column;gap:.6rem;">
+                        <?php if($status !== 'Running'): ?>
+                        <button class="btn btn-primary btn-sm" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Running')">
+                            <span class="btn-text"><i class="fas fa-play"></i> Resume</span>
+                        </button>
+                        <?php else: ?>
+                        <button class="btn btn-ghost btn-sm" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Paused')" style="border-color:var(--warning);color:var(--warning);">
+                            <span class="btn-text"><i class="fas fa-pause"></i> Pause</span>
+                        </button>
+                        <?php endif; ?>
+                        <button class="btn btn-ghost btn-sm" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Completed')" style="border-color:var(--success);color:var(--success);">
+                            <span class="btn-text"><i class="fas fa-check-double"></i> Complete</span>
+                        </button>
+                        <button class="btn btn-ghost btn-sm" onclick="updateIvStatus(<?= $iv['id'] ?>, 'Stopped')" style="border-color:var(--danger);color:var(--danger);">
+                            <span class="btn-text"><i class="fas fa-stop"></i> Stop</span>
+                        </button>
                     </div>
                 </div>
             </div>
+            <?php endforeach; endif; ?>
         </div>
+
 
         <!-- DAILY I&O CHARTS -->
         <div id="io-content" style="display:none;">
@@ -289,7 +292,7 @@ if ($q_io) {
     <div class="modal-box" style="max-width:550px;">
         <div class="modal-header" style="background:var(--info);">
             <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-syringe"></i> Initiate IV Infusion</h3>
-            <button class="btn btn-primary modal-close" onclick="document.getElementById('ivModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
+            <button class="btn btn-primary modal-close" onclick="document.getElementById('ivModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">Ã—</span></button>
         </div>
         <div style="padding:2.5rem;">
             <form id="ivForm">
@@ -354,7 +357,7 @@ if ($q_io) {
     <div class="modal-box" style="max-width:650px;">
         <div class="modal-header" style="background:var(--primary);">
             <h3 style="color:#fff; font-size:1.6rem; font-weight:800; margin:0;"><i class="fas fa-balance-scale"></i> Update Fluid Balance</h3>
-            <button class="btn btn-primary modal-close" onclick="document.getElementById('ioModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
+            <button class="btn btn-primary modal-close" onclick="document.getElementById('ioModal').style.display='none'" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">Ã—</span></button>
         </div>
         <div style="padding:2.5rem;">
             <form id="ioForm">
@@ -471,13 +474,20 @@ function updateIvStatus(iv_id, status) {
             }, function(res) {
                 if(res.success) {
                     Swal.fire({ icon: 'success', title: 'Infusion Updated', timer: 1000, showConfirmButton: false });
-                    setTimeout(() => location.reload(), 1000);
+                    setTimeout(() => window.location.href = '?tab=fluids', 1000);
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: res.message });
                 }
             }, 'json');
         }
     });
+}
+
+function switchFluidSubTab(tab) {
+    $('.tab-link').removeClass('active').css({'color': 'var(--text-muted)', 'border-bottom-color': 'transparent', 'font-weight': '700'});
+    $(`#btn-${tab}-tab`).addClass('active').css({'color': 'var(--primary)', 'border-bottom-color': 'var(--primary)', 'font-weight': '800'});
+    if(tab === 'iv') { $('#iv-content').show(); $('#io-content').hide(); }
+    else { $('#iv-content').hide(); $('#io-content').show(); }
 }
 
 $(document).ready(function() {
@@ -504,7 +514,7 @@ $(document).ready(function() {
                         timer: 1500,
                         showConfirmButton: false
                     });
-                    setTimeout(() => location.reload(), 1500);
+                    setTimeout(() => window.location.href = '?tab=fluids', 1500);
                 } else {
                     Swal.fire({ icon: 'error', title: 'Action Failed', text: res.message });
                     btn.prop('disabled', false).html(origHtml);

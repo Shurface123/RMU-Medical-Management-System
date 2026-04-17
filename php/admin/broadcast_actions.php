@@ -3,7 +3,7 @@
  * Broadcast Actions Handler
  * Handles AJAX requests from the Broadcast Management Panel.
  */
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../db_conn.php';
 require_once '../classes/BroadcastManager.php';
 

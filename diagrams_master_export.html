@@ -222,6 +222,7 @@
             <a href="#" class="nav-link" onclick="filterRole('Pharmacist', this)"><i class="fa-solid fa-capsules"></i> Pharmacists</a>
             <a href="#" class="nav-link" onclick="filterRole('Lab Tech', this)"><i class="fa-solid fa-microscope"></i> Lab Technicians</a>
             <a href="#" class="nav-link" onclick="filterRole('Support', this)"><i class="fa-solid fa-broom"></i> Support Staff</a>
+            <a href="#" class="nav-link" onclick="filterRole('Finance Manager', this)"><i class="fa-solid fa-file-invoice-dollar"></i> Finance Manager</a>
             <a href="#" class="nav-link" onclick="filterRole('Patient', this)"><i class="fa-solid fa-user"></i> Patients</a>
         </div>
     </aside>
@@ -2917,6 +2918,183 @@ erDiagram
         int triggered_by FK
         string status
         datetime triggered_at
+    }
+                    </pre>
+                </div>
+            </div>
+            <div class="diagram-section active" data-type="usecases" data-roles="Finance Manager, Finance Officer, Admin">
+                <div class="diagram-card">
+                    <pre class="mermaid">
+---
+title: "12. Finance & Revenue Management | Roles: Finance Manager, Finance Officer, Admin | Type: Use Case Diagram"
+---
+flowchart LR
+    %% Style Definitions
+    classDef admin fill:#f8d7da,stroke:#f5c6cb,stroke-width:2px,color:#000;
+    classDef finance fill:#fffACD,stroke:#e6db74,stroke-width:2px,color:#000;
+    classDef patient fill:#ffe5cc,stroke:#ffcc99,stroke-width:2px,color:#000;
+    classDef sys fill:#e2e3e5,stroke:#d6d8db,stroke-width:2px,color:#000;
+    classDef usecase fill:#ffffff,stroke:#333333,stroke-width:1px,rx:20,ry:20,color:#000;
+
+    FM(("fa:fa-user-tie\nFinance Manager")):::finance
+    FO(("fa:fa-user\nFinance Officer")):::finance
+
+    subgraph System ["RMU Medical Sickbay System"]
+        direction TB
+        
+        subgraph Invoicing ["Billing & Invoices"]
+            UC1([Generate Patient Invoice]):::usecase
+            UC2([Manage Billing Items & Prices]):::usecase
+            UC3([Apply Discounts/Waivers]):::usecase
+            UC4([Void/Cancel Invoice]):::usecase
+        end
+
+        subgraph Payments ["Payments & Reconciliation"]
+            UC5([Record Manual Payment]):::usecase
+            UC6([Verify Online Payment]):::usecase
+            UC7([Reconcile Daily Collections]):::usecase
+            UC8([Manage Refund Requests]):::usecase
+        end
+
+        subgraph Analytics ["Reporting & Audit"]
+            UC9([Generate Revenue Reports]):::usecase
+            UC10([View Financial Analytics Dashboard]):::usecase
+            UC11([Export Tax/Audit Records]):::usecase
+            UC12([Manage Finance Settings]):::usecase
+        end
+    end
+
+    Pat(("fa:fa-user\nPatient")):::patient
+    Adm(("fa:fa-user-tie\nAdmin")):::admin
+    Paystack(("fa:fa-credit-card\nPaystack API")):::sys
+
+    FM --- Invoicing
+    FM --- Payments
+    FM --- Analytics
+    FO --- Invoicing
+    FO --- Payments
+
+    %% Cross Interactions
+    UC1 --- Pat
+    UC6 --- Paystack
+    UC9 --- Adm
+    UC12 --- Adm
+                    </pre>
+                </div>
+            </div>
+
+            <div class="diagram-section active" data-type="flowcharts" data-roles="Finance Manager, Patient, System">
+                <div class="diagram-card">
+                    <pre class="mermaid">
+---
+title: "13. Billing & Collection Workflow | Roles: Finance Manager, Patient, System | Type: Flowchart"
+---
+flowchart TD
+    Start([Service Rendered]) --> UC_Check{Price Found?}
+    UC_Check -- No --> Admin_Price[Admin/Finance sets price] --> UC_Gen
+    UC_Check -- Yes --> UC_Gen[Generate Invoice]
+    
+    UC_Gen --> Pat_Notif[Notify Patient]
+    Pat_Notif --> Pay_Choice{Payment Method?}
+    
+    Pay_Choice -- "Online (Paystack)" --> Paystack_Flow[Patient pays via Portal]
+    Paystack_Flow --> Callback[Webhook/Callback Received]
+    Callback --> Verify_Pay{Payment Verified?}
+    
+    Pay_Choice -- "Manual (Cash/POS)" --> Finance_Input[Finance Staff inputs payment]
+    Finance_Input --> Verify_Pay
+    
+    Verify_Pay -- Yes --> Update_Inv[Mark Invoice as Paid]
+    Verify_Pay -- No --> Alert_Finance[Alert Finance Team]
+    
+    Update_Inv --> Gen_Receipt[Generate E-Receipt]
+    Gen_Receipt --> End([Cycle Complete / Reconciled])
+    
+    style Start fill:#f9f,stroke:#333,stroke-width:2px
+    style End fill:#f9f,stroke:#333,stroke-width:2px
+    style Paystack_Flow fill:#00d1b2,color:#fff
+    style Finance_Input fill:#ffdd57
+                    </pre>
+                </div>
+            </div>
+
+            <div class="diagram-section active" data-type="sequences" data-roles="Finance Manager, Patient, System, Paystack">
+                <div class="diagram-card">
+                    <pre class="mermaid">
+---
+title: "14. Paystack Payment Sequence | Roles: Patient, System, Paystack | Type: Sequence Diagram"
+---
+sequenceDiagram
+    autonumber
+    actor P as Patient
+    participant S as RMU System
+    participant PS as Paystack API
+    participant DB as System Database
+
+    P->>S: Initiates "Pay Now" from Billing Portal
+    S->>S: Validates Invoice Amount & Reference
+    S->>PS: Initialize Transaction Request
+    PS-->>S: Returns Authorization URL & Ref
+    S-->>P: Redirects to Paystack Secure Page
+    P->>PS: Enters Payment Details & Authorizes
+    PS->>PS: Processes Payment (Bank/Card)
+    PS-->>P: Shows Payment Success/Failure
+    PS-->>S: Callback/Webhook (Payment Notification)
+    S->>PS: Verify Transaction (GET /verify/{ref})
+    PS-->>S: Confirmed Success
+    S->>DB: Update Invoice Status (paid = 1)
+    S->>DB: Log Transaction Record
+    S-->>P: Displays Receipt & Success Message
+                    </pre>
+                </div>
+            </div>
+
+            <div class="diagram-section active" data-type="er" data-roles="Finance Manager, Admin">
+                <div class="diagram-card">
+                    <pre class="mermaid">
+---
+title: "15. Finance & Revenue ER Diagram | Roles: Finance Manager, Admin | Type: Entity Relationship"
+---
+erDiagram
+    FINANCE_STAFF ||--o{ INVOICES : "generates"
+    PATIENTS ||--o{ INVOICES : "billed_to"
+    INVOICES ||--|{ INVOICE_ITEMS : "contains"
+    BILLING_ITEMS ||--o{ INVOICE_ITEMS : "defines"
+    INVOICES ||--o{ PAYMENTS : "tracks"
+    
+    INVOICES {
+        int id PK
+        string invoice_number
+        int patient_id FK
+        float total_amount
+        float discount
+        string status "paid/unpaid/void"
+        datetime created_at
+    }
+
+    INVOICE_ITEMS {
+        int id PK
+        int invoice_id FK
+        int item_id FK
+        string item_name
+        float unit_price
+        int quantity
+    }
+
+    BILLING_ITEMS {
+        int id PK
+        string category "Lab/Pharmacy/Consultation"
+        string item_name
+        float base_price
+    }
+
+    PAYMENTS {
+        int id PK
+        int invoice_id FK
+        string paystack_ref "null for manual"
+        string payment_method "Cash/POS/Paystack"
+        float amount_paid
+        datetime transaction_date
     }
                     </pre>
                 </div>

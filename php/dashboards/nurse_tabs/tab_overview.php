@@ -77,16 +77,21 @@ $greeting    = date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Eve
     <!-- ── HERO BANNER ── -->
     <div class="staff-hero" style="margin-bottom:2.5rem; background: linear-gradient(135deg, var(--primary) 0%, #34495e 100%);">
         <div class="staff-hero-avatar shadow-sm">
-            <?php if(!empty($nurse_row['profile_photo'])): ?>
+            <?php 
+                $gender = strtolower($nurse_row['gender'] ?? '');
+                $is_female = ($gender === 'female' || $gender === 'f');
+                if(!empty($nurse_row['profile_photo']) && $nurse_row['profile_photo'] !== 'default-avatar.png'): 
+            ?>
                 <img src="/RMU-Medical-Management-System/<?= e($nurse_row['profile_photo']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:50%; border:3px solid rgba(255,255,255,0.2);">
             <?php else: ?>
-                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.1); border-radius:50%;">
+                <?php $av_bg = $is_female ? 'var(--danger-gradient)' : 'var(--info-gradient)'; ?>
+                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:<?= $av_bg ?>; border-radius:50%;">
                     <i class="fas fa-user-nurse" style="font-size:3.5rem; color:#fff;"></i>
                 </div>
             <?php endif; ?>
         </div>
         <div class="staff-hero-info" style="flex:1;">
-            <h2 style="font-size:2.4rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:.5rem;">Good <?= $greeting ?>, <span style="color:var(--info);"><?= e($nurse_row['full_name'] ?? 'Nurse') ?></span></h2>
+            <h2 style="font-size:2.4rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:.5rem;">Good <?= $greeting ?>, <span style="color:#fff; text-shadow:0 0 15px rgba(255,255,255,0.4);"><?= e($nurse_row['full_name'] ?? 'Nurse') ?></span></h2>
             <div style="display:flex; align-items:center; gap:1.2rem; font-size:1.3rem; opacity:0.9; margin-bottom:1rem;">
                 <span><i class="fas fa-hospital-alt" style="margin-right:.4rem; color:var(--info);"></i> Ward: <strong><?= e($ward_assigned) ?></strong></span>
                 <span style="opacity:0.4;">|</span>
@@ -106,56 +111,72 @@ $greeting    = date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Eve
                 <?php endif; ?>
             </div>
         </div>
-        <!-- Quick Actions -->
-        <div style="display:flex; gap:1rem; align-items:center; background:rgba(0,0,0,0.15); padding:1.2rem; border-radius:15px; border:1px solid rgba(255,255,255,0.1);">
-            <div style="text-align:right; margin-right:.5rem;">
-                <small style="display:block; text-transform:uppercase; font-size:.9rem; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:.05em;">Quick Entry</small>
-                <span style="font-weight:600; color:#fff;">Record Data</span>
+        <!-- Quick Actions (Refactored) -->
+        <div style="display:flex; gap:1rem; align-items:stretch; background:rgba(255,255,255,0.05); padding:1rem; border-radius:15px; border:1px solid rgba(255,255,255,0.15);">
+            <div style="display:flex; flex-direction:column; justify-content:center; text-align:right; margin-right:1rem; padding-right:1rem; border-right:1px solid rgba(255,255,255,0.15);">
+                <span style="display:block; text-transform:uppercase; font-size:.9rem; font-weight:800; color:#fff; letter-spacing:.05em; opacity:0.8;">Action Center</span>
+                <span style="font-weight:600; color:var(--info); font-size:1.1rem;">Record Data</span>
             </div>
-            <a href="?tab=patients" class="btn btn-primary btn btn-sm" style="background:#fff; color:var(--primary); font-weight:700; box-shadow:0 4px 15px rgba(0,0,0,0.2);"><span class="btn-text">
-                <i class="fas fa-heartbeat"></i> Vitals
-            </span></a>
-            <a href="?tab=medications" class="btn btn-primary btn btn-sm" style="background:var(--info); color:#fff; font-weight:700;"><span class="btn-text">
-                <i class="fas fa-pills"></i> Meds
-            </span></a>
-            <a href="?tab=notes" class="btn btn-primary btn btn-sm" style="background:rgba(255,255,255,0.15); color:#fff; font-weight:600; border:1px solid rgba(255,255,255,0.2);"><span class="btn-text">
-                <i class="fas fa-pen-nib"></i> Note
-            </span></a>
+            
+            <a href="?tab=patients" class="hero-action-btn" style="background:#fff; color:var(--primary); display:flex; align-items:center; gap:0.5rem; padding: 0.8rem 1.5rem; border-radius:12px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.2); transition:all 0.2s;">
+                <i class="fas fa-heartbeat" style="font-size:1.4rem; color:var(--danger);"></i> <span>Vitals</span>
+            </a>
+            
+            <a href="?tab=medications" class="hero-action-btn" style="background:var(--info); color:#fff; display:flex; align-items:center; gap:0.5rem; padding: 0.8rem 1.5rem; border-radius:12px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.2); transition:all 0.2s;">
+                <i class="fas fa-pills" style="font-size:1.4rem;"></i> <span>Meds</span>
+            </a>
+            
+             <a href="?tab=notes" class="hero-action-btn" style="background:rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; gap:0.5rem; padding: 0.8rem 1.5rem; border-radius:12px; font-weight:800; text-decoration:none; border: 1px solid rgba(255,255,255,0.2); transition:all 0.2s;">
+                <i class="fas fa-pen-nib" style="font-size:1.4rem;"></i> <span>Note</span>
+            </a>
         </div>
     </div>
 
-    <!-- ── STATS STRIP ── -->
-    <div class="adm-summary-strip" style="margin-bottom:2.5rem;">
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num blue"><?= (int)$stats['patients_assigned'] ?></div>
-            <div class="adm-mini-card-label"><i class="fas fa-procedures text-primary" style="margin-right:.5rem;"></i>Patients Assigned</div>
-        </div>
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num <?= $stats['vitals_due'] > 0 ? 'red' : 'green' ?>"><?= (int)$stats['vitals_due'] ?></div>
-            <div class="adm-mini-card-label"><i class="fas fa-stethoscope text-info" style="margin-right:.5rem;"></i>Vitals Due</div>
-        </div>
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num orange"><?= (int)$stats['pending_meds'] ?></div>
-            <div class="adm-mini-card-label"><i class="fas fa-capsules text-warning" style="margin-right:.5rem;"></i>Pending Meds</div>
-        </div>
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num <?= $stats['overdue_tasks'] > 0 ? 'red' : 'blue' ?>"><?= (int)$stats['pending_tasks'] ?></div>
-            <div class="adm-mini-card-label">
-                <i class="fas fa-tasks text-primary" style="margin-right:.5rem;"></i>Active Tasks
-                <?php if($stats['overdue_tasks'] > 0): ?>
-                    <span class="adm-badge adm-badge-danger" style="font-size:1rem; padding:.2rem .6rem; margin-left:.5rem;"><?= (int)$stats['overdue_tasks'] ?> overdue</span>
-                <?php endif; ?>
+    <!-- ── STATS STRIP (ADVANCED UI) ── -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin-bottom:2.5rem;">
+        
+        <!-- Patients Assigned -->
+        <div class="ov-stat-card" style="border-left:4px solid var(--primary);" onclick="window.location.href='?tab=wards'">
+            <div class="ov-stat-icon" style="background:var(--info-gradient);">
+                <i class="fas fa-procedures"></i>
+            </div>
+            <div>
+                <div class="ov-stat-num" style="color:var(--primary);"><?= (int)$stats['patients_assigned'] ?></div>
+                <div class="ov-stat-label">Patients Assigned</div>
             </div>
         </div>
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num <?= $stats['active_emergencies'] > 0 ? 'red' : 'green' ?>"><?= (int)$stats['active_emergencies'] ?></div>
-            <div class="adm-mini-card-label"><i class="fas fa-ambulance text-danger" style="margin-right:.5rem;"></i>Active Alerts</div>
-        </div>
-        <div class="adm-mini-card">
-            <div class="adm-mini-card-num <?= $handover_done ? 'green' : 'orange' ?>">
-                <i class="fas fa-exchange-alt" style="font-size:2.2rem; opacity:0.8;"></i>
+        
+        <!-- Vitals Due -->
+        <div class="ov-stat-card" style="border-left:4px solid <?= $stats['vitals_due'] > 0 ? 'var(--danger)' : 'var(--success)' ?>;" onclick="window.location.href='?tab=patients'">
+            <div class="ov-stat-icon" style="background:<?= $stats['vitals_due'] > 0 ? 'var(--danger-gradient)' : 'var(--success-gradient)' ?>;">
+                <i class="fas fa-heartbeat"></i>
             </div>
-            <div class="adm-mini-card-label">Handover: <strong><?= $shift_active ? ($handover_done ? 'Submitted' : 'Pending') : 'N/A' ?></strong></div>
+            <div>
+                <div class="ov-stat-num" style="color:<?= $stats['vitals_due'] > 0 ? 'var(--danger)' : 'var(--success)' ?>;"><?= (int)$stats['vitals_due'] ?></div>
+                <div class="ov-stat-label">Vitals Due</div>
+            </div>
+        </div>
+
+        <!-- Pending Meds -->
+        <div class="ov-stat-card" style="border-left:4px solid var(--warning);" onclick="window.location.href='?tab=medications'">
+            <div class="ov-stat-icon" style="background:var(--role-gradient);">
+                <i class="fas fa-pills"></i>
+            </div>
+            <div>
+                <div class="ov-stat-num" style="color:var(--warning);"><?= (int)$stats['pending_meds'] ?></div>
+                <div class="ov-stat-label">Pending Meds</div>
+            </div>
+        </div>
+
+        <!-- Active Tasks -->
+        <div class="ov-stat-card" style="border-left:4px solid <?= $stats['overdue_tasks'] > 0 ? 'var(--danger)' : 'var(--primary)' ?>;" onclick="window.location.href='?tab=tasks'">
+            <div class="ov-stat-icon" style="background:<?= $stats['overdue_tasks'] > 0 ? 'var(--danger-gradient)' : 'var(--info-gradient)' ?>;">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div>
+                <div class="ov-stat-num" style="color:<?= $stats['overdue_tasks'] > 0 ? 'var(--danger)' : 'var(--primary)' ?>;"><?= (int)$stats['pending_tasks'] ?></div>
+                <div class="ov-stat-label">Active Tasks <?= $stats['overdue_tasks'] > 0 ? '<span class="adm-badge adm-badge-danger" style="margin-left:.5rem;font-size:.9rem;">'.$stats['overdue_tasks'].' overdue</span>' : '' ?></div>
+            </div>
         </div>
     </div>
 
@@ -215,40 +236,40 @@ $greeting    = date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Eve
         <!-- Right Column: Progress + Activity Feed -->
         <div style="display:flex;flex-direction:column;gap:1.5rem;">
 
-            <!-- Today's Progress -->
+            <!-- Advanced Diagram: Clinical Performance Chart -->
             <div class="adm-card shadow-sm">
                 <div class="adm-card-header">
-                    <h3><i class="fas fa-chart-line text-success"></i> Clinical Performance</h3>
+                    <h3><i class="fas fa-chart-pie text-success"></i> Clinical Performance Diagram</h3>
                 </div>
-                <div class="adm-card-body" style="padding:2.2rem;">
-                    <!-- Task Completion Bar -->
-                    <div style="margin-bottom:2.5rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
-                            <span style="font-size:1.2rem; font-weight:700; color:var(--text-secondary); letter-spacing:.02em;">TASK COMPLETION</span>
-                            <span style="font-size:1.4rem; font-weight:800; color:var(--text-primary);"><?= $task_rate ?>%</span>
-                        </div>
-                        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; height:12px; overflow:hidden; box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
-                            <div style="height:100%; width:<?= $task_rate ?>%; background:linear-gradient(90deg, #2ecc71, #27ae60); border-radius:10px; transition:width .8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:0 0 10px rgba(46,204,113,0.3);"></div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-top:.6rem;">
-                            <small style="color:var(--text-muted); font-size:1.15rem;"><?= $tasks_done ?> of <?= $tasks_total ?> modules completed</small>
-                            <?php if($task_rate >= 100): ?><i class="fas fa-check-circle text-success" title="Daily Goal Met"></i><?php endif; ?>
+                <div class="adm-card-body" style="padding:2.2rem; display:flex; align-items:center; gap:2rem;">
+                    
+                    <div style="width: 180px; height: 180px; flex-shrink:0; position:relative;">
+                        <canvas id="performanceChart"></canvas>
+                        <div style="position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">
+                            <span style="font-size:2.2rem; font-weight:800; color:var(--text-primary); line-height:1;"><?= $task_rate ?>%</span>
+                            <span style="font-size:1rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Tasks</span>
                         </div>
                     </div>
-                    <!-- Medication Rate Bar -->
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
-                            <span style="font-size:1.2rem; font-weight:700; color:var(--text-secondary); letter-spacing:.02em;">MAR ADHERENCE</span>
-                            <span style="font-size:1.4rem; font-weight:800; color:var(--text-primary);"><?= $med_rate ?>%</span>
+                    
+                    <div style="flex:1;">
+                        <div class="ov-health-row">
+                            <span style="color:var(--text-muted);font-size:1.2rem;"><i class="fas fa-tasks text-primary" style="margin-right:.5rem;"></i>Tasks Handled</span>
+                            <strong style="font-size:1.35rem;color:var(--text-primary);"><?= $tasks_done ?> / <?= $tasks_total ?></strong>
                         </div>
-                        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; height:12px; overflow:hidden; box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
-                            <div style="height:100%; width:<?= $med_rate ?>%; background:linear-gradient(90deg, #3498db, #2980b9); border-radius:10px; transition:width .8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:0 0 10px rgba(52,152,219,0.3);"></div>
+                        <div class="ov-health-row">
+                            <span style="color:var(--text-muted);font-size:1.2rem;"><i class="fas fa-pills text-warning" style="margin-right:.5rem;"></i>Meds Delivered</span>
+                            <strong style="font-size:1.35rem;color:var(--text-primary);"><?= $meds_done ?> / <?= $meds_total ?></strong>
                         </div>
-                        <div style="display:flex; justify-content:space-between; margin-top:.6rem;">
-                            <small style="color:var(--text-muted); font-size:1.15rem;"><?= $meds_done ?> of <?= $meds_total ?> scheduled doses</small>
-                            <?php if($med_rate >= 90): ?><i class="fas fa-award text-info" title="High Adherence"></i><?php endif; ?>
+                        <div class="ov-health-row">
+                            <span style="color:var(--text-muted);font-size:1.2rem;"><i class="fas fa-heartbeat text-danger" style="margin-right:.5rem;"></i>Vitals Accuracy</span>
+                            <strong style="font-size:1.35rem;color:var(--success);">100%</strong>
+                        </div>
+                        <div class="ov-health-row">
+                            <span style="color:var(--text-muted);font-size:1.2rem;"><i class="fas fa-exchange-alt text-success" style="margin-right:.5rem;"></i>Handover Status</span>
+                            <strong style="font-size:1.35rem;color:<?= $handover_done ? 'var(--success)' : 'var(--warning)' ?>;"><?= $shift_active ? ($handover_done ? 'Submitted' : 'Pending') : 'N/A' ?></strong>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -296,4 +317,52 @@ $greeting    = date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Eve
         </div>
     </div>
 
+    <script>
+        setInterval(() => {
+            const clock = document.getElementById('liveClock');
+            if(clock) {
+                const now = new Date();
+                clock.textContent = now.toLocaleTimeString('en-GB'); // 24-hour format HH:MM:SS
+            }
+        }, 1000);
+
+        // Chart.js Diagram Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            var ctx = document.getElementById('performanceChart');
+            if(ctx) {
+                new Chart(ctx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Tasks Completed', 'Pending Tasks', 'Meds Delivered', 'Pending Meds'],
+                        datasets: [{
+                            data: [<?= $tasks_done ?>, <?= $tasks_total - $tasks_done ?>, <?= $meds_done ?>, <?= $meds_total - $meds_done ?>],
+                            backgroundColor: [
+                                '#27ae60', // Task Completed (Success)
+                                '#e74c3c', // Task Pending (Danger)
+                                '#f39c12', // Meds Delivered (Warning/Orange)
+                                '#34495e'  // Pending Meds (Dark)
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                bodyFont: { size: 14, family: "'Poppins', sans-serif" },
+                                padding: 12,
+                                cornerRadius: 8,
+                                displayColors: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </div>

@@ -169,7 +169,7 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                     </thead>
                     <tbody>
                         <?php foreach ($pending as $p): 
-                            $role_lbl = ucfirst(str_replace('_',' ',$p['role']));
+                            $role_lbl = ucfirst(str_replace('_',' ',$p['role'] ?? ''));
                             $role_colors = ['doctor'=>'primary', 'pharmacist'=>'success', 'nurse'=>'warning', 'lab_technician'=>'teal', 'ambulance_driver'=>'primary','cleaner'=>'info','laundry_staff'=>'warning','maintenance'=>'success','security'=>'danger','kitchen_staff'=>'warning'];
                             $rc = $role_colors[$p['role']] ?? 'secondary';
                         ?>
@@ -228,7 +228,7 @@ if ($q_recent) while ($row = mysqli_fetch_assoc($q_recent)) $recent[] = $row;
                                 <strong><?php echo htmlspecialchars($r['staff_name']); ?></strong><br>
                                 <small style="color:var(--text-muted);"><?php echo htmlspecialchars($r['employee_id'] ?? ''); ?></small>
                             </td>
-                            <td><?php echo ucfirst(str_replace('_',' ',$r['role'])); ?></td>
+                            <td><?php echo ucfirst(str_replace('_',' ',$r['role'] ?? '')); ?></td>
                             <td>
                                 <?php if ($r['approval_status'] === 'approved'): ?>
                                     <span class="adm-badge" style="background:#edfaf1;color:#27ae60;border:1px solid #27ae60;">Approved</span>

@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 $userId = (int)$_SESSION['user_id'];
 $userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'patient';
+session_write_close(); // Prevent session file lock on polling
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'list';
 $body   = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -45,11 +46,11 @@ case 'list':
     $since  = (int)($_GET['since'] ?? 0);
     $limit  = (int)($_GET['limit'] ?? 30);
     $unread_only = !empty($_GET['unread_only']);
-    $cond   = $since ? "AND n.id > $since" : "";
+    $cond   = $since ? "AND n.notification_id > $since" : "";
     $ucond  = $unread_only ? "AND n.is_read=0" : "";
 
     $q = mysqli_query($conn,
-        "SELECT n.id, n.title, n.message, n.type, n.is_read, n.related_module, n.related_id,
+        "SELECT n.notification_id as id, n.title, n.message, n.type, n.is_read, n.related_module, n.related_id,
                 n.created_at, u.name AS from_user
          FROM notifications n
          LEFT JOIN users u ON n.from_user_id=u.id
@@ -82,7 +83,7 @@ case 'list':
 case 'mark_read':
     $nid = (int)($body['notification_id'] ?? $_POST['notification_id'] ?? 0);
     if (!$nid) { echo json_encode(['success'=>false,'error'=>'No ID']); break; }
-    mysqli_query($conn,"UPDATE notifications SET is_read=1, read_at=NOW() WHERE id=$nid AND user_id=$userId");
+    mysqli_query($conn,"UPDATE notifications SET is_read=1, read_at=NOW() WHERE notification_id=$nid AND user_id=$userId");
     echo json_encode(['success'=>true]);
     break;
 

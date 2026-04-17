@@ -59,108 +59,134 @@ if ($q) {
         </div>
     </div>
 
-    <!-- Patients List Card -->
-    <div class="adm-card shadow-sm">
-        <div class="adm-card-header" style="justify-content:space-between;">
-            <h3 style="font-size:1.5rem; font-weight:700;"><i class="fas fa-user-injured text-primary"></i> Ward Census</h3>
-            <span class="adm-badge adm-badge-info"><?= count($patients) ?> ACTIVE PATIENTS</span>
+    <!-- Patient Census: Advanced rec-card2 Accordion Layout -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+            <span class="adm-badge adm-badge-info" style="font-size:1.2rem;padding:.5rem 1.2rem;"><i class="fas fa-procedures"></i> <?= count($patients) ?> Active Patients</span>
         </div>
-        <div class="adm-card-body" style="padding:0;">
-            <div class="adm-table-wrap">
-                <table class="adm-table" id="patientsTable">
-                    <thead>
-                        <tr>
-                            <th>Patient Identity</th>
-                            <th>Demographics</th>
-                            <th>Location/Unit</th>
-                            <th>Medical Flags</th>
-                            <th>Last Vitals Status</th>
-                            <th style="text-align:right;">Care Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if(empty($patients)): ?>
-                            <tr>
-                                <td colspan="6" style="text-align:center; padding:5rem 2rem; color:var(--text-muted);">
-                                    <div style="opacity:0.2; margin-bottom:1.5rem;">
-                                        <i class="fas fa-bed" style="font-size:4rem;"></i>
-                                    </div>
-                                    <h5 style="font-weight:600; font-size:1.4rem;">No Patients Assigned</h5>
-                                    <p style="font-size:1.2rem;">Currently no occupied beds found in <?= e($ward_assigned) ?>.</p>
-                                </td>
-                            </tr>
-                        <?php else: foreach($patients as $p): ?>
-                            <tr style="transition:all .2s ease;">
-                                <td>
-                                    <div style="font-family:monospace; font-weight:700; color:var(--text-primary); letter-spacing:.02em; font-size:1.3rem;">#<?= e($p['patient_id']) ?></div>
-                                    <small style="color:var(--text-muted); text-transform:uppercase; font-size:1.05rem; font-weight:600;">Reg Code: EX-<?= rand(100,999) ?></small>
-                                </td>
-                                <td>
-                                    <div style="display:flex; align-items:center; gap:1.2rem;">
-                                        <div style="width:42px; height:42px; border-radius:12px; background:<?= $p['gender']=='Male' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(231, 76, 60, 0.1)' ?>; color:<?= $p['gender']=='Male' ? 'var(--primary)' : 'var(--danger)' ?>; display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:800; border:1px solid rgba(0,0,0,0.05); flex-shrink:0;">
-                                            <?= strtoupper(substr($p['patient_name'],0,1)) ?>
-                                        </div>
-                                        <div>
-                                            <div style="font-weight:700; font-size:1.45rem; color:var(--text-primary); margin-bottom:.1rem;"><?= e($p['patient_name']) ?></div>
-                                            <div style="display:flex; align-items:center; gap:.6rem; font-size:1.15rem; color:var(--text-muted); font-weight:500;">
-                                                <i class="fas <?= $p['gender']=='Male'?'fa-mars':'fa-venus' ?>"></i> <?= e($p['gender']) ?> · <i class="fas fa-hourglass-half"></i> <?= $p['age'] ?>y
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="display:flex; flex-direction:column; gap:.3rem;">
-                                        <span class="adm-badge adm-badge-primary" style="font-size:1.1rem; padding:.3rem .8rem;"><i class="fas fa-door-open"></i> <?= e($p['ward']) ?></span>
-                                        <span class="adm-badge border" style="font-size:1.1rem; padding:.3rem .8rem;"><i class="fas fa-bed"></i> Bed <?= e($p['bed_number']) ?></span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="display:flex; flex-wrap:wrap; gap:.5rem;">
-                                        <?php if(!empty($p['allergies'])): ?>
-                                            <span class="adm-badge adm-badge-danger" title="<?= e($p['allergies']) ?>" style="cursor:help; font-weight:700;"><i class="fas fa-skull-crossbones"></i> ALLERGY</span>
-                                        <?php endif; ?>
-                                        <span class="adm-badge" style="background:var(--surface-2); color:var(--text-secondary); border:1px solid var(--border); font-weight:700;"><i class="fas fa-tint"></i> <?= e($p['blood_group'] ?: 'N/A') ?></span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <?php if($p['last_vital_time']): ?>
-                                        <div style="font-size:1.25rem; font-weight:700; color:var(--text-primary); margin-bottom:.4rem;"><?= date('H:i', strtotime($p['last_vital_time'])) ?> <small style="font-weight:400; color:var(--text-muted);"><?= date('d M', strtotime($p['last_vital_time'])) ?></small></div>
-                                        <?php if($p['last_vital_flagged']): ?>
-                                            <span class="adm-badge adm-badge-danger pulse-fade" style="font-weight:700;"><i class="fas fa-heart-crack"></i> ABNORMAL</span>
-                                        <?php else: ?>
-                                            <span class="adm-badge adm-badge-success" style="font-weight:700;"><i class="fas fa-check-circle"></i> STABLE</span>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <span class="adm-badge adm-badge-warning" style="font-weight:700; opacity:0.8;"><i class="fas fa-clock"></i> PENDING</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="text-align:right;">
-                                    <div style="display:flex; gap:.6rem; justify-content:flex-end;">
-                                        <button class="btn btn-primary" onclick="openVitalsModal(<?= $p['patient_pk'] ?>, '<?= e(addslashes($p['patient_name'])) ?>', '<?= e($p['patient_id']) ?>')" style="padding:.6rem 1.2rem; border-radius:10px; font-weight:700;"><span class="btn-text">
-                                            <i class="fas fa-file-medical"></i> Log
-                                        </span></button>
-                                        <button class="btn btn-ghost" onclick="viewVitalsHistory(<?= $p['patient_pk'] ?>)" style="padding:.6rem 1rem; border-radius:10px;"><span class="btn-text">
-                                            <i class="fas fa-history"></i>
-                                        </span></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; endif; ?>
-                    </tbody>
-                </table>
+        <div style="display:flex;gap:.8rem;">
+            <input type="text" id="patSearch" class="form-control" style="max-width:220px;" placeholder="Search patient..." oninput="filterPatients()">
+        </div>
+    </div>
+    <?php if(empty($patients)): ?>
+    <div class="adm-card" style="text-align:center;padding:5rem;">
+        <i class="fas fa-bed" style="font-size:3.5rem;opacity:.2;display:block;margin-bottom:1rem;"></i>
+        <h3 style="color:var(--text-muted);">No Patients Assigned</h3>
+        <p style="color:var(--text-muted);font-size:1.3rem;margin-top:.5rem;">Currently no occupied beds found in <?= e($ward_assigned) ?>.</p>
+    </div>
+    <?php else: foreach($patients as $p):
+        $is_male  = strtolower($p['gender'] ?? '') === 'male';
+        $av_bg    = $is_male ? 'linear-gradient(135deg,#2F80ED,#56CCF2)' : 'linear-gradient(135deg,#FF6B6B,#FF8E53)';
+        $av_icon  = $is_male ? 'fa-mars' : 'fa-venus';
+        $vt_color = $p['last_vital_flagged'] ? 'var(--danger)' : 'var(--success)';
+        $vt_label = !$p['last_vital_time'] ? 'Pending' : ($p['last_vital_flagged'] ? 'Abnormal' : 'Stable');
+        $vt_badge = !$p['last_vital_time'] ? 'warning' : ($p['last_vital_flagged'] ? 'danger' : 'success');
+    ?>
+    <div class="rec-card2 pat-row" data-name="<?= strtolower(e($p['patient_name'])) ?>" data-ward="<?= strtolower(e($p['ward'])) ?>">
+        <!-- Clickable Header -->
+        <div class="rec-card2-header" onclick="togglePatientCard(<?= $p['patient_pk'] ?>)">
+            <div style="flex:1;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+                <!-- Gender Gradient Avatar -->
+                <div style="width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:<?= $av_bg ?>;color:#fff;font-size:2rem;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    <i class="fas <?= $av_icon ?>"></i>
+                </div>
+                <div>
+                    <div style="font-size:1.6rem;font-weight:800;color:var(--text-primary);margin-bottom:.3rem;"><?= e($p['patient_name']) ?></div>
+                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                        <span class="rec-diag-chip" style="font-size:1.05rem;padding:.2rem .8rem;"><i class="fas fa-id-badge"></i> <?= e($p['patient_id']) ?></span>
+                        <span class="adm-badge adm-badge-primary"><i class="fas fa-door-open"></i> <?= e($p['ward']) ?></span>
+                        <span class="adm-badge" style="background:var(--surface-2);border:1px solid var(--border);"><i class="fas fa-bed"></i> Bed <?= e($p['bed_number']) ?></span>
+                        <?php if(!empty($p['allergies'])): ?><span class="adm-badge adm-badge-danger" title="<?= e($p['allergies']) ?>" style="cursor:help;"><i class="fas fa-skull-crossbones"></i> ALLERGY</span><?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <!-- Right: Vitals Status + Chevron -->
+            <div style="display:flex;align-items:center;gap:1.2rem;flex-shrink:0;">
+                <div style="text-align:right;">
+                    <span class="adm-badge adm-badge-<?= $vt_badge ?>" style="font-size:1.1rem;font-weight:700;">
+                        <?= $p['last_vital_time'] ? '<i class="fas fa-circle" style="font-size:.6rem;margin-right:.4rem;"></i>' : '<i class="fas fa-clock" style="margin-right:.4rem;"></i>' ?>
+                        <?= $vt_label ?>
+                    </span>
+                    <?php if($p['last_vital_time']): ?><div style="font-size:1.05rem;color:var(--text-muted);margin-top:.3rem;"><?= date('d M, H:i', strtotime($p['last_vital_time'])) ?></div><?php endif; ?>
+                </div>
+                <i class="fas fa-chevron-down" id="patChev-<?= $p['patient_pk'] ?>" style="color:var(--text-muted);transition:transform .25s;"></i>
+            </div>
+        </div>
+
+        <!-- Expandable Detail Body -->
+        <div class="rec-expand-body" id="patExpand-<?= $p['patient_pk'] ?>">
+            <div class="rec-field-grid">
+                <div class="rec-field">
+                    <div class="rec-field-label"><i class="fas fa-user" style="color:var(--primary);margin-right:.4rem;"></i>Demographics</div>
+                    <div class="rec-field-value">
+                        <span class="vital-chip"><i class="fas <?= $av_icon ?>" style="color:<?= $is_male ? 'var(--primary)' : 'var(--danger)' ?>;"></i> <?= e($p['gender']) ?></span>
+                        <span class="vital-chip"><i class="fas fa-hourglass-half" style="color:var(--warning);"></i> <?= $p['age'] ?> yrs</span>
+                        <?php if(!empty($p['phone'])): ?><span class="vital-chip"><i class="fas fa-phone" style="color:var(--success);"></i> <?= e($p['phone']) ?></span><?php endif; ?>
+                    </div>
+                </div>
+                <div class="rec-field">
+                    <div class="rec-field-label"><i class="fas fa-tint" style="color:var(--danger);margin-right:.4rem;"></i>Medical Flags</div>
+                    <div class="rec-field-value">
+                        <span class="vital-chip"><i class="fas fa-tint" style="color:var(--danger);"></i> <?= e($p['blood_group'] ?: 'N/A') ?></span>
+                        <?php if(!empty($p['allergies'])): ?><span class="vital-chip" style="border-color:var(--danger);color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> <?= e($p['allergies']) ?></span><?php endif; ?>
+                    </div>
+                </div>
+                <?php if(!empty($p['chronic_conditions'])): ?>
+                <div class="rec-field">
+                    <div class="rec-field-label"><i class="fas fa-lungs" style="color:var(--warning);margin-right:.4rem;"></i>Chronic Conditions</div>
+                    <div class="rec-field-value" style="font-size:1.2rem;"><?= e($p['chronic_conditions']) ?></div>
+                </div>
+                <?php endif; ?>
+                <div class="rec-field">
+                    <div class="rec-field-label"><i class="fas fa-heartbeat" style="color:var(--danger);margin-right:.4rem;"></i>Vitals Status</div>
+                    <div class="rec-field-value">
+                        <?php if($p['last_vital_time']): ?>
+                        <span class="vital-chip" style="border-color:<?= $vt_color ?>;color:<?= $vt_color ?>;font-weight:700;">
+                            <i class="fas <?= $p['last_vital_flagged'] ? 'fa-heart-crack' : 'fa-check-circle' ?>"></i>
+                            <?= $vt_label ?> Â· <?= date('d M, H:i', strtotime($p['last_vital_time'])) ?>
+                        </span>
+                        <?php else: ?>
+                        <span class="vital-chip" style="border-color:var(--warning);color:var(--warning);"><i class="fas fa-clock"></i> No vitals recorded yet</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <!-- Actions -->
+            <div style="display:flex;gap:.8rem;margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--border);flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="openVitalsModal(<?= $p['patient_pk'] ?>, '<?= e(addslashes($p['patient_name'])) ?>', '<?= e($p['patient_id']) ?>')">
+                    <span class="btn-text"><i class="fas fa-file-medical"></i> Log Vitals</span>
+                </button>
+                <button class="btn btn-ghost btn-sm" onclick="viewVitalsHistory(<?= $p['patient_pk'] ?>)">
+                    <span class="btn-text"><i class="fas fa-history"></i> Vitals History</span>
+                </button>
             </div>
         </div>
     </div>
-</div>
+    <?php endforeach; endif; ?>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!-- MODAL: RECORD VITALS (Premium Design System)    -->
-<!-- ═══════════════════════════════════════════════ -->
+<script>
+function togglePatientCard(pid) {
+    const body = document.getElementById('patExpand-' + pid);
+    const chev = document.getElementById('patChev-' + pid);
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+function filterPatients() {
+    const q = (document.getElementById('patSearch').value || '').toLowerCase();
+    document.querySelectorAll('.pat-row').forEach(r => {
+        const name = r.dataset.name || '';
+        const ward = r.dataset.ward || '';
+        r.style.display = (!q || name.includes(q) || ward.includes(q)) ? '' : 'none';
+    });
+}
+</script>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-bg" id="recordVitalsModal">
-    <div class="modal-box" style="max-width:720px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+    <div class="modal-box" style="max-width:750px; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden;">
         <div class="modal-header" style="background:var(--primary); padding:1.8rem 2.5rem;">
-            <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-heartbeat" style="margin-right:.8rem;"></i> Vital Signs Entry</h3>
-            <button class="btn btn-primary modal-close" onclick="closeVitalsModal()" type="button" style="color:#fff; opacity:0.8;"><span class="btn-text">×</span></button>
+            <h3 style="color:#fff; font-size:1.8rem; font-weight:800; letter-spacing:-0.01em; margin:0;"><i class="fas fa-heartbeat text-danger" style="margin-right:.8rem;"></i> Vital Signs Entry</h3>
+            <button class="btn btn-primary modal-close" onclick="closeVitalsModal()" type="button" style="color:#fff; opacity:0.8; background:rgba(255,255,255,0.2);"><span class="btn-text">Ã—</span></button>
         </div>
 
         <div style="padding:2.5rem;">
@@ -183,68 +209,82 @@ if ($q) {
                 <input type="hidden" name="action" value="record_vitals">
                 <input type="hidden" name="patient_id" id="vitals_patient_id">
 
-                <!-- Input Groups -->
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem;">
-                    <!-- Blood Pressure -->
-                    <div style="background:rgba(52,152,219,0.03); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
-                        <label style="display:block; font-size:1.15rem; font-weight:800; color:var(--text-secondary); margin-bottom:1rem; text-transform:uppercase; letter-spacing:.05em;"><i class="fas fa-gauge-high text-primary"></i> Blood Pressure</label>
-                        <div style="display:flex; align-items:center; gap:1rem;">
-                            <input type="number" class="form-control" name="bp_systolic" placeholder="Sys" style="text-align:center; font-weight:700; font-size:1.5rem;">
-                            <span style="font-size:1.8rem; color:var(--border); font-weight:300;">/</span>
-                            <input type="number" class="form-control" name="bp_diastolic" placeholder="Dia" style="text-align:center; font-weight:700; font-size:1.5rem;">
-                        </div>
-                        <small style="display:block; text-align:center; color:var(--text-muted); margin-top:.5rem;">mmHg (Systolic / Diastolic)</small>
-                    </div>
+                <!-- UI Tab Navigation -->
+                <div style="display:flex; border-bottom:2px solid var(--border); margin-bottom:2rem; gap:1.5rem;">
+                    <div class="v-tab active" onclick="switchVTab('basic')" id="vTab_basic" style="padding:1rem 1.5rem; font-weight:700; color:var(--primary); border-bottom:3px solid var(--primary); cursor:pointer; font-size:1.2rem;"><i class="fas fa-stethoscope"></i> Basic Signs</div>
+                    <div class="v-tab" onclick="switchVTab('advanced')" id="vTab_advanced" style="padding:1rem 1.5rem; font-weight:600; color:var(--text-muted); cursor:pointer; font-size:1.2rem;"><i class="fas fa-vial"></i> Advanced Details</div>
+                    <div class="v-tab" onclick="switchVTab('notes')" id="vTab_notes" style="padding:1rem 1.5rem; font-weight:600; color:var(--text-muted); cursor:pointer; font-size:1.2rem;"><i class="fas fa-comment-medical"></i> Clinical Notes</div>
+                </div>
 
-                    <!-- Heart & Oxygen -->
-                    <div style="background:rgba(231,76,60,0.03); border:1px solid var(--border); border-radius:12px; padding:1.5rem;">
-                        <label style="display:block; font-size:1.15rem; font-weight:800; color:var(--text-secondary); margin-bottom:1rem; text-transform:uppercase; letter-spacing:.05em;"><i class="fas fa-wave-square text-danger"></i> Pulse &amp; O2</label>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                            <div class="input-group">
-                                <span class="input-group-text" style="background:none; border-right:none;"><i class="fas fa-heartbeat text-danger"></i></span>
-                                <input type="number" class="form-control" name="pulse_rate" placeholder="BPM" style="border-left:none; font-weight:700;">
+                <!-- Tab 1: Basic Signs -->
+                <div id="v_content_basic" style="display:block;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem;">
+                        <!-- Blood Pressure -->
+                        <div style="background:rgba(52,152,219,0.03); border:1px solid var(--border); border-radius:12px; padding:1.8rem;">
+                            <label style="display:block; font-size:1.15rem; font-weight:800; color:var(--text-secondary); margin-bottom:1.5rem; text-transform:uppercase; letter-spacing:.05em;"><i class="fas fa-gauge-high text-primary"></i> Blood Pressure</label>
+                            <div style="display:flex; align-items:center; gap:1rem;">
+                                <input type="number" class="form-control form-control-lg" name="bp_systolic" placeholder="Sys" style="text-align:center; font-weight:700; font-size:1.6rem; padding:1.2rem;">
+                                <span style="font-size:2rem; color:var(--border); font-weight:300;">/</span>
+                                <input type="number" class="form-control form-control-lg" name="bp_diastolic" placeholder="Dia" style="text-align:center; font-weight:700; font-size:1.6rem; padding:1.2rem;">
                             </div>
-                            <div class="input-group">
-                                <span class="input-group-text" style="background:none; border-right:none;"><i class="fas fa-lungs text-info"></i></span>
-                                <input type="number" class="form-control" name="oxygen_saturation" placeholder="SpO2%" style="border-left:none; font-weight:700;">
+                            <small style="display:block; text-align:center; color:var(--text-muted); margin-top:.8rem; font-weight:500;">mmHg (Systolic / Diastolic)</small>
+                        </div>
+
+                        <!-- Heart & Oxygen -->
+                        <div style="background:rgba(231,76,60,0.03); border:1px solid var(--border); border-radius:12px; padding:1.8rem;">
+                            <label style="display:block; font-size:1.15rem; font-weight:800; color:var(--text-secondary); margin-bottom:1.5rem; text-transform:uppercase; letter-spacing:.05em;"><i class="fas fa-wave-square text-danger"></i> Pulse &amp; O2</label>
+                            <div style="display:grid; gap:1.2rem;">
+                                <div class="input-group">
+                                    <span class="input-group-text" style="background:#fff; border-right:none; font-size:1.4rem; padding:0 1.2rem;"><i class="fas fa-heartbeat text-danger"></i></span>
+                                    <input type="number" class="form-control form-control-lg" name="pulse_rate" placeholder="Heart Rate (BPM)" style="border-left:none; font-weight:700; font-size:1.4rem;">
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text" style="background:#fff; border-right:none; font-size:1.4rem; padding:0 1.2rem;"><i class="fas fa-lungs text-info"></i></span>
+                                    <input type="number" class="form-control form-control-lg" name="oxygen_saturation" placeholder="SpO2 (%)" style="border-left:none; font-weight:700; font-size:1.4rem;">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
-                    <div class="form-group">
-                        <label><i class="fas fa-thermometer-half text-warning"></i> Temp (°C)</label>
-                        <input type="number" step="0.1" class="form-control" name="temperature" placeholder="37.0" style="font-weight:700;">
+                <!-- Tab 2: Advanced Details -->
+                <div id="v_content_advanced" style="display:none; animation:fadeIn .3s;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
+                        <div class="form-group">
+                            <label><i class="fas fa-thermometer-half text-warning"></i> Temperature (Â°C)</label>
+                            <input type="number" step="0.1" class="form-control form-control-lg" name="temperature" placeholder="37.0" style="font-weight:700;">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-wind text-secondary"></i> Respiratory Rate</label>
+                            <input type="number" class="form-control form-control-lg" name="respiratory_rate" placeholder="16" style="font-weight:700;">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-bottom:1rem; padding:1.5rem; background:var(--surface-2); border-radius:12px; border:1px solid var(--border);">
+                        <div class="form-group" style="margin:0;">
+                            <label><i class="fas fa-weight"></i> Weight (kg)</label>
+                            <input type="number" step="0.1" class="form-control calc-bmi" id="calc_weight" name="weight" placeholder="0.0">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label><i class="fas fa-ruler-vertical"></i> Height (cm)</label>
+                            <input type="number" step="0.1" class="form-control calc-bmi" id="calc_height" name="height" placeholder="0.0">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label><i class="fas fa-calculator text-primary"></i> Calc. BMI</label>
+                            <input type="number" step="0.1" class="form-control" id="calc_bmi" name="bmi" readonly style="background:rgba(var(--primary-rgb),0.1); font-weight:800; color:var(--primary); border-color:rgba(var(--primary-rgb),0.3);">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label><i class="fas fa-wind text-secondary"></i> Resp. Rate</label>
-                        <input type="number" class="form-control" name="respiratory_rate" placeholder="16" style="font-weight:700;">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-tint text-primary"></i> Glucose</label>
-                        <input type="number" step="0.1" class="form-control" name="blood_glucose" placeholder="95" style="font-weight:700;">
+                        <label><i class="fas fa-tint text-primary"></i> Blood Glucose (mg/dL)</label>
+                        <input type="number" step="0.1" class="form-control form-control-lg" name="blood_glucose" placeholder="95" style="font-weight:700;">
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
+                <!-- Tab 3: Notes -->
+                <div id="v_content_notes" style="display:none; animation:fadeIn .3s;">
                     <div class="form-group">
-                        <label><i class="fas fa-weight"></i> Weight (kg)</label>
-                        <input type="number" step="0.1" class="form-control calc-bmi" id="calc_weight" name="weight" placeholder="0.0">
+                        <label style="font-size:1.3rem; margin-bottom:1rem;"><i class="fas fa-comment-medical text-info"></i> Clinical Observations &amp; Additional Notes</label>
+                        <textarea class="form-control" name="notes" rows="6" placeholder="Describe patient's general appearance, physical complaints, pain levels, or specific concerns..." style="font-size:1.3rem; padding:1.5rem; border-radius:12px; background:var(--surface-2);"></textarea>
                     </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-ruler-vertical"></i> Height (cm)</label>
-                        <input type="number" step="0.1" class="form-control calc-bmi" id="calc_height" name="height" placeholder="0.0">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calculator text-primary"></i> Calculated BMI</label>
-                        <input type="number" step="0.1" class="form-control" id="calc_bmi" name="bmi" readonly style="background:var(--surface-2); font-weight:700; color:var(--primary);">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label><i class="fas fa-comment-medical text-info"></i> Clinical Observations / Notes</label>
-                    <textarea class="form-control" name="notes" rows="3" placeholder="Describe patient's general appearance, complaints, or any specific concerns..."></textarea>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:1.2rem; margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
@@ -259,12 +299,30 @@ if ($q) {
 </div>
 
 <script>
+function switchVTab(tabStr) {
+    document.querySelectorAll('.v-tab').forEach(el => {
+        el.style.borderBottom = 'none';
+        el.style.color = 'var(--text-muted)';
+        el.style.fontWeight = '600';
+    });
+    document.getElementById('vTab_'+tabStr).style.borderBottom = '3px solid var(--primary)';
+    document.getElementById('vTab_'+tabStr).style.color = 'var(--primary)';
+    document.getElementById('vTab_'+tabStr).style.fontWeight = '700';
+    
+    document.getElementById('v_content_basic').style.display = 'none';
+    document.getElementById('v_content_advanced').style.display = 'none';
+    document.getElementById('v_content_notes').style.display = 'none';
+    
+    document.getElementById('v_content_'+tabStr).style.display = 'block';
+}
+
 function openVitalsModal(patientPk, patientName, patientId) {
     document.getElementById('vitals_patient_id').value = patientPk;
     document.getElementById('vitals_patient_name_display').textContent = patientName;
     document.getElementById('vitals_patient_id_display').textContent = patientId;
     document.getElementById('vitals_avatar_init').textContent = patientName.charAt(0).toUpperCase();
     document.getElementById('recordVitalsForm').reset();
+    switchVTab('basic');
     document.getElementById('recordVitalsModal').style.display = 'flex';
 }
 function closeVitalsModal() {
@@ -308,7 +366,7 @@ $(document).ready(function() {
             success: function(res) {
                 if(res.success) { 
                     Swal.fire({ icon: 'success', title: 'Saved!', text: 'Vital signs recorded successfully.', timer: 1500, showConfirmButton: false });
-                    setTimeout(() => location.reload(), 1500);
+                    setTimeout(() => window.location.href = '?tab=patients', 1500);
                 } else { 
                     Swal.fire({ icon: 'error', title: 'Error', text: res.message || 'Failed to save vitals.' });
                     btn.html('<i class="fas fa-check-circle"></i> Authenticate &amp; Save').prop('disabled', false); 

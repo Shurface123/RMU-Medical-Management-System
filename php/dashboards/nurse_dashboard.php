@@ -18,7 +18,7 @@ $today     = date('Y-m-d');
 $valid_tabs = [
     'overview', 'patients', 'medications', 'wards', 'notes',
     'tasks', 'emergency', 'fluids', 'education', 'messages',
-    'analytics', 'reports', 'profile', 'settings'
+    'notifications', 'analytics', 'reports', 'profile', 'settings'
 ];
 $active_tab = isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs) ? $_GET['tab'] : 'overview';
 
@@ -26,7 +26,7 @@ $active_tab = isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs) ? $_GET
 $nurse_row = mysqli_fetch_assoc(mysqli_query($conn,
     "SELECT n.id AS nurse_pk, n.nurse_id, n.full_name, n.shift_type,
             n.designation, n.specialization, n.profile_photo, n.status,
-            u.email, u.phone
+            u.email, u.phone, u.gender
      FROM nurses n JOIN users u ON n.user_id=u.id
      WHERE n.user_id=$user_id LIMIT 1"));
 
@@ -84,6 +84,10 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
             --role-accent: #E67E22; /* Warm Medical Orange */
             --role-accent-dark: #CA6F1E;
             --role-accent-light: #FDEBD0;
+            --role-gradient: linear-gradient(135deg, #E67E22, #F39C12);
+            --info-gradient: linear-gradient(135deg, #2F80ED, #56CCF2);
+            --danger-gradient: linear-gradient(135deg, #E74C3C, #FF6B6B);
+            --success-gradient: linear-gradient(135deg, #27AE60, #2ECC71);
             
             /* Bridging Legacy Tokens */
             --primary-color: var(--primary);
@@ -97,6 +101,56 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
         }
         [data-theme="dark"] { --role-accent-light: #3a2512; }
 
+        /* ── Micro-Styles from Patient Dashboard ── */
+        .ov-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:2rem;display:flex;align-items:center;gap:1.5rem;box-shadow:var(--shadow-sm);transition:var(--transition);cursor:pointer;position:relative;overflow:hidden;}
+        .ov-stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:opacity .3s;}
+        .ov-stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
+        .ov-stat-card:hover::before{opacity:1;}
+        .ov-stat-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:#fff;flex-shrink:0;}
+        .ov-stat-num{font-size:3rem;font-weight:800;line-height:1;}
+        .ov-stat-label{font-size:1.2rem;color:var(--text-muted);font-weight:500;margin-top:.2rem;}
+
+        .ov-appt-item{display:flex;align-items:flex-start;gap:1.2rem;padding:1.2rem 0;border-bottom:1px solid var(--border);transition:background .15s;}
+        .ov-appt-item:last-child{border-bottom:none;}
+        .ov-appt-date-badge{min-width:52px;background:var(--role-gradient);color:#fff;border-radius:10px;padding:.5rem .7rem;text-align:center;flex-shrink:0;}
+        .ov-appt-date-badge .day{font-size:1.6rem;font-weight:800;line-height:1;}
+        .ov-appt-date-badge .mon{font-size:.85rem;text-transform:uppercase;opacity:.9;}
+
+        .ov-quick-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.5rem;text-align:center;cursor:pointer;transition:var(--transition);text-decoration:none;color:var(--text-primary);display:block;}
+        .ov-quick-card:hover{background:var(--role-accent);color:#fff;transform:translateY(-3px);box-shadow:var(--shadow-md);}
+        .ov-quick-card:hover .ov-quick-icon{background:rgba(255,255,255,.2);color:#fff;}
+        .ov-quick-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.6rem;background:var(--surface);transition:var(--transition);}
+        .ov-quick-label{font-size:1.2rem;font-weight:700;}
+
+        .ov-health-row{display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;border-bottom:1px solid var(--border);}
+        .ov-health-row:last-child{border-bottom:none;}
+
+        .ov-timeline-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:5px;border:2px solid var(--surface);}
+        .ov-timeline-line{width:2px;background:var(--border);margin:0 auto;flex-grow:1;}
+        
+        .rec-card2{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:1.2rem;box-shadow:var(--shadow-sm);overflow:hidden;transition:var(--transition);}
+        .rec-card2:hover{box-shadow:var(--shadow-md);}
+        .rec-card2-header{display:flex;align-items:center;gap:1.2rem;padding:1.5rem 1.8rem;cursor:pointer;transition:background .15s;flex-wrap:wrap;}
+        .rec-card2-header:hover{background:var(--surface-2);}
+        .rec-diag-chip{display:inline-flex;align-items:center;gap:.5rem;background:var(--info-gradient);color:#fff;border-radius:20px;padding:.35rem 1rem;font-size:1.2rem;font-weight:700;white-space:nowrap;}
+        .rec-expand-body{display:none;border-top:1px solid var(--border);padding:1.5rem 1.8rem;background:var(--surface-2);}
+        .rec-expand-body.open{display:block;animation:fadeTab .2s ease;}
+        .rec-field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;}
+        .rec-field{background:var(--surface);border-radius:10px;padding:1.2rem;}
+        .rec-field .rec-field-label{font-size:1rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem;}
+        .rec-field .rec-field-value{font-size:1.3rem;color:var(--text-primary);}
+        .vital-chip{display:inline-flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.3rem .8rem;font-size:1.1rem;font-weight:600;margin:.2rem;}
+
+        .inv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:1rem;box-shadow:var(--shadow-sm);transition:var(--transition);overflow:hidden;}
+        .inv-card:hover{box-shadow:var(--shadow-md);}
+        .inv-card.inv-paid{border-left:5px solid var(--success);}
+        .inv-card.inv-pending,.inv-card.inv-partially{border-left:5px solid var(--warning);}
+        .inv-card.inv-overdue{border-left:5px solid var(--danger);}
+        .inv-card-header{display:flex;align-items:center;gap:1.2rem;padding:1.4rem 1.8rem;flex-wrap:wrap;}
+        .pay-progress-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;width:120px;margin-top:.4rem;}
+        .pay-progress-fill{height:100%;border-radius:4px;background:var(--success-gradient);transition:width .5s;}
+
+        @media(max-width:900px){.ov-main-grid{grid-template-columns:1fr!important;}}
         /* ── Hero Banner ── */
         .staff-hero { background:linear-gradient(135deg,#1C3A6B 0%,#2F80ED 55%,#E67E22 100%);color:#fff;border-radius:var(--radius-lg);padding:2.2rem 2.8rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.8rem;flex-wrap:wrap;position:relative;overflow:hidden; box-shadow: var(--shadow-md); }
         .staff-hero-avatar { width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;font-size:2.6rem;border:3px solid rgba(255,255,255,.35);flex-shrink:0; }
@@ -258,6 +312,13 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
             <i class="fas fa-envelope"></i><span>Messages</span>
         </a>
         
+        <a href="?tab=notifications" class="adm-nav-item <?= $active_tab=='notifications'?'active':'' ?>">
+            <i class="fas fa-bell"></i><span>Notifications</span>
+            <?php if($unread_notifs>0): ?>
+                <span style="background:var(--danger); color:#fff; border-radius:50%; padding:2px 8px; font-size:12px; margin-left:auto;"><?= $unread_notifs ?></span>
+            <?php endif; ?>
+        </a>
+        
         <a href="?tab=reports" class="adm-nav-item <?= $active_tab=='reports'?'active':'' ?>">
             <i class="fas fa-file-pdf"></i><span>Reports</span>
         </a>
@@ -306,20 +367,25 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
                 <i class="fas fa-exclamation-triangle"></i> CODE BLUE
             </span></a>
 
-            <!-- Notifications -->
-            <a href="?tab=overview#notifications" style="text-decoration: none; color: var(--text-muted); position: relative; margin-right: 20px; font-size: 1.2rem;">
-                <i class="fas fa-bell"></i>
-                <?php if($unread_notifs>0): ?>
-                    <span style="position: absolute; top: -5px; right: -10px; background: var(--danger); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;"><?= $unread_notifs ?></span>
-                <?php endif; ?>
-            </a>
+            <!-- Notifications BroadcastReceiver Bell Auto-Injects Here -->
 
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
             
             <div class="adm-avatar" onclick="window.location.href='?tab=profile'" style="cursor:pointer; display:flex; align-items:center;">
-                <img src="/RMU-Medical-Management-System/uploads/profiles/<?= $profile_image_path ?>" 
-                     alt="Profile" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" 
-                     onerror="this.src='/RMU-Medical-Management-System/image/default-avatar.png'">
+                <?php
+                    $gender = strtolower($nurse_row['gender'] ?? '');
+                    $is_female = ($gender === 'female' || $gender === 'f');
+                    
+                    if (!empty($nurse_row['profile_photo']) && $nurse_row['profile_photo'] !== 'default-avatar.png') {
+                        $avatarUrl = "/RMU-Medical-Management-System/uploads/profiles/" . htmlspecialchars($nurse_row['profile_photo']);
+                        echo "<img src='$avatarUrl' style='width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--role-accent);'>";
+                    } else {
+                        // Display CSS Avatar if no photo exists
+                        $av_bg = $is_female ? 'var(--danger-gradient)' : 'var(--info-gradient)';
+                        $av_icon = $is_female ? 'fa-user-nurse' : 'fa-user-nurse'; // Using nurse specific shapes
+                        echo "<div style='width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:$av_bg;color:#fff;font-size:1.4rem;border:2px solid var(--surface);box-shadow:0 2px 5px rgba(0,0,0,0.2);'><i class='fas $av_icon'></i></div>";
+                    }
+                ?>
             </div>
         </div>
     </div>
@@ -344,7 +410,22 @@ $pending_tasks = qval($conn,"SELECT COUNT(*) FROM nurse_tasks WHERE nurse_id=$nu
 
 <!-- ── GLOBAL SCRIPTS ────────────────────────────────────── -->
 <script src="/RMU-Medical-Management-System/php/includes/BroadcastReceiver.js"></script>
+<!-- SweetAlert2 for Global Toasts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+window.showToast = function(msg, iconType = 'success') {
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        icon: iconType,
+        title: msg,
+        customClass: { popup: 'adm-toast-popup' }
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof BroadcastReceiver !== 'undefined') {
         window.rmuBroadcasts = new BroadcastReceiver(<?= $_SESSION['user_id'] ?>);

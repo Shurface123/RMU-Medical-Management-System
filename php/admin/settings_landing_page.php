@@ -5,7 +5,7 @@
  * public-facing landing page content, chatbot KB, and bookings.
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../db_conn.php';
 
 // ── Auth: Admin Only ──────────────────────────────────────────────

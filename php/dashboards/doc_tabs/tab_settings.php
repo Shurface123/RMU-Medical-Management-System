@@ -130,6 +130,7 @@
     <?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
   </div>
 </div>
+</div>
 <script>
 async function toggle2FA(cb){
   const enable = cb.checked ? 1 : 0;

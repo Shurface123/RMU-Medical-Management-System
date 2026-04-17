@@ -118,9 +118,10 @@ $notif_prefs = is_string($settings['notification_preferences']??'')
             </div>
         </div>
     </div>
+
+    <?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
 </div>
 
-<?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
 <script>
 async function saveLang(val){
     await doAction({action:'save_settings', language:val},'Language preference saved!');

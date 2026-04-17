@@ -5,7 +5,7 @@
 // new columns (reschedule_date/time, cancellation_reason, cancelled_by),
 // and unified notification system
 // ============================================================
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once '../db_conn.php';
 require_once '../classes/AppointmentManager.php';
 

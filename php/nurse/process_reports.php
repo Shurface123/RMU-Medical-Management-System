@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // CSRF checking logic - using the robust implementation from nurse_security
-if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+if (!verifyCsrfToken($_POST['_csrf'] ?? '')) {
     die("Security Token Validation Failed. Please refresh the dashboard and try again.");
 }
 
@@ -26,7 +26,7 @@ if (!$type) die("Report type mapping error.");
 
 // Helper function safely fetching user context data
 function buildVitalsQuery($nurse_id, $start, $end) {
-    return "SELECT pv.recorded_at, p.user_id as patient_pk, u.name as patient_name, pv.blood_pressure, pv.heart_rate, pv.temperature, pv.oxygen_saturation, pv.is_flagged, pv.flag_reason 
+    return "SELECT pv.recorded_at, CONCAT(u.name, ' (', p.patient_id, ')'), CONCAT(pv.bp_systolic, '/', pv.bp_diastolic), pv.pulse_rate, pv.temperature, pv.oxygen_saturation, CASE WHEN pv.is_flagged=1 THEN 'Yes' ELSE 'No' END, pv.flag_reason 
             FROM patient_vitals pv 
             JOIN patients p ON pv.patient_id = p.id 
             JOIN users u ON p.user_id = u.id 
@@ -34,7 +34,7 @@ function buildVitalsQuery($nurse_id, $start, $end) {
             ORDER BY pv.recorded_at DESC";
 }
 function buildMedsQuery($nurse_id, $start, $end) {
-    return "SELECT ma.administered_at, ma.scheduled_time, p.user_id as patient_pk, u.name as patient_name, ma.drug_name, ma.dosage, ma.route, ma.status, ma.notes 
+    return "SELECT ma.scheduled_time, ma.administered_at, CONCAT(u.name, ' (', p.patient_id, ')'), ma.drug_name, ma.dosage, ma.route, ma.status, ma.notes 
             FROM medication_administration ma 
             JOIN patients p ON ma.patient_id = p.id 
             JOIN users u ON p.user_id = u.id 
@@ -42,7 +42,7 @@ function buildMedsQuery($nurse_id, $start, $end) {
             ORDER BY ma.scheduled_time DESC";
 }
 function buildFluidsQuery($nurse_id, $start, $end) {
-    return "SELECT fb.recorded_at, u.name as patient_name, fb.fluid_type, fb.volume_ml, fb.route, fb.balance_type, fb.notes 
+    return "SELECT fb.recorded_at, CONCAT(u.name, ' (', p.patient_id, ')'), fb.fluid_type, fb.volume_ml, fb.route, fb.balance_type, fb.notes 
             FROM fluid_balance fb 
             JOIN patients p ON fb.patient_id = p.id 
             JOIN users u ON p.user_id = u.id 
@@ -50,7 +50,7 @@ function buildFluidsQuery($nurse_id, $start, $end) {
             ORDER BY fb.recorded_at DESC";
 }
 function buildTasksQuery($nurse_id, $start, $end) {
-    return "SELECT nt.created_at, nt.completed_at, nt.task_type, nt.description, u.name as patient_name, nt.status 
+    return "SELECT nt.created_at, nt.completed_at, nt.task_type, nt.description, IFNULL(CONCAT(u.name, ' (', p.patient_id, ')'), 'Ward Task'), nt.status 
             FROM nurse_tasks nt 
             LEFT JOIN patients p ON nt.patient_id = p.id 
             LEFT JOIN users u ON p.user_id = u.id 

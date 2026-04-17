@@ -109,7 +109,15 @@ if ($q_alerts) {
                             <span>Security Alert</span>
                         </span></button>
                         <button class="btn btn-ghost" onclick="showTriggerModal('General Emergency')" style="border-color:var(--text-muted); color:var(--text-muted); font-weight:700; padding:1.2rem .5rem; height:auto; display:flex; flex-direction:column; gap:.8rem;"><span class="btn-text">
-                            <i class="fas fa-exclamation-circle" style="font-size        <!-- REAL-TIME ALERTS FEED -->
+                            <i class="fas fa-exclamation-circle" style="font-size:1.8rem;"></i>
+                            <span>General Emergency</span>
+                        </span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REAL-TIME ALERTS FEED -->
         <div>
             <div class="adm-card shadow-sm">
                 <div class="adm-card-header" style="justify-content:space-between; border-bottom:1.5px solid var(--border);">
@@ -198,25 +206,34 @@ if ($q_alerts) {
 
                                     <div style="display:flex; justify-content:space-between; align-items:center; pt-1.5rem; border-top:1px solid var(--border); padding-top:1.5rem;">
                                         <div style="display:flex; align-items:center; gap:.8rem;">
+                                            <?php 
+                                            $t_nurse = !empty($a['triggering_nurse']) ? $a['triggering_nurse'] : 'Unknown'; 
+                                            ?>
                                             <div style="width:30px; height:30px; border-radius:50%; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:.9rem; font-weight:800; color:var(--text-secondary);">
-                                                <?= strtoupper(substr($a['triggering_nurse'], 0, 1)) ?>
+                                                <?= strtoupper(substr($t_nurse, 0, 1)) ?>
                                             </div>
                                             <div style="font-size:1.1rem; font-weight:600; color:var(--text-muted);">
-                                                Initiated by <span style="color:var(--text-secondary); font-weight:700;"><?= e($a['triggering_nurse']) ?></span>
+                                                Initiated by <span style="color:var(--text-secondary); font-weight:700;"><?= e($t_nurse) ?></span>
                                             </div>
                                         </div>
 
-                                        <div style="display:flex; gap:.8rem;">
+                                        <div style="display:flex; align-items:center; gap:.8rem;">
                                             <?php if($is_active): ?>
-                                                <button class="adm-btn adm-btn-warning" onclick="updateAlert(<?= $a['id'] ?>, 'Responded')" style="font-weight:800; font-size:1.1rem; padding:.6rem 1.4rem;">
+                                                <button class="btn" onclick="updateAlert(<?= $a['id'] ?>, 'Responded')" style="background:var(--warning); color:#fff; font-weight:800; font-size:1.1rem; padding:.6rem 1.4rem; border-radius:12px;">
                                                     <i class="fas fa-running"></i> I AM RESPONDING
-                                                </span></button>
+                                                </button>
+                                            <?php endif; ?>
+                                            
+                                            <?php if($is_responded && !empty($a['resolver_name'])): ?>
+                                                <div style="background:rgba(241,196,15,0.1); border:1px solid rgba(241,196,15,0.2); color:var(--warning); font-weight:800; font-size:1.1rem; padding:.6rem 1.2rem; border-radius:12px; margin-right:1rem;">
+                                                    <i class="fas fa-user-nurse"></i> Being Handled By: <?= e($a['resolver_name']) ?>
+                                                </div>
                                             <?php endif; ?>
                                             
                                             <?php if($is_active || $is_responded): ?>
-                                                <button class="btn btn-success" onclick="showResolveModal(<?= $a['id'] ?>)" style="font-weight:800; font-size:1.1rem; padding:.6rem 1.4rem;"><span class="btn-text">
+                                                <button class="btn btn-success" onclick="showResolveModal(<?= $a['id'] ?>)" style="background:var(--success); color:#fff; font-weight:800; font-size:1.1rem; padding:.6rem 1.4rem; border-radius:12px;">
                                                     <i class="fas fa-check"></i> RESOLVE
-                                                </span></button>
+                                                </button>
                                             <?php endif; ?>
 
                                             <?php if($is_resolved): ?>
@@ -393,7 +410,7 @@ function updateAlert(alertId, statusVal) {
             }, function(res) {
                 if(res.success) {
                     Swal.fire({ icon: 'success', title: 'Response Noted', timer: 1000, showConfirmButton: false });
-                    setTimeout(() => location.reload(), 1000);
+        setTimeout(() => window.location.href = '?tab=emergency', 1000);
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: res.message });
                 }
@@ -429,7 +446,7 @@ $(document).ready(function() {
                         if(res.success) {
                             closeTriggerModal();
                             Swal.fire({ icon: 'success', title: 'ALERT BROADCASTED', text: res.message, timer: 3000, showConfirmButton: false });
-                            setTimeout(() => location.reload(), 3000);
+        setTimeout(() => window.location.href = '?tab=emergency', 3000);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Transmission Failed', text: res.message });
                             btn.prop('disabled', false).html('<i class="fas fa-bullhorn"></i> BROADCAST ALERT');
@@ -466,7 +483,7 @@ $(document).ready(function() {
                         if(res.success) {
                             closeResolveModal();
                             Swal.fire({ icon: 'success', title: 'Event Secured', timer: 1500, showConfirmButton: false });
-                            setTimeout(() => location.reload(), 1500);
+        setTimeout(() => window.location.href = '?tab=emergency', 1500);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Error', text: res.message });
                         }

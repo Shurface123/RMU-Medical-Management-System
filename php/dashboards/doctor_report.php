@@ -4,7 +4,7 @@
 // PHP/dashboards/doctor_report.php
 // Supports: PDF (print layout), CSV, XLSX-as-CSV
 // ============================================================
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'doctor') {
     die('Unauthorized'); 
 }

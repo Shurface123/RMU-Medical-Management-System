@@ -96,25 +96,6 @@
       </div>
       <style>#twoFaToggle:checked + span{background:var(--success)!important;}#twoFaToggle:checked + span + span{transform:translateX(22px)!important;}</style>
 
-      <div class="adm-card" style="padding:1.8rem;">
-        <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:1rem;"><i class="fas fa-laptop" style="color:var(--info);margin-right:.5rem;"></i>Active Sessions</h3>
-        <?php
-          $sessions=[];
-          $q=mysqli_query($conn,"SELECT * FROM pharmacist_sessions WHERE pharmacist_id=$pharm_pk ORDER BY last_active DESC LIMIT 5");
-          if($q) while($r=mysqli_fetch_assoc($q)) $sessions[]=$r;
-        ?>
-        <?php if(empty($sessions)):?>
-        <p style="color:var(--text-muted);text-align:center;padding:1rem;">No session data available</p>
-        <?php else: foreach($sessions as $sess):?>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:.8rem 0;border-bottom:1px solid var(--border);">
-          <div>
-            <div style="font-weight:600;"><?=htmlspecialchars($sess['browser']??'Unknown Browser')?></div>
-            <div style="font-size:1.1rem;color:var(--text-muted);">IP: <?=htmlspecialchars($sess['ip_address']??'—')?> · <?=$sess['last_active']?date('d M, g:i A',strtotime($sess['last_active'])):'—'?></div>
-          </div>
-          <?php if($sess['is_current']):?><span class="adm-badge adm-badge-success">Current</span>
-          <?php else:?><button class="btn btn-danger btn-sm" onclick="revokeSession(<?=$sess['id']?>)"><span class="btn-text"><i class="fas fa-times"></i></span></button><?php endif;?>
-        </div>
-        <?php endforeach; endif;?>
       <?php include __DIR__.'/../../includes/active_sessions_panel.php'; ?>
     </div>
   </div>

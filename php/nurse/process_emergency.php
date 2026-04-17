@@ -73,11 +73,13 @@ if ($action === 'trigger_alert') {
     $types = "s";
 
     if ($status === 'Responded') {
-        $query .= ", responded_at = NOW() WHERE id = ?";
+        $query .= ", responded_at = NOW(), resolved_by = ? WHERE id = ?";
+        $params[] = $nurse_id;
+        $types .= "ii";
     } else {
         $query .= ", resolved_at = NOW(), resolved_by = ? WHERE id = ?";
         $params[] = $nurse_id; // Store user ID of the resolver
-        $types .= "i";
+        $types .= "ii";
     }
     $params[] = $alert_id;
     $types .= "i";
