@@ -6,6 +6,9 @@
 require_once '../includes/auth_middleware.php';
 enforceSingleDashboard('pharmacist');
 
+require_once 'pharmacy_security.php';
+initSecureSession();
+setSecurityHeaders();
 require_once '../db_conn.php';
 date_default_timezone_set('Africa/Accra');
 $csrf_token = generateCsrfToken();
@@ -238,7 +241,15 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{--role-accent:#27AE60;--role-accent-dark:#1E8449;--role-accent-light:#EAFAF1;}
+:root {
+  --role-accent: #27AE60; /* Medical Pharmacy Green */
+  --role-accent-dark: #1E8449;
+  --role-accent-light: #EAFAF1;
+  --role-gradient: linear-gradient(135deg, #27AE60, #2ECC71);
+  --info-gradient: linear-gradient(135deg, #2F80ED, #56CCF2);
+  --danger-gradient: linear-gradient(135deg, #E74C3C, #FF6B6B);
+  --success-gradient: linear-gradient(135deg, #27AE60, #2ECC71);
+}
 [data-theme="dark"]{--role-accent-light:#0d2b19;}
 
 /* ── Hero Banner ── */
@@ -285,14 +296,29 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 .adm-badge-primary{background:var(--primary-light);color:var(--primary);}
 .adm-badge-teal{background:var(--role-accent-light);color:var(--role-accent);}
 
-/* ── Table ── */
-.adm-table-wrap{overflow-x:auto;border-radius:var(--radius-md);}
-.adm-table{width:100%;border-collapse:collapse;font-size:1.3rem;}
-.adm-table th{background:var(--surface-2);padding:1.2rem 1.4rem;text-align:left;font-weight:600;color:var(--text-secondary);font-size:1.1rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--border);}
-.adm-table td{padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle;}
-.adm-table tr:last-child td{border:none;}
-.adm-table tr:hover td{background:var(--surface-2);}
-.adm-table .action-btns{display:flex;gap:.5rem;flex-wrap:wrap;}
+/* ── Advanced Table Diagrams ── */
+.adm-table-wrap { overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border); }
+.adm-table { width:100%;border-collapse:collapse;font-size:1.3rem; }
+.adm-table th { background:var(--surface-2);padding:1.2rem 1.4rem;text-align:left;font-weight:600;color:var(--text-secondary);font-size:1.1rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--border); }
+.adm-table td { padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle; transition:var(--transition); }
+.adm-table tr:last-child td { border:none; }
+.adm-table tr:hover td { background:var(--surface-2); }
+.adm-table .action-btns { display:flex;gap:.5rem;flex-wrap:wrap; }
+
+/* Mobile Table Diagrams (Carding System) */
+@media(max-width: 900px) {
+  .adm-table thead { display: none; }
+  .adm-table, .adm-table tbody, .adm-table tr, .adm-table td { display: block; width: 100%; }
+  .adm-table tr { margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow-sm); }
+  .adm-table td { padding: 0.8rem 1rem; text-align: right; border-bottom: 1px solid var(--border); position: relative; display: flex; justify-content: space-between; align-items: center; }
+  .adm-table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; color: var(--text-secondary); font-size: 1rem; text-align: left; margin-right: 1rem; }
+  .adm-table td:last-child { border-bottom: 0; }
+  .action-btns { justify-content: flex-end; }
+}
+
+/* Glassmorphism Modals & Cards */
+.glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+
 
 /* ── Cards Grid ── */
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;}
@@ -360,45 +386,70 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 
 <!-- ════════════════ SIDEBAR ════════════════ -->
 <aside class="adm-sidebar" id="admSidebar">
+  <!-- Brand -->
   <div class="adm-sidebar-brand">
-    <div class="adm-brand-icon"><i class="fas fa-prescription-bottle-medical"></i></div>
-    <div class="adm-brand-text">
-      <span class="adm-brand-name">RMU Sickbay</span>
-      <span class="adm-brand-role">Pharmacy Portal</span>
-    </div>
+      <div class="adm-sidebar-brand-icon">
+          <i class="fas fa-prescription-bottle-medical"></i>
+      </div>
+      <div class="adm-sidebar-brand-text">
+          <h2>RMU SICKBAY</h2>
+          <span>Pharmacy Portal</span>
+      </div>
   </div>
-  <nav class="adm-nav" style="padding:1.5rem 1rem;flex:1;">
-    <div class="adm-nav-label">Main</div>
-    <a href="#" class="adm-nav-item <?=($active_tab==='overview')?'active':''?>" onclick="showTab('overview',this)"><i class="fas fa-house"></i><span>Overview</span></a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='inventory')?'active':''?>" onclick="showTab('inventory',this)">
+
+  <nav class="adm-sidebar-nav" style="padding:1.5rem 1rem;flex:1;overflow-y:auto;">
+    <span class="adm-nav-section-label">Main System</span>
+    <a href="?tab=overview" class="adm-nav-item <?=($active_tab==='overview')?'active':''?>">
+      <i class="fas fa-house"></i><span>Overview</span>
+    </a>
+    <a href="?tab=inventory" class="adm-nav-item <?=($active_tab==='inventory')?'active':''?>">
       <i class="fas fa-pills"></i><span>Medicine Inventory</span>
-      <?php if($stats['low_stock']>0||$stats['out_of_stock']>0):?><span class="adm-badge adm-badge-danger" style="margin-left:auto;font-size:1rem;"><?=$stats['low_stock']+$stats['out_of_stock']?></span><?php endif;?>
+      <?php if($stats['low_stock']>0||$stats['out_of_stock']>0):?><span style="background:var(--danger);color:#fff;border-radius:50%;padding:2px 8px;font-size:12px;margin-left:auto;"><?=$stats['low_stock']+$stats['out_of_stock']?></span><?php endif;?>
     </a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='prescriptions')?'active':''?>" onclick="showTab('prescriptions',this)">
+    <a href="?tab=prescriptions" class="adm-nav-item <?=($active_tab==='prescriptions')?'active':''?>">
       <i class="fas fa-prescription-bottle-medical"></i><span>Prescriptions</span>
-      <?php if($stats['pending_rx']>0):?><span class="adm-badge adm-badge-warning" style="margin-left:auto;font-size:1rem;"><?=$stats['pending_rx']?></span><?php endif;?>
+      <?php if($stats['pending_rx']>0):?><span style="background:var(--warning);color:#fff;border-radius:50%;padding:2px 8px;font-size:12px;margin-left:auto;"><?=$stats['pending_rx']?></span><?php endif;?>
     </a>
-    <div class="adm-nav-label" style="margin-top:1rem;">Inventory</div>
-    <a href="#" class="adm-nav-item <?=($active_tab==='stock')?'active':''?>" onclick="showTab('stock',this)"><i class="fas fa-boxes-stacked"></i><span>Stock Management</span></a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='alerts')?'active':''?>" onclick="showTab('alerts',this)">
+
+    <span class="adm-nav-section-label">Inventory & Stock</span>
+    <a href="?tab=stock" class="adm-nav-item <?=($active_tab==='stock')?'active':''?>">
+      <i class="fas fa-boxes-stacked"></i><span>Stock Management</span>
+    </a>
+    <a href="?tab=alerts" class="adm-nav-item <?=($active_tab==='alerts')?'active':''?>">
       <i class="fas fa-triangle-exclamation"></i><span>Alerts</span>
-      <?php if($stats['active_alerts']>0):?><span class="adm-badge adm-badge-danger" style="margin-left:auto;font-size:1rem;"><?=$stats['active_alerts']?></span><?php endif;?>
+      <?php if($stats['active_alerts']>0):?><span style="background:var(--danger);color:#fff;border-radius:50%;padding:2px 8px;font-size:12px;margin-left:auto;"><?=$stats['active_alerts']?></span><?php endif;?>
     </a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='dispensing')?'active':''?>" onclick="showTab('dispensing',this)"><i class="fas fa-hand-holding-medical"></i><span>Dispensing History</span></a>
-    <div class="adm-nav-label" style="margin-top:1rem;">Insights</div>
-    <a href="#" class="adm-nav-item <?=($active_tab==='analytics')?'active':''?>" onclick="showTab('analytics',this)"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='reports')?'active':''?>" onclick="showTab('reports',this)"><i class="fas fa-file-export"></i><span>Reports</span></a>
-    <div class="adm-nav-label" style="margin-top:1rem;">Account</div>
-    <a href="#" class="adm-nav-item <?=($active_tab==='notifications')?'active':''?>" onclick="showTab('notifications',this)">
+    <a href="?tab=dispensing" class="adm-nav-item <?=($active_tab==='dispensing')?'active':''?>">
+      <i class="fas fa-hand-holding-medical"></i><span>Dispensing History</span>
+    </a>
+
+    <span class="adm-nav-section-label">Insights</span>
+    <a href="?tab=analytics" class="adm-nav-item <?=($active_tab==='analytics')?'active':''?>">
+      <i class="fas fa-chart-bar"></i><span>Analytics</span>
+    </a>
+    <a href="?tab=reports" class="adm-nav-item <?=($active_tab==='reports')?'active':''?>">
+      <i class="fas fa-file-export"></i><span>Reports</span>
+    </a>
+
+    <span class="adm-nav-section-label">Account</span>
+    <a href="?tab=notifications" class="adm-nav-item <?=($active_tab==='notifications')?'active':''?>">
       <i class="fas fa-bell"></i><span>Notifications</span>
-      <?php if($stats['unread_notifs']>0):?><span class="adm-badge adm-badge-warning" style="margin-left:auto;font-size:1rem;"><?=$stats['unread_notifs']?></span><?php endif;?>
+      <?php if($stats['unread_notifs']>0):?><span style="background:var(--danger);color:#fff;border-radius:50%;padding:2px 8px;font-size:12px;margin-left:auto;"><?=$stats['unread_notifs']?></span><?php endif;?>
     </a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='settings')?'active':''?>" onclick="showTab('settings',this)"><i class="fas fa-gear"></i><span>Settings</span></a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='profile')?'active':''?>" onclick="showTab('profile',this)"><i class="fas fa-user-circle"></i><span>My Profile</span></a>
-    <a href="#" class="adm-nav-item <?=($active_tab==='system_settings')?'active':''?>" onclick="showTab('system_settings',this)"><i class="fas fa-sliders"></i><span>System Settings</span></a>
+    <a href="?tab=settings" class="adm-nav-item <?=($active_tab==='settings')?'active':''?>">
+      <i class="fas fa-gear"></i><span>Settings</span>
+    </a>
+    <a href="?tab=profile" class="adm-nav-item <?=($active_tab==='profile')?'active':''?>">
+      <i class="fas fa-user-circle"></i><span>My Profile</span>
+    </a>
+    <a href="?tab=system_settings" class="adm-nav-item <?=($active_tab==='system_settings')?'active':''?>">
+      <i class="fas fa-sliders"></i><span>System Settings</span>
+    </a>
   </nav>
   <div class="adm-sidebar-footer">
-    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text"><i class="fas fa-right-from-bracket"></i><span>Logout</span></span></a>
+    <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-primary adm-logout-btn"><span class="btn-text">
+        <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+    </span></a>
   </div>
 </aside>
 <div class="adm-overlay" id="admOverlay"></div>
@@ -427,28 +478,33 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
         </span></button>
       </div>
       <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
-      <div class="adm-avatar" style="background:linear-gradient(135deg,var(--role-accent),#2F80ED);" title="<?=htmlspecialchars($pharm_row['full_name']??$pharmacistName)?>">
-        <?=strtoupper(substr($pharm_row['full_name']??$pharmacistName,0,1))?>
+      <div class="adm-avatar" onclick="window.location.href='?tab=profile'" style="cursor:pointer; display:flex; align-items:center;">
+        <?php
+            $pImg = $pharm_row['profile_photo'] ?? $pharm_row['profile_image'] ?? '';
+            if (!empty($pImg) && $pImg !== 'default-avatar.png') {
+                $avatarUrl = "/RMU-Medical-Management-System/" . htmlspecialchars($pImg);
+                echo "<img src='$avatarUrl' style='width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--role-accent);'>";
+            } else {
+                echo "<div style='width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--role-gradient);color:#fff;font-size:1.4rem;border:2px solid var(--surface);box-shadow:0 2px 5px rgba(0,0,0,0.2);'><i class='fas fa-mortar-pestle'></i></div>";
+            }
+        ?>
       </div>
     </div>
   </div>
 
   <!-- CONTENT -->
   <div class="adm-content">
-
-    <?php include __DIR__.'/phar_tabs/tab_overview.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_inventory.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_prescriptions.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_stock.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_alerts.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_dispensing.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_analytics.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_reports.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_notifications.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_settings.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_profile.php'; ?>
-    <?php include __DIR__.'/phar_tabs/tab_system_settings.php'; ?>
-
+      <?php
+      $tab_file = "phar_tabs/tab_{$active_tab}.php";
+      if(file_exists($tab_file)) {
+          include $tab_file;
+      } else {
+          echo "<div class='alert alert-warning'>
+                  <i class='fas fa-exclamation-circle'></i> 
+                  Module '{$active_tab}' is currently under development.
+                </div>";
+      }
+      ?>
   </div><!-- /adm-content -->
 </main>
 </div><!-- /adm-layout -->
@@ -466,38 +522,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ── Tab Navigation ─────────────────────────────────────────
-const TAB_TITLES={overview:'Overview',inventory:'Medicine Inventory',prescriptions:'Prescriptions',
-  stock:'Stock Management',alerts:'Alerts',dispensing:'Dispensing History',
-  analytics:'Analytics',reports:'Reports',notifications:'Notifications',settings:'Settings',
-  profile:'My Profile',system_settings:'System Settings'};
-const TAB_ICONS={overview:'fa-house',inventory:'fa-pills',prescriptions:'fa-prescription-bottle-medical',
-  stock:'fa-boxes-stacked',alerts:'fa-triangle-exclamation',dispensing:'fa-hand-holding-medical',
-  analytics:'fa-chart-bar',reports:'fa-file-export',notifications:'fa-bell',settings:'fa-gear',
-  profile:'fa-user-circle',system_settings:'fa-sliders'};
-
-function showTab(tab, el){
-  document.querySelectorAll('.dash-section').forEach(s=>s.classList.remove('active'));
-  const sec=document.getElementById('sec-'+tab);
-  if(sec) sec.classList.add('active');
-  document.querySelectorAll('.adm-nav-item').forEach(a=>a.classList.remove('active'));
-  if(el) el.classList.add('active');
-  document.getElementById('pageTitleText').textContent=TAB_TITLES[tab]||tab;
-  const icon=document.querySelector('#pageTitle i');
-  if(icon && TAB_ICONS[tab]) icon.className=`fas ${TAB_ICONS[tab]}`;
-  document.getElementById('admSidebar').classList.remove('active');
-  document.getElementById('admOverlay').classList.remove('active');
-}
-
-// ── Init ───────────────────────────────────────────────────
+// ── Init & Sidebar Toggle ──────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  const initTab='<?=$active_tab?>';
-  const initEl=document.querySelector(`.adm-nav-item[onclick*="${initTab}"]`);
-  showTab(initTab,initEl);
-  initCharts();
+  if (typeof initCharts === 'function') initCharts();
 });
 
-// ── Sidebar Toggle ─────────────────────────────────────────
 document.getElementById('menuToggle')?.addEventListener('click',()=>{
   document.getElementById('admSidebar').classList.toggle('active');
   document.getElementById('admOverlay').classList.toggle('active');
@@ -506,6 +535,10 @@ document.getElementById('admOverlay')?.addEventListener('click',()=>{
   document.getElementById('admSidebar').classList.remove('active');
   document.getElementById('admOverlay').classList.remove('active');
 });
+
+function showTab(tab, el) {
+    window.location.href = '?tab=' + tab;
+}
 
 // ── Theme ──────────────────────────────────────────────────
 function applyTheme(t){

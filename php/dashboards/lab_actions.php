@@ -682,9 +682,8 @@ if ($action === 'upload_document') {
     if ($file['size'] > $max_size) throw new Exception("File exceeds maximum allowed size of 5MB.");
     
     $allowed_mimes = ['application/pdf', 'image/jpeg', 'image/png'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
     
     if (!in_array($mime, $allowed_mimes)) throw new Exception("Invalid file type. Only PDF, JPG, and PNG are allowed.");
     

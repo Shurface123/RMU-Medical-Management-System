@@ -129,12 +129,14 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
   <h4 style="margin:1rem 0 .6rem;"><i class="fas fa-award"></i> Qualifications</h4>
   <button class="btn btn-sm btn-primary" onclick="openModal('addQualModal')"><span class="btn-text"><i class="fas fa-plus"></i> Add Qualification</span></button>
   <div class="table-responsive" style="margin-top:.8rem;">
-    <table class="data-table"><thead><tr><th>Degree</th><th>Institution</th><th>Year</th><th>Certificate</th><th>Actions</th></tr></thead><tbody id="qualTable">
+    <table class="adm-table"><thead><tr><th>Degree</th><th>Institution</th><th>Year</th><th>Certificate</th><th>Actions</th></tr></thead><tbody id="qualTable">
     <?php foreach($quals as $q): ?>
       <tr id="qual-<?=$q['id']?>">
-        <td><?=e($q['degree_name'])?></td><td><?=e($q['institution'])?></td><td><?=e($q['year_awarded']??'')?></td>
-        <td><?php if($q['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$q['id']?>" class="btn-icon btn btn-xs btn-outline"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php else: ?>—<?php endif; ?></td>
-        <td><button class="btn btn-xs btn-danger" onclick="deleteQual(<?=$q['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
+        <td data-label="Degree"><?=e($q['degree_name'])?></td>
+        <td data-label="Institution"><?=e($q['institution'])?></td>
+        <td data-label="Year"><?=e($q['year_awarded']??'')?></td>
+        <td data-label="Certificate"><?php if($q['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$q['id']?>" class="btn-icon btn btn-xs btn-outline"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php else: ?>—<?php endif; ?></td>
+        <td data-label="Actions"><button class="btn btn-xs btn-danger" onclick="deleteQual(<?=$q['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
       </tr>
     <?php endforeach; if(!$quals): ?><tr><td colspan="5" class="text-center text-muted">No qualifications added</td></tr><?php endif; ?>
     </tbody></table>
@@ -144,19 +146,20 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
   <h4 style="margin:1.5rem 0 .6rem;"><i class="fas fa-certificate"></i> Certifications</h4>
   <button class="btn btn-sm btn-primary" onclick="openModal('addCertModal')"><span class="btn-text"><i class="fas fa-plus"></i> Add Certification</span></button>
   <div class="table-responsive" style="margin-top:.8rem;">
-    <table class="data-table"><thead><tr><th>Name</th><th>Issuing Body</th><th>Issued</th><th>Expires</th><th>Status</th><th>File</th><th>Actions</th></tr></thead><tbody id="certTable">
+    <table class="adm-table"><thead><tr><th>Name</th><th>Issuing Body</th><th>Issued</th><th>Expires</th><th>Status</th><th>File</th><th>Actions</th></tr></thead><tbody id="certTable">
     <?php foreach($certs as $c):
       $cd = $c['expiry_date'] ? (int)((strtotime($c['expiry_date'])-time())/86400) : 999;
       $cb = $cd>60 ? 'badge-success' : ($cd>0 ? 'badge-warning' : 'badge-danger');
       $cl = $cd>60 ? 'Valid' : ($cd>0 ? "Expires in {$cd}d" : 'Expired');
     ?>
       <tr id="cert-<?=$c['id']?>">
-        <td><?=e($c['cert_name'])?></td><td><?=e($c['issuing_body']??'')?></td>
-        <td><?=$c['issue_date']?date('d M Y',strtotime($c['issue_date'])):''?></td>
-        <td><?=$c['expiry_date']?date('d M Y',strtotime($c['expiry_date'])):''?></td>
-        <td><span class="badge <?=$cb?>"><?=$cl?></span></td>
-        <td><?php if($c['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$c['id']?>" class="btn-icon btn btn-xs btn-outline"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php else: ?>—<?php endif; ?></td>
-        <td><button class="btn btn-xs btn-danger" onclick="deleteCert(<?=$c['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
+        <td data-label="Name"><?=e($c['cert_name'])?></td>
+        <td data-label="Issuing Body"><?=e($c['issuing_body']??'')?></td>
+        <td data-label="Issued"><?=$c['issue_date']?date('d M Y',strtotime($c['issue_date'])):''?></td>
+        <td data-label="Expires"><?=$c['expiry_date']?date('d M Y',strtotime($c['expiry_date'])):''?></td>
+        <td data-label="Status"><span class="badge <?=$cb?>"><?=$cl?></span></td>
+        <td data-label="File"><?php if($c['cert_file_path']): ?><a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$c['id']?>" class="btn-icon btn btn-xs btn-outline"><span class="btn-text"><i class="fas fa-download"></i></span></a><?php else: ?>—<?php endif; ?></td>
+        <td data-label="Actions"><button class="btn btn-xs btn-danger" onclick="deleteCert(<?=$c['id']?>)"><span class="btn-text"><i class="fas fa-trash"></i></span></button></td>
       </tr>
     <?php endforeach; if(!$certs): ?><tr><td colspan="7" class="text-center text-muted">No certifications added</td></tr><?php endif; ?>
     </tbody></table>
@@ -192,15 +195,15 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
   <!-- Active Sessions -->
   <h4 style="margin:1.5rem 0 .6rem;"><i class="fas fa-desktop"></i> Active Sessions</h4>
   <div class="table-responsive">
-    <table class="data-table"><thead><tr><th>Device</th><th>Browser</th><th>IP</th><th>Login Time</th><th>Status</th><th>Action</th></tr></thead><tbody>
+    <table class="adm-table"><thead><tr><th>Device</th><th>Browser</th><th>IP</th><th>Login Time</th><th>Status</th><th>Action</th></tr></thead><tbody>
     <?php foreach($sessions as $s): ?>
       <tr>
-        <td><?=e($s['device_info']??'Unknown')?></td>
-        <td><?=e($s['browser']??'Unknown')?></td>
-        <td><code><?=e($s['ip_address']??'')?></code></td>
-        <td><?=date('d M Y, g:i A',strtotime($s['login_time']))?></td>
-        <td><?php if($s['is_current']): ?><span class="badge badge-success">Current</span><?php else: ?><span class="badge badge-secondary">Active</span><?php endif; ?></td>
-        <td><?php if(!$s['is_current']): ?><button class="btn btn-xs btn-danger" onclick="revokeSession(<?=$s['id']?>)"><span class="btn-text"><i class="fas fa-sign-out-alt"></i></span></button><?php else: ?>—<?php endif; ?></td>
+        <td data-label="Device"><?=e($s['device_info']??'Unknown')?></td>
+        <td data-label="Browser"><?=e($s['browser']??'Unknown')?></td>
+        <td data-label="IP"><code><?=e($s['ip_address']??'')?></code></td>
+        <td data-label="Login Time"><?=date('d M Y, g:i A',strtotime($s['login_time']))?></td>
+        <td data-label="Status"><?php if($s['is_current']): ?><span class="badge badge-success">Current</span><?php else: ?><span class="badge badge-secondary">Active</span><?php endif; ?></td>
+        <td data-label="Action"><?php if(!$s['is_current']): ?><button class="btn btn-xs btn-danger" onclick="revokeSession(<?=$s['id']?>)"><span class="btn-text"><i class="fas fa-sign-out-alt"></i></span></button><?php else: ?>—<?php endif; ?></td>
       </tr>
     <?php endforeach; if(!$sessions): ?><tr><td colspan="6" class="text-center text-muted">No active sessions</td></tr><?php endif; ?>
     </tbody></table>
@@ -209,13 +212,13 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
   <!-- Activity Log -->
   <h4 style="margin:1.5rem 0 .6rem;"><i class="fas fa-history"></i> Account Activity Log</h4>
   <div class="table-responsive">
-    <table class="data-table"><thead><tr><th>Action</th><th>Type</th><th>IP</th><th>Date/Time</th></tr></thead><tbody>
+    <table class="adm-table"><thead><tr><th>Action</th><th>Type</th><th>IP</th><th>Date/Time</th></tr></thead><tbody>
     <?php foreach($actLog as $l): ?>
       <tr>
-        <td><?=e($l['action_description'])?></td>
-        <td><span class="badge badge-info"><?=e($l['action_type'])?></span></td>
-        <td><code><?=e($l['ip_address']??'')?></code></td>
-        <td><?=date('d M Y, g:i A',strtotime($l['created_at']))?></td>
+        <td data-label="Action"><?=e($l['action_description'])?></td>
+        <td data-label="Type"><span class="badge badge-info"><?=e($l['action_type'])?></span></td>
+        <td data-label="IP"><code><?=e($l['ip_address']??'')?></code></td>
+        <td data-label="Date/Time"><?=date('d M Y, g:i A',strtotime($l['created_at']))?></td>
       </tr>
     <?php endforeach; ?>
     </tbody></table>
@@ -274,14 +277,14 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
     <input type="file" id="docFileInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadDocument(this)">
   </div>
   <div class="table-responsive" style="margin-top:1rem;">
-    <table class="data-table"><thead><tr><th>File Name</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="docsTable">
+    <table class="adm-table"><thead><tr><th>File Name</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="docsTable">
     <?php foreach($docs as $d): ?>
       <tr id="doc-<?=$d['id']?>">
-        <td><i class="fas fa-file"></i> <?=e($d['file_name'])?></td>
-        <td><?=e($d['file_type']??'—')?></td>
-        <td><?=round(($d['file_size']??0)/1024)?>KB</td>
-        <td><?=date('d M Y',strtotime($d['uploaded_at']))?></td>
-        <td>
+        <td data-label="File Name"><i class="fas fa-file"></i> <?=e($d['file_name'])?></td>
+        <td data-label="Type"><?=e($d['file_type']??'—')?></td>
+        <td data-label="Size"><?=round(($d['file_size']??0)/1024)?>KB</td>
+        <td data-label="Uploaded"><?=date('d M Y',strtotime($d['uploaded_at']))?></td>
+        <td data-label="Actions">
           <a href="/RMU-Medical-Management-System/php/dashboards/pharmacy_download.php?type=document&id=<?=$d['id']?>" class="btn-icon btn btn-xs btn-outline" title="Download"><span class="btn-text"><i class="fas fa-download"></i></span></a>
           <button class="btn btn-xs btn-danger" onclick="deleteDoc(<?=$d['id']?>)" title="Delete"><span class="btn-text"><i class="fas fa-trash"></i></span></button>
         </td>
@@ -325,7 +328,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
 
 <!-- ════════════════ MODALS ══════════════════════════════ -->
 <!-- Add Qualification -->
-<div class="modal-bg" id="addQualModal">
+<div class="modal-bg glass-panel" id="addQualModal">
 <div class="modal-content">
   <div class="modal-head"><h3>Add Qualification</h3><button onclick="closeModal('addQualModal')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-times"></i></span></button></div>
   <div class="form-group"><label>Degree Name *</label><input id="aq_degree" class="form-control" placeholder="e.g. B.Pharm, PharmD"></div>
@@ -336,7 +339,7 @@ $age = $prof['date_of_birth'] ? (int)((time()-strtotime($prof['date_of_birth']))
 </div>
 </div>
 <!-- Add Certification -->
-<div class="modal-bg" id="addCertModal">
+<div class="modal-bg glass-panel" id="addCertModal">
 <div class="modal-content">
   <div class="modal-head"><h3>Add Certification</h3><button onclick="closeModal('addCertModal')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-times"></i></span></button></div>
   <div class="form-group"><label>Certification Name *</label><input id="ac_name" class="form-control"></div>

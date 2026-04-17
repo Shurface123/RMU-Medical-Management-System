@@ -214,9 +214,9 @@ case 'dispense_prescription':
     mysqli_begin_transaction($conn);
     try {
         dbExecute($conn, "UPDATE medicines SET stock_quantity=? WHERE id=?", "ii", [$newQty, $medId]);
-        dbExecute($conn, "UPDATE prescriptions SET status=?, pharmacist_id=?, dispensed_by=?, dispensed_date=NOW() WHERE id=?", "siii", [$newStatus, $user_id, $user_id, $rxId]);
+        dbExecute($conn, "UPDATE prescriptions SET status=?, pharmacist_id=?, dispensed_by=?, dispensed_date=NOW() WHERE id=?", "siii", [$newStatus, $pharm_pk, $user_id, $rxId]);
         dbExecute($conn, "INSERT INTO dispensing_records (prescription_id, patient_id, pharmacist_id, medicine_id, quantity_dispensed, selling_price, payment_status, notes) VALUES (?,?,?,?,?,?,?,?)",
-            "iiiidsss", [$rxId, $rx['patient_id'], $user_id, $medId, $qty, $price, $payStatus, $notes]);
+            "iiiidsss", [$rxId, $rx['patient_id'], $pharm_pk, $medId, $qty, $price, $payStatus, $notes]);
         dbExecute($conn, "INSERT INTO stock_transactions (medicine_id, transaction_type, quantity, previous_quantity, new_quantity, performed_by, notes) VALUES (?, 'dispensed', ?, ?, ?, ?, ?)",
             "iiiis", [$medId, $qty, $prevQty, $newQty, $user_id, "Dispensed for Rx #$rxId"]);
         secureNotify($conn, $rx['patient_user_id'], "Your prescription for $medName has been dispensed.", 'dispensing', 'prescriptions');
@@ -409,6 +409,50 @@ case 'resolve_alert':
     dbExecute($conn, "UPDATE stock_alerts SET is_resolved=1, resolved_by=?, resolved_at=NOW() WHERE id=?", "ii", [$user_id, $alertId]);
     secureLog($conn, $pharm_pk, "Resolved alert #$alertId", 'alert');
     echo json_encode(['success'=>true,'message'=>'Alert resolved']);
+    break;
+
+case 'resolve_expired':
+    // Marks an expired medicine as discontinued, zeros its stock, logs a transaction,
+    // and resolves ALL expired alerts for it — so it won't reappear on reload.
+    $medId = validateInt($input['medicine_id'] ?? 0, 1);
+    if (!$medId) { echo json_encode(['success'=>false,'message'=>'Invalid medicine ID']); exit; }
+    $med = dbRow($conn, "SELECT medicine_name, stock_quantity FROM medicines WHERE id=?", "i", [$medId]);
+    if (!$med) { echo json_encode(['success'=>false,'message'=>'Medicine not found']); exit; }
+    $prevQty = (int)$med['stock_quantity'];
+    mysqli_begin_transaction($conn);
+    try {
+        dbExecute($conn, "UPDATE medicines SET stock_quantity=0, status='discontinued' WHERE id=?", "i", [$medId]);
+        if ($prevQty > 0) {
+            dbExecute($conn, "INSERT INTO stock_transactions (medicine_id, transaction_type, quantity, previous_quantity, new_quantity, performed_by, notes) VALUES (?, 'expired', ?, ?, 0, ?, 'Expired stock removed from inventory')",
+                "iiii", [$medId, $prevQty, $prevQty, $user_id]);
+        }
+        dbExecute($conn, "UPDATE stock_alerts SET is_resolved=1, resolved_by=?, resolved_at=NOW() WHERE medicine_id=? AND is_resolved=0", "ii", [$user_id, $medId]);
+        mysqli_commit($conn);
+        secureLog($conn, $pharm_pk, "Removed expired stock: {$med['medicine_name']} ($prevQty units)", 'alert');
+        echo json_encode(['success'=>true,'message'=>"{$med['medicine_name']} removed from inventory. {$prevQty} expired units cleared."]);
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo json_encode(['success'=>false,'message'=>'Error removing expired stock']);
+    }
+    break;
+
+case 'update_supplier':
+    $supId = validateInt($input['supplier_id'] ?? 0, 1);
+    if (!$supId) { echo json_encode(['success'=>false,'message'=>'Invalid supplier ID']); exit; }
+    $fields = []; $types = ''; $params = [];
+    $allowed = ['supplier_name','contact_person','phone','email','address','supply_categories','payment_terms'];
+    foreach ($allowed as $f) {
+        if (isset($input[$f])) { $fields[] = "$f=?"; $types .= 's'; $params[] = trim($input[$f]); }
+    }
+    if (empty($fields)) { echo json_encode(['success'=>false,'message'=>'Nothing to update']); exit; }
+    $types .= 'i'; $params[] = $supId;
+    $ok = dbExecute($conn, "UPDATE pharmacy_suppliers SET " . implode(',', $fields) . " WHERE supplier_id=?", $types, $params);
+    if ($ok !== false) {
+        secureLog($conn, $pharm_pk, "Updated supplier #$supId", 'supplier');
+        echo json_encode(['success'=>true,'message'=>'Supplier updated successfully']);
+    } else {
+        echo json_encode(['success'=>false,'message'=>'Failed to update supplier']);
+    }
     break;
 
 // ════════════════════════════════════════════════════════════

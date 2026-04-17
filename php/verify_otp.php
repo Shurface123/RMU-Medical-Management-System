@@ -74,24 +74,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
                 $is_active      = $needs_approval ? 0 : 1;
                 $account_status = $needs_approval ? 'pending' : 'active';
 
-                // Insert into users
-                $s_ins = mysqli_prepare($conn,
-                    "INSERT INTO users
-                     (user_name,email,password,user_role,patient_type,name,phone,
-                      gender,date_of_birth,profile_image,is_active,is_verified,
-                      account_status,created_at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,1,?,NOW())");
-                $role_val = $td['actual_user_role'];
-                $pt_val   = $td['patient_type'] ?: null;
-                mysqli_stmt_bind_param($s_ins,
-                    'ssssssssssis',
-                    $td['username'],$td['email'],$td['password_hash'],
-                    $role_val,$pt_val,$td['full_name'],$td['phone'],
-                    $td['gender'],$td['dob'],$td['profile_image'],
-                    $is_active, $account_status);
-                if (!mysqli_stmt_execute($s_ins)) {
-                    $otp_error = 'Account creation failed: ' . mysqli_error($conn);
-                } else {
+                try {
+                    // ── PROACTIVE CHECK: Ensure username/email still available ─────
+                    $s_check = mysqli_prepare($conn, "SELECT id FROM users WHERE user_name=? OR email=? LIMIT 1");
+                    mysqli_stmt_bind_param($s_check, 'ss', $td['username'], $td['email']);
+                    mysqli_stmt_execute($s_check);
+                    if (mysqli_stmt_get_result($s_check)->num_rows > 0) {
+                        throw new Exception('This username or email is already registered. Please restart the registration with different details.');
+                    }
+
+                    // Insert into users
+                    $s_ins = mysqli_prepare($conn,
+                        "INSERT INTO users
+                         (user_name,email,password,user_role,patient_type,name,phone,
+                          gender,date_of_birth,profile_image,is_active,is_verified,
+                          account_status,created_at)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?,1,?,NOW())");
+                    $role_val = $td['actual_user_role'];
+                    $pt_val   = $td['patient_type'] ?: null;
+                    mysqli_stmt_bind_param($s_ins,
+                        'ssssssssssis',
+                        $td['username'],$td['email'],$td['password_hash'],
+                        $role_val,$pt_val,$td['full_name'],$td['phone'],
+                        $td['gender'],$td['dob'],$td['profile_image'],
+                        $is_active, $account_status);
+                    
+                    if (!mysqli_stmt_execute($s_ins)) {
+                        throw new Exception('Account creation failed.');
+                    }
+
                     $new_uid = (int)mysqli_insert_id($conn);
 
                     // ── Role-specific record ────────────────────
@@ -130,10 +141,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
                               availability_status,created_at)
                              VALUES (?,?,?,?,?,?,?,?,?,NOW())");
                         $st_d = 'Offline';
-                        mysqli_stmt_bind_param($si,'isssssiss',
+                        mysqli_stmt_bind_param($si,'issssiisi',
                             $new_uid,$did,$td['full_name'],$td['gender'],
-                            $td['specialization'],$td['license_number'],
-                            $dept_id,$td['experience_years'],$st_d);
+                            $td['specialization'],$dept_id,$td['license_number'],
+                            $td['experience_years'],$st_d);
                         @mysqli_stmt_execute($si);
                     } elseif ($r === 'nurse') {
                         $nid = 'NRS-' . strtoupper(bin2hex(random_bytes(3)));
@@ -146,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
                         $st_n = 'Inactive'; $ap_n = 'pending';
                         $dept_id_n = (int)($dept_id ?? 0);
                         $exp_n = (int)($td['experience_years'] ?? 0);
-                        mysqli_stmt_bind_param($si,'isssssiss' . 's',
+                        mysqli_stmt_bind_param($si,'isssssiiss',
                             $new_uid,$nid,$td['full_name'],$td['gender'],
                             $td['license_number'],$td['specialization'],
                             $dept_id_n,$exp_n,$st_n,$ap_n);
@@ -160,22 +171,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
                               approval_status,created_at)
                              VALUES (?,?,?,?,?,?,?,?,?,NOW())");
                         $ap_l = 'pending';
-                        mysqli_stmt_bind_param($si,'isssssiss',
+                        mysqli_stmt_bind_param($si,'isssssiis',
                             $new_uid,$lid,$td['full_name'],$td['gender'],
                             $td['license_number'],$td['specialization'],
                             $dept_id,$td['experience_years'],$ap_l);
                         @mysqli_stmt_execute($si);
                     } elseif ($r === 'pharmacist') {
+                        $pid = 'PHM-' . strtoupper(bin2hex(random_bytes(3)));
                         $si = mysqli_prepare($conn,
                             "INSERT INTO pharmacist_profile
-                             (user_id,full_name,gender,license_number,
+                             (user_id,pharmacy_staff_id,full_name,gender,license_number,
                               specialization,department,years_of_experience,
                               availability_status,created_at)
-                             VALUES (?,?,?,?,?,?,?,?,NOW())");
+                             VALUES (?,?,?,?,?,?,?,?,?,NOW())");
                         $st_p = 'Offline';
                         $exp_int = (int)($td['experience_years'] ?? 0);
-                        mysqli_stmt_bind_param($si,'isssssiss',
-                            $new_uid,$td['full_name'],$td['gender'],
+                        mysqli_stmt_bind_param($si,'issssssis',
+                            $new_uid,$pid,$td['full_name'],$td['gender'],
                             $td['license_number'],$td['specialization'],
                             $td['department'],$exp_int,$st_p);
                         @mysqli_stmt_execute($si);
@@ -251,6 +263,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp_digits'])) {
                         ? 'Registration complete! Your account is pending admin approval. You will be notified by email once approved.'
                         : 'Registration successful! Your email has been verified. You may now log in.';
                     header('Location: index.php?success=' . urlencode($success_msg)); exit;
+                }
+                catch (mysqli_sql_exception $e) {
+                    if ($e->getCode() == 1062) {
+                        $otp_error = 'This username or email has already been registered. Please restart the process with different credentials.';
+                    } else {
+                        $otp_error = 'Database Error: ' . $e->getMessage();
+                    }
+                } catch (Exception $e) {
+                    $otp_error = $e->getMessage();
                 }
             }
         }

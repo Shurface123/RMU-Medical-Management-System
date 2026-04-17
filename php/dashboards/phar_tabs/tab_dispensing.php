@@ -27,19 +27,33 @@
           $paySc=$payMap[$dr['payment_status']]??'primary';
         ?>
         <tr data-payment="<?=$dr['payment_status']?>">
-          <td><code>#<?=$dr['id']?></code></td>
-          <td><strong><?=htmlspecialchars($dr['patient_name'])?></strong></td>
-          <td><?=$dr['doctor_name']?'Dr. '.htmlspecialchars($dr['doctor_name']):'—'?></td>
-          <td><code><?=htmlspecialchars($dr['rx_ref']??'—')?></code></td>
-          <td><?=htmlspecialchars($dr['medicine_name'])?></td>
-          <td style="font-weight:600;"><?=$dr['quantity_dispensed']?></td>
-          <td><?=date('d M Y, g:i A',strtotime($dr['dispensing_date']))?></td>
-          <td><span class="adm-badge adm-badge-<?=$paySc?>"><?=ucfirst($dr['payment_status'])?></span></td>
-          <td><?=htmlspecialchars($dr['pharmacist_name']??'—')?></td>
-          <td>
+          <td data-label="ID"><code>#<?=$dr['id']?></code></td>
+          <td data-label="Patient">
+            <div style="display:flex;align-items:center;gap:.8rem;">
+              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#08a88a,#27ae60);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;box-shadow:0 2px 5px rgba(0,0,0,.15);">
+                <?=strtoupper(substr($dr['patient_name']??'U',0,1))?>
+              </div>
+              <strong style="color:var(--text-primary);"><?=htmlspecialchars($dr['patient_name'])?></strong>
+            </div>
+          </td>
+          <td data-label="Doctor">
+            <div style="display:flex;align-items:center;gap:.6rem;">
+               <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2980b9,#56ccf2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">
+                  <i class="fas fa-user-md" style="font-size:0.8rem;"></i>
+               </div>
+               <span><?=$dr['doctor_name']?'Dr. '.htmlspecialchars($dr['doctor_name']):'—'?></span>
+            </div>
+          </td>
+          <td data-label="Rx ID"><code><?=htmlspecialchars($dr['rx_ref']??'—')?></code></td>
+          <td data-label="Medicine"><span class="adm-badge adm-badge-teal" style="background:rgba(39,174,96,0.1);color:#27ae60;border:1px solid rgba(39,174,96,0.3);"><i class="fas fa-pills" style="margin-right:4px;"></i> <?=htmlspecialchars($dr['medicine_name'])?></span></td>
+          <td data-label="Qty" style="font-weight:800;color:var(--text-primary);"><?=$dr['quantity_dispensed']?></td>
+          <td data-label="Date"><span style="color:var(--text-muted);"><i class="far fa-clock" style="margin-right:4px;"></i> <?=date('d M y, g:i A',strtotime($dr['dispensing_date']))?></span></td>
+          <td data-label="Payment"><span class="adm-badge adm-badge-<?=$paySc?>" style="box-shadow:0 2px 4px rgba(0,0,0,0.1);"><?=ucfirst($dr['payment_status'])?></span></td>
+          <td data-label="Dispensed By"><span style="font-size:0.95em;color:var(--text-secondary);"><i class="fas fa-user-circle"></i> <?=htmlspecialchars($dr['pharmacist_name']??'—')?></span></td>
+          <td data-label="Actions">
             <div class="action-btns">
               <?php if($dr['payment_status']==='unpaid'):?>
-              <button class="btn btn-success btn-sm" onclick="markPaid(<?=$dr['id']?>)" title="Mark Paid"><span class="btn-text"><i class="fas fa-check"></i></span></button>
+              <button class="btn btn-success btn-sm" onclick="markPaid(<?=$dr['id']?>)" style="border-radius:20px;padding:0.3rem 0.8rem;transition:all 0.2s;box-shadow:0 2px 4px rgba(39,174,96,0.2);"><span class="btn-text"><i class="fas fa-check-circle"></i> Paid</span></button>
               <?php endif;?>
             </div>
           </td>

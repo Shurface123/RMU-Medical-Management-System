@@ -27,10 +27,10 @@ function clean($v) {
 function log_reg_audit($conn, $uid, $action, $ip, $ua, $notes = '') {
     $audit_id = 'URA-' . uniqid();
     $s = mysqli_prepare($conn,
-        "INSERT INTO user_registration_audit
+        "INSERT INTO user_registration_audit 
          (audit_id,user_id,action,performed_by,ip_address,device_info,notes)
          VALUES (?,?,?,'self',?,?,?)");
-    mysqli_stmt_bind_param($s,'sisssss', $audit_id,$uid,$action,$ip,$ua,$notes);
+    mysqli_stmt_bind_param($s,'sissss', $audit_id,$uid,$action,$ip,$ua,$notes);
     mysqli_stmt_execute($s);
 }
 
@@ -127,7 +127,7 @@ if (mysqli_stmt_num_rows($s) > 0) bail('This username is already taken. Please c
 if ($license_number && in_array($role, APPROVAL_REQUIRED_ROLES)) {
     $tbl_map = [
         'doctor'=>'doctors','nurse'=>'nurses',
-        'lab_technician'=>'lab_technicians','pharmacist'=>'pharmacists'
+        'lab_technician'=>'lab_technicians','pharmacist'=>'pharmacist_profile'
     ];
     if (isset($tbl_map[$role])) {
         $t = $tbl_map[$role];
@@ -182,50 +182,49 @@ $temp_data     = json_encode([
     'is_active'=>$is_active,'ip'=>$ip,'ua'=>$ua,
 ]);
 
-$s = mysqli_prepare($conn,
-    "INSERT INTO registration_sessions
-     (session_token,email,role,step_reached,temp_data,expires_at)
-     VALUES (?,?,?,2,?,?)");
-mysqli_stmt_bind_param($s,'sssss', $session_token,$email,$role,$temp_data,$expires_at);
-if (!mysqli_stmt_execute($s)) bail('Session creation failed. Please try again.');
+try {
+    $s = mysqli_prepare($conn,
+        "INSERT INTO registration_sessions
+         (session_token,email,role,step_reached,temp_data,expires_at)
+         VALUES (?,?,?,2,?,?)");
+    mysqli_stmt_bind_param($s,'sssss', $session_token,$email,$role,$temp_data,$expires_at);
+    if (!mysqli_stmt_execute($s)) throw new Exception('Session creation failed.');
 
-// ── Generate & send OTP ───────────────────────────────────────
-$otp_plain  = str_pad((string)random_int(0, 999999), OTP_LENGTH, '0', STR_PAD_LEFT);
-$otp_hash   = password_hash($otp_plain, PASSWORD_BCRYPT);
-$otp_expiry = date('Y-m-d H:i:s', time() + OTP_EXPIRY_MINUTES * 60);
-$ver_id     = bin2hex(random_bytes(32));
+    // ── Generate & send OTP ───────────────────────────────────────
+    $otp_plain  = str_pad((string)random_int(0, 999999), OTP_LENGTH, '0', STR_PAD_LEFT);
+    $otp_hash   = password_hash($otp_plain, PASSWORD_BCRYPT);
+    $otp_expiry = date('Y-m-d H:i:s', time() + OTP_EXPIRY_MINUTES * 60);
+    $ver_id     = bin2hex(random_bytes(32));
 
-$s = mysqli_prepare($conn,
-    "INSERT INTO email_verifications
-     (verification_id,user_id,email,otp_code,otp_expires_at,verification_type)
-     VALUES (?,NULL,?,?,?,'registration')");
-mysqli_stmt_bind_param($s,'ssss', $ver_id,$email,$otp_hash,$otp_expiry);
-if (!mysqli_stmt_execute($s)) bail('Could not create verification record. Please try again.');
+    $s = mysqli_prepare($conn,
+        "INSERT INTO email_verifications
+         (verification_id,user_id,email,otp_code,otp_expires_at,verification_type)
+         VALUES (?,NULL,?,?,?,'registration')");
+    mysqli_stmt_bind_param($s,'ssss', $ver_id,$email,$otp_hash,$otp_expiry);
+    if (!mysqli_stmt_execute($s)) throw new Exception('Could not create verification record.');
 
-$mail_result = reg_send_otp_email($conn, $email, $full_name, $otp_plain);
-if (!$mail_result['success']) {
-    // Don't block registration if email fails — let user request resend on OTP screen
-    error_log('OTP email failed for ' . $email . ': ' . ($mail_result['error'] ?? 'unknown'));
-}
-
-// Store session info for OTP page
-$_SESSION['reg_session_token'] = $session_token;
-$_SESSION['reg_ver_id']        = $ver_id;
-$_SESSION['reg_email']         = $email;
-$_SESSION['reg_name']          = $full_name;
-// Rotate CSRF
-$_SESSION['_reg_csrf'] = bin2hex(random_bytes(32));
-
-// Safe local fallback for testing Registration
-$redirectQuery = '';
-if (!$mail_result['success']) {
-    $redirectQuery = '?warn=email';
-    if ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_NAME'] === '127.0.0.1') {
-        $redirectQuery .= '&dev_otp=' . urlencode($otp_plain);
+    $mail_result = reg_send_otp_email($conn, $email, $full_name, $otp_plain);
+    if (!$mail_result['success']) {
+        error_log('OTP email failed for ' . $email . ': ' . ($mail_result['error'] ?? 'unknown'));
     }
-}
 
-// Redirect to OTP verification
-header('Location: verify_otp.php' . $redirectQuery);
-exit;
+    // Store session info for OTP page
+    $_SESSION['reg_session_token'] = $session_token;
+    $_SESSION['reg_ver_id']        = $ver_id;
+    $_SESSION['reg_email']         = $email;
+    $_SESSION['reg_name']          = $full_name;
+    $_SESSION['_reg_csrf']         = bin2hex(random_bytes(32));
+
+    // Safe local fallback for testing
+    $redirectQuery = '';
+    if (!$mail_result['success']) {
+        $redirectQuery = '?warn=email';
+        if ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_NAME'] === '127.0.0.1') {
+            $redirectQuery .= '&dev_otp=' . urlencode($otp_plain);
+        }
+    }
+    header('Location: verify_otp.php' . $redirectQuery); exit;
+} catch (Exception $e) {
+    bail('Error: ' . $e->getMessage());
+}
 
