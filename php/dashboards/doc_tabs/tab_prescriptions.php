@@ -1,27 +1,36 @@
 <?php // TAB: PRESCRIPTIONS ?>
 <div id="sec-prescriptions" class="dash-section">
+
+<style>
+.adm-tab-group { display:flex; gap:.8rem; flex-wrap:wrap; margin-bottom:1.8rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
+.ftab-v2 { 
+  display:inline-flex;align-items:center;gap:.6rem;padding:.55rem 1.4rem;border-radius:20px;
+  font-size:1.2rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text-secondary);transition:all 0.3s ease;
+}
+.ftab-v2:hover { background:var(--primary-light);color:var(--primary);border-color:var(--primary);transform:translateY(-1px); }
+.ftab-v2.active { background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(47,128,237,.25); }
+.premium-modal { border-radius:18px; border:1px solid rgba(255,255,255,0.1); }
+</style>
+
   <div class="sec-header">
-    <h2><i class="fas fa-prescription-bottle-medical"></i> Prescriptions</h2>
-    <button onclick="openModal('modalNewRx')" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> New Prescription</span></button>
-  </div>
-
-  <div class="filter-tabs">
-    <button class="btn btn-primary ftab active" onclick="filterByStatus('all','rxTable',4)"><span class="btn-text">All</span></button>
-    <button class="btn btn-warning btn-icon ftab" onclick="filterByStatus('Pending','rxTable',4)"><span class="btn-text">Pending</span></button>
-    <button class="btn btn-primary ftab" onclick="filterByStatus('Dispensed','rxTable',4)"><span class="btn-text">Dispensed</span></button>
-    <button class="btn btn-ghost ftab" onclick="filterByStatus('Cancelled','rxTable',4)"><span class="btn-text">Cancelled</span></button>
-  </div>
-
-  <div style="margin-bottom:1.2rem;">
-    <div class="adm-search-wrap"><i class="fas fa-search"></i>
-      <input type="text" class="adm-search-input" id="rxSearch" placeholder="Search patient or medicine…" oninput="filterTable('rxSearch','rxTable')">
+    <h2><i class="fas fa-prescription-bottle-medical" style="color:var(--primary);"></i> Prescriptions</h2>
+    <div style="display:flex;gap:.7rem;flex-wrap:wrap;">
+      <button onclick="openModal('modalNewRx')" class="btn btn-primary" style="border-radius:12px;padding:.8rem 1.4rem;"><span class="btn-text"><i class="fas fa-plus"></i> New Prescription</span></button>
     </div>
   </div>
 
-  <div class="adm-card">
+  <div class="adm-tab-group">
+    <button class="ftab-v2 active" onclick="filterRx('all',this)"><i class="fas fa-list"></i> All</button>
+    <button class="ftab-v2" onclick="filterRx('Pending',this)"><i class="fas fa-clock" style="color:var(--warning);"></i> Pending</button>
+    <button class="ftab-v2" onclick="filterRx('Dispensed',this)"><i class="fas fa-check-circle" style="color:var(--success);"></i> Dispensed</button>
+    <button class="ftab-v2" onclick="filterRx('Cancelled',this)"><i class="fas fa-xmark-circle" style="color:var(--danger);"></i> Cancelled</button>
+  </div>
+
+  <div class="adm-card shadow-sm" style="overflow:hidden;">
     <div class="adm-table-wrap">
       <table class="adm-table" id="rxTable">
-        <thead><tr><th>Rx ID</th><th>Patient</th><th>Medicine</th><th>Dosage / Duration</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <thead><tr style="background:linear-gradient(90deg, var(--surface-2), var(--surface));"><th>Rx ID</th><th>Patient</th><th>Medicine</th><th>Dosage / Duration</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
         <tbody>
         <?php if(empty($prescriptions)):?>
           <tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--text-muted);">No prescriptions found.</td></tr>
@@ -57,12 +66,12 @@
 
 <!-- Modal: New Prescription -->
 <div class="modal-bg" id="modalNewRx">
-  <div class="modal-box wide">
+  <div class="modal-box wide premium-modal">
     <div class="modal-header">
-      <h3><i class="fas fa-prescription-bottle-medical" style="color:var(--role-accent);"></i> Issue New Prescription</h3>
-      <button class="btn btn-primary modal-close" onclick="closeModal('modalNewRx')"><span class="btn-text">&times;</span></button>
+      <h3><i class="fas fa-prescription-bottle-medical" style="color:#fff;"></i> Issue New Prescription</h3>
+      <button class="modal-close" onclick="closeModal('modalNewRx')">&times;</button>
     </div>
-    <form id="formNewRx" onsubmit="submitRx(event)">
+    <form id="formNewRx" onsubmit="submitRx(event)" style="padding:1rem;">
       <div class="form-row">
         <div class="form-group"><label>Select Patient</label>
           <select class="form-control" name="patient_id" required>
@@ -108,12 +117,12 @@
 
 <!-- Modal: View Rx -->
 <div class="modal-bg" id="modalViewRx">
-  <div class="modal-box">
+  <div class="modal-box premium-modal">
     <div class="modal-header">
-      <h3><i class="fas fa-prescription-bottle-medical" style="color:var(--role-accent);"></i> Prescription Details</h3>
-      <button class="btn btn-primary modal-close" onclick="closeModal('modalViewRx')"><span class="btn-text">&times;</span></button>
+      <h3><i class="fas fa-prescription-bottle-medical" style="color:#fff;"></i> Prescription Details</h3>
+      <button class="modal-close" onclick="closeModal('modalViewRx')">&times;</button>
     </div>
-    <div id="rxDetail" style="font-size:1.3rem;line-height:2.2;"></div>
+    <div id="rxDetail" style="padding:1rem;"></div>
   </div>
 </div>
 
@@ -132,16 +141,20 @@ function checkStock(sel){
 }
 function viewRx(r){
   document.getElementById('rxDetail').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
-      <div><strong>Patient</strong><br>${r.patient_name}</div>
-      <div><strong>Medicine</strong><br>${r.medication_name}</div>
-      <div><strong>Dosage</strong><br>${r.dosage}</div>
-      <div><strong>Frequency</strong><br>${r.frequency}</div>
-      <div><strong>Duration</strong><br>${r.duration}</div>
-      <div><strong>Quantity</strong><br>${r.quantity}</div>
-      <div><strong>Status</strong><br><span class="adm-badge adm-badge-primary">${r.status}</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;font-size:1.3rem;background:var(--surface-2);padding:1.5rem;border-radius:12px;">
+      <div><strong style="color:var(--text-secondary);">Patient</strong><br><span style="font-weight:600;color:var(--text-primary);">${r.patient_name}</span></div>
+      <div><strong style="color:var(--text-secondary);">Medicine</strong><br><span style="font-weight:700;color:var(--primary);">${r.medication_name}</span></div>
+      <div><strong style="color:var(--text-secondary);">Dosage</strong><br><span style="font-weight:600;">${r.dosage}</span></div>
+      <div><strong style="color:var(--text-secondary);">Frequency</strong><br><span style="font-weight:600;">${r.frequency}</span></div>
+      <div><strong style="color:var(--text-secondary);">Duration</strong><br><span style="font-weight:600;">${r.duration}</span></div>
+      <div><strong style="color:var(--text-secondary);">Quantity</strong><br><span style="font-weight:600;">${r.quantity}</span></div>
+      <div style="grid-column:1 / span 2;"><strong style="color:var(--text-secondary);">Status</strong><br><span class="adm-badge adm-badge-primary" style="margin-top:.4rem;">${r.status}</span></div>
     </div>
-    ${r.instructions?`<div style="margin-top:1rem;"><strong>Instructions</strong><p style="color:var(--text-secondary);margin-top:.3rem;">${r.instructions}</p></div>`:''}`;
+    ${r.instructions?`
+    <div class="rx-card-v2" style="padding:1.8rem;margin:0;border:1.5px solid var(--primary);border-radius:12px;box-shadow:0 4px 15px rgba(47,128,237,0.1);">
+      <strong style="color:var(--primary);font-size:1.2rem;text-transform:uppercase;letter-spacing:0.04em;"><i class="fas fa-clipboard-list"></i> Instructions</strong>
+      <p style="margin-top:.8rem;color:var(--text-secondary);font-size:1.3rem;">${r.instructions}</p>
+    </div>`:''}`;
   openModal('modalViewRx');
 }
 async function submitRx(e){
@@ -159,4 +172,26 @@ async function cancelRx(id){
   if(res.success){toast('Prescription cancelled');setTimeout(()=>location.reload(),1000);}
   else toast(res.message||'Error','danger');
 }
+
+function filterRx(status, btn) {
+    document.querySelectorAll('.adm-tab-group .ftab-v2').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    
+    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#rxTable')) {
+        const dt = $('#rxTable').DataTable();
+        if(status === 'all') { dt.column(4).search('').draw(); }
+        else { dt.column(4).search(status, true, false).draw(); }
+    } else {
+        filterByStatus(status, 'rxTable', 4);
+    }
+}
+
+$(document).ready(function() {
+    if($.fn.DataTable) {
+        $('#rxTable').DataTable({
+            pageLength: 10,
+            language: { search: "", searchPlaceholder: "Quick search prescriptions..." }
+        });
+    }
+});
 </script>

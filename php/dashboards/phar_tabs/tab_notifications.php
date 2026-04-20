@@ -69,7 +69,7 @@
                 </div>
             </div>
             <?php if(!$isRead):?>
-            <button class="btn-icon" onclick="markRead(<?=$n['id']?>)" style="background:var(--primary-light);color:var(--primary);border:none;border-radius:8px;padding:.5rem .8rem;cursor:pointer;transition:all .2s;" title="Mark as read"><i class="fas fa-check"></i></button>
+            <button class="btn-icon" onclick="markRead(<?=$n['notification_id']?>)" style="background:var(--primary-light);color:var(--primary);border:none;border-radius:8px;padding:.5rem .8rem;cursor:pointer;transition:all .2s;" title="Mark as read"><i class="fas fa-check"></i></button>
             <?php endif;?>
         </div>
       </div>

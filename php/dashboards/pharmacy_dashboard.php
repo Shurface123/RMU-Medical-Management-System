@@ -380,7 +380,11 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 .adm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;}
 </style>
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/notifications.css">
-<!-- Phase 4 Hooks --><link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css"><meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>"></head>
+<!-- Phase 4 Hooks -->
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
 <body>
 <div class="adm-layout">
 
@@ -432,6 +436,9 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     </a>
 
     <span class="adm-nav-section-label">Account</span>
+    <a href="?tab=messages" class="adm-nav-item <?=($active_tab==='messages')?'active':''?>">
+      <i class="fas fa-comments"></i><span>Messages</span>
+    </a>
     <a href="?tab=notifications" class="adm-nav-item <?=($active_tab==='notifications')?'active':''?>">
       <i class="fas fa-bell"></i><span>Notifications</span>
       <?php if($stats['unread_notifs']>0):?><span style="background:var(--danger);color:#fff;border-radius:50%;padding:2px 8px;font-size:12px;margin-left:auto;"><?=$stats['unread_notifs']?></span><?php endif;?>

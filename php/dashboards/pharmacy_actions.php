@@ -466,17 +466,47 @@ case 'mark_paid':
     break;
 
 // ════════════════════════════════════════════════════════════
-// NOTIFICATIONS
+// NOTIFICATIONS & MESSAGING
 // ════════════════════════════════════════════════════════════
 case 'mark_notification_read':
     $nId = validateInt($input['notification_id'] ?? 0, 1);
-    if ($nId) dbExecute($conn, "UPDATE notifications SET is_read=1 WHERE id=? AND user_id=?", "ii", [$nId, $user_id]);
+    if ($nId) dbExecute($conn, "UPDATE notifications SET is_read=1 WHERE notification_id=? AND user_id=?", "ii", [$nId, $user_id]);
     echo json_encode(['success'=>true]);
     break;
 
 case 'mark_all_notifications_read':
     dbExecute($conn, "UPDATE notifications SET is_read=1 WHERE user_id=? AND is_read=0", "i", [$user_id]);
     echo json_encode(['success'=>true]);
+    break;
+
+case 'send_msg':
+    $to_user_id = validateInt($input['to_user_id'] ?? 0, 1);
+    $to_role    = trim($input['to_role'] ?? '');
+    $msg_txt    = trim($input['message'] ?? '');
+    
+    $valid_roles = ['doctor', 'nurse', 'lab_technician', 'pharmacist', 'admin'];
+    if ($to_user_id && !empty($msg_txt) && in_array($to_role, $valid_roles)) {
+        dbExecute($conn, 
+            "INSERT INTO lab_internal_messages (sender_id, sender_role, receiver_id, receiver_role, message_content) VALUES (?, 'pharmacist', ?, ?, ?)",
+            "iiss", [$user_id, $to_user_id, $to_role, $msg_txt]
+        );
+        $mId = mysqli_insert_id($conn);
+        $pharmName = dbVal($conn, "SELECT name FROM users WHERE id=?", "i", [$user_id]);
+        secureNotify($conn, $to_user_id, "New direct message from Pharmacist $pharmName", 'message', 'messages');
+        echo json_encode(['success'=>true,'message'=>'Message sent']);
+    } else {
+        echo json_encode(['success'=>false,'message'=>'Invalid message payload']);
+    }
+    break;
+
+case 'mark_msg_read':
+    $msg_id = validateInt($input['msg_id'] ?? 0, 1);
+    if ($msg_id) {
+        dbExecute($conn, "UPDATE lab_internal_messages SET is_read=1, read_at=NOW() WHERE id=? AND receiver_id=? AND receiver_role='pharmacist'", "ii", [$msg_id, $user_id]);
+        echo json_encode(['success'=>true]);
+    } else {
+        echo json_encode(['success'=>false]);
+    }
     break;
 
 // ════════════════════════════════════════════════════════════

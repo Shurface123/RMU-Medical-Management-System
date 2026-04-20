@@ -102,28 +102,40 @@ case 'request_lab_test':
     $cat_id = (int)($post['test_catalog_id']??0);
     $priority = esc($conn, $post['priority']??'Routine');
     $notes = esc($conn, $post['clinical_notes']??'');
+    $tech_id = (int)($post['technician_id']??0);
 
     if (!$pat_id || !$cat_id) fail('Missing required fields for lab test');
 
-    $dr2 = mysqli_fetch_assoc(mysqli_query($conn,"SELECT full_name FROM doctors WHERE id=$doc_pk"));
-    $doc_name = $dr2['full_name'] ?? 'Doctor';
+    $dr2 = mysqli_fetch_assoc(mysqli_query($conn,"SELECT u.name FROM doctors d JOIN users u ON d.user_id=u.id WHERE d.id=$doc_pk"));
+    $doc_name = $dr2['name'] ?? 'Doctor';
 
-    // Insert into lab_test_orders
-    $q = "INSERT INTO lab_test_orders (patient_id, doctor_id, test_catalog_id, priority, clinical_notes, status, created_at)
-          VALUES ($pat_id, $doc_pk, $cat_id, '$priority', '$notes', 'Pending', NOW())";
+    $catRow = mysqli_fetch_assoc(mysqli_query($conn,"SELECT test_name FROM lab_test_catalog WHERE id=$cat_id LIMIT 1"));
+    $tname = $catRow ? esc($conn, $catRow['test_name']) : 'Clinical Assay';
+
+    $order_str = 'ORD-'.rand(10000, 99999).rand(100, 999);
+    $tech_val = $tech_id > 0 ? $tech_id : "NULL";
+
+    // Insert into lab_test_orders mapping correctly to urgency and order_status
+    $q = "INSERT INTO lab_test_orders (order_id, patient_id, doctor_id, technician_id, test_catalog_id, test_name, urgency, clinical_notes, order_status, order_date, created_at)
+          VALUES ('$order_str', $pat_id, $doc_pk, $tech_val, $cat_id, '$tname', '$priority', '$notes', 'Pending', CURDATE(), NOW())";
     
     if (mysqli_query($conn, $q)) {
-        $order_id = mysqli_insert_id($conn);
+        $db_id = mysqli_insert_id($conn);
         
-        // Notify all lab technicians
-        $techs = mysqli_query($conn, "SELECT user_id FROM lab_technicians");
-        if ($techs) {
-            while ($t = mysqli_fetch_assoc($techs)) {
-                $uid = (int)$t['user_id'];
-                notify($conn, $uid, 'lab_technician', 'lab', 'New Lab Request', "Dr. $doc_name has ordered a new lab test (ORD-$order_id) with $priority priority.", 'lab', $order_id);
+        // Notify targeted lab technician or all lab technicians
+        if($tech_id > 0) {
+            $t = mysqli_fetch_assoc(mysqli_query($conn, "SELECT user_id FROM lab_technicians WHERE id=$tech_id LIMIT 1"));
+            if($t) notify($conn, $t['user_id'], 'lab_technician', 'lab', 'Directed Lab Request', "Dr. $doc_name has ordered a new lab test ($order_str) directed to you.", 'Orders', $db_id);
+        } else {
+            $techs = mysqli_query($conn, "SELECT user_id FROM lab_technicians");
+            if ($techs) {
+                while ($t = mysqli_fetch_assoc($techs)) {
+                    $uid = (int)$t['user_id'];
+                    notify($conn, $uid, 'lab_technician', 'lab', 'New Lab Request', "Dr. $doc_name has ordered a new lab test ($order_str).", 'Orders', $db_id);
+                }
             }
         }
-        ok(['message' => 'Lab request submitted']);
+        ok(['message' => 'Lab request transmitted securely']);
     } else {
         fail('Database error: ' . mysqli_error($conn));
     }
@@ -296,6 +308,51 @@ case 'toggle_2fa':
     
     ok(['message' => '2FA ' . ($enable ? 'enabled' : 'disabled')]);
     break;
+
+// ── Notifications: Mark Read ──────────────────────────────
+case 'mark_notif_read':
+    $notif_id = (int)($post['notification_id'] ?? 0);
+    if ($notif_id > 0) {
+        mysqli_query($conn, "UPDATE notifications SET is_read = 1 WHERE notification_id = $notif_id AND user_id = $user_id");
+        ok(['message' => 'Notification marked as read']);
+    }
+    fail('Invalid notification ID');
+
+case 'mark_all_notifs_read':
+    mysqli_query($conn, "UPDATE notifications SET is_read = 1 WHERE user_id = $user_id AND is_read = 0");
+    ok(['message' => 'All notifications marked as read']);
+
+// ── Messaging: Send Internal Message ──────────────────────
+case 'send_msg':
+    $to_user_id  = (int)($post['to_user_id']  ?? 0);
+    $to_role     = esc($conn, $post['to_role'] ?? 'lab_technician');
+    $msg_txt     = trim($post['message'] ?? '');
+
+    if ($to_user_id > 0 && !empty($msg_txt)) {
+        $e_msg = esc($conn, $msg_txt);
+        mysqli_query($conn, "INSERT INTO lab_internal_messages 
+            (sender_id, sender_role, receiver_id, receiver_role, message_content)
+            VALUES ($user_id, 'doctor', $to_user_id, '$to_role', '$e_msg')");
+
+        // Push notification to recipient
+        $dr2 = mysqli_fetch_assoc(mysqli_query($conn,"SELECT name FROM users WHERE id=$user_id"));
+        $drName = $dr2['name'] ?? 'Doctor';
+        notify($conn, $to_user_id, $to_role, 'message', "New Message from Dr. $drName", 
+               substr($msg_txt, 0, 80), 'Messages', mysqli_insert_id($conn));
+
+        ok(['message' => 'Message sent successfully']);
+    }
+    fail('Invalid message payload');
+
+// ── Messaging: Mark Message Read ──────────────────────────
+case 'mark_msg_read':
+    $msg_id = (int)($post['msg_id'] ?? 0);
+    if ($msg_id > 0) {
+        mysqli_query($conn, "UPDATE lab_internal_messages SET is_read = 1 
+            WHERE id = $msg_id AND receiver_id = $user_id AND receiver_role = 'doctor'");
+        ok(['message' => 'Message marked as read']);
+    }
+    fail('Invalid message ID');
 
 default:
     fail('Unknown action: '.$action);

@@ -114,7 +114,7 @@ if ($q_notifs) {
                                     </span>
                                     
                                     <?php if (!$is_read): ?>
-                                        <button class="btn btn-sm" onclick="markNotificationRead(<?= $n['id'] ?>)" style="background:transparent; color:var(--primary); font-weight:800; border:2px solid var(--primary); border-radius:8px; padding:.4rem 1rem; font-size:1.1rem;">
+                                        <button class="btn btn-sm" onclick="markNotificationRead(<?= $n['notification_id'] ?>)" style="background:transparent; color:var(--primary); font-weight:800; border:2px solid var(--primary); border-radius:8px; padding:.4rem 1rem; font-size:1.1rem;">
                                             <i class="fas fa-check"></i> Mark as Read
                                         </button>
                                     <?php endif; ?>

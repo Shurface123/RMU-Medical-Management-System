@@ -29,19 +29,18 @@ if ($action === 'send_message') {
 
     // Identify receiver role
     $rec_role = dbVal($conn, "SELECT user_role FROM users WHERE id=?", "i", [$receiver_id]);
-    if (!$rec_role || !in_array($rec_role, ['doctor', 'admin', 'nurse'])) {
+    if (!$rec_role || !in_array($rec_role, ['doctor', 'admin', 'nurse', 'lab_technician', 'pharmacist'])) {
         echo json_encode(['success' => false, 'message' => 'Invalid message recipient role.']);
         exit;
     }
 
-    $msg_id = 'MSG-' . strtoupper(uniqid());
     $patient_val = $patient_id > 0 ? $patient_id : null;
 
     $stmt = mysqli_prepare($conn, "
-        INSERT INTO nurse_doctor_messages (message_id, sender_id, sender_role, receiver_id, receiver_role, patient_id, subject, message_content) 
-        VALUES (?, ?, 'nurse', ?, ?, ?, ?, ?)
+        INSERT INTO lab_internal_messages (sender_id, sender_role, receiver_id, receiver_role, patient_id, subject, message_content) 
+        VALUES (?, 'nurse', ?, ?, ?, ?, ?)
     ");
-    mysqli_stmt_bind_param($stmt, "siisiss", $msg_id, $nurse_id, $receiver_id, $rec_role, $patient_val, $subject, $content);
+    mysqli_stmt_bind_param($stmt, "iisiss", $nurse_id, $receiver_id, $rec_role, $patient_val, $subject, $content);
 
     if (mysqli_stmt_execute($stmt)) {
         
@@ -62,7 +61,7 @@ if ($action === 'send_message') {
 
     if ($msg_id) {
         // Ensure this user is the receiver
-        dbExecute($conn, "UPDATE nurse_doctor_messages SET is_read = 1, read_at = NOW() WHERE id = ? AND receiver_id = ? AND is_read = 0", "ii", [$msg_id, $nurse_id]);
+        dbExecute($conn, "UPDATE lab_internal_messages SET is_read = 1, read_at = NOW() WHERE id = ? AND receiver_id = ? AND is_read = 0", "ii", [$msg_id, $nurse_id]);
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['success' => false]);

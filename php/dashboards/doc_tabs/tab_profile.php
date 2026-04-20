@@ -47,10 +47,23 @@ $avail_status = $prof['availability_status'] ?? 'Offline';
 ?>
 
 <div id="sec-profile" class="dash-section">
-  <div class="sec-header"><h2><i class="fas fa-user-doctor"></i> My Profile</h2></div>
+<style>
+/* Global Premium Styles for Profile Sub-Sections */
+#sec-profile .adm-card { background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.04); overflow:hidden; margin-bottom: 2rem !important; }
+#sec-profile .adm-card-header { padding:1.8rem 2rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface); }
+#sec-profile .adm-card-header h3 { font-size:1.4rem; font-weight:800; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:0.8rem; }
+#sec-profile .adm-card-header h3 i { color: var(--primary); }
+#sec-profile .form-control { border-radius: 12px; }
+#sec-profile .ftab-v2 { display:inline-flex;align-items:center;gap:.6rem;padding:.55rem 1.4rem;border-radius:20px; font-size:1.2rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border); background:var(--surface);color:var(--text-secondary);transition:all 0.3s ease; }
+#sec-profile .ftab-v2:hover { background:var(--primary-light);color:var(--primary);border-color:var(--primary);transform:translateY(-1px); }
+#sec-profile .ftab-v2.active { background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(47,128,237,.25); }
+#sec-profile .btn { border-radius: 12px; }
+</style>
+
+  <div class="sec-header"><h2><i class="fas fa-user-doctor" style="color:var(--primary);"></i> My Profile</h2></div>
 
   <!-- Profile sub-nav -->
-  <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:2rem;">
+  <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);">
     <?php foreach([
       ['header','Identity','fa-id-card'],['personal','Personal Info','fa-user'],
       ['professional','Professional','fa-stethoscope'],['qualifications','Qualifications','fa-graduation-cap'],
@@ -58,9 +71,9 @@ $avail_status = $prof['availability_status'] ?? 'Offline';
       ['security','Account & Security','fa-shield-halved'],['notifications','Notifications','fa-bell'],
       ['documents','Documents','fa-file-upload'],['completeness','Completeness','fa-tasks']
     ] as [$id,$label,$icon]):?>
-    <button class="btn btn-primary ftab prof-nav <?=$id==='header'?'active':''?>" onclick="showProfSection('<?=$id?>',this)"><span class="btn-text">
+    <button class="ftab-v2 prof-nav <?=$id==='header'?'active':''?>" onclick="showProfSection('<?=$id?>',this)">
       <i class="fas <?=$icon?>"></i> <?=$label?>
-    </span></button>
+    </button>
     <?php endforeach;?>
   </div>
 

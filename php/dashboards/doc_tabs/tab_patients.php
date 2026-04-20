@@ -1,19 +1,20 @@
 <?php // TAB: PATIENT RECORDS ?>
 <div id="sec-patients" class="dash-section">
+
+<style>
+.premium-modal { border-radius:18px; border:1px solid rgba(255,255,255,0.1); }
+</style>
+
   <div class="sec-header">
-    <h2><i class="fas fa-users"></i> Patient Records</h2>
+    <h2><i class="fas fa-users" style="color:var(--primary);"></i> Global Patient Directory</h2>
   </div>
 
-  <div style="margin-bottom:1.2rem;">
-    <div class="adm-search-wrap"><i class="fas fa-search"></i>
-      <input type="text" class="adm-search-input" id="patSearch" placeholder="Search by name, ID, or blood group…" oninput="filterTable('patSearch','patTable')">
-    </div>
-  </div>
 
-  <div class="adm-card">
+
+  <div class="adm-card shadow-sm" style="overflow:hidden;">
     <div class="adm-table-wrap">
       <table class="adm-table" id="patTable">
-        <thead><tr><th>Patient ID</th><th>Name</th><th>Gender / Age</th><th>Blood Group</th><th>Allergies</th><th>Type</th><th>Actions</th></tr></thead>
+        <thead><tr style="background:linear-gradient(90deg, var(--surface-2), var(--surface));"><th>Patient ID</th><th>Name</th><th>Gender / Age</th><th>Blood Group</th><th>Allergies</th><th>Type</th><th>Actions</th></tr></thead>
         <tbody>
         <?php if(empty($patients)):?>
           <tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--text-muted);">No patients found. Patients appear here once they have an appointment with you.</td></tr>
@@ -54,21 +55,21 @@
 
 <!-- Modal: View Patient -->
 <div class="modal-bg" id="modalViewPatient">
-  <div class="modal-box wide">
+  <div class="modal-box wide premium-modal">
     <div class="modal-header">
-      <h3><i class="fas fa-user" style="color:var(--role-accent);"></i> Patient Profile</h3>
-      <button class="btn btn-primary modal-close" onclick="closeModal('modalViewPatient')"><span class="btn-text">&times;</span></button>
+      <h3><i class="fas fa-user-circle" style="color:#fff;"></i> Patient Profile</h3>
+      <button class="modal-close" onclick="closeModal('modalViewPatient')">&times;</button>
     </div>
-    <div id="patientDetail"></div>
+    <div id="patientDetail" style="padding:1rem;"></div>
   </div>
 </div>
 
 <!-- Modal: Add Patient Note -->
 <div class="modal-bg" id="modalAddNote">
-  <div class="modal-box">
+  <div class="modal-box premium-modal">
     <div class="modal-header">
-      <h3><i class="fas fa-note-sticky" style="color:var(--role-accent);"></i> Add Consultation Note</h3>
-      <button class="btn btn-primary modal-close" onclick="closeModal('modalAddNote')"><span class="btn-text">&times;</span></button>
+      <h3><i class="fas fa-note-sticky" style="color:#fff;"></i> Add Clinical Note</h3>
+      <button class="modal-close" onclick="closeModal('modalAddNote')">&times;</button>
     </div>
     <p id="notePatientName" style="font-weight:600;font-size:1.4rem;margin-bottom:1.5rem;"></p>
     <div class="form-group"><label>Note Type</label>
@@ -87,20 +88,20 @@
 let currentNotePatientId=null;
 function viewPatient(p){
   document.getElementById('patientDetail').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;font-size:1.3rem;margin-bottom:1.5rem;">
-      <div><strong>Full Name</strong><br>${p.name}</div>
-      <div><strong>Patient ID</strong><br>${p.p_ref}</div>
-      <div><strong>Gender</strong><br>${p.gender||'—'}</div>
-      <div><strong>Phone</strong><br>${p.phone||'—'}</div>
-      <div><strong>Email</strong><br>${p.email||'—'}</div>
-      <div><strong>Blood Group</strong><br><strong style="color:var(--danger);">${p.blood_group||'Unknown'}</strong></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;font-size:1.3rem;margin-bottom:2rem;background:var(--surface-2);padding:1.5rem;border-radius:12px;">
+      <div><strong style="color:var(--text-secondary);">Full Name</strong><br><span style="font-weight:600;color:var(--text-primary);">${p.name}</span></div>
+      <div><strong style="color:var(--text-secondary);">Patient ID</strong><br><span style="font-family:monospace;color:var(--primary);">${p.p_ref}</span></div>
+      <div><strong style="color:var(--text-secondary);">Gender</strong><br><span style="font-weight:600;">${p.gender||'—'}</span></div>
+      <div><strong style="color:var(--text-secondary);">Phone</strong><br><span style="font-weight:600;">${p.phone||'—'}</span></div>
+      <div><strong style="color:var(--text-secondary);">Email</strong><br><span style="font-weight:600;">${p.email||'—'}</span></div>
+      <div><strong style="color:var(--text-secondary);">Blood Group</strong><br><strong style="color:var(--danger);font-size:1.4rem;">${p.blood_group||'Unknown'}</strong></div>
     </div>
-    ${p.allergies?`<div style="background:var(--warning-light);border-left:3px solid var(--warning);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1rem;">⚠️ <strong>Allergies:</strong> ${p.allergies}</div>`:''}
-    ${p.chronic_conditions?`<div style="background:var(--info-light);border-left:3px solid var(--info);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1rem;"><strong>Chronic Conditions:</strong> ${p.chronic_conditions}</div>`:''}
-    ${p.emergency_contact_name?`<div style="background:var(--surface-2);border-radius:8px;padding:1rem 1.2rem;"><strong>Emergency Contact:</strong> ${p.emergency_contact_name}</div>`:''}
-    <div style="margin-top:1.5rem;display:flex;gap:.8rem;">
-      <button onclick="closeModal('modalViewPatient');openNoteModal(${p.id},'${p.name}')" class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-note-sticky"></i> Add Note</span></button>
-      <button onclick="closeModal('modalViewPatient');openModal('modalNewRx')" class="btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-prescription-bottle-medical"></i> Prescribe</span></button>
+    ${p.allergies?`<div style="background:var(--warning-light);border-left:4px solid var(--warning);border-radius:8px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;font-size:1.2rem;"><i class="fas fa-triangle-exclamation" style="color:var(--warning);margin-right:.5rem;"></i><strong style="color:var(--warning);">Allergies:</strong> ${p.allergies}</div>`:''}
+    ${p.chronic_conditions?`<div style="background:var(--info-light);border-left:4px solid var(--info);border-radius:8px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;font-size:1.2rem;"><i class="fas fa-heart-pulse" style="color:var(--info);margin-right:.5rem;"></i><strong style="color:var(--info);">Chronic Conditions:</strong> ${p.chronic_conditions}</div>`:''}
+    ${p.emergency_contact_name?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;font-size:1.2rem;box-shadow:0 4px 10px rgba(0,0,0,0.02);"><i class="fas fa-phone" style="color:var(--primary);margin-right:.5rem;"></i><strong style="color:var(--text-secondary);">Emergency Contact:</strong> <span style="font-weight:600;">${p.emergency_contact_name}</span></div>`:''}
+    <div style="margin-top:2rem;display:flex;gap:1rem;justify-content:flex-end;">
+      <button onclick="closeModal('modalViewPatient');openNoteModal(${p.id},'${p.name}')" class="btn btn-outline-primary" style="border-radius:12px;padding:.6rem 1.4rem;"><span class="btn-text"><i class="fas fa-note-sticky"></i> Add Note</span></button>
+      <button onclick="closeModal('modalViewPatient');openModal('modalNewRx')" class="btn btn-primary" style="border-radius:12px;padding:.6rem 1.4rem;"><span class="btn-text"><i class="fas fa-prescription-bottle-medical"></i> Prescribe</span></button>
     </div>
   `;
   openModal('modalViewPatient');
@@ -118,4 +119,13 @@ async function submitNote(){
   if(res.success){toast('Note saved!');closeModal('modalAddNote');document.getElementById('noteContent').value='';}
   else toast(res.message||'Error','danger');
 }
+
+$(document).ready(function() {
+    if($.fn.DataTable) {
+        $('#patTable').DataTable({
+            pageLength: 10,
+            language: { search: "", searchPlaceholder: "Quick search patients..." }
+        });
+    }
+});
 </script>

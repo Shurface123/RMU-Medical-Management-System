@@ -19,7 +19,7 @@ $action = sanitize($_POST['action'] ?? '');
 if ($action === 'mark_read') {
     $notif_id = validateInt($_POST['notification_id'] ?? 0);
     if ($notif_id > 0) {
-        if (dbExecute($conn, "UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", "ii", [$notif_id, $nurse_id])) {
+        if (dbExecute($conn, "UPDATE notifications SET is_read = 1 WHERE notification_id = ? AND user_id = ?", "ii", [$notif_id, $nurse_id])) {
             echo json_encode(['success' => true]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Query failed']);

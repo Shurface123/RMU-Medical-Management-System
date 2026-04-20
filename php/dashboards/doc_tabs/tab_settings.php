@@ -1,13 +1,20 @@
 <?php // TAB: SETTINGS ?>
 <div id="sec-settings" class="dash-section">
-  <div class="sec-header"><h2><i class="fas fa-gear"></i> Settings</h2></div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+<style>
+.setting-card-v2 { background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.04); overflow:hidden; }
+.setting-card-v2 .adm-card-header { padding:1.8rem 2rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface); }
+.setting-card-v2 .adm-card-header h3 { font-size:1.4rem; font-weight:700; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:0.5rem; }
+</style>
+
+  <div class="sec-header"><h2><i class="fas fa-gear" style="color:var(--primary);"></i> Account Settings</h2></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;">
 
     <!-- Profile Settings -->
-    <div class="adm-card" style="margin:0;">
-      <div class="adm-card-header"><h3><i class="fas fa-user-pen"></i> Profile Settings</h3></div>
-      <div style="padding:2rem;">
+    <div class="setting-card-v2" style="margin:0;">
+      <div class="adm-card-header"><h3><i class="fas fa-user-pen" style="color:var(--primary);"></i> Profile Information</h3></div>
+      <div style="padding:2.5rem;">
         <form id="formProfile" onsubmit="saveProfile(event)">
           <div style="text-align:center;margin-bottom:1.5rem;">
             <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--role-accent),var(--primary));color:#fff;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:700;margin:0 auto 1rem;"><?=strtoupper(substr($doc_row['name'],0,1))?></div>
@@ -22,30 +29,30 @@
           </div>
           <div class="form-group"><label>Bio / About</label><textarea name="bio" class="form-control" rows="3"><?=htmlspecialchars($doc_row['bio']??'')?></textarea></div>
           <div class="form-group"><label>License Number</label><input type="text" name="license_number" class="form-control" value="<?=htmlspecialchars($doc_row['license_number']??'')?>"></div>
-          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-save"></i> Save Profile</span></button>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;border-radius:12px;"><span class="btn-text"><i class="fas fa-save"></i> Save Profile</span></button>
         </form>
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+    <div style="display:flex;flex-direction:column;gap:2rem;">
 
       <!-- Change Password -->
-      <div class="adm-card" style="margin:0;">
-        <div class="adm-card-header"><h3><i class="fas fa-lock"></i> Change Password</h3></div>
-        <div style="padding:2rem;">
+      <div class="setting-card-v2" style="margin:0;">
+        <div class="adm-card-header"><h3><i class="fas fa-lock" style="color:var(--warning);"></i> Security & Password</h3></div>
+        <div style="padding:2.5rem;">
           <form id="formPassword" onsubmit="changePassword(event)">
             <div class="form-group"><label>Current Password</label><input type="password" name="current_password" class="form-control" placeholder="Current password" required></div>
             <div class="form-group"><label>New Password</label><input type="password" name="new_password" id="newPwd" class="form-control" placeholder="Min 8 characters" required minlength="8"></div>
             <div class="form-group"><label>Confirm New Password</label><input type="password" name="confirm_password" id="confPwd" class="form-control" placeholder="Repeat new password" required></div>
-            <button type="submit" class="btn btn-warning" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-key"></i> Update Password</span></button>
+            <button type="submit" class="btn btn-warning" style="width:100%;justify-content:center;padding:1.2rem;border-radius:12px;"><span class="btn-text"><i class="fas fa-key"></i> Update Password</span></button>
           </form>
         </div>
       </div>
 
       <!-- Availability Schedule -->
-      <div class="adm-card" style="margin:0;">
-        <div class="adm-card-header"><h3><i class="fas fa-clock"></i> Availability Schedule</h3></div>
-        <div style="padding:2rem;">
+      <div class="setting-card-v2" style="margin:0;">
+        <div class="adm-card-header"><h3><i class="fas fa-calendar-alt" style="color:var(--success);"></i> Availability Schedule</h3></div>
+        <div style="padding:2.5rem;">
           <form id="formAvail" onsubmit="saveAvailability(event)">
             <div class="form-group"><label>Available Days</label>
               <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem;">
@@ -78,15 +85,15 @@
                 </label>
               </div>
             </div>
-            <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;"><span class="btn-text"><i class="fas fa-calendar-check"></i> Update Schedule</span></button>
+            <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;padding:1.2rem;border-radius:12px;"><span class="btn-text"><i class="fas fa-calendar-check"></i> Update Schedule</span></button>
           </form>
         </div>
       </div>
 
       <!-- Notification Preferences -->
-      <div class="adm-card" style="margin:0;">
-        <div class="adm-card-header"><h3><i class="fas fa-bell-slash"></i> Notification Preferences</h3></div>
-        <div style="padding:2rem;">
+      <div class="setting-card-v2" style="margin:0;">
+        <div class="adm-card-header"><h3><i class="fas fa-bell-slash" style="color:var(--info);"></i> Notification Preferences</h3></div>
+        <div style="padding:2.5rem;">
           <?php foreach([
             ['notif_appointments','Appointment Notifications','New, rescheduled, or cancelled appointments','checked'],
             ['notif_lab','Lab Result Alerts','When technician submits lab results','checked'],
@@ -109,9 +116,9 @@
       </div>
 
       <!-- Security Settings -->
-      <div class="adm-card" style="margin:0;">
-        <div class="adm-card-header"><h3><i class="fas fa-shield-halved"></i> Security & 2FA</h3></div>
-        <div style="padding:2rem;">
+      <div class="setting-card-v2" style="margin:0;">
+        <div class="adm-card-header"><h3><i class="fas fa-shield-halved" style="color:#2F80ED;"></i> Security & 2FA</h3></div>
+        <div style="padding:2.5rem;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-weight:600;font-size:1.3rem;">Two-Factor Authentication (2FA)</div>

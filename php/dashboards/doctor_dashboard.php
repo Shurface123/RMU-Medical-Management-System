@@ -69,15 +69,14 @@ if ($q) while ($r=mysqli_fetch_assoc($q)) $prescriptions[]=$r;
 // Lab Requests (Deprecated)
 $lab_requests=[];
 
-// ── Patients Directory ────────────────────────────────────
+// ── Full System Patients Directory ──────────────────────────
 $patients=[];
 $q=mysqli_query($conn,
-    "SELECT DISTINCT p.id, p.patient_id AS p_ref, p.blood_group, p.allergies,
+    "SELECT p.id, p.patient_id AS p_ref, p.blood_group, p.allergies,
             p.is_student, p.chronic_conditions, p.emergency_contact_name,
             u.name, u.email, u.phone, u.gender, u.date_of_birth
      FROM patients p JOIN users u ON p.user_id=u.id
-     JOIN appointments a ON a.patient_id=p.id
-     WHERE a.doctor_id=$doc_pk ORDER BY u.name ASC LIMIT 200");
+     ORDER BY u.name ASC");
 if ($q) while ($r=mysqli_fetch_assoc($q)) $patients[]=$r;
 
 // ── Medicine Inventory ────────────────────────────────────
@@ -146,7 +145,12 @@ $diag_labels    = json_encode(array_column($top_diagnoses,'diagnosis'));
 $diag_data      = json_encode(array_column($top_diagnoses,'cnt'));
 
 // ── Handle AJAX tab from URL ──────────────────────────────
-$active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
+$valid_tabs = [
+    'overview', 'appointments', 'records', 'prescriptions', 'lab_requests', 
+    'patients', 'medicine', 'beds', 'staff', 'analytics', 'reports', 
+    'profile', 'settings', 'messages', 'notifications'
+];
+$active_tab = isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs) ? $_GET['tab'] : 'overview';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -158,6 +162,9 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <style>
 :root{--role-accent:#1abc9c;--role-accent-dark:#16a085;--role-accent-light:#e8f8f5;}
 [data-theme="dark"]{--role-accent-light:#0d3d30;}
@@ -270,23 +277,45 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
   .adm-overlay.active{display:block;}
 }
 .adm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;}
+
+/* ── DataTables Integration (Advanced Modal Table) ── */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current { background: var(--primary) !important; color: white !important; border: 1px solid var(--primary) !important; border-radius:6px !important; }
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: var(--primary-light) !important; color: var(--primary) !important; }
+.dataTables_wrapper .dataTables_filter input { border: 1.5px solid var(--border) !important; border-radius:8px !important; padding: 0.5rem 1rem !important; background: var(--surface) !important; color: var(--text-primary) !important; }
+.dataTables_wrapper .dataTables_length select { border: 1.5px solid var(--border) !important; border-radius:8px !important; background: var(--surface) !important; color: var(--text-primary) !important; }
+.dataTables_wrapper .dataTables_info { color: var(--text-secondary) !important; font-size:1.2rem; }
+[data-theme="dark"] .dataTables_filter input, [data-theme="dark"] .dataTables_length select { background-color: var(--surface) !important; color: var(--text-primary) !important; border-color: var(--border) !important; }
+[data-theme="dark"] .adm-table td { color: var(--text-primary) !important; }
+[data-theme="light"] .adm-table td { color: var(--text-primary) !important; }
+table.dataTable tbody tr { background-color: transparent !important; }
 </style>
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/notifications.css">
-<!-- Phase 4 Hooks --><link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css"><meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>"></head>
+<!-- Phase 4 Hooks -->
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+</head>
 <body>
 <div class="adm-layout">
 
 <!-- ════════════════ SIDEBAR ════════════════ -->
 <aside class="adm-sidebar" id="admSidebar">
+  <!-- Brand -->
   <div class="adm-sidebar-brand">
-    <div class="adm-brand-icon"><i class="fas fa-stethoscope"></i></div>
-    <div class="adm-brand-text">
-      <span class="adm-brand-name">RMU Sickbay</span>
-      <span class="adm-brand-role">Doctor Portal</span>
+    <div class="adm-sidebar-brand-icon">
+      <i class="fas fa-stethoscope"></i>
+    </div>
+    <div class="adm-sidebar-brand-text">
+      <h2>RMU SICKBAY</h2>
+      <span>Doctor Panel</span>
     </div>
   </div>
-  <nav class="adm-nav" style="padding:1.5rem 1rem;flex:1;">
-    <div class="adm-nav-label">Main</div>
+
+  <!-- Navigation -->
+  <nav class="adm-sidebar-nav" style="padding:1.5rem 1rem;flex:1;">
+    <span class="adm-nav-section-label">Main System</span>
     <a href="#" class="adm-nav-item <?=($active_tab==='overview')?'active':''?>" onclick="showTab('overview',this)"><i class="fas fa-house-medical"></i><span>Overview</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='appointments')?'active':''?>" onclick="showTab('appointments',this)">
       <i class="fas fa-calendar-check"></i><span>Appointments</span>
@@ -294,7 +323,8 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     </a>
     <a href="#" class="adm-nav-item <?=($active_tab==='records')?'active':''?>" onclick="showTab('records',this)"><i class="fas fa-file-medical"></i><span>Medical Records</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='prescriptions')?'active':''?>" onclick="showTab('prescriptions',this)"><i class="fas fa-prescription-bottle-medical"></i><span>Prescriptions</span></a>
-    <div class="adm-nav-label" style="margin-top:1rem;">Clinical</div>
+    
+    <span class="adm-nav-section-label">Clinical Options</span>
     <a href="#" class="adm-nav-item <?=($active_tab==='lab_requests')?'active':''?>" onclick="showTab('lab_requests',this)"><i class="fas fa-flask"></i><span>Lab Requests</span></a>
 
     <a href="#" class="adm-nav-item <?=($active_tab==='patients')?'active':''?>" onclick="showTab('patients',this)"><i class="fas fa-users"></i><span>Patient Records</span></a>
@@ -303,7 +333,10 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
       <?php if($stats['low_stock']>0):?><span class="adm-badge adm-badge-danger" style="margin-left:auto;font-size:1rem;"><?=$stats['low_stock']?></span><?php endif;?>
     </a>
     <a href="#" class="adm-nav-item <?=($active_tab==='beds')?'active':''?>" onclick="showTab('beds',this)"><i class="fas fa-bed"></i><span>Bed Management</span></a>
-    <div class="adm-nav-label" style="margin-top:1rem;">Workspace</div>
+    <a href="?tab=messages" class="adm-nav-item <?=($active_tab==='messages')?'active':''?>"><i class="fas fa-comments"></i><span>Clinical Messages</span></a>
+    <a href="?tab=notifications" class="adm-nav-item <?=($active_tab==='notifications')?'active':''?>"><i class="fas fa-bell"></i><span>Notifications</span></a>
+    
+    <span class="adm-nav-section-label">Workspace Settings</span>
     <a href="#" class="adm-nav-item <?=($active_tab==='staff')?'active':''?>" onclick="showTab('staff',this)"><i class="fas fa-address-book"></i><span>Staff Directory</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='analytics')?'active':''?>" onclick="showTab('analytics',this)"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
     <a href="#" class="adm-nav-item <?=($active_tab==='reports')?'active':''?>" onclick="showTab('reports',this)"><i class="fas fa-file-export"></i><span>Reports</span></a>
@@ -354,11 +387,12 @@ $active_tab = htmlspecialchars($_GET['tab'] ?? 'overview');
     <?php include __DIR__.'/doc_tabs/tab_appointments.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_records.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_prescriptions.php'; ?>
-
     <?php include __DIR__.'/doc_tabs/tab_lab_requests.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_patients.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_medicine.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_beds.php'; ?>
+    <?php include __DIR__.'/doc_tabs/tab_messages.php'; ?>
+    <?php include __DIR__.'/doc_tabs/tab_notifications.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_staff.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_analytics.php'; ?>
     <?php include __DIR__.'/doc_tabs/tab_reports.php'; ?>
@@ -386,11 +420,13 @@ document.addEventListener('DOMContentLoaded', () => {
 const TAB_TITLES={overview:'Overview',appointments:'Appointments',records:'Medical Records',
   prescriptions:'Prescriptions',lab_requests:'Lab Test Requests',patients:'Patient Records',
   medicine:'Medicine Inventory',beds:'Bed Management',staff:'Staff Directory',
-  analytics:'Analytics',reports:'Reports',profile:'My Profile',settings:'Settings'};
+  analytics:'Analytics',reports:'Reports',profile:'My Profile',settings:'Settings',
+  messages:'Clinical Messages', notifications:'Notifications'};
 const TAB_ICONS={overview:'fa-house-medical',appointments:'fa-calendar-check',records:'fa-file-medical',
   prescriptions:'fa-prescription-bottle-medical',lab_requests:'fa-flask',patients:'fa-users',
   medicine:'fa-pills',beds:'fa-bed',staff:'fa-address-book',
-  analytics:'fa-chart-bar',reports:'fa-file-export',profile:'fa-user-doctor',settings:'fa-gear'};
+  analytics:'fa-chart-bar',reports:'fa-file-export',profile:'fa-user-doctor',settings:'fa-gear',
+  messages:'fa-comments', notifications:'fa-bell'};
 
 function showTab(tab, el){
   document.querySelectorAll('.dash-section').forEach(s=>s.classList.remove('active'));

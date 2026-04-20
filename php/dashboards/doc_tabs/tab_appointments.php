@@ -1,44 +1,53 @@
 <?php // TAB: APPOINTMENTS ?>
 <div id="sec-appointments" class="dash-section">
+
+<style>
+/* Modern Filter Tabs */
+.adm-tab-group { display:flex; gap:.8rem; flex-wrap:wrap; margin-bottom:1.8rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
+.ftab-v2 { 
+  display:inline-flex;align-items:center;gap:.6rem;padding:.55rem 1.4rem;border-radius:20px;
+  font-size:1.2rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text-secondary);transition:all 0.3s ease;
+}
+.ftab-v2:hover { background:var(--primary-light);color:var(--primary);border-color:var(--primary);transform:translateY(-1px); }
+.ftab-v2.active { background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(47,128,237,.25); }
+
+.appt-card-v2 { background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.04); overflow:hidden; margin-bottom:2rem; }
+.appt-card-header { padding:1.8rem 2rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface); }
+</style>
+
   <div class="sec-header">
-    <h2><i class="fas fa-calendar-check"></i> Appointments Management</h2>
+    <h2><i class="fas fa-calendar-check" style="color:var(--primary);"></i> Appointments Management</h2>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap;">
-      <button onclick="document.getElementById('apptCalView').style.display=document.getElementById('apptCalView').style.display==='none'?'block':'none'" class="btn-icon btn btn-ghost btn-sm"><span class="btn-text"><i class="fas fa-calendar"></i> Calendar View</span></button>
+      <button onclick="document.getElementById('apptCalView').style.display=document.getElementById('apptCalView').style.display==='none'?'block':'none'" class="btn btn-outline-primary" style="font-weight:600;border-radius:20px;"><span class="btn-text"><i class="fas fa-calendar-alt"></i> Toggle Calendar</span></button>
     </div>
   </div>
 
   <!-- Filter Tabs -->
-  <div class="filter-tabs">
-    <button class="btn btn-primary ftab active" onclick="filterAppts('all',this)"><span class="btn-text">All</span></button>
-    <button class="btn btn-warning btn-icon ftab" onclick="filterAppts('Pending',this)"><span class="btn-text">Pending</span></button>
-    <button class="btn btn-success btn-icon ftab" onclick="filterAppts('Confirmed',this)"><span class="btn-text">Confirmed</span></button>
-    <button class="btn btn-primary ftab" onclick="filterAppts('Rescheduled',this)"><span class="btn-text">Rescheduled</span></button>
-    <button class="btn btn-primary ftab" onclick="filterAppts('Completed',this)"><span class="btn-text">Completed</span></button>
-    <button class="btn btn-ghost ftab" onclick="filterAppts('Cancelled',this)"><span class="btn-text">Cancelled</span></button>
-    <button class="btn btn-primary ftab" onclick="filterAppts('today',this)"><span class="btn-text">Today</span></button>
+  <div class="adm-tab-group">
+    <button class="ftab-v2 active" onclick="filterAppts('all',this)"><i class="fas fa-list"></i> All</button>
+    <button class="ftab-v2" onclick="filterAppts('today',this)"><i class="fas fa-calendar-day"></i> Today</button>
+    <button class="ftab-v2" onclick="filterAppts('Pending',this)"><i class="fas fa-clock" style="color:var(--warning);"></i> Pending</button>
+    <button class="ftab-v2" onclick="filterAppts('Confirmed',this)"><i class="fas fa-check-circle" style="color:var(--success);"></i> Confirmed</button>
+    <button class="ftab-v2" onclick="filterAppts('Rescheduled',this)"><i class="fas fa-calendar-pen" style="color:var(--info);"></i> Resched</button>
+    <button class="ftab-v2" onclick="filterAppts('Completed',this)"><i class="fas fa-clipboard-check" style="color:var(--primary);"></i> Completed</button>
   </div>
 
-  <!-- Search -->
-  <div style="margin-bottom:1.2rem;">
-    <div class="adm-search-wrap"><i class="fas fa-search"></i>
-      <input type="text" class="adm-search-input" placeholder="Search patient name or appointment ID…" oninput="filterTable('apptSearch','apptTable');" id="apptSearch">
-    </div>
-  </div>
 
   <!-- Calendar placeholder-->
-  <div id="apptCalView" style="display:none;margin-bottom:1.5rem;" class="adm-card">
-    <div class="adm-card-header"><h3><i class="fas fa-calendar"></i> Calendar View</h3></div>
-    <div style="padding:2rem;text-align:center;color:var(--text-muted);">
-      <i class="fas fa-calendar-days" style="font-size:3rem;opacity:.35;margin-bottom:1rem;display:block;"></i>
-      <p>Calendar integration: appointments for the selected month appear below the table.</p>
+  <div id="apptCalView" style="display:none;margin-bottom:2rem;" class="adm-card shadow-sm">
+    <div class="adm-card-header"><h3 style="font-size:1.4rem;margin:0;"><i class="fas fa-calendar-alt" style="color:var(--primary);margin-right:.5rem;"></i> Master Schedule View</h3></div>
+    <div style="padding:4rem 2rem;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-calendar-days" style="font-size:4rem;color:var(--border);margin-bottom:1rem;display:block;"></i>
+      <p style="font-size:1.3rem;">Calendar GUI synchronization is active. Select a date block to isolate appts.</p>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="adm-card">
+  <div class="adm-card shadow-sm" style="overflow:hidden;">
     <div class="adm-table-wrap">
       <table class="adm-table" id="apptTable">
-        <thead><tr>
+        <thead><tr style="background:linear-gradient(90deg, var(--surface-2), var(--surface));">
           <th>Appt ID</th><th>Patient</th><th>Date & Time</th><th>Service</th><th>Status</th><th>Actions</th>
         </tr></thead>
         <tbody>
@@ -133,16 +142,33 @@
 </div>
 
 <script>
+$(document).ready(function() {
+    if($.fn.DataTable) {
+        $('#apptTable').DataTable({
+            pageLength: 10,
+            language: { search: "", searchPlaceholder: "Quick search..." }
+        });
+    }
+});
+
 let currentApptId=null;
 function filterAppts(status,btn){
-  document.querySelectorAll('.filter-tabs .ftab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.adm-tab-group .ftab-v2').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   const today='<?=$today?>';
-  document.querySelectorAll('#apptTable tbody tr').forEach(row=>{
-    if(status==='all'){row.style.display='';return;}
-    if(status==='today'){row.style.display=row.dataset.date===today?'':'none';return;}
-    row.style.display=row.dataset.status===status?'':'none';
-  });
+  
+  if ($.fn.DataTable && $.fn.DataTable.isDataTable('#apptTable')) {
+      const dt = $('#apptTable').DataTable();
+      if(status === 'all') { dt.search('').columns().search('').draw(); return; }
+      if(status === 'today') { dt.columns().search('').search(today).draw(); return; }
+      dt.columns(4).search(status, true, false).draw();
+  } else {
+      document.querySelectorAll('#apptTable tbody tr').forEach(row=>{
+        if(status==='all'){row.style.display='';return;}
+        if(status==='today'){row.style.display=row.dataset.date===today?'':'none';return;}
+        row.style.display=row.dataset.status===status?'':'none';
+      });
+  }
 }
 function viewAppt(a){
   document.getElementById('apptDetail').innerHTML=`

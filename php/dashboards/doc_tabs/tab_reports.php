@@ -1,13 +1,21 @@
 <?php // TAB: REPORTS ?>
 <div id="sec-reports" class="dash-section">
+
+<style>
+.report-card-v2 { background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.04); overflow:hidden; }
+.report-card-v2 .adm-card-header { padding:1.8rem 2rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface); }
+.report-card-v2 .adm-card-header h3 { font-size:1.4rem; font-weight:700; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:0.5rem; }
+.fmt-option.selected { border-color:var(--primary) !important; background:var(--primary-light) !important; color:var(--primary); }
+</style>
+
   <div class="sec-header">
-    <h2><i class="fas fa-file-export"></i> Generate Reports</h2>
+    <h2><i class="fas fa-file-export" style="color:var(--primary);"></i> Generate Reports</h2>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;">
     <!-- Report Builder -->
-    <div class="adm-card" style="margin:0;">
-      <div class="adm-card-header"><h3><i class="fas fa-sliders"></i> Report Builder</h3></div>
-      <div style="padding:2rem;">
+    <div class="report-card-v2" style="margin:0;">
+      <div class="adm-card-header"><h3><i class="fas fa-sliders" style="color:var(--primary);"></i> Report Builder</h3></div>
+      <div style="padding:2.5rem;">
         <form id="formReport" onsubmit="buildReport(event)">
           <div class="form-group"><label>Report Type</label>
             <select class="form-control" id="reportType" name="report_type" required onchange="updateReportOptions(this.value)">
@@ -42,29 +50,29 @@
             </select>
           </div>
           <div class="form-group"><label>Export Format</label>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.3rem;">
-              <?php foreach(['PDF'=>'fa-file-pdf','CSV'=>'fa-file-csv','Excel (XLSX)'=>'fa-file-excel'] as $fmt=>$ic):
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:.5rem;">
+              <?php foreach(['PDF'=>'fa-file-pdf','CSV'=>'fa-file-csv','Excel'=>'fa-file-excel'] as $fmt=>$ic):
                 $val=strtolower(explode(' ',$fmt)[0]);
               ?>
-              <label style="cursor:pointer;border:1.5px solid var(--border);border-radius:10px;padding:.8rem;text-align:center;transition:var(--transition);" class="fmt-option">
-                <input type="radio" name="export_format" value="<?=$val?>" style="display:none;" <?=$val==='pdf'?'checked':''?> onchange="document.querySelectorAll('.fmt-option').forEach(e=>e.style.setProperty('border-color','var(--border)'));this.parentElement.style.setProperty('border-color','var(--role-accent)');">
-                <i class="fas <?=$ic?>" style="display:block;font-size:1.6rem;margin-bottom:.3rem;color:var(--role-accent);"></i>
-                <span style="font-size:1.1rem;"><?=$fmt?></span>
+              <label style="cursor:pointer;border:2px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;transition:var(--transition);display:flex;flex-direction:column;align-items:center;" class="fmt-option <?=$val==='pdf'?'selected':''?>">
+                <input type="radio" name="export_format" value="<?=$val?>" style="display:none;" <?=$val==='pdf'?'checked':''?> onchange="document.querySelectorAll('.fmt-option').forEach(e=>e.classList.remove('selected'));this.parentElement.classList.add('selected');">
+                <i class="fas <?=$ic?>" style="font-size:2rem;margin-bottom:.6rem;color:<?=$val==='pdf'?'#E74C3C':($val==='csv'?'#27AE60':'#2F80ED')?>;"></i>
+                <span style="font-size:1.15rem;font-weight:600;"><?=$fmt?></span>
               </label>
               <?php endforeach;?>
             </div>
           </div>
-          <button type="submit" class="btn-icon btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;"><span class="btn-text"><i class="fas fa-download"></i> Generate &amp; Download Report</span></button>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:1.2rem;border-radius:12px;font-size:1.3rem;margin-top:1rem;"><span class="btn-text"><i class="fas fa-download"></i> Generate &amp; Download</span></button>
         </form>
       </div>
     </div>
 
     <!-- Recent Reports & Preview -->
-    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+    <div style="display:flex;flex-direction:column;gap:2rem;">
       <!-- Quick Report Cards -->
-      <div class="adm-card" style="margin:0;">
-        <div class="adm-card-header"><h3><i class="fas fa-bolt"></i> Quick Reports (Today)</h3></div>
-        <div style="padding:1.5rem;display:flex;flex-direction:column;gap:.7rem;">
+      <div class="report-card-v2" style="margin:0;">
+        <div class="adm-card-header"><h3><i class="fas fa-bolt" style="color:var(--warning);"></i> Quick Reports (Today)</h3></div>
+        <div style="padding:2rem;display:flex;flex-direction:column;gap:1.2rem;">
           <?php foreach([
             ['appointments','Today\'s Appointments','fa-calendar-check','primary'],
             ['prescriptions','Pending Prescriptions','fa-prescription-bottle-medical','warning'],
@@ -76,7 +84,7 @@
             <input type="hidden" name="date_from" value="<?=$today?>">
             <input type="hidden" name="date_to" value="<?=$today?>">
             <input type="hidden" name="export_format" value="pdf">
-            <button type="submit" class="btn btn-primary btn btn-<?=$col?> btn-sm" style="width:100%;justify-content:flex-start;gap:.8rem;"><span class="btn-text">
+            <button type="submit" class="btn btn-outline-<?=$col?>" style="width:100%;justify-content:flex-start;gap:.8rem;padding:1rem 1.4rem;border-radius:12px;background:var(--<?=$col?>-light);border:1.5px solid var(--<?=$col?>);color:var(--<?=$col?>);"><span class="btn-text">
               <i class="fas <?=$icon?>"></i> <?=$label?>
             </span></button>
           </form>
@@ -85,14 +93,14 @@
       </div>
 
       <!-- Report Tips -->
-      <div class="adm-card" style="margin:0;">
-        <div class="adm-card-header"><h3><i class="fas fa-lightbulb"></i> Report Tips</h3></div>
-        <div style="padding:1.5rem;font-size:1.2rem;color:var(--text-secondary);line-height:2;">
-          <div><i class="fas fa-file-pdf" style="color:#E74C3C;margin-right:.5rem;"></i><strong>PDF</strong> — Professional printable layout with header &amp; date</div>
-          <div><i class="fas fa-file-csv" style="color:#27AE60;margin-right:.5rem;"></i><strong>CSV</strong> — Raw spreadsheet data for Excel import</div>
-          <div><i class="fas fa-file-excel" style="color:#2F80ED;margin-right:.5rem;"></i><strong>XLSX</strong> — Formatted Excel workbook</div>
-          <div style="margin-top:.8rem;padding:.8rem;background:var(--role-accent-light);border-radius:8px;color:var(--role-accent);">
-            <i class="fas fa-info-circle"></i> All reports pull live data at generation time.
+      <div class="report-card-v2" style="margin:0;">
+        <div class="adm-card-header"><h3><i class="fas fa-lightbulb" style="color:#F1C40F;"></i> Report Tips</h3></div>
+        <div style="padding:2.5rem;font-size:1.25rem;color:var(--text-secondary);line-height:2.2;">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;"><i class="fas fa-file-pdf" style="color:#E74C3C;font-size:1.6rem;"></i> <div><strong>PDF</strong> — Professional printable layout with header &amp; date</div></div>
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;"><i class="fas fa-file-csv" style="color:#27AE60;font-size:1.6rem;"></i> <div><strong>CSV</strong> — Raw spreadsheet data for Excel import</div></div>
+          <div style="display:flex;align-items:center;gap:1rem;"><i class="fas fa-file-excel" style="color:#2F80ED;font-size:1.6rem;"></i> <div><strong>Excel</strong> — Formatted Excel workbook</div></div>
+          <div style="margin-top:1.5rem;padding:1rem 1.5rem;background:var(--primary-light);border-left:4px solid var(--primary);border-radius:8px;color:var(--primary);font-weight:600;display:flex;align-items:center;gap:.8rem;">
+            <i class="fas fa-info-circle" style="font-size:1.4rem;"></i> All reports pull live data at generation time.
           </div>
         </div>
       </div>

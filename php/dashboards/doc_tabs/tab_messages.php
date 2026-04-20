@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// NURSE DASHBOARD - MESSAGES 
+// DOCTOR DASHBOARD - MESSAGES 
 // ============================================================
 if (!isset($conn)) exit;
 
@@ -9,7 +9,7 @@ $staff_list = [];
 $q_staff = mysqli_query($conn, "
     SELECT id AS user_id, name, user_role 
     FROM users 
-    WHERE user_role IN ('lab_technician', 'pharmacist', 'doctor', 'admin') AND id != $user_id
+    WHERE user_role IN ('lab_technician', 'pharmacist', 'nurse', 'admin') AND id != $user_id
     ORDER BY user_role ASC, name ASC
 ");
 if ($q_staff) {
@@ -22,7 +22,7 @@ $q_inbox = mysqli_query($conn, "
     SELECT m.*, u.name AS sender_name, u.user_role AS sender_role_display
     FROM lab_internal_messages m
     JOIN users u ON m.sender_id = u.id
-    WHERE m.receiver_id = $user_id AND m.receiver_role = 'nurse'
+    WHERE m.receiver_id = $user_id AND m.receiver_role = 'doctor'
     ORDER BY m.sent_at DESC
 ");
 if ($q_inbox) {
@@ -35,7 +35,7 @@ $q_sent = mysqli_query($conn, "
     SELECT m.*, u.name AS receiver_name, u.user_role AS receiver_role_display
     FROM lab_internal_messages m
     JOIN users u ON m.receiver_id = u.id
-    WHERE m.sender_id = $user_id AND m.sender_role = 'nurse'
+    WHERE m.sender_id = $user_id AND m.sender_role = 'doctor'
     ORDER BY m.sent_at DESC LIMIT 50
 ");
 if ($q_sent) {
@@ -43,12 +43,12 @@ if ($q_sent) {
 }
 ?>
 
-<div class="tab-content <?= ($active_tab === 'messages') ? 'active' : '' ?>" id="messages" style="animation:fadeIn 0.4s ease;">
+<div class="dash-section <?= ($active_tab === 'messages') ? 'active' : '' ?>" id="sec-messages" style="animation:fadeIn 0.4s ease;">
 
     <div class="sec-header">
         <div>
             <h2 style="font-size:2.4rem; font-weight:800; color:var(--primary); margin-bottom:.3rem;"><i class="fas fa-comments pulse-fade"></i> Clinical Communications</h2>
-            <p style="font-size:1.3rem; color:var(--text-muted);">Secure messaging between nursing units, physicians, lab, and pharmacy staff.</p>
+            <p style="font-size:1.3rem; color:var(--text-muted);">Secure messaging between physicians, lab staff, and pharmacy units.</p>
         </div>
         <button class="adm-btn adm-adm-btn adm-btn-primary" onclick="document.getElementById('composeForm').reset(); document.getElementById('composeModal').style.display='flex';" style="border-radius:12px; font-weight:700;"><span class="btn-text">
             <i class="fas fa-pen"></i> New Message
@@ -279,7 +279,7 @@ function viewMessage(folder, msg, element) {
         $('#btnReply').show();
         
         if(msg.is_read == 0) {
-            $.post('/RMU-Medical-Management-System/php/nurse/process_messages.php', { action: 'mark_read', message_id: msg.id });
+            docAction({ action: 'mark_msg_read', msg_id: msg.id });
             msg.is_read = 1;
             $(element).find('.activity-dot').css({'background': 'var(--border)', 'box-shadow': 'none'});
             $(element).find('h6').css('font-weight', '600');
@@ -316,26 +316,19 @@ $(document).ready(function() {
         
         const data = {
             action: 'send_msg',
-            receiver_id: $('#compReceiver').val(),
-            receiver_role: $('#compRole').val(),
-            message: $('#compBody').val(),
-            _csrf: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            to_user_id: $('#compReceiver').val(),
+            to_role: $('#compRole').val(),
+            message: $('#compBody').val()
         };
 
-        $.ajax({
-            url: '/RMU-Medical-Management-System/php/nurse/process_messages.php',
-            type: 'POST',
-            data: data,
-            dataType: 'json',
-            success: function(res) {
-                if (res.success) {
-                     alert('Message Transmitted Successfully');
-                     document.getElementById('composeModal').style.display='none';
-                     window.location.href = '?tab=messages';
-                } else {
-                     alert(res.message || 'Error');
-                     btn.prop('disabled', false).html(origHtml);
-                }
+        docAction(data).then(res => {
+            if(res.success) {
+                toast('Message Transmitted Successfully');
+                document.getElementById('composeModal').style.display='none';
+                window.location.href = '?tab=messages';
+            } else {
+                toast(res.message || 'Error', 'danger');
+                btn.prop('disabled', false).html(origHtml);
             }
         });
     });
