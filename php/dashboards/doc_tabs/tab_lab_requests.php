@@ -63,15 +63,15 @@ if($ord_q) while($o=mysqli_fetch_assoc($ord_q)) $orders[]=$o;
                             <td><?= e($o['test_name']) ?> <small>(<?= e($o['category']) ?>)</small></td>
                             <td><?= date('d M Y, h:i A', strtotime($o['created_at'])) ?></td>
                             <td>
-                                <?php if($o['priority'] === 'STAT'): ?>
-                                    <span class="adm-badge adm-badge-danger">STAT</span>
-                                <?php elseif($o['priority'] === 'Urgent'): ?>
+                                <?php if($o['urgency'] === 'STAT' || $o['urgency'] === 'Critical'): ?>
+                                    <span class="adm-badge adm-badge-danger"><?= e($o['urgency']) ?></span>
+                                <?php elseif($o['urgency'] === 'Urgent'): ?>
                                     <span class="adm-badge adm-badge-warning">Urgent</span>
                                 <?php else: ?>
                                     <span class="adm-badge" style="background:var(--surface-2);">Routine</span>
                                 <?php endif; ?>
                             </td>
-                            <td><span class="adm-badge adm-badge-primary"><?= e($o['status']) ?></span></td>
+                            <td><span class="adm-badge adm-badge-primary"><?= e($o['order_status']) ?></span></td>
                             <td>
                                 <button class="btn btn-primary btn btn-sm" style="background:var(--surface-2);color:var(--primary);" onclick="viewLabOrder(<?= $o['id'] ?>)"><span class="btn-text"><i class="fas fa-eye"></i> Details</span></button>
                             </td>

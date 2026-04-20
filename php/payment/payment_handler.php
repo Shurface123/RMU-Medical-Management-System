@@ -32,9 +32,9 @@ if ($action === 'add_payment') {
     // Generate receipt ID
     $receipt_id = 'RCV-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
 
-    $paid_at_sql = $status === 'Paid' ? ', paid_at=NOW()' : '';
+    $paid_at_sql = $status === 'Paid' ? ', payment_date=NOW()' : '';
     $ok = mysqli_query($conn,
-        "INSERT INTO payments (receipt_id, patient_id, amount, method, status, notes $paid_at_sql)
+        "INSERT INTO payments (receipt_number, patient_id, amount, payment_method, status, notes $paid_at_sql)
          VALUES ('$receipt_id', NULL, $amount, '$method', '$status', '$notes'"
         . ($status === 'Paid' ? ', NOW()' : '') . ")"
     );
@@ -52,8 +52,8 @@ if ($action === 'update_status') {
     $new_status = mysqli_real_escape_string($conn, $_POST['new_status'] ?? '');
     $allowed    = ['Paid', 'Pending', 'Overdue', 'Refunded'];
     if ($id > 0 && in_array($new_status, $allowed)) {
-        $paid_clause = $new_status === 'Paid' ? ', paid_at=NOW()' : '';
-        mysqli_query($conn, "UPDATE payments SET status='$new_status'$paid_clause WHERE id=$id");
+        $paid_clause = $new_status === 'Paid' ? ", payment_date=NOW()" : '';
+        mysqli_query($conn, "UPDATE payments SET status='$new_status'$paid_clause WHERE payment_id=$id");
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Invalid request.']);

@@ -24,7 +24,7 @@ if ($stmt) {
 
 // Fetch logout logs
 $stmt2 = mysqli_query($conn, "
-    SELECT l.log_id as audit_id, l.user_id, l.logout_type as action, CONCAT('Device: ', IFNULL(l.device_info,'?'), ' / Browser: ', IFNULL(l.browser,'?'), ' / Origin: ', IFNULL(l.dashboard_logged_out_from,'?')) as notes, 'self' as performed_by, l.ip_address, l.created_at, u.name as user_name, u.email as user_email, u.user_role 
+    SELECT l.id as audit_id, l.user_id, l.logout_type as action, CONCAT('Device: ', IFNULL(l.device_info,'?'), ' / Browser: ', IFNULL(l.browser,'?'), ' / Origin: ', IFNULL(l.dashboard_logged_out_from,'?')) as notes, 'self' as performed_by, l.ip_address, l.created_at, u.name as user_name, u.email as user_email, u.user_role 
     FROM logout_logs l
     LEFT JOIN users u ON l.user_id = u.id
     ORDER BY l.created_at DESC

@@ -715,6 +715,424 @@ if ($action === 'upload_document') {
     }
 }
 
+// ------------------------------------------------------------------
+// 8. SAMPLE REGISTRATION (NEW)
+// ------------------------------------------------------------------
+if ($action === 'register_sample') {
+    $order_id   = (int)($_POST['order_id']   ?? 0);
+    $sample_type = trim($_POST['sample_type'] ?? '');
+    $container   = trim($_POST['container']   ?? '');
+    $coll_date   = $_POST['collection_date'] ?? date('Y-m-d');
+    $coll_time   = $_POST['collection_time'] ?? date('H:i:s');
+    $notes       = trim($_POST['notes']       ?? '');
+
+    if ($order_id > 0 && $sample_type !== '' && $container !== '') {
+        try {
+            // Validate order exists and get patient
+            $stmt = $conn->prepare("SELECT patient_id FROM lab_test_orders WHERE id = ? LIMIT 1");
+            $stmt->bind_param("i", $order_id);
+            $stmt->execute();
+            $ord = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            if (!$ord) throw new Exception("Test order #$order_id not found.");
+
+            $patient_id = $ord['patient_id'];
+            // Generate unique sample barcode: SMP-YYYYMMDD-{rand6}
+            $barcode = 'SMP-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+
+            $stmt = $conn->prepare("INSERT INTO lab_samples
+                (order_id, patient_id, sample_code, sample_type, container_type,
+                 collection_date, collection_time, notes, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Collected', NOW())");
+            $stmt->bind_param("iissssss", $order_id, $patient_id, $barcode, $sample_type,
+                              $container, $coll_date, $coll_time, $notes);
+            $stmt->execute();
+            $new_id = $stmt->insert_id;
+            $stmt->close();
+
+            // Update order status to 'Sample Collected'
+            $stmt = $conn->prepare("UPDATE lab_test_orders SET order_status = 'Sample Collected' WHERE id = ? AND order_status = 'Accepted'");
+            $stmt->bind_param("i", $order_id);
+            $stmt->execute();
+            $stmt->close();
+
+            // Audit trail
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $ua = $_SERVER['HTTP_USER_AGENT'];
+            $stmt = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id, new_value, ip_address, device_info)
+                VALUES (?, 'Register Sample', 'Sample Tracking', ?, ?, ?, ?)");
+            $nv = json_encode(['barcode' => $barcode, 'order_id' => $order_id]);
+            $stmt->bind_param("iisss", $user_id, $new_id, $nv, $ip, $ua);
+            $stmt->execute();
+            $stmt->close();
+
+            $response = ['success' => true, 'message' => "Sample $barcode registered.", 'barcode' => $barcode];
+        } catch (Exception $e) {
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+    } else {
+        $response['message'] = 'Missing required sample registration fields.';
+    }
+}
+
+// ------------------------------------------------------------------
+// 9. REFERENCE RANGE: FETCH BY ID  (NEW)
+// ------------------------------------------------------------------
+if ($action === 'fetch_range_by_id') {
+    $range_id = (int)($_POST['range_id'] ?? 0);
+    if ($range_id > 0) {
+        $stmt = $conn->prepare("SELECT r.*, c.test_name FROM lab_reference_ranges r JOIN lab_test_catalog c ON r.test_catalog_id = c.id WHERE r.id = ? LIMIT 1");
+        $stmt->bind_param("i", $range_id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($row) {
+            $response = ['success' => true, 'range' => $row];
+        } else {
+            $response['message'] = 'Range not found.';
+        }
+    } else {
+        $response['message'] = 'Invalid range ID.';
+    }
+}
+
+// ------------------------------------------------------------------
+// 10. REFERENCE RANGE: SAVE / UPDATE  (NEW)
+// ------------------------------------------------------------------
+if ($action === 'save_reference_range') {
+    $range_id  = (int)($_POST['range_id'] ?? 0);
+    $test_id   = (int)($_POST['test_id']  ?? 0);
+    $param     = trim($_POST['param']     ?? '');
+    $gender    = $_POST['gender']         ?? 'Both';
+    $age_min   = (int)($_POST['age_min']  ?? 0);
+    $age_max   = (int)($_POST['age_max']  ?? 150);
+    $norm_min  = trim($_POST['norm_min']  ?? '');
+    $norm_max  = trim($_POST['norm_max']  ?? '');
+    $crit_low  = trim($_POST['crit_low']  ?? '');
+    $crit_high = trim($_POST['crit_high'] ?? '');
+    $unit      = trim($_POST['unit']      ?? '');
+
+    if ($test_id > 0 && $param !== '' && $norm_min !== '' && $norm_max !== '' && $unit !== '') {
+        try {
+            $e_param     = mysqli_real_escape_string($conn, $param);
+            $e_gender    = mysqli_real_escape_string($conn, $gender);
+            $e_norm_min  = mysqli_real_escape_string($conn, $norm_min);
+            $e_norm_max  = mysqli_real_escape_string($conn, $norm_max);
+            $e_crit_low  = mysqli_real_escape_string($conn, $crit_low);
+            $e_crit_high = mysqli_real_escape_string($conn, $crit_high);
+            $e_unit      = mysqli_real_escape_string($conn, $unit);
+
+            if ($range_id > 0) {
+                $q = "UPDATE lab_reference_ranges
+                    SET test_catalog_id=$test_id, parameter_name='$e_param', gender='$e_gender',
+                        age_min_years=$age_min, age_max_years=$age_max,
+                        normal_min='$e_norm_min', normal_max='$e_norm_max',
+                        critical_low='$e_crit_low', critical_high='$e_crit_high', unit='$e_unit'
+                    WHERE id=$range_id";
+                $action_label = 'Update Reference Range';
+            } else {
+                $q = "INSERT INTO lab_reference_ranges
+                    (test_catalog_id, parameter_name, gender, age_min_years, age_max_years,
+                     normal_min, normal_max, critical_low, critical_high, unit)
+                    VALUES ($test_id, '$e_param', '$e_gender', $age_min, $age_max,
+                            '$e_norm_min', '$e_norm_max', '$e_crit_low', '$e_crit_high', '$e_unit')";
+                $action_label = 'Add Reference Range';
+            }
+
+            mysqli_begin_transaction($conn);
+            if (!mysqli_query($conn, $q)) {
+                throw new Exception("DB error: " . mysqli_error($conn));
+            }
+            if ($range_id === 0) {
+                $range_id = (int)mysqli_insert_id($conn);
+            }
+            mysqli_commit($conn);
+
+            // Audit trail
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $ua = $_SERVER['HTTP_USER_AGENT'];
+            $nv = json_encode(['param' => $param, 'range' => "$norm_min - $norm_max $unit"]);
+            $aud = $conn->prepare("INSERT INTO lab_audit_trail
+                (technician_id, action_type, module_affected, record_id, new_value, ip_address, device_info)
+                VALUES (?, ?, 'Reference Ranges', ?, ?, ?, ?)");
+            $aud->bind_param("isisss", $user_id, $action_label, $range_id, $nv, $ip, $ua);
+            $aud->execute();
+            $aud->close();
+
+            $response = ['success' => true, 'message' => 'Reference range saved successfully.'];
+        } catch (Exception $e) {
+            @mysqli_rollback($conn);
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+    } else {
+        $response['message'] = 'Missing required fields (test, parameter, normal range, and unit).';
+    }
+}
+
+// ------------------------------------------------------------------
+// 11. EQUIPMENT: LOG CALIBRATION  (NEW)
+// ------------------------------------------------------------------
+if ($action === 'log_calibration') {
+    $equip_id   = (int)($_POST['equip_id']   ?? 0);
+    $calib_date = $_POST['calib_date']        ?? date('Y-m-d');
+    $next_date  = $_POST['next_date']         ?? '';
+    $notes      = trim($_POST['notes']        ?? '');
+    $new_status = $_POST['new_status']        ?? 'Operational';
+
+    if ($equip_id > 0 && $next_date !== '') {
+        try {
+            mysqli_begin_transaction($conn);
+
+            // Insert calibration log
+            $stmt = $conn->prepare("INSERT INTO lab_equipment_maintenance
+                (equipment_id, maintenance_type, performed_by, maintenance_date, next_due_date, notes, outcome)
+                VALUES (?, 'Calibration', ?, ?, ?, ?, 'Completed')");
+            $stmt->bind_param("iisss", $equip_id, $user_id, $calib_date, $next_date, $notes);
+            $stmt->execute();
+            $stmt->close();
+
+            // Update equipment status and next_calibration_date
+            $stmt = $conn->prepare("UPDATE lab_equipment SET status = ?, next_calibration_date = ? WHERE id = ?");
+            $stmt->bind_param("ssi", $new_status, $next_date, $equip_id);
+            $stmt->execute();
+            $stmt->close();
+
+            // Audit
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $ua = $_SERVER['HTTP_USER_AGENT'];
+            $nv = json_encode(['status' => $new_status, 'next_calibration' => $next_date]);
+            $aud = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id, new_value, ip_address, device_info)
+                VALUES (?, 'Log Calibration', 'Equipment Management', ?, ?, ?, ?)");
+            $aud->bind_param("iisss", $user_id, $equip_id, $nv, $ip, $ua);
+            $aud->execute();
+            $aud->close();
+
+            mysqli_commit($conn);
+            $response = ['success' => true, 'message' => 'Calibration record saved.'];
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+    } else {
+        $response['message'] = 'Missing required calibration fields.';
+    }
+}
+
+// ------------------------------------------------------------------
+// 12. EQUIPMENT: SCHEDULE MAINTENANCE  (NEW)
+// ------------------------------------------------------------------
+if ($action === 'schedule_maintenance') {
+    $equip_id  = (int)($_POST['equip_id']  ?? 0);
+    $maint_date = $_POST['maint_date']     ?? '';
+    $reason    = trim($_POST['reason']     ?? '');
+
+    if ($equip_id > 0) {
+        try {
+            mysqli_begin_transaction($conn);
+
+            // Mark equipment as under maintenance
+            $stmt = $conn->prepare("UPDATE lab_equipment SET status = 'Maintenance' WHERE id = ?");
+            $stmt->bind_param("i", $equip_id);
+            $stmt->execute();
+            $stmt->close();
+
+            // Insert maintenance log
+            $stmt = $conn->prepare("INSERT INTO lab_equipment_maintenance
+                (equipment_id, maintenance_type, performed_by, maintenance_date, notes, outcome)
+                VALUES (?, 'Scheduled Maintenance', ?, ?, ?, 'Pending')");
+            $stmt->bind_param("iiss", $equip_id, $user_id, $maint_date ?: date('Y-m-d'), $reason);
+            $stmt->execute();
+            $stmt->close();
+
+            mysqli_commit($conn);
+            $response = ['success' => true, 'message' => 'Maintenance scheduled. Equipment marked accordingly.'];
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+    } else {
+        $response['message'] = 'Invalid equipment ID.';
+    }
+}
+
+// ------------------------------------------------------------------
+// 13. EQUIPMENT: LOG DAILY QC  (NEW)
+// ------------------------------------------------------------------
+if ($action === 'log_qc') {
+    $equip_id   = (int)($_POST['equip_id']   ?? 0);
+    $qc_result  = $_POST['qc_result']         ?? 'Pass';
+    $qc_notes   = trim($_POST['qc_notes']     ?? '');
+    $run_date   = $_POST['run_date']           ?? date('Y-m-d');
+
+    if ($equip_id > 0) {
+        try {
+            $stmt = $conn->prepare("INSERT INTO lab_equipment_maintenance
+                (equipment_id, maintenance_type, performed_by, maintenance_date, notes, outcome)
+                VALUES (?, 'Daily QC', ?, ?, ?, ?)");
+            $outcome = ($qc_result === 'Pass') ? 'Completed' : 'Failed';
+            $full_notes = "QC Result: $qc_result. $qc_notes";
+            $stmt->bind_param("iisss", $equip_id, $user_id, $run_date, $full_notes, $outcome);
+            $stmt->execute();
+            $stmt->close();
+
+            // If QC failed, flag equipment
+            if ($qc_result === 'Fail') {
+                $stmt = $conn->prepare("UPDATE lab_equipment SET status = 'Maintenance' WHERE id = ?");
+                $stmt->bind_param("i", $equip_id);
+                $stmt->execute();
+                $stmt->close();
+
+                // Notify admins
+                $admin_q = mysqli_query($conn, "SELECT id FROM users WHERE user_role = 'admin' LIMIT 3");
+                while ($adm = mysqli_fetch_assoc($admin_q)) {
+                    $ntf = $conn->prepare("INSERT INTO notifications (user_id, user_role, type, title, message, is_read, related_module, related_id, created_at)
+                        VALUES (?, 'admin', 'equipment_alert', 'QC Failure Alert', ?, 0, 'Equipment', ?, NOW())");
+                    $ntf_msg = "Daily QC FAILED for equipment ID #$equip_id. Equipment flagged as Maintenance.";
+                    $ntf->bind_param("isi", $adm['id'], $ntf_msg, $equip_id);
+                    $ntf->execute();
+                    $ntf->close();
+                }
+            }
+
+            $response = ['success' => true, 'message' => "QC log recorded. Result: $qc_result."];
+        } catch (Exception $e) {
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+    } else {
+        $response['message'] = 'Invalid equipment ID.';
+    }
+}
+
+// ------------------------------------------------------------------
+// 14. EQUIPMENT: ADD NEW EQUIPMENT  (NEW)
+// ------------------------------------------------------------------
+if ($action === 'add_equipment') {
+    $equip_id_str = trim($_POST['equipment_id_str'] ?? '');
+    $name         = trim($_POST['name']             ?? '');
+    $model        = trim($_POST['model']            ?? '');
+    $manufacturer = trim($_POST['manufacturer']     ?? '');
+    $location     = trim($_POST['location']         ?? '');
+    $department   = trim($_POST['department']       ?? 'Laboratory');
+    $purchase_date = $_POST['purchase_date']        ?? null;
+    $serial_no    = trim($_POST['serial_no']        ?? '');
+
+    if ($equip_id_str !== '' && $name !== '' && $model !== '') {
+        try {
+            mysqli_begin_transaction($conn);
+
+            // Check for duplicate equipment_id
+            $dup = $conn->prepare("SELECT id FROM lab_equipment WHERE equipment_id = ? LIMIT 1");
+            $dup->bind_param("s", $equip_id_str);
+            $dup->execute();
+            if ($dup->get_result()->num_rows > 0) {
+                throw new Exception("Equipment ID '$equip_id_str' already exists. Please use a unique ID.");
+            }
+            $dup->close();
+
+            $stmt = $conn->prepare("INSERT INTO lab_equipment
+                (equipment_id, name, model, manufacturer, location, department, serial_number, purchase_date, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Operational')");
+            $stmt->bind_param("ssssssss", $equip_id_str, $name, $model, $manufacturer, $location, $department, $serial_no, $purchase_date);
+            $stmt->execute();
+            $new_eid = $stmt->insert_id;
+            $stmt->close();
+
+            // Audit
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $ua = $_SERVER['HTTP_USER_AGENT'];
+            $nv = json_encode(['name' => $name, 'model' => $model, 'equip_id' => $equip_id_str]);
+            $aud = $conn->prepare("INSERT INTO lab_audit_trail (technician_id, action_type, module_affected, record_id, new_value, ip_address, device_info)
+                VALUES (?, 'Add Equipment', 'Equipment Management', ?, ?, ?, ?)");
+            $aud->bind_param("iisss", $user_id, $new_eid, $nv, $ip, $ua);
+            $aud->execute();
+            $aud->close();
+
+            mysqli_commit($conn);
+            $response = ['success' => true, 'message' => "Equipment '$name' added to inventory."];
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+    } else {
+        $response['message'] = 'Equipment ID, name, and model are required.';
+    }
+}
+
+// ------------------------------------------------------------------
+// 15. MESSAGING: MULTI-ROLE SEND MESSAGE  (EXTEND)
+// ------------------------------------------------------------------
+if ($action === 'send_msg') {
+    $to_user_id  = (int)($_POST['to_user_id']  ?? 0);
+    $to_role     = trim($_POST['to_role']       ?? 'doctor');
+    $msg_txt     = trim($_POST['message']       ?? '');
+
+    $valid_roles = ['doctor', 'nurse', 'lab_technician', 'pharmacist'];
+    if ($to_user_id > 0 && !empty($msg_txt) && in_array($to_role, $valid_roles)) {
+        try {
+            $e_msg = mysqli_real_escape_string($conn, $msg_txt);
+            mysqli_query($conn, "INSERT INTO lab_internal_messages
+                (sender_id, sender_role, receiver_id, receiver_role, message_content)
+                VALUES ($user_id, 'lab_technician', $to_user_id, '$to_role', '$e_msg')");
+
+
+            // Push notification to recipient
+            $ntf_title = "New Message from Lab";
+            $ntf_body  = "Lab message: " . substr($msg_txt, 0, 60) . (strlen($msg_txt) > 60 ? '...' : '');
+            $e_body    = mysqli_real_escape_string($conn, $ntf_body);
+            mysqli_query($conn, "INSERT INTO notifications
+                (user_id, user_role, type, title, message, is_read, related_module, created_at)
+                VALUES ($to_user_id, '$to_role', 'message', '$ntf_title', '$e_body', 0, 'Messages', NOW())");
+
+            $response = ['success' => true, 'message' => 'Message sent.'];
+        } catch (Exception $e) {
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+    } else {
+        $response['message'] = 'Invalid message payload.';
+    }
+}
+
+// ------------------------------------------------------------------
+// 16. NOTIFICATIONS: MARK READ (NEW)
+// ------------------------------------------------------------------
+if ($action === 'mark_notif_read') {
+    $notif_id = (int)($_POST['notification_id'] ?? 0);
+    if ($notif_id > 0) {
+        try {
+            mysqli_query($conn, "UPDATE lab_notifications SET is_read = 1 WHERE id = $notif_id AND recipient_id = $user_id");
+            $response = ['success' => true, 'message' => 'Notification marked as read.'];
+        } catch (Exception $e) {
+            $response = ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+}
+
+if ($action === 'mark_all_notifs_read') {
+    try {
+        mysqli_query($conn, "UPDATE lab_notifications SET is_read = 1 WHERE recipient_id = $user_id AND is_read = 0");
+        $response = ['success' => true, 'message' => 'All notifications marked as read.'];
+    } catch (Exception $e) {
+        $response = ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
+// ------------------------------------------------------------------
+// 17. MESSAGING: MARK MESSAGE READ (NEW)
+// ------------------------------------------------------------------
+if ($action === 'mark_msg_read') {
+    $msg_id = (int)($_POST['msg_id'] ?? 0);
+    if ($msg_id > 0) {
+        try {
+            mysqli_query($conn, "UPDATE lab_internal_messages SET is_read = 1 WHERE id = $msg_id AND receiver_id = $user_id AND receiver_role = 'lab_technician'");
+            $response = ['success' => true, 'message' => 'Message marked as read.'];
+        } catch (Exception $e) {
+            $response = ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+}
+
 echo json_encode($response);
 exit();
 ?>
+

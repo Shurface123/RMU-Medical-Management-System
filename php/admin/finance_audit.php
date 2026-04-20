@@ -14,7 +14,7 @@ $q = mysqli_query($conn, "
            u.name as user_name,
            u.email as user_email
     FROM finance_audit_trail f
-    LEFT JOIN users u ON f.user_id = u.id
+    LEFT JOIN users u ON f.actor_user_id = u.id
     ORDER BY f.created_at DESC
     LIMIT 200
 ");

@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     if ($action === 'mark_paid') {
         $id = (int) $_POST['id'];
-        if ($id > 0 && mysqli_query($conn, "UPDATE payments SET status='Paid', paid_at=NOW() WHERE id=$id")) {
+        if ($id > 0 && mysqli_query($conn, "UPDATE payments SET status='Paid', payment_date=NOW() WHERE payment_id=$id")) {
             echo json_encode(['success' => true]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Update failed']);
@@ -33,7 +33,7 @@ if ($tbl_exists) {
 
     $where = ['1=1'];
     if ($search)
-        $where[] = "(u.name LIKE '%$search%' OR pm.receipt_id LIKE '%$search%')";
+        $where[] = "(u.name LIKE '%$search%' OR pm.receipt_number LIKE '%$search%')";
     if ($stat_f)
         $where[] = "pm.status = '$stat_f'";
     if ($date_f)
@@ -197,33 +197,33 @@ if ($tbl_exists) {
                             } else {
                                 $n = 1;
                                 while ($pm = mysqli_fetch_assoc($q)):
-                                    $sc = $pm['status'] === 'Paid' ? 'success' : ($pm['status'] === 'Overdue' ? 'danger' : ($pm['status'] === 'Refunded' ? 'info' : 'warning'));
+                                    $sc = ($pm['status'] ?? '') === 'Paid' ? 'success' : (($pm['status'] ?? '') === 'Overdue' ? 'danger' : (($pm['status'] ?? '') === 'Refunded' ? 'info' : 'warning'));
                                     $method_icons = ['Cash' => 'fa-coins', 'GhIPSS' => 'fa-building-columns', 'Mobile Money' => 'fa-mobile-alt', 'Card' => 'fa-credit-card'];
-                                    $mi = $method_icons[$pm['method']] ?? 'fa-circle-dollar-to-slot';
+                                    $mi = $method_icons[$pm['payment_method'] ?? ''] ?? 'fa-circle-dollar-to-slot';
                                     ?>
                                     <tr>
                                         <td><?php echo $n++; ?></td>
                                         <td><span class="adm-badge adm-badge-primary"
-                                                style="font-size:.72rem;"><?php echo htmlspecialchars($pm['receipt_id']); ?></span>
+                                                style="font-size:.72rem;"><?php echo htmlspecialchars($pm['receipt_number'] ?? ''); ?></span>
                                         </td>
                                         <td><strong><?php echo htmlspecialchars($pm['patient_name'] ?? 'Walk-in'); ?></strong></td>
                                         <td><strong
-                                                style="color:var(--primary);">GH₵<?php echo number_format($pm['amount'], 2); ?></strong>
+                                                style="color:var(--primary);">GH₵<?php echo number_format($pm['amount'] ?? 0, 2); ?></strong>
                                         </td>
                                         <td><i class="fas <?php echo $mi; ?>"
-                                                style="margin-right:.35rem;color:var(--text-secondary);"></i><?php echo htmlspecialchars($pm['method']); ?>
+                                                style="margin-right:.35rem;color:var(--text-secondary);"></i><?php echo htmlspecialchars($pm['payment_method'] ?? ''); ?>
                                         </td>
-                                        <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo $pm['status']; ?></span>
+                                        <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo htmlspecialchars($pm['status'] ?? ''); ?></span>
                                         </td>
-                                        <td><?php echo $pm['paid_at'] ? date('d M Y', strtotime($pm['paid_at'])) : date('d M Y', strtotime($pm['created_at'])); ?>
+                                        <td><?php echo ($pm['payment_date'] ?? null) ? date('d M Y', strtotime($pm['payment_date'])) : date('d M Y', strtotime($pm['created_at'])); ?>
                                         </td>
                                         <td style="max-width:160px;font-size:.8rem;color:var(--text-muted);">
                                             <?php echo htmlspecialchars(substr($pm['notes'] ?? '', 0, 50)); ?></td>
                                         <td>
                                             <div class="adm-table-actions">
-                                                <?php if ($pm['status'] !== 'Paid'): ?>
+                                                <?php if (($pm['status'] ?? '') !== 'Paid'): ?>
                                                     <button class="btn btn-success btn-sm"
-                                                        onclick="markPaid(<?php echo $pm['id']; ?>, this)" title="Mark as Paid"><span class="btn-text"><i
+                                                        onclick="markPaid(<?php echo $pm['payment_id'] ?? 0; ?>, this)" title="Mark as Paid"><span class="btn-text"><i
                                                             class="fas fa-check"></i></span></button>
                                                 <?php endif; ?>
                                             </div>

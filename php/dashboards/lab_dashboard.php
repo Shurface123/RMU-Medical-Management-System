@@ -18,12 +18,14 @@ $today     = date('Y-m-d');
 $valid_tabs = [
     'overview', 'orders', 'samples', 'results', 'reference',
     'equipment', 'inventory', 'messages', 'reports', 'analytics',
-    'audit', 'profile', 'settings'
+    'audit', 'notifications', 'profile', 'settings'
 ];
 $active_tab = isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs) ? $_GET['tab'] : 'overview';
 
-function e($str) {
-    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
+if (!function_exists('e')) {
+    function e($str) {
+        return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
+    }
 }
 
 // ── Lab Technician Profile ──────────────────────────────────
@@ -47,7 +49,9 @@ $tech_pk = (int)$tech_row['tech_pk'];
 $profile_image_path = !empty($tech_row['profile_photo']) ? e($tech_row['profile_photo']) : 'default-avatar.png';
 
 // ── Global Stats ───────────────────────────────────────────
-function qval($conn,$sql){$r=mysqli_query($conn,$sql);return $r?(mysqli_fetch_row($r)[0]??0):0;}
+if (!function_exists('qval')) {
+    function qval($conn,$sql){$r=mysqli_query($conn,$sql);return $r?(mysqli_fetch_row($r)[0]??0):0;}
+}
 
 $unread_notifs = qval($conn,"SELECT COUNT(*) FROM lab_notifications WHERE recipient_id=$user_id AND is_read=0");
 
@@ -131,25 +135,21 @@ if ($lic_q) {
     <link rel="stylesheet" href="../../css/admin-dashboard.css">
     
     <style>
-        /* ── Role Accent Tokens (Lab Technician Theme - Teal) ── */
+        /* ── Role Accent Tokens (Lab Technician uses System Blue) ── */
         :root {
-            --role-accent: #0d9488; /* Deep Teal */
-            --role-accent-dark: #0f766e;
-            --role-accent-light: #ccfbf1;
-            
-            --primary-color: var(--primary);
-            --primary-dark: var(--primary);
-            --accent-color: var(--danger);
-            --bs-primary: #0d9488; 
+            --role-accent: var(--primary);       /* System Blue #2F80ED */
+            --role-accent-dark: var(--primary-dark);
+            --role-accent-light: var(--primary-light);
+            --bs-primary: #2F80ED;
             --bs-danger: #e74c3c;
             --bs-success: #27ae60;
             --bs-warning: #f1c40f;
             --bs-info: #2980b9;
         }
-        [data-theme="dark"] { --role-accent-light: #134e4a; }
+        [data-theme="dark"] { --role-accent-light: #1A2D4F; }
 
         /* ── Hero Banner ── */
-        .staff-hero { background:linear-gradient(135deg,#1C3A6B 0%,#2F80ED 55%,#0d9488 100%);color:#fff;border-radius:var(--radius-lg);padding:2.2rem 2.8rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.8rem;flex-wrap:wrap;position:relative;overflow:hidden; box-shadow: var(--shadow-md); transition: transform 0.3s ease; }
+        .staff-hero { background:linear-gradient(135deg,#1C3A6B 0%,#2F80ED 60%,#56CCF2 100%);color:#fff;border-radius:var(--radius-lg);padding:2.2rem 2.8rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.8rem;flex-wrap:wrap;position:relative;overflow:hidden; box-shadow: var(--shadow-md); transition: transform 0.3s ease; }
         .staff-hero:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
         .staff-hero-avatar { width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;font-size:2.6rem;border:3px solid rgba(255,255,255,.35);flex-shrink:0; }
         .staff-hero-info h2 { font-size:2rem;font-weight:700;margin:0 0 .3rem; }
@@ -160,18 +160,18 @@ if ($lic_q) {
         .adm-summary-strip { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:2rem; }
         .adm-mini-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.4rem 1.2rem;text-align:center;box-shadow:var(--shadow-sm);transition:var(--transition);cursor:pointer; }
         .adm-mini-card:hover { transform:translateY(-3px);box-shadow:var(--shadow-md); }
-        .adm-mini-card-num { font-size:2.8rem;font-weight:800;color:var(--text-primary);line-height:1; }
+        .adm-mini-card-num { font-size:2.8rem;font-weight:800;color:var(--primary);line-height:1; }
         .adm-mini-card-num.green { color:var(--success); }
         .adm-mini-card-num.orange { color:var(--warning); }
         .adm-mini-card-num.blue { color:var(--primary); }
-        .adm-mini-card-num.teal { color:var(--role-accent); }
+        .adm-mini-card-num.teal { color:var(--primary); }
         .adm-mini-card-num.red { color:var(--danger); }
         .adm-mini-card-label { font-size:.78rem;color:var(--text-secondary);margin-top:.4rem;font-weight:500;text-transform:uppercase;letter-spacing:0.04em; }
         
         .stat-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.5rem;margin-bottom:2.5rem; }
         .stat-mini { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.8rem 1.5rem;text-align:center;transition:var(--transition);cursor:pointer;box-shadow:var(--shadow-sm); }
         .stat-mini:hover { box-shadow:var(--shadow-md);transform:translateY(-3px); }
-        .stat-mini-val { font-size:3rem;font-weight:800;line-height:1;color:var(--role-accent); }
+        .stat-mini-val { font-size:3rem;font-weight:800;line-height:1;color:var(--primary); }
         .stat-mini-lbl { font-size:1.15rem;font-weight:500;color:var(--text-secondary);margin-top:.6rem; }
 
         /* ── Tab Sections ── */
@@ -183,7 +183,7 @@ if ($lic_q) {
 
         .sec-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.8rem;flex-wrap:wrap;gap:1rem; }
         .sec-header h2 { font-size:2rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:.8rem; }
-        .sec-header h2 i { color:var(--role-accent); }
+        .sec-header h2 i { color:var(--primary); }
 
         /* ── Filter Tabs & Sub-navigation (Premium) ── */
         .adm-tab-group { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.8rem; border-bottom:1px solid var(--border); padding-bottom:1rem; }
@@ -193,24 +193,23 @@ if ($lic_q) {
             cursor:pointer; transition:var(--transition); display:flex; align-items:center; gap:.6rem;
         }
         .ftab i { font-size:1.3rem; opacity:0.8; }
-        .ftab:hover { border-color:var(--role-accent); color:var(--role-accent); background:var(--primary-light); }
-        .ftab.active { background:var(--role-accent); color:#fff; border-color:var(--role-accent); box-shadow:0 4px 12px color-mix(in srgb, var(--role-accent) 25%, transparent); }
+        .ftab:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-light); }
+        .ftab.active { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:#fff; border-color:var(--primary); box-shadow:0 4px 12px rgba(47,128,237,0.25); }
 
-        /* ── Table Aesthetics ── */
-        .adm-table-wrap { overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border); }
-        .adm-table { width:100%;border-collapse:collapse;font-size:1.3rem; }
-        .adm-table th { background:var(--surface-2);padding:1.2rem 1.4rem;text-align:left;font-weight:600;color:var(--text-secondary);font-size:1.1rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--border); }
-        .adm-table td { padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle; }
+        /* ── Table Aesthetics — use system adm-table (blue gradient thead) ── */
+        .adm-table-wrap { overflow-x:auto; width:100%; border-radius:var(--radius-md); border:1px solid var(--border); }
+        .adm-table { width:100%; min-width:600px; border-collapse:collapse; font-size:1.3rem; }
+        .adm-table td { padding:1.2rem 1.4rem; border-bottom:1px solid var(--border); color:var(--text-primary); vertical-align:middle; }
         .adm-table tr:last-child td { border:none; }
-        .adm-table tr:hover td { background:var(--surface-2); }
+        .adm-table tr:hover td { background:var(--primary-light); }
         .adm-table .action-btns { display:flex;gap:.5rem;flex-wrap:wrap; }
 
-        /* ── Standard CSS Grids (Replacing Bootstrap cols) ── */
+        /* ── Standard CSS Grids ── */
         .cards-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem; }
         .info-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.6rem;box-shadow:var(--shadow-sm);transition:var(--transition); }
         .info-card:hover { box-shadow:var(--shadow-md);transform:translateY(-2px); }
         .info-card-head { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem; }
-        .info-card-icon { width:44px;height:44px;border-radius:12px;background:var(--role-accent-light);color:var(--role-accent);display:flex;align-items:center;justify-content:center;font-size:1.6rem; }
+        .info-card-icon { width:44px;height:44px;border-radius:12px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.6rem; }
         
         .charts-grid { display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem; }
         .chart-wrap { position:relative;height:280px;width:100%;transition:var(--transition); }
@@ -221,21 +220,34 @@ if ($lic_q) {
         .form-group { margin-bottom:1.4rem; }
         .form-group label { display:block;font-size:1.2rem;font-weight:600;color:var(--text-secondary);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em; }
         .form-control { width:100%;padding:1rem 1.2rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);font-family:'Poppins',sans-serif;font-size:1.3rem;transition:var(--transition);outline:none; }
-        .form-control:focus { border-color:var(--role-accent);box-shadow:0 0 0 3px color-mix(in srgb, var(--role-accent) 15%, transparent 85%); }
+        .form-control:focus { border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,128,237,0.15); }
         .form-control select, .form-select { appearance:none; }
 
         /* ── Activity Feed ── */
         .activity-item { display:flex;align-items:flex-start;gap:1rem;padding:1.4rem 0;border-bottom:1px solid var(--border);transition:var(--transition); }
         .activity-item:last-child { border:none; }
         .activity-item:hover { transform: translateX(5px); }
-        .activity-dot { width:10px;height:10px;border-radius:50%;background:var(--role-accent);flex-shrink:0;margin-top:.5rem;box-shadow:0 0 0 3px color-mix(in srgb, var(--role-accent) 10%, transparent); }
+        .activity-dot { width:10px;height:10px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:.5rem;box-shadow:0 0 0 3px rgba(47,128,237,0.1); }
 
-        /* Missing Badges / Adjustments */
-        .adm-badge-teal { background:var(--role-accent-light); color:var(--role-accent); }
-        
-        /* Ensure DataTables integrates */
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: var(--role-accent) !important; color: white !important; border: 1px solid var(--role-accent) !important; }
+        /* ── Modal Styles ── */
+        .modal-bg { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; animation:fadeIn .2s ease; }
+        .modal-box { background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); max-width:700px; width:95%; max-height:90vh; overflow-y:auto; position:relative; }
+        .modal-header { display:flex; align-items:center; justify-content:space-between; padding:2rem 2.5rem; background:linear-gradient(135deg,#1C3A6B,var(--primary)); border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+        .modal-header h3 { color:#fff; font-size:1.7rem; font-weight:800; margin:0; display:flex; align-items:center; gap:.8rem; }
+        .modal-close { background:transparent; border:none; color:rgba(255,255,255,0.8); font-size:2.2rem; cursor:pointer; padding:0; line-height:1; transition:color 0.2s; }
+        .modal-close:hover { color:#fff; }
+
+        /* ── DataTables Integration ── */
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: var(--primary) !important; color: white !important; border: 1px solid var(--primary) !important; border-radius:6px !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: var(--primary-light) !important; color: var(--primary) !important; }
+        .dataTables_wrapper .dataTables_filter input { border: 1.5px solid var(--border) !important; border-radius:8px !important; padding: 0.5rem 1rem !important; background: var(--surface) !important; color: var(--text-primary) !important; }
+        .dataTables_wrapper .dataTables_length select { border: 1.5px solid var(--border) !important; border-radius:8px !important; background: var(--surface) !important; color: var(--text-primary) !important; }
+        .dataTables_wrapper .dataTables_info { color: var(--text-secondary) !important; font-size:1.2rem; }
         [data-theme="dark"] .form-control, [data-theme="dark"] .form-select { background-color: var(--surface); color: var(--text-primary); border-color: var(--border); }
+        [data-theme="dark"] .adm-table td { color: var(--text-primary); }
+        
+        /* ── Badge Utility ── */
+        .adm-badge-primary { background:var(--primary-light); color:var(--primary); }
         
         @media(max-width:768px) { .charts-grid { grid-template-columns:1fr; } .form-row { grid-template-columns:1fr; } }
     </style>
@@ -265,6 +277,13 @@ if ($lic_q) {
 
         <a href="?tab=overview" class="adm-nav-item <?= $active_tab=='overview'?'active':'' ?>">
             <i class="fas fa-chart-pie"></i><span>Overview</span>
+        </a>
+
+        <a href="?tab=notifications" class="adm-nav-item <?= $active_tab=='notifications'?'active':'' ?>" style="position:relative;">
+            <i class="fas fa-bell"></i><span>Notifications</span>
+            <?php if($unread_notifs > 0): ?>
+                <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:var(--danger);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;"><?= $unread_notifs ?></span>
+            <?php endif; ?>
         </a>
 
         <span class="adm-nav-section-label">Clinical Laboratory</span>
@@ -347,21 +366,25 @@ if ($lic_q) {
         </div>
         
         <div class="adm-topbar-right">
-
-            <!-- Notifications -->
-            <a href="?tab=overview#notifications" style="text-decoration: none; color: var(--text-muted); position: relative; margin-right: 20px; font-size: 1.2rem;">
+            <!-- Single notification bell linking to notifications tab -->
+            <a href="?tab=notifications" class="adm-notif-btn" title="Notifications" style="text-decoration:none;">
                 <i class="fas fa-bell"></i>
-                <?php if($unread_notifs>0): ?>
-                    <span style="position: absolute; top: -5px; right: -10px; background: var(--danger); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;"><?= $unread_notifs ?></span>
+                <?php if($unread_notifs > 0): ?>
+                    <span class="adm-notif-badge"><?= $unread_notifs ?></span>
                 <?php endif; ?>
             </a>
 
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
             
-            <div class="adm-avatar" onclick="window.location.href='?tab=profile'" style="cursor:pointer; display:flex; align-items:center;">
-                <img src="/RMU-Medical-Management-System/uploads/profiles/<?= $profile_image_path ?>" 
-                     alt="Profile" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" 
-                     onerror="this.src='/RMU-Medical-Management-System/image/default-avatar.png'">
+            <div class="adm-avatar" onclick="window.location.href='?tab=profile'" style="cursor:pointer;">
+                <?php if($profile_image_path && $profile_image_path !== 'default-avatar.png'): ?>
+                    <img src="/RMU-Medical-Management-System/uploads/profiles/<?= e($profile_image_path) ?>" 
+                         alt="Profile" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <?php endif; ?>
+                <div style="display:<?= (empty($profile_image_path) || $profile_image_path === 'default-avatar.png') ? 'flex' : 'none' ?>; width:38px; height:38px; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:50%; color:#fff; font-weight:800; font-size:1.4rem; border:2px solid var(--primary);">
+                    <?= strtoupper(substr(e($techName), 0, 1)) ?>
+                </div>
             </div>
         </div>
     </div>

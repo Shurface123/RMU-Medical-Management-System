@@ -109,7 +109,7 @@ $doctors_dd = mysqli_query($conn, "SELECT d.id, u.name FROM doctors d JOIN users
                 <select name="doctor" class="adm-search-input">
                     <option value="">All Doctors</option>
                     <?php while ($dd = mysqli_fetch_assoc($doctors_dd)): ?>
-                    <option value="<?php echo $dd['id']; ?>" <?php echo ($filter_doctor==(int)$dd['id'])?'selected':''; ?>>Dr. <?php echo htmlspecialchars($dd['name']); ?></option>
+                    <option value="<?php echo $dd['id']; ?>" <?php echo ($filter_doctor==(int)$dd['id'])?'selected':''; ?>>Dr. <?php echo htmlspecialchars($dd['name'] ?? ''); ?></option>
                     <?php endwhile; ?>
                 </select>
             </div>
@@ -170,13 +170,13 @@ $doctors_dd = mysqli_query($conn, "SELECT d.id, u.name FROM doctors d JOIN users
                         ?>
                         <tr <?php echo $is_today ? "style='background:rgba(47,128,237,.04);'" : ''; ?>>
                             <td><?php echo $n++; ?></td>
-                            <td><span class="adm-badge adm-badge-primary" style="font-size:.72rem;"><?php echo htmlspecialchars($a['appointment_id']); ?></span></td>
+                            <td><span class="adm-badge adm-badge-primary" style="font-size:.72rem;"><?php echo htmlspecialchars($a['appointment_id'] ?? ''); ?></span></td>
                             <td>
                                 <div style="font-weight:600;"><?php echo htmlspecialchars($a['patient_name'] ?? 'Walk-in'); ?></div>
-                                <?php if ($a['patient_code']): ?><div style="font-size:.75rem;color:var(--text-muted);"><?php echo htmlspecialchars($a['patient_code']); ?></div><?php endif; ?>
+                                <?php if ($a['patient_code']): ?><div style="font-size:.75rem;color:var(--text-muted);"><?php echo htmlspecialchars($a['patient_code'] ?? ''); ?></div><?php endif; ?>
                             </td>
-                            <td>Dr. <?php echo htmlspecialchars($a['doctor_name']); ?><br><span style="font-size:.75rem;color:var(--text-muted);"><?php echo htmlspecialchars($a['specialization']); ?></span></td>
-                            <td><?php echo htmlspecialchars($a['service_type']); ?></td>
+                            <td>Dr. <?php echo htmlspecialchars($a['doctor_name'] ?? ''); ?><br><span style="font-size:.75rem;color:var(--text-muted);"><?php echo htmlspecialchars($a['specialization'] ?? ''); ?></span></td>
+                            <td><?php echo htmlspecialchars($a['service_type'] ?? ''); ?></td>
                             <td>
                                 <?php
                                 $apt_day = date('d M Y', strtotime($a['appointment_date']));

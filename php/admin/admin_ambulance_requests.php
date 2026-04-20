@@ -59,7 +59,7 @@ while($r = mysqli_fetch_assoc($q_req)) $requests[] = $r;
     
     <div class="adm-content">
         <?php if($message): ?>
-            <div style="background:#10b98122; color:#10b981; padding:1rem; border-radius:8px; margin-bottom:1.5rem; font-weight:600;"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($message) ?></div>
+            <div style="background:#10b98122; color:#10b981; padding:1rem; border-radius:8px; margin-bottom:1.5rem; font-weight:600;"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($message ?? '') ?></div>
         <?php endif; ?>
 
         <div class="card-wrap">
@@ -78,21 +78,21 @@ while($r = mysqli_fetch_assoc($q_req)) $requests[] = $r;
                     <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">No ambulance requests found.</td></tr>
                 <?php else: foreach($requests as $r): ?>
                 <tr>
-                    <td><b><?= htmlspecialchars($r['request_id']) ?></b></td>
+                    <td><b><?= htmlspecialchars($r['request_id'] ?? '') ?></b></td>
                     <td>
-                        <b><?= htmlspecialchars($r['patient_name']) ?></b><br>
-                        <i class="fas fa-phone" style="font-size:.8rem; color:var(--danger);"></i> <small><?= htmlspecialchars($r['patient_phone']) ?></small>
+                        <b><?= htmlspecialchars($r['patient_name'] ?? '') ?></b><br>
+                        <i class="fas fa-phone" style="font-size:.8rem; color:var(--danger);"></i> <small><?= htmlspecialchars($r['patient_phone'] ?? '') ?></small>
                     </td>
                     <td style="max-width:200px;">
-                        <span style="color:var(--primary); font-size:0.85rem;"><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($r['pickup_location']) ?></span><br>
-                        <span style="color:var(--success); font-size:0.85rem;"><i class="fas fa-hospital"></i> <?= htmlspecialchars($r['destination']) ?></span>
+                        <span style="color:var(--primary); font-size:0.85rem;"><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($r['pickup_location'] ?? '') ?></span><br>
+                        <span style="color:var(--success); font-size:0.85rem;"><i class="fas fa-hospital"></i> <?= htmlspecialchars($r['destination'] ?? '') ?></span>
                     </td>
-                    <td><span style="font-size:0.85rem; font-weight:600; color:var(--danger);"><?= htmlspecialchars($r['emergency_type']) ?></span></td>
+                    <td><span style="font-size:0.85rem; font-weight:600; color:var(--danger);"><?= htmlspecialchars($r['emergency_type'] ?? '') ?></span></td>
                     <td>
                         <b style="color:var(--text);"><?= date('M d, Y', strtotime($r['request_time'])) ?></b><br>
                         <small style="color:var(--danger); font-weight:700;"><i class="fas fa-clock"></i> <?= date('h:i A', strtotime($r['request_time'])) ?></small>
                     </td>
-                    <td><span class="st-<?= str_replace(' ','',htmlspecialchars($r['status'])) ?>"><?= htmlspecialchars($r['status']) ?></span></td>
+                    <td><span class="st-<?= str_replace(' ','',htmlspecialchars($r['status'] ?? '')) ?>"><?= htmlspecialchars($r['status'] ?? '') ?></span></td>
                     <td>
                         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                             <?php if($r['status'] === 'Pending'): ?>
