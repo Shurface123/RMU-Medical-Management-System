@@ -1,182 +1,160 @@
 <?php
 /**
- * tab_cleaning.php — Module 4: Cleaner Module
+ * tab_cleaning.php — Module 4: Cleaner Module (Modernized)
  */
 if ($staffRole !== 'cleaner') { echo '<div id="sec-cleaning" class="dash-section"></div>'; return; }
 
-$schedules = dbSelect($conn,"SELECT * FROM cleaning_schedules WHERE assigned_to=? ORDER BY FIELD(status,'urgent','scheduled','in progress','completed'),schedule_date ASC, start_time ASC LIMIT 30","i",[$staff_id]);
-$my_reports = dbSelect($conn,"SELECT * FROM contamination_reports WHERE reported_by=? ORDER BY reported_at DESC LIMIT 10","i",[$staff_id]);
+$schedules = dbSelect($conn,"SELECT * FROM cleaning_schedules WHERE assigned_to=? ORDER BY FIELD(status,'urgent','scheduled','in progress','completed'),schedule_date ASC, start_time ASC LIMIT 50","i",[$staff_id]);
+$my_reports = dbSelect($conn,"SELECT * FROM contamination_reports WHERE reported_by=? ORDER BY reported_at DESC LIMIT 20","i",[$staff_id]);
 
 // Sanitation board overview
-$sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as san_status FROM cleaning_logs WHERE completed_at IS NOT NULL GROUP BY ward_room_area ORDER BY ward_room_area LIMIT 20");
+$sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as san_status FROM cleaning_logs WHERE completed_at IS NOT NULL GROUP BY ward_room_area ORDER BY ward_room_area LIMIT 24");
 ?>
 <div id="sec-cleaning" class="dash-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
-        <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-broom" style="color:var(--role-accent);"></i> Cleaning Log</h2>
-        <button class="btn btn-danger" onclick="openModal('contamReportModal')"><span class="btn-text"><i class="fas fa-biohazard"></i> Report Contamination</span></button>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3rem;flex-wrap:wrap;gap:1.5rem;">
+        <div>
+            <h2 style="font-size:2.4rem;font-weight:800;margin:0;"><i class="fas fa-hand-sparkles" style="color:var(--role-accent);"></i> Sanitation Hub</h2>
+            <p style="font-size:1.35rem;color:var(--text-muted);margin:0.5rem 0 0;">Maintain facility hygiene and report biohazard risks</p>
+        </div>
+        <div style="display:flex;gap:1rem;">
+            <button class="btn btn-danger" onclick="openModal('contamReportModal')"><i class="fas fa-biohazard mr-2"></i> Report Biohazard</button>
+            <button class="btn btn-outline" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
+        </div>
     </div>
 
-    <!-- Sanitation Status Board -->
-    <?php if(!empty($sanit_board)): ?>
-    <div class="card" style="margin-bottom:2rem;">
-        <div class="card-header"><h3><i class="fas fa-clipboard-check"></i> Sanitation Status Board</h3></div>
-        <div class="card-body" style="display:flex;flex-wrap:wrap;gap:1rem;">
-            <?php $sc=['clean'=>'var(--success)','in progress'=>'var(--primary)','pending'=>'var(--warning)','contaminated'=>'var(--danger)'];
-            foreach($sanit_board as $s):
-                $ss=$s['san_status']??'pending';
-                $color=$sc[$ss]??'var(--text-muted)';
-            ?>
-            <div style="padding:.7rem 1.3rem;border-radius:12px;background:color-mix(in srgb,<?=$color?> 15%,#fff 85%);border:1.5px solid <?=$color?>;font-size:1.2rem;display:flex;align-items:center;gap:.6rem;">
-                <i class="fas fa-circle" style="font-size:.8rem;color:<?=$color?>;"></i>
-                <span style="font-weight:600;"><?=e($s['ward_room_area'])?></span>
-                <span style="color:<?=$color?>;font-size:1rem;"><?=ucfirst($ss)?></span>
+    <!-- Health & Safety Status Board -->
+    <div class="card mb-8" style="background:var(--surface); border:1px solid var(--border); overflow:hidden;">
+        <div class="card-header" style="background:var(--surface-2); padding:1.5rem 2.5rem; display:flex; align-items:center; gap:1.2rem;">
+            <div style="width:36px; height:36px; border-radius:10px; background:var(--success)22; color:var(--success); display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-shield-virus"></i>
             </div>
-            <?php endforeach; ?>
+            <h3 style="font-size:1.6rem; font-weight:800;">Facility Sanitation Pulse</h3>
         </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Cleaning Schedule -->
-    <div class="card" style="margin-bottom:2rem;">
-        <div class="card-header"><h3><i class="fas fa-calendar-check"></i> My Cleaning Schedule</h3></div>
-        <?php if(empty($schedules)): ?>
-        <div class="card-body" style="text-align:center;padding:4rem;"><p style="color:var(--text-muted);">No cleaning tasks scheduled.</p></div>
-        <?php else: ?>
-        <div class="card-body-flush">
-        <table class="stf-table">
-            <thead><tr><th>Area / Room</th><th>Type</th><th>Scheduled Time</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-            <?php foreach($schedules as $s):
-                $st=$s['status']??'scheduled';
-                $st_c=['scheduled'=>'var(--info)','in progress'=>'var(--warning)','completed'=>'var(--success)','urgent'=>'var(--danger)'][$st]??'var(--text-muted)';
-                $type_icon=['routine'=>'fa-broom','deep clean'=>'fa-spray-can','biohazard'=>'fa-biohazard','disinfection'=>'fa-shield-virus'][$s['cleaning_type']??'']??'fa-broom';
+        <div style="padding:2.5rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:1.5rem;">
+            <?php if(empty($sanit_board)): ?>
+                <div style="grid-column:1/-1; padding:3rem; text-align:center; color:var(--text-muted);">No sanitation data available.</div>
+            <?php else: 
+                $sc = ['clean'=>'#27AE60','in progress'=>'#2F80ED','pending'=>'#F2C94C','contaminated'=>'#EB5757'];
+                foreach($sanit_board as $s):
+                    $ss = strtolower($s['san_status']??'pending');
+                    $clr = $sc[$ss] ?? 'var(--text-muted)';
             ?>
-            <tr>
-                <td><i class="fas fa-door-open" style="color:var(--role-accent);margin-right:.5rem;"></i><?=e($s['ward_room_area']??'—')?></td>
-                <td><i class="fas <?=$type_icon?>" style="margin-right:.4rem;"></i><?=e(ucfirst($s['cleaning_type']??'—'))?></td>
-                <td><?=$s['start_time']?date('d M, H:i',strtotime($s['start_time'])):'—'?></td>
-                <td><span class="badge" style="background:color-mix(in srgb,<?=$st_c?> 15%,#fff 85%);color:<?=$st_c?>;"><?=ucfirst($st)?></span></td>
-                <td>
-                    <?php if($st==='scheduled'||$st==='urgent'): ?>
-                    <button class="btn btn-primary btn-sm" onclick="startCleaning(<?=$s['schedule_id']?>)"><span class="btn-text"><i class="fas fa-play"></i> Start</span></button>
-                    <?php elseif($st==='in progress'): ?>
-                    <button class="btn btn-success btn-sm" onclick="openCompleteClean(<?=$s['schedule_id']?>, '<?=e($s['ward_room_area']??'')?>')"><span class="btn-text"><i class="fas fa-check"></i> Complete</span></button>
-                    <?php else: ?>
-                    <span style="color:var(--text-muted);font-size:1.2rem;">Done</span>
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-        </div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Contamination Reports -->
-    <div class="card">
-        <div class="card-header"><h3><i class="fas fa-biohazard"></i> My Contamination Reports</h3></div>
-        <?php if(empty($my_reports)): ?>
-        <div class="card-body" style="text-align:center;padding:4rem;"><p style="color:var(--text-muted);">No contamination reports filed.</p></div>
-        <?php else: ?>
-        <div class="card-body-flush">
-        <table class="stf-table">
-            <thead><tr><th>Location</th><th>Type</th><th>Severity</th><th>Reported At</th><th>Status</th></tr></thead>
-            <tbody>
-            <?php foreach($my_reports as $r):
-                $sv=$r['severity']??'medium';
-                $sv_c=['low'=>'var(--success)','medium'=>'var(--warning)','high'=>'var(--danger)','critical'=>'#8B0000'][$sv]??'var(--warning)';
-                $rst=$r['status']??'reported';
-                $rst_c=['reported'=>'var(--warning)','acknowledged'=>'var(--info)','in progress'=>'var(--primary)','resolved'=>'var(--success)'][$rst]??'var(--text-muted)';
-            ?>
-            <tr>
-                <td><?=e($r['location'])?></td>
-                <td><?=e(ucfirst($r['contamination_type']??'—'))?></td>
-                <td><span class="badge" style="background:color-mix(in srgb,<?=$sv_c?> 15%,#fff 85%);color:<?=$sv_c?>;"><?=ucfirst($sv)?></span></td>
-                <td><?=date('d M Y, H:i',strtotime($r['reported_at']))?></td>
-                <td><span class="badge" style="background:color-mix(in srgb,<?=$rst_c?> 15%,#fff 85%);color:<?=$rst_c?>;"><?=ucfirst($rst)?></span></td>
-            </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-        </div>
-        <?php endif; ?>
-    </div>
-</div>
-
-<!-- Complete Cleaning Modal -->
-<div class="modal-bg" id="complCleaning">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3><i class="fas fa-check-circle" style="color:var(--success);"></i> Complete Cleaning Task</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('complCleaning')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <form id="frmComplClean" onsubmit="event.preventDefault();submitComplCleaning();">
-            <input type="hidden" name="action" value="complete_cleaning">
-            <input type="hidden" name="schedule_id" id="complCleanId">
-            <p id="complCleanArea" style="font-weight:600;font-size:1.4rem;margin-bottom:1.5rem;color:var(--text-secondary);"></p>
-            <div class="form-group">
-                <label>Sanitation Status After Cleaning</label>
-                <select name="sanitation_status" class="form-control" required>
-                    <option value="clean">Clean ✓</option>
-                    <option value="pending">Pending follow-up</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Notes</label><textarea name="notes" class="form-control" rows="2" placeholder="Any remarks..."></textarea></div>
-            <div class="form-group"><label>Photo Proof (Required if biohazard)</label><input type="file" name="proof" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-success btn-wide" id="btnComplClean"><span class="btn-text"><i class="fas fa-check"></i> Mark Complete</span></button>
-        </form>
-    </div>
-</div>
-
-<!-- Contamination Report Modal -->
-<div class="modal-bg" id="contamReportModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3><i class="fas fa-biohazard" style="color:var(--danger);"></i> Report Contamination</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('contamReportModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <form id="frmContam" onsubmit="event.preventDefault();submitContam();">
-            <input type="hidden" name="action" value="report_contamination">
-            <div class="form-group"><label>Location *</label><input type="text" name="location" class="form-control" required placeholder="Ward/Room/Area name"></div>
-            <div class="form-row">
-                <div class="form-group"><label>Contamination Type *</label>
-                    <select name="contamination_type" class="form-control" required>
-                        <option value="">Select</option>
-                        <option value="blood">Blood</option><option value="biohazard waste">Biohazard Waste</option>
-                        <option value="chemical">Chemical Spill</option><option value="bodily fluids">Bodily Fluids</option>
-                        <option value="sharps">Sharps/Needles</option><option value="other">Other</option>
-                    </select>
+            <div class="sanit-node" style="--node-clr:<?= $clr ?>;">
+                <div class="node-head">
+                    <span class="node-dot"></span>
+                    <strong><?= e($s['ward_room_area']) ?></strong>
                 </div>
-                <div class="form-group"><label>Severity *</label>
-                    <select name="severity" class="form-control" required>
-                        <option value="low">Low</option><option value="medium">Medium</option>
-                        <option value="high">High</option><option value="critical">Critical</option>
-                    </select>
-                </div>
+                <div class="node-status"><?= strtoupper($ss) ?></div>
             </div>
-            <div class="form-group"><label>Description *</label><textarea name="description" class="form-control" rows="3" required placeholder="Describe the contamination..."></textarea></div>
-            <div class="form-group"><label>Photo Evidence</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-danger btn-wide" id="btnContam"><span class="btn-text"><i class="fas fa-biohazard"></i> Submit Report</span></button>
-        </form>
+            <?php endforeach; endif; ?>
+        </div>
     </div>
+
+    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:3rem; margin-bottom:3rem;">
+        <!-- Daily Operations -->
+        <div class="card">
+            <div class="card-header" style="padding:1.8rem 2.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:1.6rem; font-weight:800;"><i class="fas fa-clipboard-list mr-2 text-primary"></i> Sterilization Queue</h3>
+                <span class="p-badge"><?= count($schedules) ?> Tasks Active</span>
+            </div>
+            <div style="padding:1.5rem 2.5rem;">
+                <table id="tblSchedules" class="display responsive nowrap" style="width:100%">
+                    <thead><tr><th>Location</th><th>Sterilization Type</th><th>Timer</th><th>Workflow</th></tr></thead>
+                    <tbody>
+                        <?php foreach($schedules as $s):
+                            $st = strtolower($s['status']??'scheduled');
+                            $type_ico = ['routine'=>'fa-broom','deep clean'=>'fa-spray-can-sparkles','biohazard'=>'fa-skull-crossbones','disinfection'=>'fa-virus-slash'][$s['cleaning_type']??'']??'fa-broom';
+                            $status_clr = ['scheduled'=>'#2F80ED','in progress'=>'#F2C94C','completed'=>'#27AE60','urgent'=>'#EB5757'][$st]??'#999';
+                        ?>
+                        <tr>
+                            <td><div style="font-weight:800; font-size:1.35rem;"><i class="fas fa-door-open mr-2 opacity-50"></i><?= e($s['ward_room_area']) ?></div></td>
+                            <td><div style="font-size:1.2rem;"><i class="fas <?= $type_ico ?> mr-2" style="color:var(--role-accent);"></i><?= e(ucfirst($s['cleaning_type'])) ?></div></td>
+                            <td><span style="font-size:1.15rem; color:var(--text-muted); font-weight:700;"><?= $s['start_time']?date('H:i, d M',strtotime($s['start_time'])):'—' ?></span></td>
+                            <td>
+                                <?php if($st==='scheduled'||$st==='urgent'): ?>
+                                <button class="btn btn-primary btn-xs" onclick="startCleaning(<?= $s['schedule_id'] ?>)"><i class="fas fa-play mr-1"></i> EXECUTE</button>
+                                <?php elseif($st==='in progress'): ?>
+                                <button class="btn btn-success btn-xs" onclick="openCompleteClean(<?= $s['schedule_id'] ?>, '<?= e($s['ward_room_area']) ?>')"><i class="fas fa-check-double mr-1"></i> FINAL</button>
+                                <?php else: ?>
+                                <span class="p-badge status active"><i class="fas fa-check"></i> SECURED</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Contamination Audit -->
+        <div class="card">
+            <div class="card-header" style="padding:1.8rem 2.5rem;">
+                <h3 style="font-size:1.6rem; font-weight:800;"><i class="fas fa-history mr-2 text-warning"></i> Incident History</h3>
+            </div>
+            <div style="padding:1.5rem 2.5rem; max-height:600px; overflow-y:auto;">
+                <?php if(empty($my_reports)): ?>
+                <div style="padding:5rem; text-align:center; color:var(--text-muted);">No filed incidents.</div>
+                <?php else: foreach($my_reports as $r):
+                    $sev = strtolower($r['severity']??'medium');
+                    $sev_clr = ['low'=>'#27AE60','medium'=>'#F2C94C','high'=>'#F2994A','critical'=>'#EB5757'][$sev]??'#999';
+                ?>
+                <div class="audit-item" style="border-bottom:1px solid var(--border); padding-bottom:1.5rem; margin-bottom:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.6rem;">
+                        <span class="p-badge" style="background:<?= $sev_clr ?>22; color:<?= $sev_clr ?>;"><?= ucfirst($sev) ?> RISK</span>
+                        <span style="font-size:1.1rem; color:var(--text-muted);"><?= date('d M, H:i', strtotime($r['reported_at'])) ?></span>
+                    </div>
+                    <strong style="font-size:1.3rem; display:block;"><?= e($r['location']) ?></strong>
+                    <p style="font-size:1.15rem; color:var(--text-secondary); margin-top:.4rem;"><?= e($r['contamination_type']) ?> — <?= mb_strimwidth(e($r['description']),0,60,'...') ?></p>
+                </div>
+                <?php endforeach; endif; ?>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<style>
+.sanit-node { background:var(--surface-2); padding:1.2rem 1.5rem; border-radius:14px; border:1px solid var(--border); transition:.3s; cursor:default; }
+.sanit-node:hover { transform:translateY(-3px); border-color:var(--node-clr); box-shadow:var(--shadow-sm); }
+.node-head { display:flex; align-items:center; gap:.8rem; margin-bottom:.5rem; }
+.node-dot { width:8px; height:8px; border-radius:50%; background:var(--node-clr); }
+.node-head strong { font-size:1.3rem; font-weight:800; color:var(--text-primary); }
+.node-status { font-size:1rem; font-weight:900; color:var(--node-clr); margin-left:1.6rem; letter-spacing:1px; }
+
+.audit-item:last-child { border-bottom:none; margin-bottom:0; }
+.btn-xs { padding:.4rem .8rem; font-size:1rem; font-weight:800; border-radius:8px; }
+</style>
 
 <script>
-async function startCleaning(sId){ const res=await doAction({action:'start_cleaning',schedule_id:sId},'Cleaning started!'); if(res) setTimeout(()=>location.reload(),700); }
-function openCompleteClean(id,area){ document.getElementById('complCleanId').value=id; document.getElementById('complCleanArea').textContent='Area: '+area; openModal('complCleaning'); }
+$(document).ready(function() {
+    if ($.fn.DataTable) {
+        $('#tblSchedules').DataTable({
+            responsive: true,
+            pageLength: 10,
+            dom: '<"top"f>rt<"bottom"lip><"clear">',
+            language: { search: "_INPUT_", searchPlaceholder: "Filter queue..." }
+        });
+    }
+});
+
+async function startCleaning(sId){ 
+    const res = await doAction({action:'start_cleaning',schedule_id:sId},'Sterilization protocol initiated.'); 
+    if(res) setTimeout(()=>location.reload(),800); 
+}
+function openCompleteClean(id, area){ 
+    document.getElementById('complCleanId').value = id; 
+    document.getElementById('complCleanArea').textContent = ' sterilizing Area: ' + area; 
+    openModal('complCleaning'); 
+}
 async function submitComplCleaning(){
-    const btn=document.getElementById('btnComplClean'); btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn.disabled=true;
-    const fd=new FormData(document.getElementById('frmComplClean'));
-    const res=await doAction(fd,'Cleaning completed!');
-    btn.innerHTML='<i class="fas fa-check"></i> Mark Complete'; btn.disabled=false;
-    if(res){ closeModal('complCleaning'); setTimeout(()=>location.reload(),700); }
+    const fd = new FormData(document.getElementById('frmComplClean'));
+    const res = await doAction(fd, 'Sanitation verified. Area secured.');
+    if(res){ closeModal('complCleaning'); setTimeout(()=>location.reload(),800); }
 }
 async function submitContam(){
-    const btn=document.getElementById('btnContam'); btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn.disabled=true;
-    const fd=new FormData(document.getElementById('frmContam'));
-    const res=await doAction(fd,'Contamination reported!');
-    btn.innerHTML='<i class="fas fa-biohazard"></i> Submit Report'; btn.disabled=false;
-    if(res){ closeModal('contamReportModal'); document.getElementById('frmContam').reset(); setTimeout(()=>location.reload(),700); }
+    const fd = new FormData(document.getElementById('frmContam'));
+    const res = await doAction(fd, 'Biohazard report successfully transmitted.');
+    if(res){ closeModal('contamReportModal'); setTimeout(()=>location.reload(),800); }
 }
 </script>

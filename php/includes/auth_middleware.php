@@ -115,6 +115,11 @@ function enforceSingleDashboard($expectedRole) {
     
     $currentRole = getCurrentRole();
     
+    // Special handling for staff roles: all sub-roles are allowed on the shared staff dashboard
+    if ($expectedRole === 'staff' && isStaff()) {
+        return;
+    }
+
     // If user's role doesn't match the expected role for this dashboard
     if ($currentRole !== $expectedRole) {
         // Redirect to their appropriate dashboard

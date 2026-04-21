@@ -194,17 +194,26 @@ function getStaffId($conn, $user_id)
 /** Log to staff_audit_trail */
 function logStaffActivity($conn, $staff_id, $action_type, $module, $record_id = null, $old = null, $new = null)
 {
-    if (!$staff_id)
-        return;
+    // Use session user_id for the audit trail as per schema
+    $user_id = $_SESSION['user_id'] ?? 0;
+    if (!$user_id) return;
+
     $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-    $ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
-    $old_json = $old ? json_encode($old) : null;
-    $new_json = $new ? json_encode($new) : null;
+    
+    // Construct a descriptive message from the parameters
+    $desc = "Action: $action_type in $module.";
+    if ($record_id) $desc .= " Record ID: $record_id.";
+    if ($old || $new) {
+        $desc .= " Details: " . json_encode(['old' => $old, 'new' => $new]);
+    }
+
     dbInsert($conn,
-        "INSERT INTO staff_audit_trail (staff_id,action_type,module,record_id_affected,old_value,new_value,ip_address,device,timestamp) VALUES (?,?,?,?,?,?,?,?,NOW())",
-        "ississss", [$staff_id, $action_type, $module, $record_id, $old_json, $new_json, $ip, $ua]
+        "INSERT INTO staff_audit_trail (user_id, action_type, module, description, ip_address, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
+        "issss", 
+        [$user_id, $action_type, $module, $desc, $ip]
     );
 }
+
 
 /** Send a staff notification */
 function notifyStaff($conn, $staff_id, $type, $message, $link = '')

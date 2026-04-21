@@ -145,7 +145,7 @@
           <button onclick="showTab('appointments',document.querySelector('.adm-nav-item[onclick*=appointments]'))" class="btn btn-outline-primary btn-sm" style="border-radius:20px;padding:.5rem 1.5rem;font-weight:600;">View All</button>
         </div>
         <div style="padding:.5rem 0;">
-        <?php $today_list=array_filter($appointments,fn($a)=>$a['appointment_date']===$today); ?>
+        <?php $today_list=array_filter($appointments,fn($a)=>$a['appointment_date']===date('Y-m-d')); ?>
         <?php if(empty($today_list)):?>
           <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted);">
             <i class="fas fa-calendar-xmark" style="font-size:3rem;margin-bottom:1rem;color:var(--border);"></i>

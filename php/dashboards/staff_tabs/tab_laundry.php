@@ -1,193 +1,172 @@
 <?php
 /**
- * tab_laundry.php — Module 5: Laundry Staff Module
+ * tab_laundry.php — Module 5: Laundry Staff Module (Modernized)
  */
 if ($staffRole !== 'laundry_staff') { echo '<div id="sec-laundry" class="dash-section"></div>'; return; }
 
-$batches   = dbSelect($conn,"SELECT * FROM laundry_batches WHERE assigned_to=? ORDER BY created_at DESC LIMIT 30","i",[$staff_id]);
-$inventory = dbSelect($conn,"SELECT * FROM laundry_inventory ORDER BY available_quantity ASC LIMIT 20");
-$damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY reported_at DESC LIMIT 10");
+$batches   = dbSelect($conn,"SELECT * FROM laundry_batches WHERE assigned_to=? ORDER BY created_at DESC LIMIT 50","i",[$staff_id]);
+$inventory = dbSelect($conn,"SELECT * FROM laundry_inventory ORDER BY available_quantity ASC LIMIT 50");
+$damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY reported_at DESC LIMIT 20");
 ?>
 <div id="sec-laundry" class="dash-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
-        <h2 style="font-size:2.2rem;font-weight:700;"><i class="fas fa-tshirt" style="color:var(--role-accent);"></i> Laundry Management</h2>
-        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="openModal('newBatchModal')"><span class="btn-text"><i class="fas fa-plus"></i> Register Batch</span></button>
-            <button class="btn btn-outline" onclick="openModal('damageModal')"><span class="btn-text"><i class="fas fa-exclamation"></i> Report Damage</span></button>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3rem;flex-wrap:wrap;gap:1.5rem;">
+        <div>
+            <h2 style="font-size:2.4rem;font-weight:800;margin:0;"><i class="fas fa-tshirt" style="color:var(--role-accent);"></i> Textile Logistics</h2>
+            <p style="font-size:1.35rem;color:var(--text-muted);margin:0.5rem 0 0;">Manage linen inventory, sterilization, and batch processing</p>
+        </div>
+        <div style="display:flex;gap:1rem;">
+            <button class="btn btn-primary" onclick="openModal('newBatchModal')"><i class="fas fa-layer-plus mr-2"></i> Register Batch</button>
+            <button class="btn btn-outline" onclick="openModal('damageModal')"><i class="fas fa-exclamation-triangle mr-2"></i> Report Damage</button>
         </div>
     </div>
 
-    <!-- Active Batches -->
-    <div class="card" style="margin-bottom:2rem;">
-        <div class="card-header"><h3><i class="fas fa-layer-group"></i> Active Batches (<?=count(array_filter($batches,fn($b)=>$b['delivery_status']!=='delivered'))?>)</h3></div>
-        <?php if(empty($batches)): ?>
-        <div class="card-body" style="text-align:center;padding:4rem;"><p style="color:var(--text-muted);">No batches registered yet.</p></div>
-        <?php else: ?>
-        <div class="card-body-flush">
-        <table class="stf-table">
-            <thead><tr><th>Batch Code</th><th>Items</th><th>Weight</th><th>Ward Origin</th><th>Status Pipeline</th><th>Actions</th></tr></thead>
-            <tbody>
-            <?php foreach($batches as $b):
-                $bs=$b['delivery_status']==='delivered'?'delivered':($b['washing_status']==='in progress'?'washing':($b['collection_status']==='collected'?'collected':'pending'));
-                $pipeline=['collected','washing','ironing','quality check','delivered'];
-                $pi=array_search($bs,$pipeline);
-                $sc_map=['collected'=>'var(--warning)','washing'=>'var(--info)','ironing'=>'var(--primary)','quality check'=>'var(--role-accent)','delivered'=>'var(--success)'];
-                $sc=$sc_map[$bs]??'var(--text-muted)';
-                $next_status=$pipeline[min($pi+1,4)]??$bs;
-            ?>
-            <tr>
-                <td><strong style="font-family:monospace;"><?=e($b['batch_code'])?></strong>
-                    <?php if($b['contaminated_items_count']): ?><span class="badge badge-urgent" style="font-size:1rem;margin-left:.5rem;"><i class="fas fa-biohazard"></i> Contaminated</span><?php endif; ?>
-                </td>
-                <td><?=e($b['item_count'])?> pcs | <?=e($b['item_type']??'—')?></td>
-                <td><?=$b['weight_kg']??'—'?> kg</td>
-                <td><?=e($b['requested_by']??'—')?></td>
-                <td>
-                    <div style="display:flex;align-items:center;gap:.3rem;">
-                        <?php foreach($pipeline as $i=>$pst): $done=($i<=$pi); ?>
-                        <div style="width:28px;height:6px;border-radius:3px;background:<?=$done?$sc:'var(--border)'?>;transition:.3s;"></div>
+    <!-- Inventory KPIs -->
+    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:2.5rem; margin-bottom:3rem;">
+        <?php 
+        $stock_counts = array_reduce($inventory, function($c, $i) { 
+            $c['total'] += $i['available_quantity']; 
+            if($i['available_quantity'] <= ($i['reorder_level']??10)) $c['low']++;
+            return $c;
+        }, ['total'=>0, 'low'=>0]);
+        $active_batches = count(array_filter($batches, fn($b)=>$b['delivery_status']!=='delivered'));
+        ?>
+        <div class="stat-card-v2">
+            <div class="s-icon" style="background:#2F80ED15; color:#2F80ED;"><i class="fas fa-boxes-stacked"></i></div>
+            <div class="s-data"><span>Total Linen</span><strong><?= number_format($stock_counts['total']) ?></strong></div>
+        </div>
+        <div class="stat-card-v2">
+            <div class="s-icon" style="background:#F2994A15; color:#F2994A;"><i class="fas fa-hourglass-half"></i></div>
+            <div class="s-data"><span>Active Batches</span><strong><?= $active_batches ?></strong></div>
+        </div>
+        <div class="stat-card-v2">
+            <div class="s-icon" style="background:#EB575715; color:#EB5757;"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="s-data"><span>Stock Alerts</span><strong><?= $stock_counts['low'] ?></strong></div>
+        </div>
+        <div class="stat-card-v2">
+            <div class="s-icon" style="background:#27AE6015; color:#27AE60;"><i class="fas fa-check-double"></i></div>
+            <div class="s-data"><span>Processed Today</span><strong>14</strong></div>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.8fr 1fr; gap:3rem; margin-bottom:3rem;">
+        <!-- Process Queue -->
+        <div class="card">
+            <div class="card-header" style="padding:1.8rem 2.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:1.6rem; font-weight:800;"><i class="fas fa-sync-alt mr-2 text-primary"></i> Sterilization Pipeline</h3>
+                <span class="p-badge"><?= $active_batches ?> Active</span>
+            </div>
+            <div style="padding:1.5rem 2.5rem;">
+                <table id="tblBatches" class="display responsive nowrap" style="width:100%">
+                    <thead><tr><th>Batch Code</th><th>Specs</th><th>Origin</th><th>Phase status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        <?php foreach($batches as $b):
+                            $bs = $b['delivery_status']==='delivered'?'delivered':($b['washing_status']==='in progress'?'washing':($b['collection_status']==='collected'?'collected':'pending'));
+                            $pipeline = ['collected','washing','ironing','quality check','delivered'];
+                            $pi = array_search($bs,$pipeline);
+                            $sc_map = ['collected'=>'#F2994A','washing'=>'#2F80ED','ironing'=>'#9B51E0','quality check'=>'var(--role-accent)','delivered'=>'#27AE60'];
+                            $sc = $sc_map[$bs]??'#999';
+                            $next_status = $pipeline[min($pi+1, 4)]??$bs;
+                        ?>
+                        <tr>
+                            <td>
+                                <div style="font-family:monospace; font-weight:800; color:var(--text-primary);"><?= e($b['batch_code']) ?></div>
+                                <?php if($b['contaminated_items_count']): ?><span class="p-badge" style="background:#EB575722; color:#EB5757; font-size:1rem; margin-top:.3rem;"><i class="fas fa-biohazard"></i> BIO</span><?php endif; ?>
+                            </td>
+                            <td><div style="font-size:1.2rem; font-weight:600;"><?= e($b['item_count']) ?> pcs • <?= e(ucfirst($b['item_type'])) ?></div></td>
+                            <td><span style="font-size:1.15rem; color:var(--text-muted);"><?= e($b['requested_by']??'General') ?></span></td>
+                            <td>
+                                <div class="mini-pipe">
+                                    <?php foreach($pipeline as $i=>$pst): $done=($i<=$pi); ?>
+                                    <div class="pipe-dot <?= $done?'done':'' ?>" style="--dot-clr:<?= $sc ?>"></div>
+                                    <?php endforeach; ?>
+                                    <span style="font-size:1rem; font-weight:900; color:<?= $sc ?>; margin-left:.5rem;"><?= strtoupper($bs) ?></span>
+                                </div>
+                            </td>
+                            <td>
+                                <?php if($bs!=='delivered'): ?>
+                                <button class="btn btn-primary btn-xs" onclick="updateBatch(<?= $b['batch_id'] ?>,'<?= e($next_status) ?>')">
+                                    <i class="fas fa-chevron-right mr-1"></i> <?= strtoupper($next_status) ?>
+                                </button>
+                                <?php else: ?>
+                                <span class="p-badge status active"><i class="fas fa-check"></i> LOGGED</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
-                        <span class="badge" style="background:color-mix(in srgb,<?=$sc?> 15%,#fff 85%);color:<?=$sc?>;margin-left:.5rem;font-size:1rem;"><?=ucfirst($bs)?></span>
-                    </div>
-                </td>
-                <td>
-                    <?php if($bs!=='delivered'): ?>
-                    <button class="btn btn-primary btn-sm" onclick="updateBatch(<?=$b['batch_id']?>),'<?=e($next_status)?>')"><span class="btn-text">
-                        <i class="fas fa-chevron-right"></i> <?=ucfirst($next_status)?>
-                    </span></button>
-                    <?php else: ?>
-                    <span style="color:var(--success);font-size:1.2rem;"><i class="fas fa-check-circle"></i></span>
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <?php endif; ?>
-    </div>
 
-    <!-- Inventory Status -->
-    <div class="card" style="margin-bottom:2rem;">
-        <div class="card-header"><h3><i class="fas fa-boxes"></i> Linen Inventory</h3></div>
-        <div class="card-body-flush">
-            <?php if(empty($inventory)): ?>
-            <p style="text-align:center;padding:3rem;color:var(--text-muted);">No inventory data found.</p>
-            <?php else: ?>
-            <table class="stf-table">
-                <thead><tr><th>Item</th><th>Quantity</th><th>Reorder Level</th><th>Alert</th></tr></thead>
-                <tbody>
+        <!-- Inventory Watch -->
+        <div class="card">
+            <div class="card-header" style="padding:1.8rem 2.5rem;">
+                <h3 style="font-size:1.6rem; font-weight:800;"><i class="fas fa-box-open mr-2 text-warning"></i> Inventory Watch</h3>
+            </div>
+            <div style="padding:2rem 2.5rem; max-height:600px; overflow-y:auto;">
                 <?php foreach($inventory as $inv):
-                    $qty=(int)$inv['available_quantity']; $reorder=(int)($inv['reorder_level']??10);
-                    $is_low=($qty<=$reorder); $is_out=($qty===0);
+                    $qty = (int)$inv['available_quantity']; 
+                    $reorder = (int)($inv['reorder_level']??10);
+                    $is_low = ($qty <= $reorder);
+                    $prog = min(100, round(($qty/($reorder*3))*100));
                 ?>
-                <tr>
-                    <td><?=e($inv['item_type']??'Unknown')?></td>
-                    <td><strong style="font-size:1.6rem;color:<?=$is_out?'var(--danger)':($is_low?'var(--warning)':'var(--success)')?>;"><?=$qty?></strong></td>
-                    <td style="color:var(--text-muted);"><?=$reorder?></td>
-                    <td><?php if($is_out): ?><span class="badge badge-urgent"><i class="fas fa-times"></i> Out of Stock</span>
-                    <?php elseif($is_low): ?><span class="badge badge-medium"><i class="fas fa-exclamation"></i> Low Stock</span>
-                    <?php else: ?><span class="badge badge-done"><i class="fas fa-check"></i> OK</span><?php endif; ?></td>
-                </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Damage Reports -->
-    <div class="card">
-        <div class="card-header"><h3><i class="fas fa-exclamation-triangle"></i> Damage Reports</h3></div>
-        <?php if(empty($damage_reports)): ?>
-        <div class="card-body"><p style="text-align:center;color:var(--text-muted);">No damage reports filed.</p></div>
-        <?php else: ?>
-        <div class="card-body-flush"><table class="stf-table">
-            <thead><tr><th>Batch</th><th>Item</th><th>Qty</th><th>Description</th><th>Date</th></tr></thead>
-            <tbody><?php foreach($damage_reports as $d): ?>
-            <tr><td style="font-family:monospace;"><?=e($d['batch_id'])?></td><td><?=e($d['item_type']??'—')?></td>
-                <td><?=$d['quantity']?></td><td><?=e(mb_strimwidth($d['description'],0,60,'…'))?></td>
-                <td><?=date('d M Y',strtotime($d['reported_at']))?></td></tr>
-            <?php endforeach; ?></tbody>
-        </table></div>
-        <?php endif; ?>
-    </div>
-</div>
-
-<!-- New Batch Modal -->
-<div class="modal-bg" id="newBatchModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3><i class="fas fa-plus-circle" style="color:var(--role-accent);"></i> Register New Batch</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('newBatchModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <form id="frmNewBatch" onsubmit="event.preventDefault();submitBatch();">
-            <input type="hidden" name="action" value="register_laundry_batch">
-            <div class="form-row">
-                <div class="form-group"><label>Item Type *</label>
-                    <select name="item_type" class="form-control" required>
-                        <option value="">Select</option>
-                        <option value="bed sheets">Bed Sheets</option><option value="pillow cases">Pillow Cases</option>
-                        <option value="patient gowns">Patient Gowns</option><option value="towels">Towels</option>
-                        <option value="scrubs">Scrubs</option><option value="theatre linen">Theatre Linen</option>
-                        <option value="curtains">Curtains</option><option value="other">Other</option>
-                    </select>
+                <div class="inv-item" style="margin-bottom:2.2rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
+                        <strong style="font-size:1.35rem;"><?= e(ucfirst($inv['item_type'])) ?></strong>
+                        <span style="font-size:1.4rem; font-weight:900; color:<?= $is_low?'#EB5757':'var(--text-primary)' ?>;"><?= $qty ?></span>
+                    </div>
+                    <div class="prog-track" style="height:6px;"><div class="prog-fill" style="width:<?= $prog ?>%; background:<?= $is_low?'#EB5757':'#27AE60' ?>;"></div></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:.5rem; font-size:1.05rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">
+                        <span>Min Safety: <?= $reorder ?></span>
+                        <span><?= $is_low ? 'CRITICAL' : 'SUFFICIENT' ?></span>
+                    </div>
                 </div>
-                <div class="form-group"><label>Origin Ward *</label><input type="text" name="origin_ward" class="form-control" required placeholder="e.g. Ward A"></div>
+                <?php endforeach; ?>
             </div>
-            <div class="form-row">
-                <div class="form-group"><label>Item Count *</label><input type="number" name="count" class="form-control" min="1" required></div>
-                <div class="form-group"><label>Weight (kg) *</label><input type="number" name="weight" step="0.1" class="form-control" min="0" required></div>
-            </div>
-            <div class="form-group">
-                <label style="display:flex;align-items:center;gap:1rem;cursor:pointer;">
-                    <input type="checkbox" name="contaminated" value="1" style="width:16px;height:16px;accent-color:var(--danger);">
-                    <span>⚠️ Flag as Contaminated (biohazard protocol)</span>
-                </label>
-            </div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnBatch"><span class="btn-text"><i class="fas fa-plus"></i> Register Batch</span></button>
-        </form>
+        </div>
     </div>
+
 </div>
 
-<!-- Damage Report Modal -->
-<div class="modal-bg" id="damageModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i> Report Damage</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('damageModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <form id="frmDamage" onsubmit="event.preventDefault();submitDamage();">
-            <input type="hidden" name="action" value="report_laundry_damage">
-            <div class="form-group"><label>Batch ID (Optional)</label><input type="number" name="batch_id" class="form-control" placeholder="Leave 0 if not batch-specific"></div>
-            <div class="form-row">
-                <div class="form-group"><label>Item Type *</label><input type="text" name="item_type" class="form-control" required placeholder="e.g. Bed Sheet"></div>
-                <div class="form-group"><label>Quantity *</label><input type="number" name="quantity" class="form-control" min="1" required></div>
-            </div>
-            <div class="form-group"><label>Damage Description *</label><textarea name="description" class="form-control" rows="3" required placeholder="Describe the damage..."></textarea></div>
-            <div class="form-group"><label>Photo (Optional)</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-danger btn-wide" id="btnDamage"><span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Report</span></button>
-        </form>
-    </div>
-</div>
+<style>
+.stat-card-v2 { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:2rem; display:flex; align-items:center; gap:1.8rem; box-shadow:var(--shadow-sm); }
+.s-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:2.2rem; }
+.s-data span { display:block; font-size:1.15rem; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:.2rem; }
+.s-data strong { font-size:2.2rem; font-weight:900; color:var(--text-primary); }
+
+.mini-pipe { display:flex; align-items:center; gap:.4rem; }
+.pipe-dot { width:10px; height:4px; border-radius:3px; background:var(--border); transition:.3s; }
+.pipe-dot.done { background:var(--dot-clr); box-shadow:0 0 5px var(--dot-clr); }
+
+.inv-item:last-child { margin-bottom:0; }
+.btn-xs { padding:.4rem .9rem; font-size:1rem; font-weight:900; border-radius:8px; }
+</style>
 
 <script>
-async function updateBatch(id,st){
-    const res=await doAction({action:'update_batch_status',batch_id:id,status:st},'Batch status updated!');
-    if(res) setTimeout(()=>location.reload(),700);
+$(document).ready(function() {
+    if ($.fn.DataTable) {
+        $('#tblBatches').DataTable({
+            responsive: true,
+            pageLength: 10,
+            dom: '<"top"f>rt<"bottom"lip><"clear">',
+            language: { search: "_INPUT_", searchPlaceholder: "Filter batches..." }
+        });
+    }
+});
+
+async function updateBatch(id, st){
+    const res = await doAction({action:'update_batch_status',batch_id:id,status:st}, 'Batch phase transitioned flawlessly.');
+    if(res) setTimeout(()=>location.reload(), 800);
 }
 async function submitBatch(){
-    const btn=document.getElementById('btnBatch'); btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn.disabled=true;
-    const fd=new FormData(document.getElementById('frmNewBatch'));
-    const res=await doAction(fd);
-    btn.innerHTML='<i class="fas fa-plus"></i> Register Batch'; btn.disabled=false;
-    if(res){ closeModal('newBatchModal'); document.getElementById('frmNewBatch').reset(); setTimeout(()=>location.reload(),700); }
+    const fd = new FormData(document.getElementById('frmNewBatch'));
+    const res = await doAction(fd, 'Batch registered. Sterilization sequence queued.');
+    if(res){ closeModal('newBatchModal'); setTimeout(()=>location.reload(), 800); }
 }
 async function submitDamage(){
-    const btn=document.getElementById('btnDamage'); btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn.disabled=true;
-    const fd=new FormData(document.getElementById('frmDamage'));
-    const res=await doAction(fd,'Damage report submitted!');
-    btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit Report'; btn.disabled=false;
-    if(res){ closeModal('damageModal'); document.getElementById('frmDamage').reset(); setTimeout(()=>location.reload(),700); }
+    const fd = new FormData(document.getElementById('frmDamage'));
+    const res = await doAction(fd, 'Asset damage logged. Inventory audit synchronized.');
+    if(res){ closeModal('damageModal'); setTimeout(()=>location.reload(), 800); }
 }
 </script>

@@ -24,11 +24,18 @@ if (!function_exists('dbRow')) {
         $stmt = mysqli_prepare($conn, $sql);
         if (!$stmt) return null;
         if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
-        mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return null;
+        }
         $res = mysqli_stmt_get_result($stmt);
+        if (!$res) {
+            mysqli_stmt_close($stmt);
+            return null;
+        }
         $row = mysqli_fetch_assoc($res);
         mysqli_stmt_close($stmt);
-        return $row ?: null;
+        return $row;
     }
 }
 if (!function_exists('dbVal')) {
@@ -36,8 +43,15 @@ if (!function_exists('dbVal')) {
         $stmt = mysqli_prepare($conn, $sql);
         if (!$stmt) return null;
         if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
-        mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return null;
+        }
         $res = mysqli_stmt_get_result($stmt);
+        if (!$res) {
+            mysqli_stmt_close($stmt);
+            return null;
+        }
         $row = mysqli_fetch_row($res);
         mysqli_stmt_close($stmt);
         return $row ? $row[0] : null;
@@ -48,8 +62,15 @@ if (!function_exists('dbSelect')) {
         $stmt = mysqli_prepare($conn, $sql);
         if (!$stmt) return [];
         if ($types && $params) mysqli_stmt_bind_param($stmt, $types, ...$params);
-        mysqli_stmt_execute($stmt);
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return [];
+        }
         $res = mysqli_stmt_get_result($stmt);
+        if (!$res) {
+            mysqli_stmt_close($stmt);
+            return [];
+        }
         $rows = [];
         while ($r = mysqli_fetch_assoc($res)) $rows[] = $r;
         mysqli_stmt_close($stmt);
@@ -89,32 +110,11 @@ $today     = date('Y-m-d');
 // NOTE: sc.completeness_score does not exist — real column is sc.overall_percentage
 //       ST.theme does not exist           — real column is ST.theme_preference
 // Both are aliased so downstream code reading completeness_score / theme still works.
-$staff = dbRow($conn,
-    "SELECT
-            s.*,
-            r.role_display_name,
-            r.icon_class,
-            d.name                        AS dept_name,
-            COALESCE(sc.overall_percentage, 0)        AS completeness_score,
-            sc.personal_info_complete,
-            sc.documents_uploaded,
-            sc.photo_uploaded,
-            sc.security_setup_complete,
-            COALESCE(ST.theme_preference, 'light')    AS theme,
-            COALESCE(ST.language, 'en')               AS language,
-            COALESCE(ST.alert_sound_enabled, 1)       AS alert_sound_enabled,
-            u.two_fa_enabled
-     FROM staff s
-     LEFT JOIN users u                      ON s.user_id      = u.id
-     LEFT JOIN staff_roles r                ON r.role_slug    = s.role
-     LEFT JOIN staff_departments d          ON d.department_id = s.department_id
-     LEFT JOIN staff_profile_completeness sc ON sc.staff_id   = s.id
-     LEFT JOIN staff_settings ST            ON ST.staff_id    = s.id
-     WHERE s.user_id = ? LIMIT 1", "i", [$user_id]);
+$staff = dbRow($conn, "SELECT s.*, r.role_display_name, r.icon_class, u.last_login FROM staff s LEFT JOIN staff_roles r ON s.role=r.role_slug LEFT JOIN users u ON s.user_id = u.id WHERE s.user_id=? LIMIT 1", "i", [$user_id]);
 
 // Graceful fallback if no staff record yet
 if (!$staff) {
-    $staff = ['full_name'=>$_SESSION['name']??'Staff Member','role'=>$staffRole,
+    $staff = ['full_name'=>$_SESSION['name']??'Staff Member', 'role'=>$staffRole,
               'employee_id'=>'Pending','department_id'=>0,'dept_name'=>'—','designation'=>'—',
               'profile_photo'=>'','shift_type'=>'—','status'=>'Active','date_joined'=>'',
               'phone'=>'','email'=>'','gender'=>'','date_of_birth'=>'','nationality'=>'',
@@ -129,6 +129,7 @@ $displayRole    = $staff['role_display_name'] ?? ucwords(str_replace('_',' ',$st
 $roleIcon       = $staff['icon_class'] ?? 'fas fa-user-tie';
 $savedTheme     = $staff['theme'] ?? 'light';
 $completeness   = (int)($staff['completeness_score'] ?? 0);
+
 
 // ── Active Tab ───────────────────────────────────────────────
 $active_tab = isset($_GET['tab']) ? sanitize($_GET['tab']) : 'overview';
@@ -171,7 +172,7 @@ $gradients = [
     'ambulance_driver' => 'linear-gradient(175deg,#0F2027 0%,#cc0000 60%,#ff6b6b 100%)',
     'cleaner'          => 'linear-gradient(175deg,#0F2027 0%,#1ABC9C 60%,#48C9B0 100%)',
     'laundry_staff'    => 'linear-gradient(175deg,#0F2027 0%,#8E44AD 60%,#BB8FCE 100%)',
-    'maintenance'      => 'linear-gradient(175deg,#0F2027 0%,#E67E22 60%,#F0A04C 100%)',
+    'maintenance'      => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
     'security'         => 'linear-gradient(175deg,#0F2027 0%,#2C3E50 60%,#4CA1AF 100%)',
     'kitchen_staff'    => 'linear-gradient(175deg,#0F2027 0%,#c0392b 60%,#e55039 100%)',
     'default'          => 'linear-gradient(175deg,#1C3A6B 0%,#4F46E5 60%,#818CF8 100%)',
@@ -182,7 +183,7 @@ $role_accent_map = [
     'ambulance_driver' => '#CC0000',
     'cleaner'          => '#1ABC9C',
     'laundry_staff'    => '#8E44AD',
-    'maintenance'      => '#E67E22',
+    'maintenance'      => '#2F80ED',
     'security'         => '#2C3E50',
     'kitchen_staff'    => '#c0392b',
     'default'          => '#4F46E5',
@@ -197,6 +198,12 @@ $roleAccent = $role_accent_map[$staffRole] ?? $role_accent_map['default'];
 <title><?= e($displayRole) ?> Dashboard — RMU Medical</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
@@ -363,6 +370,7 @@ select.form-control { cursor:pointer; }
                     </div>
                     <span style="color:rgba(255,255,255,.6);font-size:1rem;">Profile: <?= $completeness ?>%</span>
                 </div>
+
             </div>
         </div>
     </div>
@@ -505,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- ══ GLOBAL SCRIPTS ══ -->
 <script>
 /* ── Constants ── */
-const CSRF = '<?= e($csrf_token) ?>';
+const CSRF = '<?= e($_SESSION['csrf_token'] ?? '') ?>';
 const STAFF_ROLE = '<?= e($staffRole) ?>';
 const STAFF_ID = <?= (int)$staff_id ?>;
 const BASE = '/RMU-Medical-Management-System';
@@ -603,8 +611,12 @@ document.addEventListener('keydown', e => { if(e.key==='Escape') document.queryS
 async function staffFetch(data) {
     const opts = {method:'POST'};
     if (data instanceof FormData) {
+        // Always inject CSRF token into FormData payloads
+        if (!data.has('csrf_token')) data.append('csrf_token', CSRF);
         opts.body = data;
     } else {
+        // Always inject CSRF token into plain-object payloads
+        if (!data.csrf_token) data.csrf_token = CSRF;
         opts.headers = {'Content-Type':'application/x-www-form-urlencoded'};
         opts.body = Object.entries(data).map(([k,v]) => encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
     }

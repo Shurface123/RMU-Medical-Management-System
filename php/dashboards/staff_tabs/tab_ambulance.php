@@ -1,251 +1,226 @@
 <?php
 /**
- * tab_ambulance.php — Module 3: Ambulance Driver Module
+ * tab_ambulance.php — Module 3: Ambulance Driver Module (Modernized)
  */
 if ($staffRole !== 'ambulance_driver') { echo '<div id="sec-ambulance" class="dash-section"></div>'; return; }
 
-// Pending trip requests
 $trip_requests = dbSelect($conn,"SELECT * FROM ambulance_requests WHERE status='Pending' ORDER BY emergency_type DESC, id ASC LIMIT 20");
-// Active trips for THIS driver
 $active_trip = dbRow($conn,"SELECT * FROM ambulance_trips WHERE driver_id=? AND trip_status NOT IN ('completed','cancelled') ORDER BY trip_id DESC LIMIT 1","i",[$staff_id]);
-// Assigned vehicle
 $vehicle = dbRow($conn,"SELECT * FROM vehicles WHERE assigned_driver_id=? LIMIT 1","i",[$staff_id]);
-// Recent trips
-$recent_trips = dbSelect($conn,"SELECT * FROM ambulance_trips WHERE driver_id=? ORDER BY created_at DESC LIMIT 15","i",[$staff_id]);
-// Fuel logs
-$fuel_logs = dbSelect($conn,"SELECT * FROM vehicle_fuel_logs WHERE logged_by_staff_id=? ORDER BY logged_at DESC LIMIT 10","i",[$staff_id]);
+$recent_trips = dbSelect($conn,"SELECT * FROM ambulance_trips WHERE driver_id=? ORDER BY created_at DESC LIMIT 50","i",[$staff_id]);
 ?>
 <div id="sec-ambulance" class="dash-section">
-    <h2 style="font-size:2.2rem;font-weight:700;margin-bottom:2.5rem;"><i class="fas fa-ambulance" style="color:var(--role-accent);"></i> Trip Manager</h2>
 
-    <!-- Active Trip Banner -->
-    <?php if($active_trip): ?>
-    <div class="card" style="border:2px solid var(--role-accent);margin-bottom:2rem;">
-        <div class="card-header" style="background:var(--role-accent-light);">
-            <h3><i class="fas fa-route"></i> Active Trip #<?=$active_trip['trip_id']?></h3>
-            <span class="badge" style="background:var(--role-accent);color:#fff;"><?=ucwords($active_trip['trip_status'])?></span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3rem;flex-wrap:wrap;gap:1.5rem;">
+        <div>
+            <h2 style="font-size:2.4rem;font-weight:800;margin:0;"><i class="fas fa-ambulance" style="color:var(--role-accent);"></i> Mission Control</h2>
+            <p style="font-size:1.35rem;color:var(--text-muted);margin:0.5rem 0 0;">Manage emergency responses and vehicle logistics</p>
         </div>
-        <div class="card-body">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:2rem;">
-                <div><span class="form-group label">Patient</span><strong style="font-size:1.5rem;display:block;"><?=e($active_trip['patient_name']??'—')?></strong></div>
-                <div><span class="form-group label">Pickup</span><strong style="font-size:1.5rem;display:block;"><?=e($active_trip['pickup_location']??'—')?></strong></div>
-                <div><span class="form-group label">Destination</span><strong style="font-size:1.5rem;display:block;"><?=e($active_trip['destination']??'—')?></strong></div>
-                <div><span class="form-group label">Condition</span><strong style="font-size:1.5rem;display:block;"><?=e($active_trip['patient_condition']??'—')?></strong></div>
-            </div>
+        <div style="display:flex;gap:1rem;">
+            <button class="btn btn-outline" onclick="location.reload()"><i class="fas fa-sync-alt mr-2"></i> Sync Cloud</button>
+            <?php if($vehicle): ?>
+            <button class="btn btn-primary" onclick="openModal('fuelModal')"><i class="fas fa-gas-pump mr-2"></i> Refuel Log</button>
+            <?php endif; ?>
+        </div>
+    </div>
 
-            <!-- Status Pipeline -->
-            <div style="margin-bottom:2rem;">
-                <p style="font-weight:600;margin-bottom:1rem;color:var(--text-secondary);">UPDATE TRIP STATUS</p>
-                <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                    <?php $statuses=['en route'=>'fa-car','patient onboard'=>'fa-user-plus','arrived'=>'fa-hospital','completed'=>'fa-check-circle']; foreach($statuses as $st=>$icon):
-                        $disabled=($active_trip['trip_status']===$st);
-                    ?>
-                    <button class="btn <?=$disabled?'btn-primary':'btn-outline'?>" <?=$disabled?'disabled':''?>
-                        onclick="updateTripStatus(<?=$active_trip['trip_id']?>,'<?=$st?>')"><span class="btn-text">
-                        <i class="fas <?=$icon?>"></i> <?=ucwords($st)?>
-                    </span></button>
-                    <?php endforeach; ?>
+    <!-- Active Mission Center -->
+    <?php if($active_trip):
+        $stages = ['accepted'=>'Mission start','en route'=>'En Route','patient onboard'=>'Patient Secured','arrived'=>'Arrival','completed'=>'Finalized'];
+        $cur_st = strtolower($active_trip['trip_status']);
+    ?>
+    <div class="mission-banner card" style="border-top:4px solid var(--role-accent); background:rgba(255,255,255,0.03); backdrop-filter:blur(15px); margin-bottom:3rem;">
+        <div style="padding:2.5rem 3rem; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:2rem; border-bottom:1px solid var(--border);">
+            <div style="flex:1; min-width:300px;">
+                <div style="display:flex; align-items:center; gap:1.2rem; margin-bottom:1rem;">
+                    <span class="mission-pulse"></span>
+                    <h3 style="font-size:1.8rem; font-weight:800; margin:0;">Active Mission #<?= $active_trip['trip_id'] ?></h3>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:2rem; margin-top:2rem;">
+                    <div class="mission-meta"><span>Patient Focus</span><strong><?= e($active_trip['patient_name']??'Emergency Case') ?></strong></div>
+                    <div class="mission-meta"><span>Pickup Point</span><strong><?= e($active_trip['pickup_location']??'—') ?></strong></div>
+                    <div class="mission-meta"><span>Route Destination</span><strong><?= e($active_trip['destination']??'—') ?></strong></div>
                 </div>
             </div>
-
-            <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                <button class="btn btn-outline" onclick="openModal('tripNotesModal')"><span class="btn-text"><i class="fas fa-sticky-note"></i> Add Notes</span></button>
-                <?php if($vehicle): ?>
-                <button class="btn btn-outline" onclick="openModal('fuelModal')"><span class="btn-text"><i class="fas fa-gas-pump"></i> Log Fuel</span></button>
-                <?php endif; ?>
+            
+            <div class="mission-pipeline">
+                <?php foreach(['en route','patient onboard','arrived','completed'] as $st):
+                    $is_done = false; // Logic to determine if stage is done
+                    $is_active = ($cur_st === $st);
+                    $s_icons = ['en route'=>'fa-car-side','patient onboard'=>'fa-user-injured','arrived'=>'fa-hospital-alt','completed'=>'fa-check-double'];
+                ?>
+                <div class="pipe-step <?= $is_active?'active':'' ?>" onclick="updateTripStatus(<?= $active_trip['trip_id'] ?>,'<?= $st ?>')">
+                    <div class="pipe-node"><i class="fas <?= $s_icons[$st] ?>"></i></div>
+                    <span class="pipe-lbl"><?= ucwords($st) ?></span>
+                </div>
+                <?php endforeach; ?>
             </div>
+        </div>
+        <div style="padding:1.5rem 3rem; background:var(--surface-2); display:flex; gap:1.5rem;">
+             <button class="btn btn-outline btn-sm" onclick="openModal('tripNotesModal')"><i class="fas fa-sticky-note mr-2"></i> Mission Notes</button>
+             <?php if(!empty($active_trip['patient_condition'])): ?>
+             <div style="margin-left:auto; font-size:1.2rem; display:flex; align-items:center; gap:.8rem;">
+                <i class="fas fa-heartbeat text-danger"></i> <strong>Condition:</strong> <?= e($active_trip['patient_condition']) ?>
+             </div>
+             <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2rem;">
-        <!-- Pending Requests -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:3rem; margin-bottom:3rem;">
+        <!-- Regional Requests -->
         <div class="card">
-            <div class="card-header">
-                <h3><i class="fas fa-siren-on"></i> Trip Requests</h3>
-                <?php if(count($trip_requests)>0): ?><span class="badge badge-urgent"><?=count($trip_requests)?> pending</span><?php endif; ?>
+            <div class="card-header" style="padding:1.8rem 2.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:1.6rem; font-weight:800;"><i class="fas fa-siren text-danger mr-2"></i> Area Requests</h3>
+                <?php if(count($trip_requests)>0): ?><span class="badge" style="background:#EB5757; color:#fff;"><?= count($trip_requests) ?> NEW</span><?php endif; ?>
             </div>
-            <div class="card-body" style="padding:1rem;">
-            <?php if(empty($trip_requests)): ?>
-                <p style="text-align:center;padding:3rem;color:var(--text-muted);">No pending requests.</p>
-            <?php else: foreach($trip_requests as $r):
-                $urg=$r['emergency_type']??'normal';
-                $urg_c=['critical'=>'var(--danger)','urgent'=>'var(--warning)','normal'=>'var(--info)'][$urg]??'var(--info)';
-            ?>
-            <div style="border:1.5px solid <?=$urg_c?>;border-radius:12px;padding:1.5rem;margin-bottom:1rem;background:color-mix(in srgb,<?=$urg_c?> 8%,#fff 92%);">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
-                    <div>
-                        <strong style="font-size:1.4rem;"><?=e($r['patient_name']??'Unknown Patient')?></strong>
-                        <p style="font-size:1.2rem;color:var(--text-muted);margin:.2rem 0;"><?=e($r['condition_notes']??'—')?></p>
+            <div style="padding:1.5rem 2.5rem; max-height:500px; overflow-y:auto;">
+                <?php if(empty($trip_requests)): ?>
+                <div style="padding:4rem; text-align:center; color:var(--text-muted);">
+                    <i class="fas fa-satellite-dish" style="font-size:3rem; opacity:.2; display:block; margin-bottom:1.5rem;"></i>
+                    <p style="font-weight:700;">Scanning for signals...</p>
+                    <span style="font-size:1.1rem;">No active emergency calls in your vicinity.</span>
+                </div>
+                <?php else: foreach($trip_requests as $r):
+                    $urg = strtolower($r['emergency_type']??'normal');
+                    $urg_cl = ['critical'=>'#EB5757','urgent'=>'#F2994A','normal'=>'#2F80ED'][$urg]??'#2F80ED';
+                ?>
+                <div class="req-card" style="border-left:4px solid <?= $urg_cl ?>; background:var(--surface-2); border-radius:14px; padding:1.8rem; margin-bottom:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                        <div>
+                            <strong style="font-size:1.4rem; font-weight:800;"><?= e($r['patient_name']??'Case #'.$r['id']) ?></strong>
+                            <p style="font-size:1.15rem; color:var(--text-muted); margin-top:.3rem;"><?= e($r['condition_notes']??'Emergency response requested') ?></p>
+                        </div>
+                        <span class="p-badge" style="background:<?= $urg_cl ?>22; color:<?= $urg_cl ?>;"><?= ucfirst($urg) ?></span>
                     </div>
-                    <span class="badge" style="background:color-mix(in srgb,<?=$urg_c?> 15%,#fff 85%);color:<?=$urg_c?>;"><?=ucfirst($urg)?></span>
+                    <div style="display:flex; flex-direction:column; gap:.6rem; font-size:1.2rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+                        <span><i class="fas fa-map-marker-alt text-muted mr-2"></i> <?= e($r['pickup_location']) ?></span>
+                        <span><i class="fas fa-hospital text-muted mr-2"></i> <?= e($r['destination']) ?></span>
+                    </div>
+                    <div style="display:flex; gap:1rem;">
+                        <button class="btn btn-primary btn-sm flex-1" onclick="acceptTrip(<?= $r['id'] ?>)"><i class="fas fa-check mr-2"></i> Accept Case</button>
+                        <button class="btn btn-outline btn-sm" onclick="openRejectModal(<?= $r['id'] ?>)"><i class="fas fa-times"></i></button>
+                    </div>
                 </div>
-                <p style="font-size:1.2rem;margin-bottom:.5rem;"><i class="fas fa-map-pin" style="width:14px;color:var(--text-muted);"></i> <?=e($r['pickup_location']??'—')?></p>
-                <p style="font-size:1.2rem;margin-bottom:1rem;"><i class="fas fa-hospital" style="width:14px;color:var(--text-muted);"></i> <?=e($r['destination']??'—')?></p>
-                <p style="font-size:1.1rem;color:var(--text-muted);margin-bottom:1rem;"><i class="far fa-clock"></i> <?=date('d M, H:i',strtotime($r['requested_at']??'now'))?></p>
-                <div style="display:flex;gap:.8rem;">
-                    <button class="btn btn-success btn-sm" style="flex:1;" onclick="acceptTrip(<?=$r['id']?>)"><span class="btn-text"><i class="fas fa-check"></i> Accept</span></button>
-                    <button class="btn-icon btn btn-danger btn-sm" style="flex:1;" onclick="openRejectModal(<?=$r['id']?>)"><span class="btn-text"><i class="fas fa-times"></i> Reject</span></button>
-                </div>
-            </div>
-            <?php endforeach; endif; ?>
+                <?php endforeach; endif; ?>
             </div>
         </div>
 
-        <!-- My Vehicle -->
+        <!-- Logistics Hub -->
         <div class="card">
-            <div class="card-header"><h3><i class="fas fa-truck"></i> My Vehicle</h3></div>
-            <div class="card-body">
-            <?php if($vehicle): ?>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-                    <?php $vfields=['Registration'=>'registration_number','Make/Model'=>'make_model','Status'=>'status','Last Service'=>'last_service_date','Insurance Expiry'=>'insurance_expiry'];
-                    foreach($vfields as $lbl=>$col): if($col==='status'): ?>
-                    <div><span style="font-size:1.1rem;color:var(--text-muted);display:block;margin-bottom:.3rem;"><?=$lbl?></span>
-                        <span class="badge" style="background:<?=$vehicle[$col]==='active'?'var(--success-light)':'var(--warning-light)'?>;color:<?=$vehicle[$col]==='active'?'var(--success)':'var(--warning)'?>;"><?=ucfirst(e($vehicle[$col]??'—'))?></span></div>
-                    <?php else: ?>
-                    <div><span style="font-size:1.1rem;color:var(--text-muted);display:block;margin-bottom:.3rem;"><?=$lbl?></span>
-                        <strong><?=e($vehicle[$col]??'—')?></strong></div>
-                    <?php endif; endforeach; ?>
+            <div class="card-header" style="padding:1.8rem 2.5rem;">
+                <h3 style="font-size:1.6rem; font-weight:800;"><i class="fas fa-truck-monster mr-2"></i> Vehicle Logistics</h3>
+            </div>
+            <div style="padding:2.5rem;">
+                <?php if($vehicle): ?>
+                <div style="margin-bottom:2.5rem; text-align:center;">
+                    <div style="width:70px; height:70px; border-radius:20px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem; font-size:3rem; color:var(--role-accent);">
+                        <i class="fas fa-truck-moving"></i>
+                    </div>
+                    <h4 style="font-size:1.8rem; font-weight:900; margin:0;"><?= e($vehicle['make_model']??'Ambulance') ?></h4>
+                    <span class="badge" style="background:var(--role-accent)22; color:var(--role-accent); margin-top:.8rem;"><?= e($vehicle['registration_number']) ?></span>
                 </div>
-                <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-outline btn-sm" onclick="openModal('vehicleIssueModal')"><span class="btn-text"><i class="fas fa-exclamation-triangle"></i> Report Issue</span></button>
-                    <button class="btn btn-outline btn-sm" onclick="openModal('fuelModal')"><span class="btn-text"><i class="fas fa-gas-pump"></i> Log Fuel</span></button>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2.5rem;">
+                    <div class="log-stat"><span>Systems</span><strong class="text-success"><?= ucfirst($vehicle['status']??'Active') ?></strong></div>
+                    <div class="log-stat"><span>Last Audit</span><strong><?= $vehicle['last_service_date']??'—' ?></strong></div>
+                    <div class="log-stat"><span>Safety Expiry</span><strong><?= $vehicle['insurance_expiry']??'—' ?></strong></div>
+                    <div class="log-stat"><span>Engine State</span><strong>Operational</strong></div>
                 </div>
-            <?php else: ?>
-                <p style="text-align:center;padding:3rem;color:var(--text-muted);">No vehicle currently assigned to you.</p>
-            <?php endif; ?>
+                
+                <div style="display:flex; gap:1rem;">
+                    <button class="btn btn-outline btn-wide" onclick="openModal('vehicleIssueModal')"><i class="fas fa-exclamation-triangle mr-2"></i> Report Fault</button>
+                </div>
+                <?php else: ?>
+                <div style="padding:5rem; text-align:center; color:var(--text-muted);">
+                    <i class="fas fa-key" style="font-size:4rem; opacity:.1; display:block; margin-bottom:2rem;"></i>
+                    <p style="font-size:1.3rem;">No logistics assigned.</p>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- Trip History -->
+    <!-- Operation Logs -->
     <div class="card">
-        <div class="card-header"><h3><i class="fas fa-history"></i> Trip History</h3></div>
-        <div class="card-body-flush">
-        <?php if(empty($recent_trips)): ?>
-            <p style="text-align:center;padding:3rem;color:var(--text-muted);">No trips recorded yet.</p>
-        <?php else: ?>
-        <table class="stf-table">
-            <thead><tr><th>#</th><th>Patient</th><th>Pickup</th><th>Destination</th><th>Date</th><th>Status</th></tr></thead>
-            <tbody>
-            <?php foreach($recent_trips as $t):
-                $ts=$t['trip_status']??'pending';
-                $tc=['completed'=>'var(--success)','cancelled'=>'var(--danger)','en route'=>'var(--info)','accepted'=>'var(--warning)'][$ts]??'var(--primary)';
-            ?>
-            <tr>
-                <td>#<?=$t['trip_id']?></td>
-                <td><?=e($t['patient_name']??'—')?></td>
-                <td><?=e($t['pickup_location']??'—')?></td>
-                <td><?=e($t['destination']??'—')?></td>
-                <td><?=date('d M Y, H:i',strtotime($t['created_at']))?></td>
-                <td><span class="badge" style="background:color-mix(in srgb,<?=$tc?> 15%,#fff 85%);color:<?=$tc?>;"><?=ucwords($ts)?></span></td>
-            </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-        <?php endif; ?>
+        <div class="card-header" style="background:var(--surface-2); padding:1.5rem 2.5rem;">
+            <h3 style="font-size:1.5rem; font-weight:800;"><i class="fas fa-clipboard-list mr-2"></i> Mission Archives</h3>
+        </div>
+        <div style="padding:1.5rem 2.5rem;">
+            <table id="tblHistory" class="display responsive nowrap" style="width:100%">
+                <thead><tr><th>Trip ID</th><th>Subject</th><th>Route Matrix</th><th>Timeline</th><th>Status</th></tr></thead>
+                <tbody>
+                    <?php foreach($recent_trips as $t): 
+                        $ts = strtolower($t['trip_status']??'pending');
+                        $tc = ['completed'=>'#27AE60','cancelled'=>'#EB5757','en route'=>'#2F80ED','accepted'=>'#F2C94C'][$ts]??'var(--primary)';
+                    ?>
+                    <tr>
+                        <td style="font-weight:800; color:var(--role-accent);">#<?= $t['trip_id'] ?></td>
+                        <td><div style="font-weight:700;"><?= e($t['patient_name']??'—') ?></div></td>
+                        <td>
+                            <div style="font-size:1.15rem; color:var(--text-secondary);"><i class="fas fa-long-arrow-alt-right mr-1 opacity-50"></i> <?= e($t['pickup_location']) ?> → <?= e($t['destination']) ?></div>
+                        </td>
+                        <td><span style="font-size:1.15rem; color:var(--text-muted);"><?= date('d M Y, H:i', strtotime($t['created_at'])) ?></span></td>
+                        <td><span class="p-badge" style="background:<?= $tc ?>22; color:<?= $tc ?>;"><?= ucwords($ts) ?></span></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
+
 </div>
 
-<!-- Reject Modal -->
-<div class="modal-bg" id="rejectModal">
-    <div class="modal-box" style="max-width:420px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-times-circle" style="color:var(--danger);"></i> Reject Request</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('rejectModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <input type="hidden" id="reject_req_id">
-        <div class="form-group"><label>Reason (Required)</label><textarea id="reject_reason" class="form-control" rows="3" placeholder="Provide reason for rejection..."></textarea></div>
-        <button class="btn-icon btn btn-danger btn-wide" onclick="submitReject()"><span class="btn-text"><i class="fas fa-times"></i> Confirm Rejection</span></button>
-    </div>
-</div>
+<style>
+.mission-pulse { width:12px; height:12px; background:#EB5757; border-radius:50%; box-shadow:0 0 0 0 rgba(235, 87, 87, 0.7); animation: m-pulse 1.5s infinite; }
+@keyframes m-pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(235, 87, 87, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(235, 87, 87, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(235, 87, 87, 0); } }
 
-<!-- Report Vehicle Issue Modal -->
-<div class="modal-bg" id="vehicleIssueModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3><i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> Report Vehicle Issue</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('vehicleIssueModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <form id="frmVehicleIssue" onsubmit="event.preventDefault();submitVehicleIssue();">
-            <input type="hidden" name="action" value="report_vehicle_issue">
-            <input type="hidden" name="vehicle_id" value="<?=$vehicle['id']??0?>">
-            <div class="form-group"><label>Issue Description *</label><textarea name="description" class="form-control" rows="4" required placeholder="Describe the issue in detail..."></textarea></div>
-            <div class="form-group"><label>Photo (Optional)</label><input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png"></div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnVehicleIssue"><span class="btn-text"><i class="fas fa-paper-plane"></i> Report Issue</span></button>
-        </form>
-    </div>
-</div>
+.mission-meta span { display:block; font-size:1.1rem; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:.5rem; }
+.mission-meta strong { font-size:1.6rem; font-weight:800; color:var(--text-primary); }
 
-<!-- Fuel Log Modal -->
-<div class="modal-bg" id="fuelModal">
-    <div class="modal-box" style="max-width:420px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-gas-pump" style="color:var(--role-accent);"></i> Log Fuel Top-up</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('fuelModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <form id="frmFuel" onsubmit="event.preventDefault();submitFuel();">
-            <input type="hidden" name="action" value="log_fuel">
-            <input type="hidden" name="vehicle_id" value="<?=$vehicle['id']??0?>">
-            <div class="form-row">
-                <div class="form-group"><label>Litres *</label><input type="number" name="litres" step="0.01" class="form-control" required min="0"></div>
-                <div class="form-group"><label>Cost (GHS) *</label><input type="number" name="cost" step="0.01" class="form-control" required min="0"></div>
-            </div>
-            <div class="form-group"><label>Mileage at Top-up (km)</label><input type="number" name="mileage" step="0.1" class="form-control" min="0"></div>
-            <button type="submit" class="btn btn-primary btn-wide" id="btnFuel"><span class="btn-text"><i class="fas fa-plus"></i> Log Fuel</span></button>
-        </form>
-    </div>
-</div>
+.mission-pipeline { display:flex; gap:2.5rem; align-items:center; }
+.pipe-step { display:flex; flex-direction:column; align-items:center; gap:1rem; cursor:pointer; opacity:.4; transition:.3s; }
+.pipe-step.active { opacity:1; }
+.pipe-step.active .pipe-node { background:var(--role-accent); color:#fff; transform:scale(1.1); box-shadow:0 8px 20px color-mix(in srgb, var(--role-accent) 40%, transparent); }
+.pipe-node { width:52px; height:52px; border-radius:18px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:2rem; transition:.3s; }
+.pipe-lbl { font-size:1.1rem; font-weight:800; text-transform:uppercase; white-space:nowrap; }
 
-<!-- Trip Notes Modal -->
-<div class="modal-bg" id="tripNotesModal">
-    <div class="modal-box" style="max-width:420px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-sticky-note" style="color:var(--role-accent);"></i> Add Trip Notes</h3>
-            <button class="btn btn-primary modal-close" onclick="closeModal('tripNotesModal')"><span class="btn-text"><i class="fas fa-times"></i></span></button>
-        </div>
-        <div class="form-group"><label>Notes</label><textarea id="tripNotesText" class="form-control" rows="4" placeholder="Any additional notes for this trip..."></textarea></div>
-        <button class="btn btn-primary btn-wide" onclick="saveNotes()"><span class="btn-text"><i class="fas fa-save"></i> Save Notes</span></button>
-    </div>
-</div>
+.req-card { transition: .3s; }
+.req-card:hover { transform: translateX(5px); box-shadow: var(--shadow-sm); }
+.log-stat { background:var(--surface-2); padding:1.2rem; border-radius:14px; }
+.log-stat span { display:block; font-size:1.05rem; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem; }
+.log-stat strong { font-size:1.4rem; font-weight:800; }
+</style>
 
 <script>
+$(document).ready(function() {
+    if ($.fn.DataTable) {
+        $('#tblHistory').DataTable({
+            responsive: true,
+            pageLength: 10,
+            dom: '<"top"f>rt<"bottom"lip><"clear">',
+            language: { search: "_INPUT_", searchPlaceholder: "Search missions..." }
+        });
+    }
+});
+
 async function acceptTrip(reqId){
-    if(!confirmAction('Accept this trip request?')) return;
-    const res=await doAction({action:'accept_trip_request',request_id:reqId},'Trip accepted successfully!');
-    if(res) setTimeout(()=>location.reload(),800);
-}
-function openRejectModal(reqId){ document.getElementById('reject_req_id').value=reqId; openModal('rejectModal'); }
-async function submitReject(){
-    const reason=document.getElementById('reject_reason').value.trim();
-    if(!reason){ showToast('Please provide a reason.','error'); return; }
-    const res=await doAction({action:'reject_trip_request',request_id:document.getElementById('reject_req_id').value,reason});
-    if(res){ closeModal('rejectModal'); setTimeout(()=>location.reload(),800); }
+    const res = await doAction({action:'accept_trip_request',request_id:reqId}, 'Communication established. Mission accepted.');
+    if(res) setTimeout(()=>location.reload(), 1200);
 }
 async function updateTripStatus(tripId, status){
-    if(status==='completed' && !confirmAction('Mark this trip as COMPLETED?')) return;
-    const res=await doAction({action:'update_trip_status',trip_id:tripId,trip_status:status});
-    if(res) setTimeout(()=>location.reload(),800);
+    showToast('Transmitting telemetry...', 'info');
+    const res = await doAction({action:'update_trip_status',trip_id:tripId,trip_status:status}, 'Status update protocol successful.');
+    if(res) setTimeout(()=>location.reload(), 1000);
 }
 async function submitVehicleIssue(){
-    const btn=document.getElementById('btnVehicleIssue'); btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn.disabled=true;
-    const fd=new FormData(document.getElementById('frmVehicleIssue'));
-    const res=await doAction(fd,'Issue reported to maintenance team!');
-    btn.innerHTML='<i class="fas fa-paper-plane"></i> Report Issue'; btn.disabled=false;
-    if(res){ closeModal('vehicleIssueModal'); document.getElementById('frmVehicleIssue').reset(); }
+    const fd = new FormData(document.getElementById('frmVehicleIssue'));
+    const res = await doAction(fd, 'Fault log transmitted to maintenance hub.');
+    if(res) { closeModal('vehicleIssueModal'); }
 }
 async function submitFuel(){
-    const btn=document.getElementById('btnFuel'); btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn.disabled=true;
-    const fd=new FormData(document.getElementById('frmFuel'));
-    const res=await doAction(fd,'Fuel log recorded!');
-    btn.innerHTML='<i class="fas fa-plus"></i> Log Fuel'; btn.disabled=false;
-    if(res){ closeModal('fuelModal'); document.getElementById('frmFuel').reset(); }
-}
-async function saveNotes(){
-    const notes=document.getElementById('tripNotesText').value;
-    if(!notes) return;
-    const res=await doAction({action:'update_trip_status',trip_id:<?=$active_trip['trip_id']??0?>,trip_status:'<?=e($active_trip['trip_status']??'accepted')?>',notes});
-    if(res){ closeModal('tripNotesModal'); showToast('Notes saved.','success'); }
+    const fd = new FormData(document.getElementById('frmFuel'));
+    const res = await doAction(fd, 'Resource consumption logged.');
+    if(res) { closeModal('fuelModal'); }
 }
 </script>

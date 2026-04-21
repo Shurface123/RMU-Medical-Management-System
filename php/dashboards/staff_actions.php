@@ -221,7 +221,7 @@ case 'complete_task_checklist':
 // ════════════════════════════════════════════════════════════
 case 'mark_notification_read':
     $nid = (int)($_POST['notif_id'] ?? 0);
-    if ($nid) dbExecute($conn,"UPDATE staff_notifications SET is_read=1 WHERE id=? AND staff_id=?","ii",[$nid,$staff_id]);
+    if ($nid) dbExecute($conn,"UPDATE staff_notifications SET is_read=1 WHERE notification_id=? AND staff_id=?","ii",[$nid,$staff_id]);
     else dbExecute($conn,"UPDATE staff_notifications SET is_read=1 WHERE staff_id=?","i",[$staff_id]);
     json_ok('Notifications marked as read.');
 
@@ -231,15 +231,25 @@ case 'mark_notification_read':
 case 'send_message':
     $receiver = (int)($_POST['receiver_id'] ?? 0);
     $subject  = sanitize($_POST['subject'] ?? '');
-    $body     = sanitize($_POST['body'] ?? '');
+    $content  = sanitize($_POST['body'] ?? ''); // Maps 'body' from form to 'message_content'
     $priority = sanitize($_POST['priority'] ?? 'normal');
-    if (!$receiver || !$body) json_err('Recipient and message body required.');
+    if (!$receiver || !$content) json_err('Recipient and message body required.');
+    
     $id = dbInsert($conn,
-        "INSERT INTO staff_messages (sender_id,receiver_id,subject,body,priority,is_read,sent_at) VALUES (?,?,?,?,?,0,NOW())",
-        "iissss",[$staff_id,$receiver,$subject,$body,$priority]
+        "INSERT INTO staff_messages (sender_id,receiver_id,subject,message_content,priority,is_read,sent_at) VALUES (?,?,?,?,?,0,NOW())",
+        "iisss",[$staff_id,$receiver,$subject,$content,$priority]
     );
-    if ($id) json_ok('Message sent successfully.', ['message_id'=>$id]);
+    if ($id) json_ok('Message dispatched successfully.', ['message_id'=>$id]);
     json_err('Failed to send message.');
+
+
+case 'get_available_recipients':
+    // Fetch admins, clinicians, and other relevant staff for messaging
+    // Filter out patients to keep it strictly professional/internal
+    $list = dbSelect($conn, "SELECT id, name AS full_name, user_role AS role FROM users WHERE id != ? AND user_role != 'patient' AND status='active' ORDER BY name ASC", "i", [$_SESSION['user_id']]);
+    json_ok('Recipients fetched.', ['recipients' => $list]);
+
+
 
 case 'mark_message_read':
     $mid = (int)($_POST['message_id'] ?? 0);
@@ -256,17 +266,24 @@ case 'submit_leave_request':
     $reason     = sanitize($_POST['reason'] ?? '');
     if (!$type || !$start_date || !$end_date || !$reason) json_err('All leave request fields required.');
     if ($end_date < $start_date) json_err('End date cannot be before start date.');
+    
+    // Calculate total days for schema requirement
+    $start_ts = strtotime($start_date);
+    $end_ts   = strtotime($end_date);
+    $total_days = round(($end_ts - $start_ts) / 86400) + 1;
+
     $id = dbInsert($conn,
-        "INSERT INTO staff_leaves (staff_id,leave_type,start_date,end_date,reason,status,created_at) VALUES (?,?,?,?,?,'pending',NOW())",
-        "issss",[$staff_id,$type,$start_date,$end_date,$reason]
+        "INSERT INTO staff_leaves (staff_id,leave_type,start_date,end_date,total_days,reason,status,created_at) VALUES (?,?,?,?,?,?,'pending',NOW())",
+        "isssis",[$staff_id,$type,$start_date,$end_date,$total_days,$reason]
     );
     if ($id) {
         // Notify admin (user_role='admin')
         $adminId = dbVal($conn,"SELECT id FROM staff WHERE role='admin' LIMIT 1") ?? 0;
-        if ($adminId) notifyStaff($conn,$adminId,'leave_request',"New leave request from {$staff['full_name']} ($type: $start_date - $end_date)");
+        if ($adminId) notifyStaff($conn,$adminId,'leave_request',"New leave request from {$staff['full_name']}");
         json_ok('Leave request submitted successfully.',['leave_id'=>$id]);
     }
     json_err('Failed to submit leave request.');
+
 
 // ════════════════════════════════════════════════════════════
 // MODULE: AMBULANCE DRIVER
@@ -406,7 +423,8 @@ case 'report_laundry_damage':
 case 'accept_maintenance_request':
     if ($staffRole !== 'maintenance') json_err('Access denied.',403);
     $req_id = (int)($_POST['request_id'] ?? 0);
-    dbExecute($conn,"UPDATE maintenance_requests SET status='assigned',assigned_to=?,assigned_at=NOW() WHERE id=? AND (assigned_to IS NULL OR assigned_to=0)","ii",[$staff_id,$req_id]);
+    $updated = dbExecute($conn,"UPDATE maintenance_requests SET status='assigned',assigned_to=?,assigned_at=NOW() WHERE request_id=? AND (assigned_to IS NULL OR assigned_to=0)","ii",[$staff_id,$req_id]);
+    if ($updated === 0) json_err('Request not found or already assigned.');
     logStaffActivity($conn,$staff_id,'accept_maintenance','maintenance',$req_id);
     json_ok('Request accepted and assigned to you.');
 
@@ -414,24 +432,35 @@ case 'update_maintenance_status':
     if ($staffRole !== 'maintenance') json_err('Access denied.',403);
     $req_id = (int)($_POST['request_id'] ?? 0);
     $status = sanitize($_POST['status'] ?? '');
-    $notes  = sanitize($_POST['action_notes'] ?? '');
+    $notes  = sanitize($_POST['action_notes'] ?? $_POST['completion_notes'] ?? '');
     $valid  = ['in progress','on hold','completed'];
     if (!in_array($status,$valid)) json_err('Invalid status.');
-    $req = dbRow($conn,"SELECT id FROM maintenance_requests WHERE id=? AND assigned_to=?","ii",[$req_id,$staff_id]);
-    if (!$req) json_err('Request not found.',403);
-    $extra = ($status==='completed') ? ",completed_at=NOW()" : "";
-    dbExecute($conn,"UPDATE maintenance_requests SET status=?,action_notes=?,updated_at=NOW()$extra WHERE id=?","ssi",[$status,$notes,$req_id]);
 
-    // Upload before/after photos
-    if (isset($_FILES['before_photo'])) {
-        $bp = handleUpload('before_photo','maintenance_photos',['jpg','jpeg','png'],5);
-        if ($bp && !is_array($bp)) dbExecute($conn,"UPDATE maintenance_requests SET before_photo=? WHERE id=?","si",[$bp,$req_id]);
+    $req = dbRow($conn,"SELECT request_id, status FROM maintenance_requests WHERE request_id=? AND assigned_to=?","ii",[$req_id,$staff_id]);
+    if (!$req) json_err('Request not found or not assigned to you.',403);
+
+    $extra = "";
+    if ($status === 'in progress') $extra = ", started_at=NOW()";
+    if ($status === 'completed')   $extra = ", completed_at=NOW()";
+
+    $updated = dbExecute($conn,"UPDATE maintenance_requests SET status=?, completion_notes=?, updated_at=NOW() $extra WHERE request_id=?","ssi",[$status,$notes,$req_id]);
+    
+    if ($updated !== false) {
+        logStaffActivity($conn, $staff_id, "update_maintenance_$status", 'maintenance', $req_id, ['old_status'=>$req['status']], ['new_status'=>$status]);
+
+        // Upload photos if any
+        if (isset($_FILES['before_photo'])) {
+            $bp = handleUpload('before_photo','maintenance_photos',['jpg','jpeg','png'],5);
+            if ($bp && !is_array($bp)) dbExecute($conn,"UPDATE maintenance_requests SET images_path=JSON_SET(COALESCE(images_path,'{}'),'$.before',?) WHERE request_id=?","si",[$bp,$req_id]);
+        }
+        if (isset($_FILES['after_photo'])) {
+            $ap = handleUpload('after_photo','maintenance_photos',['jpg','jpeg','png'],5);
+            if ($ap && !is_array($ap)) dbExecute($conn,"UPDATE maintenance_requests SET completion_images_path=JSON_SET(COALESCE(completion_images_path,'{}'),'$.after',?) WHERE request_id=?","si",[$ap,$req_id]);
+        }
+        json_ok("Maintenance request marked as $status.");
     }
-    if (isset($_FILES['after_photo'])) {
-        $ap = handleUpload('after_photo','maintenance_photos',['jpg','jpeg','png'],5);
-        if ($ap && !is_array($ap)) dbExecute($conn,"UPDATE maintenance_requests SET after_photo=? WHERE id=?","si",[$ap,$req_id]);
-    }
-    json_ok('Maintenance request updated.');
+    json_err('Failed to update maintenance request.');
+
 
 // ════════════════════════════════════════════════════════════
 // MODULE: SECURITY
@@ -524,17 +553,21 @@ case 'compute_completeness':
 // MODULE: REPORTS — Export (GET request, file download)
 // ════════════════════════════════════════════════════════════
 case 'export_report':
-    $report_key = sanitize($_GET['report_key'] ?? '');
-    $from       = sanitize($_GET['from']       ?? date('Y-m-01'));
-    $to         = sanitize($_GET['to']         ?? date('Y-m-d'));
-    $fmt        = strtolower(sanitize($_GET['format'] ?? 'csv'));
+case 'get_report':
+    $report_key = sanitize($_REQUEST['report_key'] ?? ''); // Use REQUEST for both components
+    $from       = sanitize($_REQUEST['from']       ?? date('Y-m-01'));
+    $to         = sanitize($_REQUEST['to']         ?? date('Y-m-d'));
+    $fmt        = strtolower(sanitize($_REQUEST['format'] ?? 'csv'));
 
     // Validate dates
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) $from = date('Y-m-01');
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $to))   $to   = date('Y-m-d');
-    if (!$staff_id) { header('Content-Type: application/json'); json_err('Staff profile not found.', 403); }
+    if (!$staff_id) { 
+        if ($action === 'get_report') json_err('Staff profile not found.', 403);
+        header('Content-Type: application/json'); json_err('Staff profile not found.', 403); 
+    }
 
-    // ── Report definitions ──────────────────────────────────
+    // ── Report definitions (Sharing logic) ───────────────────
     $report_map = [
         'tasks_completed' => [
             'title'  => 'Tasks Completed',
@@ -562,7 +595,31 @@ case 'export_report':
         ],
         'repairs_completed' => [
             'title'  => 'Repairs Completed',
-            'sql'    => 'SELECT equipment_or_area AS "Issue", location AS "Location", priority AS "Priority", status AS "Status", reported_at AS "Reported", created_at AS "Updated" FROM maintenance_requests WHERE assigned_to=? AND status="completed" AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+            'sql'    => 'SELECT request_id AS "Request #", equipment_or_area AS "Issue Area", location AS "Location", priority AS "Priority", status AS "Status", reported_at AS "Reported", completed_at AS "Completed" FROM maintenance_requests WHERE assigned_to=? AND status="completed" AND DATE(completed_at) BETWEEN ? AND ? ORDER BY completed_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'pending_jobs' => [
+            'title'  => 'Outstanding Jobs',
+            'sql'    => 'SELECT request_id AS "Request #", equipment_or_area AS "Issue Area", location AS "Location", issue_category AS "Category", priority AS "Priority", status AS "Status", reported_at AS "Reported At" FROM maintenance_requests WHERE assigned_to=? AND status NOT IN ("completed","cancelled") AND DATE(reported_at) BETWEEN ? AND ? ORDER BY FIELD(priority,"urgent","high","medium","low") ASC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'task_report' => [
+            'title'  => 'My Task Report',
+            'sql'    => 'SELECT task_title AS "Task", priority AS "Priority", status AS "Status", due_date AS "Due Date", completed_at AS "Completed At", completion_notes AS "Notes" FROM staff_tasks WHERE assigned_to=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'attendance_log' => [
+            'title'  => 'Attendance / Shift Log',
+            'sql'    => 'SELECT shift_date AS "Date", shift_type AS "Shift", start_time AS "Start", end_time AS "End", location_ward_assigned AS "Location", status AS "Status" FROM staff_shifts WHERE staff_id=? AND shift_date BETWEEN ? AND ? ORDER BY shift_date DESC',
+            'types'  => 'iss',
+            'params' => [$staff_id, $from, $to],
+        ],
+        'leave_history' => [
+            'title'  => 'Leave Request History',
+            'sql'    => 'SELECT leave_type AS "Type", start_date AS "From", end_date AS "To", reason AS "Reason", status AS "Status", created_at AS "Submitted" FROM staff_leaves WHERE staff_id=? AND start_date BETWEEN ? AND ? ORDER BY created_at DESC',
             'types'  => 'iss',
             'params' => [$staff_id, $from, $to],
         ],
@@ -574,7 +631,7 @@ case 'export_report':
         ],
         'laundry_batches' => [
             'title'  => 'Laundry Batches',
-            'sql'    => 'SELECT batch_code AS "Batch", batch_type AS "Type", item_count AS "Items", delivery_status AS "Status", collected_at AS "Collected", delivered_at AS "Delivered" FROM laundry_batches WHERE assigned_to=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+            'sql'    => 'SELECT batch_code AS "Batch", item_type AS "Type", item_count AS "Items", status AS "Status", collected_at AS "Collected", delivered_at AS "Delivered" FROM laundry_batches WHERE staff_id=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
             'types'  => 'iss',
             'params' => [$staff_id, $from, $to],
         ],
@@ -586,13 +643,14 @@ case 'export_report':
         ],
         'meal_deliveries' => [
             'title'  => 'Meal Deliveries',
-            'sql'    => 'SELECT meal_type AS "Meal", ward_department AS "Ward", quantity AS "Qty", preparation_status AS "Prep Status", delivery_status AS "Delivery", scheduled_time AS "Scheduled" FROM kitchen_tasks WHERE assigned_to=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+            'sql'    => 'SELECT meal_type AS "Meal", ward_department AS "Ward", quantity AS "Qty", status AS "Status", scheduled_time AS "Scheduled" FROM kitchen_tasks WHERE assigned_to=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
             'types'  => 'iss',
             'params' => [$staff_id, $from, $to],
         ],
     ];
 
     if (!isset($report_map[$report_key])) {
+        if ($action === 'get_report') json_err('Unknown report key: ' . $report_key);
         header('Content-Type: application/json');
         json_err('Unknown report key: ' . $report_key, 400);
     }
@@ -600,17 +658,16 @@ case 'export_report':
     $rpt    = $report_map[$report_key];
     $rows   = dbSelect($conn, $rpt['sql'], $rpt['types'], $rpt['params']);
     $title  = $rpt['title'];
-    $fname  = 'RMU_' . str_replace(' ', '_', $title) . '_' . $from . '_to_' . $to;
 
+    // ── Export CSV Logic ───────────────────
     if ($fmt === 'csv') {
+        $fname  = 'RMU_' . str_replace(' ', '_', $title) . '_' . $from . '_to_' . $to;
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $fname . '.csv"');
         header('Pragma: no-cache');
         header('Expires: 0');
         $out = fopen('php://output', 'w');
-        // BOM for Excel UTF-8
         fputs($out, "ï»¿");
-        // Report header rows
         fputcsv($out, ['RMU Medical Management System']);
         fputcsv($out, ['Report: ' . $title]);
         fputcsv($out, ['Period: ' . $from . ' to ' . $to]);
@@ -626,13 +683,28 @@ case 'export_report':
         exit;
     }
 
-    // Fallback for unsupported formats
+    // ── HTML Preview Logic ───────────────────
+    if ($fmt === 'html') {
+        if (empty($rows)) {
+            json_ok('No data', ['html' => '']);
+        }
+        $html = '<table class="display rpt-table" style="width:100%"><thead><tr>';
+        foreach (array_keys($rows[0]) as $h) $html .= "<th>" . e($h) . "</th>";
+        $html .= '</tr></thead><tbody>';
+        foreach ($rows as $row) {
+            $html .= '<tr>';
+            foreach ($row as $v) $html .= "<td>" . e($v) . "</td>";
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table>';
+        json_ok('Report generated', ['html' => $html]);
+    }
+
+    if ($action === 'get_report') json_err('Unsupported format: ' . $fmt);
     header('Content-Type: application/json');
     json_err('Unsupported format: ' . $fmt . '. Use csv.', 400);
 
-// ════════════════════════════════════════════════════════════
-// DEFAULT
-// ════════════════════════════════════════════════════════════
 default:
     json_err("Invalid action: $action");
+
 }
