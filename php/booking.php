@@ -5,26 +5,10 @@ require_once 'db_conn.php';
 $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 $user_id = $is_logged_in ? $_SESSION['user_id'] : null;
 $user_name = $is_logged_in ? ($_SESSION['name'] ?? 'Patient') : '';
-$user_role = $is_logged_in ? ($_SESSION['user_role'] ?? 'patient') : '';
+$user_role = $_SESSION['user_role'] ?? 'patient';
 
 $message = '';
 $messageType = '';
-
-// Handle Cancellation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_booking']) && $is_logged_in) {
-    // Only patients can cancel their own bookings, or doctors their own
-    $b_id = (int)$_POST['booking_id'];
-    $c_sql = "UPDATE public_appointment_bookings SET status = 'cancelled' WHERE booking_id = ? AND patient_user_id = ?";
-    $stmt = mysqli_prepare($conn, $c_sql);
-    mysqli_stmt_bind_param($stmt, "ii", $b_id, $user_id);
-    if (mysqli_stmt_execute($stmt)) {
-        $message = "Booking cancelled successfully.";
-        $messageType = "success";
-    } else {
-        $message = "Failed to cancel booking.";
-        $messageType = "error";
-    }
-}
 
 // Handle New Booking
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking']) && $is_logged_in) {
@@ -52,11 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking']) && 
 // Fetch Services
 $services = [];
 $s_res = mysqli_query($conn, "SELECT service_id, name, description, icon_class FROM landing_services WHERE is_active=1 ORDER BY display_order ASC");
-if ($s_res) {
-    while ($row = mysqli_fetch_assoc($s_res)) {
-        $services[] = $row;
-    }
-}
+while ($row = mysqli_fetch_assoc($s_res)) $services[] = $row;
 
 // Fetch Doctors
 $doctors = [];
@@ -66,220 +46,229 @@ $d_res = mysqli_query($conn, "
     JOIN users u ON d.user_id = u.id
     WHERE u.is_active=1 AND d.approval_status='approved' AND d.is_available=1
 ");
-if ($d_res) {
-    while ($row = mysqli_fetch_assoc($d_res)) {
-        $doctors[] = $row;
-    }
-}
-
-// Fetch User's My Bookings
-$my_bookings = [];
-if ($is_logged_in) {
-    $b_sql = "SELECT b.booking_id, b.preferred_date, b.preferred_time, b.status, s.name as service_name, u.name as doctor_name 
-              FROM public_appointment_bookings b
-              LEFT JOIN landing_services s ON b.service_id = s.service_id
-              LEFT JOIN doctors d ON b.doctor_id = d.id
-              LEFT JOIN users u ON d.user_id = u.id
-              WHERE b.patient_user_id = ? 
-              ORDER BY b.preferred_date DESC, b.preferred_time DESC";
-    $stmt = mysqli_prepare($conn, $b_sql);
-    mysqli_stmt_bind_param($stmt, "i", $user_id);
-    mysqli_stmt_execute($stmt);
-    $res = mysqli_stmt_get_result($stmt);
-    while($row = mysqli_fetch_assoc($res)) {
-        $my_bookings[] = $row;
-    }
-}
+while ($row = mysqli_fetch_assoc($d_res)) $doctors[] = $row;
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment - RMU Sickbay</title>
-    <link rel="icon" type="image/png" href="/RMU-Medical-Management-System/image/logo-ju-small.png">
+    <title>Booking Center | RMU Healthcare</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/RMU-Medical-Management-System/css/landing.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        .bk-hero { padding: 9rem 2rem 5rem; text-align: center; background: linear-gradient(135deg, #2563EB, #0ea5e9); color: white; position: relative; overflow: hidden; }
-        .bk-hero::after { content: ''; position: absolute; inset: 0; background: url('/RMU-Medical-Management-System/image/pattern.png'); opacity: 0.1; }
-        .bk-hero > div { position: relative; z-index: 2; }
-        .bk-hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); margin-bottom: 0.5rem; font-weight: 800; }
-        .bk-hero p { font-size: 1.3rem; opacity: 0.9; }
-
-        .bk-auth-gate {
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; padding: 5rem 3rem;
-            text-align: center; max-width: 750px; margin: -4rem auto 4rem; position: relative; z-index: 10;
-            box-shadow: 0 20px 45px rgba(37, 99, 235, 0.2); border: 1px solid rgba(255,255,255,0.4);
-        }
-        [data-theme="dark"] .bk-auth-gate { background: rgba(20, 30, 50, 0.9); border-color: rgba(255,255,255,0.05); }
-        .bk-auth-gate i { font-size: 5.5rem; color: #2563EB; margin-bottom: 2rem; }
-        .bk-auth-gate h2 { font-size: 2.4rem; margin-bottom: 1.2rem; color: var(--lp-text); font-weight: 800; }
-        .bk-auth-gate p { font-size: 1.25rem; color: var(--lp-text-muted); margin-bottom: 3rem; line-height: 1.6; }
-
-        .bk-container { max-width: 1000px; margin: -3rem auto 5rem; position: relative; z-index: 10; padding: 0 1rem; }
-        
-        .bk-form-card {
-            background: var(--lp-bg-card); border-radius: 24px; padding: 3rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid var(--lp-border);
+        :root {
+            --primary: #2563EB;
+            --secondary: #0ea5e9;
+            --surface: #ffffff;
+            --surface-2: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --radius-xl: 32px;
+            --radius-lg: 20px;
+            --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
         }
 
-        .step-indicator { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem; position: relative; }
-        .step-indicator::before { content: ''; position: absolute; top: 18px; left: 0; right: 0; height: 3px; background: var(--lp-border); z-index: 0; }
-        .step-progress { position: absolute; top: 18px; left: 0; height: 3px; background: var(--lp-primary); z-index: 0; transition: width 0.3s; }
-        .step-dot { position: relative; z-index: 1; text-align: center; }
-        .dot { width: 40px; height: 40px; border-radius: 50%; background: var(--lp-bg-card); border: 3px solid var(--lp-border); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--lp-text-muted); margin: 0 auto 0.5rem; transition: all 0.3s; }
-        .step-dot.active .dot { border-color: var(--lp-primary); background: var(--lp-primary); color: white; }
-        .step-dot.completed .dot { border-color: var(--lp-primary); background: var(--lp-primary); color: white; }
-        .step-label { font-size: 0.85rem; font-weight: 600; color: var(--lp-text-muted); position: absolute; left: 50%; transform: translateX(-50%); width: 100px; }
-
-        .bk-step-content { display: none; }
-        .bk-step-content.active { display: block; animation: fadeIn 0.4s; }
-        
-        .svc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .svc-sel {
-            border: 2px solid var(--lp-border); border-radius: 16px; padding: 1.5rem; cursor: pointer; text-align: center;
-            transition: all 0.2s; background: var(--lp-bg);
+        [data-theme="dark"] {
+            --surface: #0f172a;
+            --surface-2: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
         }
-        .svc-sel:hover { border-color: var(--lp-primary); background: var(--lp-primary-bg); }
-        .svc-sel.active { border-color: var(--lp-primary); background: var(--lp-primary-bg); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
-        .svc-icon { font-size: 2.5rem; margin-bottom: 1rem; color: var(--lp-primary); }
-        .svc-sel h4 { font-size: 1.2rem; font-weight: 700; color: var(--lp-text); margin-bottom: 0.5rem; }
-        
-        .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .doc-sel { border: 2px solid var(--lp-border); border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; background: var(--lp-bg); display: flex; gap: 1.2rem; align-items: center; }
-        .doc-sel:hover { border-color: var(--lp-primary); }
-        .doc-sel.active { border-color: var(--lp-primary); background: var(--lp-primary-bg); }
-        .doc-avatar { width: 64px; height: 64px; border-radius: 50%; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #2563EB; flex-shrink: 0; }
-        
-        .lp-input { width: 100%; padding: 1rem 1.2rem; border: 2px solid var(--lp-border); border-radius: 12px; background: var(--lp-bg); color: var(--lp-text); font-size: 1rem; margin-bottom: 1.5rem; font-family: inherit; }
-        .lp-input:focus { border-color: var(--lp-primary); outline: none; }
-        .lp-label { display: block; font-weight: 600; margin-bottom: 0.6rem; color: var(--lp-text); }
-        
-        .bk-nav-btn { display: flex; justify-content: space-between; margin-top: 2.5rem; border-top: 1px solid var(--lp-border); padding-top: 1.5rem; }
 
-        .bk-summary { background: var(--lp-bg); border-radius: 16px; padding: 2rem; border: 1px solid var(--lp-border); margin-bottom: 2rem; }
-        .sum-row { display: flex; justify-content: space-between; padding: 0.8rem 0; border-bottom: 1px solid var(--lp-border); }
-        .sum-row:last-child { border-bottom: none; }
-        .sum-lbl { font-weight: 600; color: var(--lp-text-muted); }
-        .sum-val { font-weight: 800; color: var(--lp-text); }
+        body { font-family: 'Outfit', sans-serif; background: var(--surface-2); color: var(--text-primary); margin: 0; line-height: 1.5; }
 
-        .my-bookings { margin-top: 5rem; }
-        .my-bookings h2 { font-size: 2rem; font-weight: 800; margin-bottom: 2rem; color: var(--lp-text); }
-        .booking-row { background: var(--lp-bg-card); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--lp-border); display: flex; align-items: center; justify-content: space-between; }
-        .b-date { font-size: 1.1rem; font-weight: 800; color: var(--lp-text); }
-        .b-det { font-size: 0.95rem; color: var(--lp-text-muted); }
-        .b-status { padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; }
-        .st-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .st-confirmed { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .st-cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-        @media (max-width: 768px) {
-            .booking-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .bk-hero {
+            padding: 8rem 2rem 10rem;
+            text-align: center;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            position: relative;
+            clip-path: ellipse(150% 100% at 50% 0%);
         }
+
+        .bk-container { max-width: 1100px; margin: -6rem auto 5rem; padding: 0 1.5rem; position: relative; z-index: 10; }
+
+        .glass-card {
+            background: rgba(var(--surface), 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 4rem;
+            box-shadow: var(--shadow-premium);
+        }
+        [data-theme="light"] .glass-card { background: rgba(255, 255, 255, 0.9); }
+        [data-theme="dark"] .glass-card { background: rgba(30, 41, 59, 0.7); }
+
+        /* Stepper UI */
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 5rem; position: relative; }
+        .stepper::before { content: ''; position: absolute; top: 22px; left: 0; width: 100%; height: 2px; background: var(--border); z-index: 0; }
+        .step-progress { position: absolute; top: 22px; left: 0; height: 2px; background: var(--primary); z-index: 1; transition: 0.5s ease; }
+        
+        .step-item { position: relative; z-index: 2; text-align: center; width: 44px; }
+        .step-circle { 
+            width: 44px; height: 44px; border-radius: 14px; background: var(--surface); border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;
+            transition: 0.3s; color: var(--text-secondary);
+        }
+        .step-item.active .step-circle { border-color: var(--primary); background: var(--primary); color: white; transform: scale(1.1); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); }
+        .step-item.completed .step-circle { border-color: var(--primary); background: var(--primary); color: white; }
+        .step-label { position: absolute; top: 55px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .step-item.active .step-label { color: var(--primary); }
+
+        .bk-pane { display: none; animation: paneIn 0.5s ease-out; }
+        .bk-pane.active { display: block; }
+        @keyframes paneIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Grid Item Selectors */
+        .grid-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .select-item {
+            background: var(--surface-2); border: 2px solid transparent; border-radius: 20px; padding: 2rem;
+            cursor: pointer; transition: 0.2s; position: relative;
+        }
+        .select-item:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .select-item.active { border-color: var(--primary); background: rgba(37, 99, 235, 0.05); }
+        .select-item.active::after { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 1rem; right: 1rem; color: var(--primary); font-size: 1.2rem; }
+
+        .item-icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 1.2rem; }
+        .item-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .item-desc { font-size: 0.95rem; color: var(--text-secondary); }
+
+        /* Form Inputs */
+        .form-group { margin-bottom: 2rem; }
+        .form-label { display: block; font-weight: 700; margin-bottom: 0.8rem; color: var(--text-primary); }
+        .form-control {
+            width: 100%; padding: 1.2rem; border-radius: 15px; border: 2px solid var(--border); background: var(--surface);
+            color: var(--text-primary); font-family: inherit; font-size: 1.1rem; transition: 0.2s; box-sizing: border-box;
+        }
+        .form-control:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+
+        .btn {
+            padding: 1.2rem 2.5rem; border-radius: 15px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
+            transition: 0.2s; display: inline-flex; align-items: center; gap: 0.8rem; border: none;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); }
+        .btn-primary:hover { transform: translateY(-3px); background: #1d4ed8; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-primary); }
+        .btn-outline:hover { background: var(--border); }
+
+        .summary-card { background: var(--surface-2); border-radius: 20px; padding: 2.5rem; border: 1px solid var(--border); }
+        .summary-row { display: flex; justify-content: space-between; padding: 1.2rem 0; border-bottom: 1px solid var(--border); }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label { font-weight: 600; color: var(--text-secondary); }
+        .summary-value { font-weight: 800; color: var(--text-primary); }
+
+        /* Header / Nav simulation */
+        .bk-nav {
+            position: absolute; top: 0; left: 0; right: 0; padding: 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 100;
+        }
+        .logo { font-size: 1.5rem; font-weight: 900; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.8rem; }
     </style>
 </head>
 <body>
-    <div id="lpAnnouncements"></div>
-    <?php
-    $active_page = 'booking';
-    $_base = '/RMU-Medical-Management-System';
-    require_once __DIR__ . '/includes/nav_landing.php';
-    ?>
+
+    <nav class="bk-nav">
+        <a href="/RMU-Medical-Management-System/index.php" class="logo">
+            <img src="/RMU-Medical-Management-System/image/logo-ju-small.png" height="40" alt="Logo">
+            RMU HEALTHCARE
+        </a>
+        <div style="display:flex; gap:1.5rem; align-items:center;">
+            <?php if($is_logged_in): ?>
+                <span style="color:white; font-weight:600; opacity:0.8;">Welcome, <?= htmlspecialchars($user_name) ?></span>
+                <a href="/RMU-Medical-Management-System/php/logout.php" class="btn btn-outline" style="color:white; border-color:rgba(255,255,255,0.3); padding:0.6rem 1.5rem; font-size:0.9rem;">Sign Out</a>
+            <?php else: ?>
+                <a href="/RMU-Medical-Management-System/php/index.php" class="btn btn-primary" style="padding:0.6rem 2rem; font-size:0.9rem;">Sign In</a>
+            <?php endif; ?>
+        </div>
+    </nav>
 
     <section class="bk-hero">
-        <div class="lp-container">
-            <h1><i class="fas fa-calendar-check"></i> Book an Appointment</h1>
-            <p>Schedule your visit with our medical experts quickly and easily</p>
+        <div style="max-width:800px; margin:0 auto;">
+            <h1 style="font-size:3.5rem; font-weight:900; margin-bottom:1rem; letter-spacing:-2px;">Clinical Reservation</h1>
+            <p style="font-size:1.3rem; opacity:0.7;">Secure your medical appointment through our synchronized booking gateway.</p>
         </div>
     </section>
 
     <div class="bk-container">
-        <?php if (!empty($message)): ?>
-            <div style="background: <?php echo $messageType==='error'?'#fef2f2':'#f0fdf4'; ?>; color: <?php echo $messageType==='error'?'#ef4444':'#10b981'; ?>; padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid <?php echo $messageType==='error'?'#fecaca':'#bbf7d0'; ?>; margin-bottom: 2rem; font-weight: 600; text-align: center;">
-                <?php echo $message; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (!$is_logged_in): ?>
-            <div class="bk-auth-gate">
-                <i class="fas fa-user-lock"></i>
-                <h2>Authentication Required</h2>
-                <p>To securely book an appointment and access your medical history, please log in to your RMU Medical account.</p>
-                <div style="display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap;">
-                    <a href="/RMU-Medical-Management-System/php/index.php" style="font-size:1.15rem; font-weight:700; padding:1rem 3rem; background:#2563EB; color:#fff; border-radius:12px; text-decoration:none; box-shadow:0 8px 20px rgba(37,99,235,0.3); transition:transform 0.2s;">Log In Now</a>
-                    <a href="/RMU-Medical-Management-System/php/register.php" style="font-size:1.15rem; font-weight:700; padding:1rem 3rem; background:transparent; color:#2563EB; border:2px solid #2563EB; border-radius:12px; text-decoration:none; transition:background 0.2s;">Register</a>
+        <div class="glass-card">
+            <?php if(!$is_logged_in): ?>
+                <div style="text-align:center; padding:3rem 0;">
+                    <i class="fas fa-user-shield" style="font-size:5rem; color:var(--primary); margin-bottom:2rem; opacity:0.3;"></i>
+                    <h2 style="font-size:2.2rem; font-weight:800; margin-bottom:1rem;">Authentication Required</h2>
+                    <p style="color:var(--text-secondary); font-size:1.2rem; margin-bottom:3rem; max-width:500px; margin-left:auto; margin-right:auto;">Please authenticate your credentials to access the clinical booking system and sync your medical records.</p>
+                    <div style="display:flex; justify-content:center; gap:1.5rem;">
+                        <a href="/RMU-Medical-Management-System/php/index.php" class="btn btn-primary" style="padding:1.2rem 3.5rem;">Access Secure Login</a>
+                        <a href="/RMU-Medical-Management-System/php/register.php" class="btn btn-outline" style="padding:1.2rem 3.5rem;">Establish New Account</a>
+                    </div>
                 </div>
-            </div>
-        <?php else: ?>
-            <div class="bk-form-card">
-                <div class="step-indicator">
+            <?php else: ?>
+                <div class="stepper">
                     <div class="step-progress" id="stepProgress" style="width: 0%;"></div>
-                    <div class="step-dot active" id="dot-1"><div class="dot">1</div><div class="step-label">Service</div></div>
-                    <div class="step-dot" id="dot-2"><div class="dot">2</div><div class="step-label">Doctor</div></div>
-                    <div class="step-dot" id="dot-3"><div class="dot">3</div><div class="step-label">Date</div></div>
-                    <div class="step-dot" id="dot-4"><div class="dot">4</div><div class="step-label">Details</div></div>
-                    <div class="step-dot" id="dot-5"><div class="dot">5</div><div class="step-label">Confirm</div></div>
+                    <div class="step-item active" id="step1-dot"><div class="step-circle">1</div><div class="step-label">Clinical Service</div></div>
+                    <div class="step-item" id="step2-dot"><div class="step-circle">2</div><div class="step-label">Practitioner</div></div>
+                    <div class="step-item" id="step3-dot"><div class="step-circle">3</div><div class="step-label">Schedule</div></div>
+                    <div class="step-item" id="step4-dot"><div class="step-circle">4</div><div class="step-label">Confirmation</div></div>
                 </div>
 
-                <form method="POST" action="" id="bookingForm">
-                    <!-- HIDDEN INPUTS -->
+                <form method="POST" id="bookingForm">
                     <input type="hidden" name="service_id" id="inp_service_id" required>
                     <input type="hidden" name="doctor_id" id="inp_doctor_id" required>
                     <input type="hidden" name="submit_booking" value="1">
 
-                    <!-- STEP 1 -->
-                    <div class="bk-step-content active" id="step-1">
-                        <h3 style="font-size:1.5rem; margin-bottom:1.5rem; font-weight:800;"><i class="fas fa-stethoscope" style="color:#2563EB;"></i> Select Service</h3>
-                        <div class="svc-grid">
+                    <!-- STEP 1: SERVICE -->
+                    <div class="bk-pane active" id="pane-1">
+                        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:2.5rem; display:flex; align-items:center; gap:1rem;"><i class="fas fa-stethoscope" style="color:var(--primary);"></i> Select Medical Service</h2>
+                        <div class="grid-selector">
                             <?php foreach($services as $svc): ?>
-                            <div class="svc-sel" onclick="selectService(this, <?php echo $svc['service_id']; ?>, '<?php echo htmlspecialchars($svc['name']); ?>')">
-                                <div class="svc-icon"><i class="<?php echo htmlspecialchars($svc['icon_class'] ?: 'fas fa-notes-medical'); ?>"></i></div>
-                                <h4><?php echo htmlspecialchars($svc['name']); ?></h4>
-                                <p style="font-size:0.85rem; color:var(--lp-text-muted);"><?php echo htmlspecialchars($svc['description']); ?></p>
+                            <div class="select-item" onclick="selectService(this, <?= $svc['service_id'] ?>, '<?= htmlspecialchars($svc['name']) ?>')">
+                                <div class="item-icon"><i class="<?= $svc['icon_class'] ?: 'fas fa-notes-medical' ?>"></i></div>
+                                <div class="item-title"><?= htmlspecialchars($svc['name']) ?></div>
+                                <div class="item-desc"><?= htmlspecialchars($svc['description']) ?></div>
                             </div>
                             <?php endforeach; ?>
                         </div>
-                        <div class="bk-nav-btn">
-                            <div></div>
-                            <button type="button" class="btn btn-primary lp-btn lp-btn-solid" onclick="nextStep(1)"><span class="btn-text">Next Step <i class="fas fa-arrow-right"></i></span></button>
+                        <div style="margin-top:4rem; display:flex; justify-content:flex-end;">
+                            <button type="button" class="btn btn-primary" onclick="nextStep(1)">Proceed to Practitioner <i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
 
-                    <!-- STEP 2 -->
-                    <div class="bk-step-content" id="step-2">
-                        <h3 style="font-size:1.5rem; margin-bottom:1.5rem; font-weight:800;"><i class="fas fa-user-doctor" style="color:#2563EB;"></i> Select Doctor</h3>
-                        <div class="doc-grid">
+                    <!-- STEP 2: DOCTOR -->
+                    <div class="bk-pane" id="pane-2">
+                        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:2.5rem; display:flex; align-items:center; gap:1rem;"><i class="fas fa-user-md" style="color:var(--primary);"></i> Choose Clinical Expert</h2>
+                        <div class="grid-selector">
                             <?php foreach($doctors as $doc): ?>
-                            <div class="doc-sel" onclick="selectDoctor(this, <?php echo $doc['id']; ?>, 'Dr. <?php echo htmlspecialchars(addslashes($doc['doctor_name'])); ?>')">
-                                <div class="doc-avatar"><i class="fas fa-user-md"></i></div>
-                                <div>
-                                    <h4 style="font-weight:800; font-size:1.1rem; color:var(--lp-text);">Dr. <?php echo htmlspecialchars($doc['doctor_name']); ?></h4>
-                                    <p style="font-size:0.85rem; color:var(--lp-primary); font-weight:600; margin-bottom:0.2rem;"><?php echo htmlspecialchars($doc['specialization'] ?: 'General Practice'); ?></p>
-                                    <p style="font-size:0.8rem; color:var(--lp-text-muted);"><i class="fas fa-clock"></i> <?php echo htmlspecialchars($doc['available_days'] ?: 'Mon-Fri'); ?></p>
+                            <div class="select-item" onclick="selectDoctor(this, <?= $doc['id'] ?>, 'Dr. <?= htmlspecialchars(addslashes($doc['doctor_name'])) ?>')">
+                                <div style="display:flex; align-items:center; gap:1.5rem;">
+                                    <div style="width:60px; height:60px; border-radius:15px; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.8rem;"><i class="fas fa-user-doctor"></i></div>
+                                    <div>
+                                        <div class="item-title" style="margin:0;">Dr. <?= htmlspecialchars($doc['doctor_name']) ?></div>
+                                        <div style="font-size:0.9rem; color:var(--primary); font-weight:700; text-transform:uppercase;"><?= htmlspecialchars($doc['specialization']) ?></div>
+                                    </div>
                                 </div>
+                                <div style="margin-top:1.2rem; font-size:0.85rem; color:var(--text-secondary); font-weight:600;"><i class="fas fa-clock"></i> <?= $doc['available_days'] ?> | <?= $doc['available_hours'] ?></div>
                             </div>
                             <?php endforeach; ?>
                         </div>
-                        <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(2)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
-                            <button type="button" class="btn btn-primary lp-btn lp-btn-solid" onclick="nextStep(2)"><span class="btn-text">Next Step <i class="fas fa-arrow-right"></i></span></button>
+                        <div style="margin-top:4rem; display:flex; justify-content:space-between;">
+                            <button type="button" class="btn btn-outline" onclick="prevStep(2)"><i class="fas fa-chevron-left"></i> Back</button>
+                            <button type="button" class="btn btn-primary" onclick="nextStep(2)">Schedule Slot <i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
 
-                    <!-- STEP 3 -->
-                    <div class="bk-step-content" id="step-3">
-                        <h3 style="font-size:1.5rem; margin-bottom:1.5rem; font-weight:800;"><i class="fas fa-calendar" style="color:#2563EB;"></i> Choose Date & Time</h3>
-                        <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
-                            <div style="flex:1; min-width:260px;">
-                                <label class="lp-label">Preferred Date *</label>
-                                <input type="date" name="pref_date" id="pref_date" class="lp-input" required min="<?php echo date('Y-m-d'); ?>">
+                    <!-- STEP 3: DATE & TIME -->
+                    <div class="bk-pane" id="pane-3">
+                        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:2.5rem; display:flex; align-items:center; gap:1rem;"><i class="fas fa-calendar-alt" style="color:var(--primary);"></i> Select Temporal Slot</h2>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:3rem;">
+                            <div class="form-group">
+                                <label class="form-label">Preferred Date</label>
+                                <input type="date" name="pref_date" id="pref_date" class="form-control" required min="<?= date('Y-m-d') ?>">
                             </div>
-                            <div style="flex:1; min-width:260px;">
-                                <label class="lp-label">Preferred Time Slot *</label>
-                                <select name="pref_time" id="pref_time" class="lp-input" required>
-                                    <option value="" disabled selected>Select a time slot</option>
+                            <div class="form-group">
+                                <label class="form-label">Consultation Window</label>
+                                <select name="pref_time" id="pref_time" class="form-control" required>
+                                    <option value="" disabled selected>Select a time window</option>
                                     <option value="08:00:00">08:00 AM - 09:00 AM</option>
                                     <option value="09:00:00">09:00 AM - 10:00 AM</option>
                                     <option value="10:00:00">10:00 AM - 11:00 AM</option>
@@ -290,130 +279,125 @@ if ($is_logged_in) {
                                 </select>
                             </div>
                         </div>
-                        <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(3)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
-                            <button type="button" class="btn btn-primary lp-btn lp-btn-solid" onclick="nextStep(3)"><span class="btn-text">Next Step <i class="fas fa-arrow-right"></i></span></button>
+                        <div class="form-group">
+                            <label class="form-label">Reason for Consultation (Optional)</label>
+                            <textarea name="reason" id="reason" class="form-control" rows="3" placeholder="Briefly describe your symptoms or objective..."></textarea>
+                        </div>
+                        <div style="margin-top:4rem; display:flex; justify-content:space-between;">
+                            <button type="button" class="btn btn-outline" onclick="prevStep(3)"><i class="fas fa-chevron-left"></i> Back</button>
+                            <button type="button" class="btn btn-primary" onclick="nextStep(3)">Verify Details <i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
 
-                    <!-- STEP 4 -->
-                    <div class="bk-step-content" id="step-4">
-                        <h3 style="font-size:1.5rem; margin-bottom:1.5rem; font-weight:800;"><i class="fas fa-notes-medical" style="color:#2563EB;"></i> Reason for Visit</h3>
-                        <label class="lp-label">Describe your symptoms or reason for booking</label>
-                        <textarea name="reason" id="reason_text" class="lp-input" rows="4" placeholder="Optional brief description..."></textarea>
-                        
-                        <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(4)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
-                            <button type="button" class="btn btn-outline btn-icon lp-btn lp-btn-solid" onclick="nextStep(4)"><span class="btn-text">Review <i class="fas fa-arrow-right"></i></span></button>
+                    <!-- STEP 4: CONFIRM -->
+                    <div class="bk-pane" id="pane-4">
+                        <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:2.5rem; display:flex; align-items:center; gap:1rem;"><i class="fas fa-check-double" style="color:var(--success);"></i> Review Submission</h2>
+                        <div class="summary-card">
+                            <div class="summary-row"><span class="summary-label">Patient Identity</span><span class="summary-value"><?= htmlspecialchars($user_name) ?></span></div>
+                            <div class="summary-row"><span class="summary-label">Medical Service</span><span class="summary-value" id="sum-svc">---</span></div>
+                            <div class="summary-row"><span class="summary-label">Assigned Specialist</span><span class="summary-value" id="sum-doc">---</span></div>
+                            <div class="summary-row"><span class="summary-label">Scheduled Date</span><span class="summary-value" id="sum-date">---</span></div>
+                            <div class="summary-row"><span class="summary-label">Consultation Window</span><span class="summary-value" id="sum-time">---</span></div>
                         </div>
-                    </div>
-
-                    <!-- STEP 5 -->
-                    <div class="bk-step-content" id="step-5">
-                        <h3 style="font-size:1.5rem; margin-bottom:1.5rem; font-weight:800;"><i class="fas fa-check-circle" style="color:#2563EB;"></i> Confirm Details</h3>
-                        <div class="bk-summary">
-                            <div class="sum-row"><span class="sum-lbl">Service</span><span class="sum-val" id="sum-svc"></span></div>
-                            <div class="sum-row"><span class="sum-lbl">Doctor</span><span class="sum-val" id="sum-doc"></span></div>
-                            <div class="sum-row"><span class="sum-lbl">Date</span><span class="sum-val" id="sum-date"></span></div>
-                            <div class="sum-row"><span class="sum-lbl">Time</span><span class="sum-val" id="sum-time"></span></div>
-                        </div>
-                        
-                        <div class="bk-nav-btn">
-                            <button type="button" class="lp-btn lp-btn-outline" onclick="prevStep(5)"><span class="btn-text"><i class="fas fa-arrow-left"></i> Back</span></button>
-                            <button type="submit" class="btn btn-primary btn-lg btn-icon lp-btn lp-btn-solid" style="background:#10b981; border-color:#10b981;"><span class="btn-text"><i class="fas fa-paper-plane"></i> Confirm Booking</span></button>
+                        <div style="margin-top:4rem; display:flex; justify-content:space-between;">
+                            <button type="button" class="btn btn-outline" onclick="prevStep(4)"><i class="fas fa-chevron-left"></i> Back</button>
+                            <button type="submit" class="btn btn-primary" style="background:var(--success); border-color:var(--success); padding:1.2rem 4rem;">Confirm Clinical Booking <i class="fas fa-paper-plane"></i></button>
                         </div>
                     </div>
                 </form>
-            </div>
+            <?php endif; ?>
+        </div>
 
-            <!-- MY BOOKINGS -->
-            <div class="my-bookings">
-                <h2>My Bookings</h2>
-                <?php if (empty($my_bookings)): ?>
-                    <p style="color:var(--lp-text-muted);">You have no previous bookings.</p>
-                <?php else: ?>
-                    <?php foreach($my_bookings as $b): ?>
-                    <div class="booking-row">
-                        <div>
-                            <div class="b-date"><i class="fas fa-calendar" style="color:#2563EB;margin-right:0.5rem;"></i> <?php echo date('D, M d Y', strtotime($b['preferred_date'])); ?> @ <?php echo date('h:i A', strtotime($b['preferred_time'])); ?></div>
-                            <div class="b-det">Dr. <?php echo htmlspecialchars($b['doctor_name']); ?> • <?php echo htmlspecialchars($b['service_name']); ?></div>
-                            <div class="b-det" style="font-size:0.8rem;">Ref: BK-<?php echo str_pad($b['booking_id'], 5, '0', STR_PAD_LEFT); ?></div>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:1.5rem;">
-                            <span class="b-status st-<?php echo htmlspecialchars($b['status']); ?>"><?php echo htmlspecialchars($b['status']); ?></span>
-                            <?php if ($b['status'] === 'pending'): ?>
-                            <form method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                                <input type="hidden" name="booking_id" value="<?php echo $b['booking_id']; ?>">
-                                <button type="submit" name="cancel_booking" class="lp-btn lp-btn-outline" style="padding:0.4rem 1rem; border-color:#ef4444; color:#ef4444; font-size:0.85rem;"><span class="btn-text"><i class="fas fa-times"></i> Cancel</span></button>
-                            </form>
-                            <?php endif; ?>
-                        </div>
+        <?php if($is_logged_in): ?>
+        <div style="margin-top:5rem;">
+            <h2 style="font-size:2.2rem; font-weight:900; margin-bottom:2rem; letter-spacing:-1px;">My Recent Bookings</h2>
+            <div style="display:grid; gap:1.5rem;">
+                <?php
+                $b_sql = "SELECT b.*, s.name as service_name, u.name as doctor_name 
+                          FROM public_appointment_bookings b
+                          LEFT JOIN landing_services s ON b.service_id = s.service_id
+                          LEFT JOIN doctors d ON b.doctor_id = d.id
+                          LEFT JOIN users u ON d.user_id = u.id
+                          WHERE b.patient_user_id = ? 
+                          ORDER BY b.created_at DESC LIMIT 5";
+                $stmt = mysqli_prepare($conn, $b_sql);
+                mysqli_stmt_bind_param($stmt, "i", $user_id);
+                mysqli_stmt_execute($stmt);
+                $res = mysqli_stmt_get_result($stmt);
+                while($b = mysqli_fetch_assoc($res)):
+                    $s_cls = ($b['status'] === 'pending') ? '#f59e0b' : (($b['status'] === 'confirmed') ? '#10b981' : '#ef4444');
+                ?>
+                <div class="glass-card" style="padding:2rem; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:1.2rem; font-weight:800; color:var(--text-primary);"><?= htmlspecialchars($b['service_name']) ?></div>
+                        <div style="color:var(--text-secondary); font-weight:600; font-size:1rem; margin-top:0.3rem;">with Dr. <?= htmlspecialchars($b['doctor_name']) ?></div>
+                        <div style="font-size:0.9rem; color:var(--text-muted); margin-top:0.5rem;"><i class="far fa-clock"></i> <?= date('d M Y', strtotime($b['preferred_date'])) ?> @ <?= date('h:i A', strtotime($b['preferred_time'])) ?></div>
                     </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                    <div style="text-align:right;">
+                        <span style="background:<?= $s_cls ?>11; color:<?= $s_cls ?>; padding:0.6rem 1.2rem; border-radius:10px; font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;"><?= $b['status'] ?></span>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.8rem; font-weight:700;">REF: BK-<?= str_pad($b['booking_id'], 5, '0', STR_PAD_LEFT) ?></div>
+                    </div>
+                </div>
+                <?php endwhile; ?>
             </div>
+        </div>
         <?php endif; ?>
     </div>
 
-    <?php require_once __DIR__ . '/includes/footer_landing.php'; ?>
-    <?php require_once __DIR__ . '/includes/chatbot_landing.php'; ?>
-    <script src="/RMU-Medical-Management-System/js/landing.js"></script>
-    <script src="/RMU-Medical-Management-System/js/landing-chatbot.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
-        let currStep = 1;
-        let p_svc='', p_doc='';
+        let p_svc = '', p_doc = '';
 
         function selectService(elem, id, name) {
-            document.querySelectorAll('.svc-sel').forEach(el=>el.classList.remove('active'));
-            elem.classList.add('active');
-            document.getElementById('inp_service_id').value = id;
+            $('.select-item').removeClass('active');
+            $(elem).addClass('active');
+            $('#inp_service_id').val(id);
             p_svc = name;
         }
 
         function selectDoctor(elem, id, name) {
-            document.querySelectorAll('.doc-sel').forEach(el=>el.classList.remove('active'));
-            elem.classList.add('active');
-            document.getElementById('inp_doctor_id').value = id;
+            $(elem).closest('.grid-selector').find('.select-item').removeClass('active');
+            $(elem).addClass('active');
+            $('#inp_doctor_id').val(id);
             p_doc = name;
         }
 
         function nextStep(step) {
-            // Validation
-            if(step===1 && !document.getElementById('inp_service_id').value) return alert('Please select a service.');
-            if(step===2 && !document.getElementById('inp_doctor_id').value) return alert('Please select a doctor.');
-            if(step===3) {
-                if(!document.getElementById('pref_date').value) return alert('Please choose a date.');
-                if(!document.getElementById('pref_time').value) return alert('Please choose a time slot.');
+            if(step === 1 && !$('#inp_service_id').val()) return alert('Please select a medical service.');
+            if(step === 2 && !$('#inp_doctor_id').val()) return alert('Please select a clinical practitioner.');
+            if(step === 3) {
+                if(!$('#pref_date').val()) return alert('Please choose a preferred date.');
+                if(!$('#pref_time').val()) return alert('Please choose a time window.');
+                
+                // Populate Summary
+                $('#sum-svc').text(p_svc);
+                $('#sum-doc').text(p_doc);
+                $('#sum-date').text($('#pref_date').val());
+                $('#sum-time').text($('#pref_time option:selected').text());
             }
 
-            if(step===4) {
-                // Populate summary
-                document.getElementById('sum-svc').textContent = p_svc;
-                document.getElementById('sum-doc').textContent = p_doc;
-                document.getElementById('sum-date').textContent = document.getElementById('pref_date').value;
-                document.getElementById('sum-time').textContent = document.getElementById('pref_time').options[document.getElementById('pref_time').selectedIndex].text;
-            }
-
-            document.getElementById('step-'+step).classList.remove('active');
-            document.getElementById('dot-'+step).classList.remove('active');
-            document.getElementById('dot-'+step).classList.add('completed');
+            $(`#pane-${step}`).removeClass('active');
+            $(`#step${step}-dot`).removeClass('active').addClass('completed');
             
-            currStep = step+1;
-            document.getElementById('step-'+currStep).classList.add('active');
-            document.getElementById('dot-'+currStep).classList.add('active');
-            document.getElementById('stepProgress').style.width = ((currStep-1)*25) + '%';
+            const next = step + 1;
+            $(`#pane-${next}`).addClass('active');
+            $(`#step${next}-dot`).addClass('active');
+            $('#stepProgress').css('width', ((next - 1) * 33.33) + '%');
         }
 
         function prevStep(step) {
-            document.getElementById('step-'+step).classList.remove('active');
-            document.getElementById('dot-'+step).classList.remove('active');
+            $(`#pane-${step}`).removeClass('active');
+            $(`#step${step}-dot`).removeClass('active');
             
-            currStep = step-1;
-            document.getElementById('dot-'+currStep).classList.remove('completed');
-            document.getElementById('dot-'+currStep).classList.add('active');
-            document.getElementById('step-'+currStep).classList.add('active');
-            document.getElementById('stepProgress').style.width = ((currStep-1)*25) + '%';
+            const prev = step - 1;
+            $(`#pane-${prev}`).addClass('active');
+            $(`#step${prev}-dot`).removeClass('completed').addClass('active');
+            $('#stepProgress').css('width', ((prev - 1) * 33.33) + '%');
         }
+
+        // Initialize Theme from localStorage
+        const savedTheme = localStorage.getItem('rmu_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
 </body>
 </html>

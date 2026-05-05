@@ -30,6 +30,18 @@ if ($q)
         $requests[] = $r;
 ?>
 
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<style>
+.staff-hero{display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;background:linear-gradient(135deg,#374151,#111827);border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap;position:relative;overflow:hidden;}
+.staff-hero-avatar{width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.35);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0;z-index:2;}
+.staff-hero-info{z-index:2;}.staff-hero-info h2{font-size:2rem;font-weight:700;margin:0;}.staff-hero-info p{font-size:1.3rem;margin:.3rem 0 0;opacity:.85;}
+.hero-bg-icon{position:absolute;right:-20px;bottom:-40px;font-size:15rem;opacity:.07;transform:rotate(-15deg);z-index:1;}
+.stf-table{width:100%;border-collapse:collapse;font-size:1.15rem;}
+.stf-table th{background:var(--surface-2);color:var(--text-secondary);font-weight:600;text-transform:uppercase;font-size:1rem;letter-spacing:.04em;padding:1.2rem 1.6rem;text-align:left;}
+.stf-table td{padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle;}
+.stf-table tr:hover td{background:var(--surface-2);}
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
@@ -37,56 +49,95 @@ if ($q)
             <span class="adm-page-title"><i class="fas fa-tools"></i> Facility Maintenance</span>
         </div>
         <div class="adm-topbar-right">
+            <div class="adm-topbar-datetime">
+                <i class="far fa-calendar-alt"></i>
+                <span><?php echo date('D, M d, Y'); ?></span>
+            </div>
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
-            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+            <div class="adm-avatar"><?php echo strtoupper(substr($_SESSION['name'] ?? 'A', 0, 1)); ?></div>
         </div>
     </div>
 
-    <div class="adm-content">
-        <div class="adm-page-header">
-            <div>
-                <h1>Maintenance & Repairs</h1>
+    <div class="adm-content" style="animation:fadeIn .35s ease;">
+        <div class="staff-hero">
+            <i class="fas fa-tools hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-hard-hat"></i></div>
+            <div class="staff-hero-info">
+                <h2>Infrastructure Command</h2>
                 <p>Log and track facility repair requirements for the maintenance team.</p>
             </div>
-            <button class="btn btn-primary" onclick="document.getElementById('maintModal').classList.add('active')"><span class="btn-text">
-                <i class="fas fa-plus"></i> Report Issue
-            </span></button>
+            <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
+                <button class="btn btn-primary" onclick="document.getElementById('maintModal').classList.add('active')" style="background:#fff; color:#111827; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+                    <i class="fas fa-plus"></i> Report Issue
+                </button>
+            </div>
+        </div>
+
+        <div class="adm-stats-grid">
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-tasks"></i></div>
+                <div class="adm-stat-label">Total Orders</div>
+                <div class="adm-stat-value"><?php echo count($requests); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-history"></i> Recent logs</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-spinner"></i></div>
+                <div class="adm-stat-label">In Progress</div>
+                <div class="adm-stat-value"><?php echo count(array_filter($requests, fn($r) => in_array($r['status'], ['assigned', 'in progress']))); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-wrench"></i> Active repairs</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #ef4444, #dc2626);"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="adm-stat-label">High Priority</div>
+                <div class="adm-stat-value" style="color:#ef4444;"><?php echo count(array_filter($requests, fn($r) => in_array($r['priority'], ['high', 'urgent']))); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-bolt"></i> Requires attention</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-check-double"></i></div>
+                <div class="adm-stat-label">Completed</div>
+                <div class="adm-stat-value"><?php echo count(array_filter($requests, fn($r) => $r['status'] === 'completed')); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-check-circle"></i> Resolved missions</div>
+            </div>
         </div>
 
         <?php if (isset($_GET['success'])): ?>
-            <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Maintenance request logged successfully. Sent to maintenance staff dashboard.</div>
-        <?php
-endif; ?>
+            <div class="adm-alert adm-alert-success" style="margin-bottom:2.5rem; border-radius:12px;"><i class="fas fa-check-circle"></i> Maintenance request logged successfully. Sent to maintenance staff dashboard.</div>
+        <?php endif; ?>
 
-        <div class="adm-card">
-            <div class="adm-card-header">
-                <h3><i class="fas fa-clipboard-list"></i> Active Work Orders</h3>
+        <div class="adm-card shadow-sm" style="border-radius:20px; border:1px solid var(--border); overflow:hidden;">
+            <div class="adm-card-header" style="padding: 1.8rem 2.5rem; background:var(--surface-2); border-bottom:1px solid var(--border);">
+                <h3><i class="fas fa-clipboard-list" style="color:var(--primary);"></i> Active Work Orders</h3>
             </div>
-            <div class="adm-table-wrap" style="overflow-x: auto; width: 100%;">
-                <table class="adm-table" style="width: 100%; min-width: 800px;">
+            <div class="adm-table-wrap" style="padding:0;">
+                <table class="stf-table">
                     <thead><tr><th>Date</th><th>Issue / Location</th><th>Priority</th><th>Reported By</th><th>Status</th></tr></thead>
                     <tbody>
-                        <?php if (empty($requests)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No maintenance requests found.</td></tr>
-                        <?php
-else:
-    foreach ($requests as $req):
-        $pc = $req['priority'] === 'high' || $req['priority'] === 'urgent' ? 'danger' : ($req['priority'] === 'medium' ? 'warning' : 'success');
-        $sc = $req['status'] === 'completed' ? 'success' : ($req['status'] === 'in progress' || $req['status'] === 'assigned' ? 'info' : 'warning');
-?>
+                        <?php if (empty($requests)): ?><tr><td colspan="5" style="text-align:center;padding:5rem;color:var(--text-muted);">No maintenance requests found.</td></tr>
+                        <?php else:
+                            foreach ($requests as $req):
+                                $pc = $req['priority'] === 'high' || $req['priority'] === 'urgent' ? 'danger' : ($req['priority'] === 'medium' ? 'warning' : 'success');
+                                $sc = $req['status'] === 'completed' ? 'success' : ($req['status'] === 'in progress' || $req['status'] === 'assigned' ? 'info' : 'warning');
+                        ?>
                         <tr>
-                            <td style="white-space:nowrap;"><?php echo date('d M Y, g:i A', strtotime($req['reported_at'])); ?></td>
-                            <td>
-                                <strong><?php echo htmlspecialchars($req['equipment_or_area']); ?></strong>
-                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($req['location']); ?></div>
-                                <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;"><?php echo htmlspecialchars(substr($req['issue_description'], 0, 80)); ?>...</div>
+                            <td style="white-space:nowrap;">
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo date('d M Y', strtotime($req['reported_at'])); ?></strong>
+                                <div style="font-size:.9rem;color:var(--text-muted);"><?php echo date('g:i A', strtotime($req['reported_at'])); ?></div>
                             </td>
-                            <td><span class="adm-badge adm-badge-<?php echo $pc; ?>"><?php echo strtoupper($req['priority']); ?></span></td>
-                            <td><?php echo htmlspecialchars($req['reported_by'] ?? 'Admin'); ?></td>
-                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($req['status']); ?></span></td>
+                            <td>
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo htmlspecialchars($req['equipment_or_area']); ?></strong>
+                                <div style="font-size:.9rem;color:var(--text-muted); margin-top:0.3rem;"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($req['location']); ?></div>
+                                <div style="font-size:.85rem;color:var(--text-secondary);margin-top:0.5rem; max-width:400px; line-height:1.4;"><?php echo htmlspecialchars(substr($req['issue_description'], 0, 120)); ?>...</div>
+                            </td>
+                            <td><span class="adm-badge" style="background:var(--<?php echo $pc; ?>-light); color:var(--<?php echo $pc; ?>); font-weight:800; font-size:0.75rem;"><?php echo strtoupper($req['priority']); ?></span></td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.6rem;">
+                                    <div style="width:30px; height:30px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:600;"><?php echo strtoupper(substr($req['reported_by'] ?? 'A', 0, 1)); ?></div>
+                                    <span style="font-weight:600;"><?php echo htmlspecialchars($req['reported_by'] ?? 'Admin'); ?></span>
+                                </div>
+                            </td>
+                            <td><span class="adm-badge" style="background:var(--<?php echo $sc; ?>-light); color:var(--<?php echo $sc; ?>); font-weight:700;"><?php echo ucfirst($req['status']); ?></span></td>
                         </tr>
-                        <?php
-    endforeach;
-endif; ?>
+                        <?php endforeach; endif; ?>
                     </tbody>
                 </table>
             </div>

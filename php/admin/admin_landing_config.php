@@ -1,5 +1,4 @@
 <?php
-
 require_once '../includes/auth_middleware.php';
 enforceSingleDashboard('admin');
 require_once '../db_conn.php';
@@ -66,78 +65,177 @@ while($r = mysqli_fetch_assoc($qs)) $stats[] = $r;
 
 $faqs = []; $qf = mysqli_query($conn, "SELECT * FROM landing_faq ORDER BY faq_id DESC");
 while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
+
+include '../includes/_sidebar.php';
 ?>
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <title>Site Configuration - Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/RMU-Medical-Management-System/css/admin-dashboard.css">
-    <style>
-        .cfg-tabs { display:flex; gap:1rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
-        .cfg-tab { padding:1rem 1.5rem; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:3px solid transparent; }
-        .cfg-tab.active, .cfg-tab:hover { color:var(--primary); border-bottom-color:var(--primary); }
-        .cfg-pane { display:none; }
-        .cfg-pane.active { display:block; animation:fadeIn 0.3s; }
-        .form-row { display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1rem; }
-        .form-row > div { flex:1; min-width:250px; }
-        .lbl { display:block; font-weight:600; margin-bottom:.5rem; font-size:.9rem; color:var(--text-secondary); }
-        .inp { width:100%; padding:.8rem 1rem; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-family:inherit; }
-        .inp:focus { outline:none; border-color:var(--primary); }
-        .card-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
-    </style>
-</head>
-<body>
-<?php include '../includes/_sidebar.php'; ?>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+
+<style>
+/* ── Premium Admin Variables ── */
+:root {
+  --primary: #2F80ED;
+  --primary-light: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+/* ── Hero Banner ── */
+.staff-hero { display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;
+  background:linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 60%, #000 40%));
+  border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap; position:relative; overflow:hidden;}
+.staff-hero-avatar { width:72px;height:72px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0; z-index:2;}
+.staff-hero-info { z-index:2; }
+.staff-hero-info h2 { font-size:2rem;font-weight:700;margin:0; }
+.staff-hero-info p  { font-size:1.3rem;margin:.3rem 0 0;opacity:.85; }
+.hero-bg-icon { position:absolute; right:-20px; bottom:-40px; font-size:15rem; opacity:0.1; transform:rotate(-15deg); z-index:1; }
+
+/* ── Cards ── */
+.card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden; margin-bottom:2.5rem; }
+.card-header { padding:1.8rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; background:var(--surface-2); }
+.card-header h3 { font-size:1.4rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:.9rem;margin:0; }
+.card-body { padding:2rem; }
+
+/* ── Form Controls ── */
+.form-row { display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.6rem; }
+@media(max-width:768px){.form-row{grid-template-columns:1fr;}}
+.form-group { margin-bottom:1.6rem; }
+.form-group label { display:block;font-size:1.1rem;font-weight:600;color:var(--text-secondary);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em; }
+.form-control { width:100%;padding:1rem 1.3rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--text-primary);font-family:'Poppins',sans-serif;font-size:1.15rem;
+  transition:var(--transition);outline:none;box-sizing:border-box; }
+.form-control:focus { border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light); }
+
+/* ── Filter Tabs ── */
+.filter-tabs { display:flex;gap:.8rem;flex-wrap:wrap; margin-bottom: 2rem; border-bottom:1px solid var(--border); padding-bottom:1.5rem; }
+.filter-tabs .ftab { padding:.8rem 1.8rem;border-radius:20px;font-size:1.15rem;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--text-secondary);transition:var(--transition); }
+.filter-tabs .ftab.active, .filter-tabs .ftab:hover { background:var(--primary);color:#fff;border-color:var(--primary); box-shadow: 0 4px 10px var(--primary-light); }
+.cfg-pane { display:none; animation:fadeIn 0.3s; }
+.cfg-pane.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+/* ── Table ── */
+.stf-table { width:100%;border-collapse:collapse;font-size:1.15rem; }
+.stf-table th { background:var(--surface-2);color:var(--text-secondary);font-weight:600;
+  text-transform:uppercase;font-size:1rem;letter-spacing:.04em;padding:1.2rem 1.6rem;text-align:left; }
+.stf-table td { padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle; }
+.stf-table tr:hover td { background:var(--surface-2); }
+
+/* ── Buttons ── */
+.btn { display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 1.8rem;border-radius:var(--radius-sm);
+  font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:600;cursor:pointer;border:none;transition:var(--transition);text-decoration:none; }
+.btn-primary { background:var(--primary);color:#fff; }
+.btn-primary:hover { opacity:.88;transform:translateY(-1px); }
+.btn-ghost { background:transparent; color:var(--text-secondary); }
+.btn-ghost:hover { background:var(--surface-2); color:var(--text-primary); }
+
+/* ── FAQ Block ── */
+.faq-block { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1.5rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:flex-start; }
+.faq-block h4 { font-size:1.3rem; margin:0 0 0.5rem 0; color:var(--text-primary); }
+.faq-block p { font-size:1.1rem; color:var(--text-secondary); margin:0 0 0.8rem 0; }
+.faq-badge { background:var(--surface-2); color:var(--text-muted); padding:0.3rem 0.8rem; border-radius:12px; font-size:0.9rem; font-weight:600; }
+
+/* ── Toast ── */
+#toastWrap { position:fixed;bottom:2.5rem;right:2.5rem;z-index:99999;display:flex;flex-direction:column;gap:.8rem; }
+.toast-msg { padding:1.2rem 2rem; border-radius:var(--radius-sm); background:var(--surface); box-shadow:var(--shadow-lg); border-left:5px solid var(--primary); font-size:1.2rem; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:1rem; animation:fadePop .3s ease; }
+@keyframes fadePop { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
             <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-            <span class="adm-page-title"><i class="fas fa-globe" style="color:var(--primary);margin-right:10px;"></i> Landing Page Content Manager</span>
+            <span class="adm-page-title"><i class="fas fa-globe"></i> Site Configuration</span>
+        </div>
+        <div class="adm-topbar-right">
+            <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
         </div>
     </div>
     
-    <div class="adm-content">
-        <?php if($message): ?>
-            <div style="background:#10b98122; color:#10b981; padding:1rem; border-radius:8px; margin-bottom:1.5rem; font-weight:600;"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($message) ?></div>
-        <?php endif; ?>
+    <div class="adm-content" style="animation:fadePop .35s ease;">
+        <div class="staff-hero">
+            <i class="fas fa-laptop-code hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-cogs"></i></div>
+            <div class="staff-hero-info">
+                <h2>Landing Page Content Manager</h2>
+                <p>Configure public-facing website details, hero content, statistics, and FAQs.</p>
+            </div>
+            <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
+                <a href="../index.php" target="_blank" class="btn" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px);">
+                    <i class="fas fa-external-link-alt"></i> View Public Site
+                </a>
+            </div>
+        </div>
 
-        <div class="cfg-tabs">
-            <div class="cfg-tab active" onclick="switchTab('general')">General Settings</div>
-            <div class="cfg-tab" onclick="switchTab('hero')">Hero Section</div>
-            <div class="cfg-tab" onclick="switchTab('about')">About Blocks</div>
-            <div class="cfg-tab" onclick="switchTab('stats')">Statistics Map</div>
-            <div class="cfg-tab" onclick="switchTab('faq')">FAQs</div>
+        <div class="filter-tabs">
+            <button class="ftab active" onclick="switchTab('general', this)">General Settings</button>
+            <button class="ftab" onclick="switchTab('hero', this)">Hero Section</button>
+            <button class="ftab" onclick="switchTab('about', this)">About Blocks</button>
+            <button class="ftab" onclick="switchTab('stats', this)">Statistics Map</button>
+            <button class="ftab" onclick="switchTab('faq', this)">FAQs</button>
         </div>
 
         <!-- GENERAL -->
         <div class="cfg-pane active" id="pane-general">
             <form method="POST">
                 <input type="hidden" name="action" value="update_config">
-                <div class="card-wrap">
-                    <h3>Contact Information</h3><br>
-                    <div class="form-row">
-                        <div><label class="lbl">Primary Phone</label><input type="text" class="inp" name="config[contact_phonePrimary]" value="<?= htmlspecialchars($configs['contact_phonePrimary']??'') ?>"></div>
-                        <div><label class="lbl">Emergency Hotline (e.g. 153)</label><input type="text" class="inp" name="config[contact_emergencyHotline]" value="<?= htmlspecialchars($configs['contact_emergencyHotline']??'') ?>"></div>
-                    </div>
-                    <div class="form-row">
-                        <div><label class="lbl">Email Support</label><input type="text" class="inp" name="config[contact_emailSupport]" value="<?= htmlspecialchars($configs['contact_emailSupport']??'') ?>"></div>
-                        <div><label class="lbl">Address</label><input type="text" class="inp" name="config[contact_address]" value="<?= htmlspecialchars($configs['contact_address']??'') ?>"></div>
-                    </div>
-                    <div class="form-row">
-                        <div><label class="lbl">Working Hours</label><input type="text" class="inp" name="config[contact_workingHours]" value="<?= htmlspecialchars($configs['contact_workingHours']??'') ?>"></div>
+                
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-address-book" style="color:var(--primary);"></i> Contact Information</h3></div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Primary Phone</label>
+                                <input type="text" class="form-control" name="config[contact_phonePrimary]" value="<?= htmlspecialchars($configs['contact_phonePrimary']??'') ?>">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Emergency Hotline (e.g. 153)</label>
+                                <input type="text" class="form-control" name="config[contact_emergencyHotline]" value="<?= htmlspecialchars($configs['contact_emergencyHotline']??'') ?>">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Email Support</label>
+                                <input type="email" class="form-control" name="config[contact_emailSupport]" value="<?= htmlspecialchars($configs['contact_emailSupport']??'') ?>">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Address</label>
+                                <input type="text" class="form-control" name="config[contact_address]" value="<?= htmlspecialchars($configs['contact_address']??'') ?>">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Working Hours</label>
+                            <input type="text" class="form-control" name="config[contact_workingHours]" value="<?= htmlspecialchars($configs['contact_workingHours']??'') ?>">
+                        </div>
                     </div>
                 </div>
-                <div class="card-wrap">
-                    <h3>Social Media Links</h3><br>
-                    <div class="form-row">
-                        <div><label class="lbl">Facebook</label><input type="url" class="inp" name="config[social_facebook]" value="<?= htmlspecialchars($configs['social_facebook']??'') ?>"></div>
-                        <div><label class="lbl">Twitter/X</label><input type="url" class="inp" name="config[social_twitter]" value="<?= htmlspecialchars($configs['social_twitter']??'') ?>"></div>
-                        <div><label class="lbl">Instagram</label><input type="url" class="inp" name="config[social_instagram]" value="<?= htmlspecialchars($configs['social_instagram']??'') ?>"></div>
+
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-hashtag" style="color:var(--primary);"></i> Social Media Links</h3></div>
+                    <div class="card-body">
+                        <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Facebook</label>
+                                <input type="url" class="form-control" name="config[social_facebook]" value="<?= htmlspecialchars($configs['social_facebook']??'') ?>">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Twitter/X</label>
+                                <input type="url" class="form-control" name="config[social_twitter]" value="<?= htmlspecialchars($configs['social_twitter']??'') ?>">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Instagram</label>
+                                <input type="url" class="form-control" name="config[social_instagram]" value="<?= htmlspecialchars($configs['social_instagram']??'') ?>">
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save General Configuration</span></button>
+
+                <button type="submit" class="btn btn-primary" style="margin-bottom:2rem;"><i class="fas fa-save"></i> Save General Configuration</button>
             </form>
         </div>
 
@@ -145,116 +243,206 @@ while($r = mysqli_fetch_assoc($qf)) $faqs[] = $r;
         <div class="cfg-pane" id="pane-hero">
             <form method="POST">
                 <input type="hidden" name="action" value="update_hero">
-                <div class="card-wrap">
-                    <h3>Hero Content Editor</h3><br>
-                    <div class="form-row">
-                        <div style="flex:auto; width:100%;"><label class="lbl">Main Headline</label><input type="text" class="inp" name="headline" value="<?= htmlspecialchars($hero['headline_text']) ?>"></div>
-                    </div>
-                    <div class="form-row">
-                        <div style="flex:auto; width:100%;"><label class="lbl">Sub Headline</label><textarea class="inp" name="subheadline" rows="3"><?= htmlspecialchars($hero['subheadline_text']) ?></textarea></div>
-                    </div>
-                    <div class="form-row">
-                        <div><label class="lbl">Primary Button Text</label><input type="text" class="inp" name="cta1_t" value="<?= htmlspecialchars($hero['cta1_text']) ?>"></div>
-                        <div><label class="lbl">Primary Button URL</label><input type="text" class="inp" name="cta1_u" value="<?= htmlspecialchars($hero['cta1_url']) ?>"></div>
-                    </div>
-                    <div class="form-row">
-                        <div><label class="lbl">Secondary Button Text</label><input type="text" class="inp" name="cta2_t" value="<?= htmlspecialchars($hero['cta2_text']) ?>"></div>
-                        <div><label class="lbl">Secondary Button URL</label><input type="text" class="inp" name="cta2_u" value="<?= htmlspecialchars($hero['cta2_url']) ?>"></div>
-                    </div>
-                    <div class="form-row">
-                        <div><label class="lbl"><input type="checkbox" name="is_active" <?= $hero['is_active']?'checked':'' ?>> Active on Public Site</label></div>
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-image" style="color:var(--primary);"></i> Hero Content Editor</h3></div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Main Headline</label>
+                            <input type="text" class="form-control" name="headline" value="<?= htmlspecialchars($hero['headline_text']) ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Sub Headline</label>
+                            <textarea class="form-control" name="subheadline" rows="4"><?= htmlspecialchars($hero['subheadline_text']) ?></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Primary Button Text</label>
+                                <input type="text" class="form-control" name="cta1_t" value="<?= htmlspecialchars($hero['cta1_text']) ?>">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Primary Button URL</label>
+                                <input type="text" class="form-control" name="cta1_u" value="<?= htmlspecialchars($hero['cta1_url']) ?>">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Secondary Button Text</label>
+                                <input type="text" class="form-control" name="cta2_t" value="<?= htmlspecialchars($hero['cta2_text']) ?>">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Secondary Button URL</label>
+                                <input type="text" class="form-control" name="cta2_u" value="<?= htmlspecialchars($hero['cta2_url']) ?>">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0; display:flex; align-items:center; gap:1rem;">
+                            <input type="checkbox" name="is_active" <?= $hero['is_active']?'checked':'' ?> style="width:20px; height:20px; accent-color:var(--primary);">
+                            <label style="margin:0; text-transform:none; font-size:1.2rem; color:var(--text-primary);">Active on Public Site</label>
+                        </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save Hero Content</span></button>
+                <button type="submit" class="btn btn-primary" style="margin-bottom:2rem;"><i class="fas fa-save"></i> Save Hero Content</button>
             </form>
         </div>
 
         <!-- ABOUT -->
         <div class="cfg-pane" id="pane-about">
-            <?php foreach($abouts as $a): ?>
-            <form method="POST" class="card-wrap">
-                <input type="hidden" name="action" value="update_about">
-                <input type="hidden" name="about_id" value="<?= $a['about_id'] ?>">
-                <h3>Section: <?= htmlspecialchars($a['section_name']) ?></h3><br>
-                <div class="form-row">
-                    <div style="width:100%; flex:auto;"><textarea name="content_text" class="inp" rows="5"><?= htmlspecialchars($a['content_text']) ?></textarea></div>
-                </div>
-                <label style="margin-bottom:1rem; display:block;"><input type="checkbox" name="is_active" <?= $a['is_active']?'checked':'' ?>> Visible</label>
-                <button type="submit" class="btn btn-primary btn-sm"><span class="btn-text"><i class="fas fa-save"></i> Update Block</span></button>
-            </form>
-            <?php endforeach; ?>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2.5rem;">
+                <?php foreach($abouts as $a): ?>
+                <form method="POST">
+                    <input type="hidden" name="action" value="update_about">
+                    <input type="hidden" name="about_id" value="<?= $a['about_id'] ?>">
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-header">
+                            <h3>Section: <?= htmlspecialchars($a['section_name']) ?></h3>
+                            <label style="display:flex; align-items:center; gap:0.5rem; margin:0; cursor:pointer;">
+                                <input type="checkbox" name="is_active" <?= $a['is_active']?'checked':'' ?> style="width:16px;height:16px;accent-color:var(--primary);">
+                                <span style="font-weight:600; color:var(--text-secondary);">Visible</span>
+                            </label>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group" style="margin-bottom:1.5rem;">
+                                <textarea name="content_text" class="form-control" rows="6"><?= htmlspecialchars($a['content_text']) ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-save"></i> Update Block</button>
+                        </div>
+                    </div>
+                </form>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <!-- STATS -->
         <div class="cfg-pane" id="pane-stats">
-            <div class="card-wrap" style="background:var(--bg-secondary);">
-                <h3>Add New Statistic Metric</h3><br>
-                <form method="POST" class="form-row" style="align-items:flex-end;">
-                    <input type="hidden" name="action" value="add_stat">
-                    <div><label class="lbl">Label (e.g. Years Experience)</label><input type="text" name="l" class="inp" required></div>
-                    <div><label class="lbl">Value (e.g. 50+)</label><input type="text" name="v" class="inp" required></div>
-                    <div><label class="lbl">FontAwesome Icon (e.g. fas fa-star)</label><input type="text" name="i" class="inp" required></div>
-                    <div><button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i></span></button></div>
-                </form>
+            <div class="card" style="background:var(--surface-2);">
+                <div class="card-body">
+                    <h3 style="margin-top:0; margin-bottom:1.5rem; font-size:1.4rem; color:var(--text-primary);">Add New Statistic Metric</h3>
+                    <form method="POST" class="form-row" style="align-items:flex-end; margin-bottom:0;">
+                        <input type="hidden" name="action" value="add_stat">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Label (e.g. Years Experience)</label>
+                            <input type="text" name="l" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Value (e.g. 50+)</label>
+                            <input type="text" name="v" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>FontAwesome Icon (e.g. fas fa-star)</label>
+                            <input type="text" name="i" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <button type="submit" class="btn btn-primary" style="height:54px; width:100%;"><i class="fas fa-plus"></i> Add</button>
+                        </div>
+                    </form>
+                </div>
             </div>
             
-            <table class="adm-table" style="width:100%; background:var(--surface); border-radius:12px;">
-                <tr><th>Icon</th><th>Value</th><th>Label</th><th>Action</th></tr>
-                <?php foreach($stats as $s): ?>
-                <tr>
-                    <td><i class="<?= htmlspecialchars($s['icon_class']) ?>"></i></td>
-                    <td><b><?= htmlspecialchars($s['stat_value']) ?></b></td>
-                    <td><?= htmlspecialchars($s['label']) ?></td>
-                    <td>
-                        <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_stat"><input type="hidden" name="stat_id" value="<?= $s['stat_id'] ?>"><button class="btn btn-ghost" style="color:var(--danger);"><span class="btn-text"><i class="fas fa-trash"></i></span></button></form>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </table>
+            <div class="card">
+                <table class="stf-table">
+                    <thead>
+                        <tr>
+                            <th style="width:80px; text-align:center;">Icon</th>
+                            <th>Value</th>
+                            <th>Label</th>
+                            <th style="text-align:right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($stats as $s): ?>
+                        <tr>
+                            <td style="text-align:center; font-size:1.8rem; color:var(--primary);"><i class="<?= htmlspecialchars($s['icon_class']) ?>"></i></td>
+                            <td><strong style="font-size:1.4rem; color:var(--text-primary);"><?= htmlspecialchars($s['stat_value']) ?></strong></td>
+                            <td style="font-size:1.2rem;"><?= htmlspecialchars($s['label']) ?></td>
+                            <td style="text-align:right;">
+                                <form method="POST" style="margin:0;">
+                                    <input type="hidden" name="action" value="delete_stat">
+                                    <input type="hidden" name="stat_id" value="<?= $s['stat_id'] ?>">
+                                    <button class="btn btn-ghost" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- FAQ -->
         <div class="cfg-pane" id="pane-faq">
-            <div class="card-wrap" style="background:var(--bg-secondary);">
-                <h3>Add New FAQ</h3><br>
-                <form method="POST">
-                    <input type="hidden" name="action" value="add_faq">
-                    <div class="form-row">
-                        <div><label class="lbl">Category</label><input type="text" name="c" class="inp" value="General" required></div>
-                    </div>
-                    <div class="form-row">
-                        <div style="width:100%;flex:auto;"><label class="lbl">Question</label><input type="text" name="q" class="inp" required></div>
-                    </div>
-                    <div class="form-row">
-                        <div style="width:100%;flex:auto;"><label class="lbl">Answer</label><textarea name="a" class="inp" rows="3" required></textarea></div>
-                    </div>
-                    <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-plus"></i> Add FAQ</span></button>
-                </form>
-            </div>
-            
-            <?php foreach($faqs as $f): ?>
-            <div class="card-wrap">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div>
-                        <b>Q: <?= htmlspecialchars($f['question']) ?></b>
-                        <p style="margin-top:5px; color:var(--text-muted);">A: <?= htmlspecialchars($f['answer']) ?></p>
-                        <span style="font-size:0.8rem; background:var(--bg-secondary); padding:2px 8px; border-radius:4px;"><?= htmlspecialchars($f['category']) ?></span>
-                    </div>
-                    <form method="POST" style="margin:0;"><input type="hidden" name="action" value="delete_faq"><input type="hidden" name="faq_id" value="<?= $f['faq_id'] ?>"><button class="btn btn-ghost" style="color:var(--danger);"><span class="btn-text"><i class="fas fa-trash"></i></span></button></form>
+            <div class="card" style="background:var(--surface-2);">
+                <div class="card-body">
+                    <h3 style="margin-top:0; margin-bottom:1.5rem; font-size:1.4rem; color:var(--text-primary);">Add New FAQ</h3>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="add_faq">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <input type="text" name="c" class="form-control" value="General" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Question</label>
+                            <input type="text" name="q" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Answer</label>
+                            <textarea name="a" class="form-control" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add FAQ</button>
+                    </form>
                 </div>
             </div>
-            <?php endforeach; ?>
+            
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                <?php foreach($faqs as $f): ?>
+                <div class="faq-block">
+                    <div style="flex:1;">
+                        <h4><?= htmlspecialchars($f['question']) ?></h4>
+                        <p><?= htmlspecialchars($f['answer']) ?></p>
+                        <span class="faq-badge"><?= htmlspecialchars($f['category']) ?></span>
+                    </div>
+                    <form method="POST" style="margin:0; padding-left:1.5rem;">
+                        <input type="hidden" name="action" value="delete_faq">
+                        <input type="hidden" name="faq_id" value="<?= $f['faq_id'] ?>">
+                        <button class="btn btn-ghost" style="color:var(--danger);" title="Delete FAQ"><i class="fas fa-trash"></i></button>
+                    </form>
+                </div>
+                <?php endforeach; ?>
+            </div>
         </div>
 
     </div>
 </main>
+
+<div id="toastWrap"></div>
+
 <script>
-    function switchTab(t) {
-        document.querySelectorAll('.cfg-pane').forEach(p=>p.classList.remove('active'));
-        document.querySelectorAll('.cfg-tab').forEach(b=>b.classList.remove('active'));
-        document.getElementById('pane-'+t).classList.add('active');
-        event.currentTarget.classList.add('active');
+    function showToast(msg, type='success') {
+        const toast = document.createElement('div');
+        toast.className = `toast-msg toast-${type}`;
+        toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i> <span>${msg}</span>`;
+        document.getElementById('toastWrap').appendChild(toast);
+        setTimeout(()=> { toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); }, 3000);
     }
+
+    <?php if ($message): ?>
+    document.addEventListener('DOMContentLoaded', () => { showToast(<?= json_encode($message) ?>, 'success'); });
+    <?php endif; ?>
+
+    function switchTab(t, btn) {
+        document.querySelectorAll('.cfg-pane').forEach(p=>p.classList.remove('active'));
+        document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+        document.getElementById('pane-'+t).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    const themeIcon = document.getElementById('themeIcon');
+    document.getElementById('themeToggle')?.addEventListener('click', () => {
+        const html = document.documentElement;
+        const t = html.getAttribute('data-theme')==='dark'?'light':'dark';
+        html.setAttribute('data-theme', t);
+        localStorage.setItem('rmu_theme', t);
+        if (themeIcon) themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+    });
 </script>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script>
 </body>
 </html>

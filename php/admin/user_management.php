@@ -140,6 +140,12 @@ $usersQuery = "SELECT u.*,
                FROM users u 
                ORDER BY u.created_at DESC";
 $users = mysqli_query($conn, $usersQuery);
+$user_array = [];
+if($users) {
+    while($row = mysqli_fetch_assoc($users)) {
+        $user_array[] = $row;
+    }
+}
 
 // Get user statistics
 $statsQuery = "SELECT 
@@ -153,452 +159,271 @@ $statsQuery = "SELECT
                FROM users";
 $statsResult = mysqli_query($conn, $statsQuery);
 $stats = mysqli_fetch_assoc($statsResult);
+
+// Establish layout variables
+$active_page = 'user_management';
+$page_title  = 'User Management';
+include '../includes/_sidebar.php';
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management - RMU Medical Sickbay</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #F4F8FF;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            padding: 25px;
-            border-radius: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header h1 {
-            color: white;
-            font-size: 28px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 24px;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-        }
-        
-        .stat-card h3 {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .stat-card .value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-        
-        .stat-card .icon {
-            float: right;
-            font-size: 32px;
-            opacity: 0.2;
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #2F80ED, #56CCF2);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.3);
-        }
-        
-        .btn-success {
-            background: #27ae60;
-            color: white;
-        }
-        
-        .btn-warning {
-            background: #f39c12;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            box-shadow: 0px 10px 30px rgba(47, 128, 237, 0.08);
-            overflow-x: auto;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .badge-admin {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .badge-doctor {
-            background: #3498db;
-            color: white;
-        }
-        
-        .badge-patient {
-            background: #27ae60;
-            color: white;
-        }
-        
-        .badge-pharmacist {
-            background: #9b59b6;
-            color: white;
-        }
-        
-        .badge-active {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 24px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #2c3e50;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #7f8c8d;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #2F80ED;
-        }
-        
-        .search-box {
-            margin-bottom: 20px;
-        }
-        
-        .search-box input {
-            width: 100%;
-            padding: 12px 40px 12px 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-users"></i> User Management</h1>
-            <button class="btn btn-primary" onclick="openModal('createModal')"><span class="btn-text">
-                <i class="fas fa-plus"></i> Add New User
-            </span></button>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+
+<style>
+/* ── Premium Admin Variables ── */
+:root {
+  --primary: #2F80ED;
+  --primary-light: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+/* ── Hero Banner ── */
+.staff-hero { display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;
+  background:linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 60%, #000 40%));
+  border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap; }
+.staff-hero-avatar { width:72px;height:72px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0; }
+.staff-hero-info h2 { font-size:2rem;font-weight:700;margin:0; }
+.staff-hero-info p  { font-size:1.3rem;margin:.3rem 0 0;opacity:.85; }
+
+/* ── Stat Mini Cards ── */
+.stat-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.5rem;margin-bottom:2.5rem; }
+.stat-mini { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:1.8rem 1.5rem;text-align:center;transition:var(--transition);cursor:pointer;box-shadow:var(--shadow-sm); }
+.stat-mini:hover { box-shadow:var(--shadow-md);transform:translateY(-3px); }
+.stat-mini-val { font-size:3rem;font-weight:800;line-height:1;color:var(--primary); }
+.stat-mini-lbl { font-size:1.15rem;font-weight:500;color:var(--text-secondary);margin-top:.6rem; text-transform:uppercase; letter-spacing:0.05em; }
+
+/* ── Table Styles ── */
+.stf-table { width:100%;border-collapse:collapse;font-size:1.15rem; }
+.stf-table th { background:var(--surface-2);color:var(--text-secondary);font-weight:600;
+  text-transform:uppercase;font-size:1rem;letter-spacing:.04em;padding:1.2rem 1.6rem;text-align:left; }
+.stf-table td { padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle; }
+.stf-table tr:hover td { background:var(--surface-2); }
+
+/* ── DataTables Overrides ── */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current { background: var(--primary) !important; color: white !important; border: 1px solid var(--primary) !important; border-radius:6px !important; }
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: var(--primary-light) !important; color: var(--primary) !important; border-color:var(--primary) !important;}
+.dataTables_wrapper .dataTables_filter input { border: 1.5px solid var(--border) !important; border-radius:8px !important; padding: 0.5rem 1rem !important; background: var(--surface) !important; color: var(--text-primary) !important; outline: none; }
+.dataTables_wrapper .dataTables_filter input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--primary-light); }
+.dataTables_wrapper .dataTables_length select { border: 1.5px solid var(--border) !important; border-radius:8px !important; padding: 0.3rem 0.5rem !important; background: var(--surface) !important; color: var(--text-primary) !important; }
+.dataTables_wrapper .dataTables_info { color: var(--text-secondary) !important; font-size: 1.1rem; }
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter input, [data-theme="dark"] .dataTables_wrapper .dataTables_length select { background-color: var(--surface) !important; color: var(--text-primary) !important; border-color: var(--border) !important; }
+
+/* ── Filter Tabs ── */
+.filter-tabs { display:flex;gap:.8rem;flex-wrap:wrap; margin-bottom: 1.5rem; }
+.filter-tabs .ftab { padding:.6rem 1.4rem;border-radius:20px;font-size:1.1rem;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--text-secondary);transition:var(--transition); }
+.filter-tabs .ftab.active, .filter-tabs .ftab:hover { background:var(--primary);color:#fff;border-color:var(--primary); box-shadow: 0 4px 10px var(--primary-light); }
+
+/* ── Badges ── */
+.badge { display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .9rem;border-radius:20px;font-size:1rem;font-weight:600; }
+.badge-admin { background:var(--danger-light);color:var(--danger); }
+.badge-doctor { background:var(--primary-light);color:var(--primary); }
+.badge-patient { background:var(--success-light);color:var(--success); }
+.badge-pharmacist { background:#f3e5f5;color:#8e44ad; }
+.badge-nurse { background:var(--warning-light);color:var(--warning); }
+.badge-active { background:var(--success-light);color:var(--success); }
+.badge-inactive { background:var(--danger-light);color:var(--danger); }
+
+/* ── Modals ── */
+.modal-bg { display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;
+  align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(5px); opacity:0; transition:opacity 0.3s ease; }
+.modal-bg.active { display:flex; opacity:1; }
+.modal-box { background:var(--surface);border-radius:var(--radius-lg);padding:2.5rem;width:100%;max-width:560px;
+  max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);border:1px solid var(--border); transform:translateY(20px); transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.modal-bg.active .modal-box { transform:translateY(0); }
+.modal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem; }
+.modal-header h3 { font-size:1.8rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:.8rem;margin:0; }
+.modal-close { background:none;border:none;font-size:2rem;cursor:pointer;color:var(--text-muted);line-height:1;padding:.3rem; transition:color 0.2s;}
+.modal-close:hover { color:var(--danger); }
+
+/* ── Buttons ── */
+.btn { display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 1.8rem;border-radius:var(--radius-sm);
+  font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:600;cursor:pointer;border:none;transition:var(--transition);text-decoration:none; }
+.btn-primary { background:var(--primary);color:#fff; }
+.btn-primary:hover { opacity:.88;transform:translateY(-1px); }
+.btn-danger { background:var(--danger);color:#fff; }
+.btn-warning { background:var(--warning);color:#fff; }
+.btn-success { background:var(--success);color:#fff; }
+.btn-ghost { background:transparent; color:var(--text-secondary); }
+.btn-ghost:hover { background:var(--surface-2); color:var(--text-primary); }
+.btn-sm { padding:.6rem 1.2rem;font-size:1.1rem; }
+
+/* ── Card System ── */
+.card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden; margin-bottom:2.5rem; }
+.card-header { padding:1.8rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+.card-header h3 { font-size:1.6rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:.9rem;margin:0; }
+.card-body { padding:2rem; }
+
+/* ── Form Controls ── */
+.form-row { display:grid;grid-template-columns:1fr 1fr;gap:1.5rem; }
+.form-group { margin-bottom:1.6rem; }
+.form-group label { display:block;font-size:1.15rem;font-weight:600;color:var(--text-secondary);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em; }
+.form-control { width:100%;padding:1rem 1.3rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--text-primary);font-family:'Poppins',sans-serif;font-size:1.2rem;
+  transition:var(--transition);outline:none;box-sizing:border-box; }
+.form-control:focus { border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light); }
+
+/* ── Toast ── */
+#toastWrap { position:fixed;bottom:2.5rem;right:2.5rem;z-index:99999;display:flex;flex-direction:column;gap:.8rem; }
+.toast-msg { padding:1.2rem 2rem; border-radius:var(--radius-sm); background:var(--surface); box-shadow:var(--shadow-lg); border-left:5px solid var(--primary); font-size:1.2rem; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:1rem; animation:fadePop .3s ease; }
+.toast-success { border-left-color:var(--success); }
+.toast-danger { border-left-color:var(--danger); }
+@keyframes fadePop { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<main class="adm-main">
+    <div class="adm-topbar">
+        <div class="adm-topbar-left">
+            <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <span class="adm-page-title"><i class="fas fa-users-cog"></i> User Management</span>
         </div>
-        
-        <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
-        
-        <!-- Statistics -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <i class="fas fa-users icon"></i>
-                <h3>Total Users</h3>
-                <div class="value"><?php echo $stats['total_users']; ?></div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-user-shield icon"></i>
-                <h3>Admins</h3>
-                <div class="value"><?php echo $stats['admin_count']; ?></div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-user-md icon"></i>
-                <h3>Doctors</h3>
-                <div class="value"><?php echo $stats['doctor_count']; ?></div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-user-injured icon"></i>
-                <h3>Patients</h3>
-                <div class="value"><?php echo $stats['patient_count']; ?></div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-check-circle icon"></i>
-                <h3>Active Users</h3>
-                <div class="value"><?php echo $stats['active_count']; ?></div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-user-plus icon"></i>
-                <h3>New (30 days)</h3>
-                <div class="value"><?php echo $stats['new_users_30d']; ?></div>
-            </div>
-        </div>
-        
-        <!-- Users Table -->
-        <div class="table-container">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search users..." onkeyup="searchTable()">
-            </div>
-            
-            <table id="usersTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Logins</th>
-                        <th>Last Activity</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($user = mysqli_fetch_assoc($users)): ?>
-                        <tr>
-                            <td><?php echo $user['id']; ?></td>
-                            <td><strong><?php echo htmlspecialchars($user['user_name']); ?></strong></td>
-                            <td><?php echo htmlspecialchars($user['name']); ?></td>
-                            <td><?php echo htmlspecialchars($user['email']); ?></td>
-                            <td>
-                                <span class="badge badge-<?php echo $user['user_role']; ?>">
-                                    <?php echo ucfirst($user['user_role']); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge badge-<?php echo $user['status'] ?? 'active'; ?>">
-                                    <?php echo ucfirst($user['status'] ?? 'active'); ?>
-                                </span>
-                            </td>
-                            <td><?php echo $user['login_count']; ?></td>
-                            <td><?php echo $user['last_activity'] ? date('M j, Y', strtotime($user['last_activity'])) : 'Never'; ?></td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick='editUser(<?php echo json_encode($user); ?>)'><span class="btn-text">
-                                    <i class="fas fa-edit"></i>
-                                </span></button>
-                                <button class="btn btn-warning btn-sm" onclick="openResetPassword(<?php echo $user['id']; ?>)"><span class="btn-text">
-                                    <i class="fas fa-key"></i>
-                                </span></button>
-                                <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                                    <button class="btn btn-danger btn-sm" onclick="deleteUser(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['user_name']); ?>')"><span class="btn-text">
-                                        <i class="fas fa-trash"></i>
-                                    </span></button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </span></a>
+        <div class="adm-topbar-right">
+            <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
         </div>
     </div>
-    
-    <!-- Create User Modal -->
-    <div id="createModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Create New User</h2>
-                <button class="btn btn-primary close-modal" onclick="closeModal('createModal')"><span class="btn-text">&times;</span></button>
+
+    <div class="adm-content" style="animation:fadePop .35s ease;">
+        
+        <div class="staff-hero">
+            <div class="staff-hero-avatar"><i class="fas fa-id-badge"></i></div>
+            <div class="staff-hero-info">
+                <h2>Staff Directory & Access Control</h2>
+                <p>Manage users, assign roles, and maintain system security.</p>
             </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="create_user">
-                
-                <div class="form-group">
-                    <label>Username *</label>
-                    <input type="text" name="username" id="usernameField" required>
-                    <div id="usernameMsg" style="font-size: 0.8rem; margin-top: 4px;"></div>
+            <div style="margin-left:auto;">
+                <button class="btn btn-primary" onclick="openModal('createModal')">
+                    <i class="fas fa-user-plus"></i> Add New User
+                </button>
+            </div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-mini">
+                <div class="stat-mini-val"><?php echo $stats['total_users']; ?></div>
+                <div class="stat-mini-lbl">Total Users</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-val" style="color:var(--success);"><?php echo $stats['active_count']; ?></div>
+                <div class="stat-mini-lbl">Active Users</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-val" style="color:var(--info);"><?php echo $stats['doctor_count']; ?></div>
+                <div class="stat-mini-lbl">Doctors</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-val" style="color:var(--warning);"><?php echo $stats['new_users_30d']; ?></div>
+                <div class="stat-mini-lbl">New (30 Days)</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-table"></i> System Users</h3>
+            </div>
+            <div class="card-body">
+                <div class="filter-tabs">
+                    <button class="ftab active" data-filter="">All Users</button>
+                    <button class="ftab" data-filter="Admin">Admins</button>
+                    <button class="ftab" data-filter="Doctor">Doctors</button>
+                    <button class="ftab" data-filter="Nurse">Nurses</button>
+                    <button class="ftab" data-filter="Pharmacist">Pharmacists</button>
+                    <button class="ftab" data-filter="Patient">Patients</button>
                 </div>
-                
+
+                <table class="stf-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>User Details</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Logins</th>
+                            <th>Last Activity</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($user_array as $user): ?>
+                            <tr>
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:1rem;">
+                                        <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.4rem;font-weight:700;">
+                                            <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
+                                        </div>
+                                        <div>
+                                            <strong style="font-size:1.3rem;"><?php echo htmlspecialchars($user['name']); ?></strong><br>
+                                            <small style="color:var(--text-muted);font-size:1.1rem;"><?php echo htmlspecialchars($user['user_name']); ?> | <?php echo htmlspecialchars($user['email']); ?></small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?php echo $user['user_role'] === 'admin' ? 'admin' : ($user['user_role'] === 'doctor' ? 'doctor' : ($user['user_role'] === 'patient' ? 'patient' : ($user['user_role'] === 'pharmacist' ? 'pharmacist' : 'nurse'))); ?>">
+                                        <?php echo ucfirst(str_replace('_', ' ', $user['user_role'])); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?php echo ($user['status'] ?? 'active') === 'active' ? 'active' : 'inactive'; ?>">
+                                        <?php echo ucfirst($user['status'] ?? 'active'); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo $user['login_count']; ?></td>
+                                <td><?php echo $user['last_activity'] ? date('M d, Y', strtotime($user['last_activity'])) : 'Never'; ?></td>
+                                <td style="text-align:right;">
+                                    <div style="display:inline-flex; gap:0.5rem;">
+                                        <button class="btn btn-primary btn-sm" onclick='editUser(<?php echo json_encode($user); ?>)' title="Edit"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-warning btn-sm" onclick="openResetPassword(<?php echo $user['id']; ?>)" title="Reset Password"><i class="fas fa-key"></i></button>
+                                        <?php if ($user['id'] != $_SESSION['user_id']): ?>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteUser(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['user_name']); ?>')" title="Delete"><i class="fas fa-trash"></i></button>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modals -->
+
+<!-- Create User Modal -->
+<div id="createModal" class="modal-bg">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus" style="color:var(--primary);"></i> Add New User</h3>
+            <button class="modal-close" onclick="closeModal('createModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="action" value="create_user">
+            
+            <div class="form-group">
+                <label>Username <span style="color:var(--danger)">*</span></label>
+                <input type="text" name="username" id="usernameField" class="form-control" required>
+                <div id="usernameMsg" style="font-size: 1.1rem; margin-top: 4px;"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Full Name <span style="color:var(--danger)">*</span></label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            
+            <div class="form-row">
                 <div class="form-group">
-                    <label>Full Name *</label>
-                    <input type="text" name="name" required>
+                    <label>Email <span style="color:var(--danger)">*</span></label>
+                    <input type="email" name="email" class="form-control" required>
                 </div>
-                
                 <div class="form-group">
-                    <label>Email *</label>
-                    <input type="email" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Password *</label>
-                    <input type="password" name="password" required>
-                    <small style="color: #7f8c8d;">Min 8 chars, uppercase, lowercase, number, special char</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>Role *</label>
-                    <select name="role" required>
+                    <label>Role <span style="color:var(--danger)">*</span></label>
+                    <select name="role" class="form-control" required>
                         <option value="">Select Role</option>
                         <option value="admin">Admin</option>
                         <option value="doctor">Doctor</option>
@@ -616,38 +441,47 @@ $stats = mysqli_fetch_assoc($statsResult);
                         <option value="patient">Patient</option>
                     </select>
                 </div>
-                
-                <button type="submit" class="btn btn-success" style="width: 100%;"><span class="btn-text">
-                    <i class="fas fa-plus"></i> Create User
-                </span></button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Edit User Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Edit User</h2>
-                <button class="btn btn-primary close-modal" onclick="closeModal('editModal')"><span class="btn-text">&times;</span></button>
             </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="update_user">
-                <input type="hidden" name="user_id" id="edit_user_id">
-                
+            
+            <div class="form-group">
+                <label>Password <span style="color:var(--danger)">*</span></label>
+                <input type="password" name="password" class="form-control" required>
+                <small style="color:var(--text-muted); font-size:1.1rem; margin-top:0.4rem; display:block;">Min 8 chars, uppercase, lowercase, number, special char</small>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2.5rem;">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('createModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editModal" class="modal-bg">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit" style="color:var(--primary);"></i> Edit User</h3>
+            <button class="modal-close" onclick="closeModal('editModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="action" value="update_user">
+            <input type="hidden" name="user_id" id="edit_user_id">
+            
+            <div class="form-group">
+                <label>Full Name <span style="color:var(--danger)">*</span></label>
+                <input type="text" name="name" id="edit_name" class="form-control" required>
+            </div>
+            
+            <div class="form-row">
                 <div class="form-group">
-                    <label>Full Name *</label>
-                    <input type="text" name="name" id="edit_name" required>
+                    <label>Email <span style="color:var(--danger)">*</span></label>
+                    <input type="email" name="email" id="edit_email" class="form-control" required>
                 </div>
                 
                 <div class="form-group">
-                    <label>Email *</label>
-                    <input type="email" name="email" id="edit_email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Role *</label>
-                    <select name="role" id="edit_role" required>
+                    <label>Role <span style="color:var(--danger)">*</span></label>
+                    <select name="role" id="edit_role" class="form-control" required>
                         <option value="admin">Admin</option>
                         <option value="doctor">Doctor</option>
                         <option value="nurse">Nurse</option>
@@ -664,135 +498,152 @@ $stats = mysqli_fetch_assoc($statsResult);
                         <option value="patient">Patient</option>
                     </select>
                 </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;"><span class="btn-text">
-                    <i class="fas fa-save"></i> Update User
-                </span></button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Reset Password Modal -->
-    <div id="resetPasswordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Reset Password</h2>
-                <button class="btn btn-primary close-modal" onclick="closeModal('resetPasswordModal')"><span class="btn-text">&times;</span></button>
             </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="reset_password">
-                <input type="hidden" name="user_id" id="reset_user_id">
-                
-                <div class="form-group">
-                    <label>New Password *</label>
-                    <input type="password" name="new_password" required>
-                    <small style="color: #7f8c8d;">Min 8 chars, uppercase, lowercase, number, special char</small>
-                </div>
-                
-                <button type="submit" class="btn btn-warning" style="width: 100%;"><span class="btn-text">
-                    <i class="fas fa-key"></i> Reset Password
-                </span></button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Delete Confirmation Form -->
-    <form id="deleteForm" method="POST" style="display: none;">
-        <input type="hidden" name="action" value="delete_user">
-        <input type="hidden" name="user_id" id="delete_user_id">
-    </form>
-    
-    <script>
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-        
-        function editUser(user) {
-            document.getElementById('edit_user_id').value = user.id;
-            document.getElementById('edit_name').value = user.name;
-            document.getElementById('edit_email').value = user.email;
-            document.getElementById('edit_role').value = user.user_role;
-            openModal('editModal');
-        }
-        
-        function openResetPassword(userId) {
-            document.getElementById('reset_user_id').value = userId;
-            openModal('resetPasswordModal');
-        }
-        
-        function deleteUser(userId, username) {
-            if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
-                document.getElementById('delete_user_id').value = userId;
-                document.getElementById('deleteForm').submit();
-            }
-        }
-        
-        function searchTable() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById('usersTable');
-            const tr = table.getElementsByTagName('tr');
             
-            for (let i = 1; i < tr.length; i++) {
-                const td = tr[i].getElementsByTagName('td');
-                let found = false;
-                
-                for (let j = 0; j < td.length; j++) {
-                    if (td[j]) {
-                        const txtValue = td[j].textContent || td[j].innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            found = true;
-                            break;
-                        }
-                    }
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2.5rem;">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div id="resetPasswordModal" class="modal-bg">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-key" style="color:var(--warning);"></i> Reset Password</h3>
+            <button class="modal-close" onclick="closeModal('resetPasswordModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="action" value="reset_password">
+            <input type="hidden" name="user_id" id="reset_user_id">
+            
+            <div class="form-group">
+                <label>New Password <span style="color:var(--danger)">*</span></label>
+                <input type="password" name="new_password" class="form-control" required>
+                <small style="color:var(--text-muted); font-size:1.1rem; margin-top:0.4rem; display:block;">Min 8 chars, uppercase, lowercase, number, special char</small>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2.5rem;">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('resetPasswordModal')">Cancel</button>
+                <button type="submit" class="btn btn-warning"><i class="fas fa-key"></i> Reset Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Form -->
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="action" value="delete_user">
+    <input type="hidden" name="user_id" id="delete_user_id">
+</form>
+
+<div id="toastWrap"></div>
+
+<script>
+function showToast(msg, type='success') {
+    const toast = document.createElement('div');
+    toast.className = `toast-msg toast-${type}`;
+    toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i> <span>${msg}</span>`;
+    document.getElementById('toastWrap').appendChild(toast);
+    setTimeout(()=> { toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); }, 3000);
+}
+
+// Show PHP-injected message if present
+<?php if ($message): ?>
+document.addEventListener('DOMContentLoaded', () => { showToast(<?php echo json_encode($message); ?>, 'success'); });
+<?php endif; ?>
+<?php if ($error): ?>
+document.addEventListener('DOMContentLoaded', () => { showToast(<?php echo json_encode($error); ?>, 'danger'); });
+<?php endif; ?>
+
+let usersTable;
+$(document).ready(function() {
+    usersTable = $('#usersTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        language: { search: "", searchPlaceholder: "Search users..." }
+    });
+
+    // Filter pills logic
+    $('.ftab').on('click', function() {
+        $('.ftab').removeClass('active');
+        $(this).addClass('active');
+        const filterVal = $(this).data('filter');
+        usersTable.column(1).search(filterVal).draw();
+    });
+});
+
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+function editUser(user) {
+    document.getElementById('edit_user_id').value = user.id;
+    document.getElementById('edit_name').value = user.name;
+    document.getElementById('edit_email').value = user.email;
+    document.getElementById('edit_role').value = user.user_role;
+    openModal('editModal');
+}
+
+function openResetPassword(userId) {
+    document.getElementById('reset_user_id').value = userId;
+    openModal('resetPasswordModal');
+}
+
+function deleteUser(userId, username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+        document.getElementById('delete_user_id').value = userId;
+        document.getElementById('deleteForm').submit();
+    }
+}
+
+// AJAX Username Check
+const usernameField = document.getElementById('usernameField');
+const usernameMsg   = document.getElementById('usernameMsg');
+let usernameTimer;
+
+usernameField?.addEventListener('input', () => {
+    clearTimeout(usernameTimer);
+    const val = usernameField.value.trim();
+    if (val.length < 3) {
+        usernameMsg.innerHTML = '<span style="color:var(--text-muted);"><i class="fas fa-info-circle"></i> Too short...</span>';
+        return;
+    }
+
+    usernameMsg.innerHTML = '<span style="color:var(--primary);"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
+    usernameTimer = setTimeout(() => {
+        const fd = new FormData();
+        fd.append('username', val);
+        fetch('../ajax/check_username.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) {
+                    usernameMsg.innerHTML = '<span style="color:var(--success);"><i class="fas fa-check-circle"></i> ' + d.msg + '</span>';
+                } else {
+                    usernameMsg.innerHTML = '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> ' + d.msg + '</span>';
                 }
-                
-                tr[i].style.display = found ? '' : 'none';
-            }
-        }
-        
-        // Close modal on outside click
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.classList.remove('active');
-            }
-        }
+            })
+            .catch(() => {
+                usernameMsg.innerHTML = '<span style="color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> Error checking username.</span>';
+            });
+    }, 500);
+});
 
-        // AJAX Username Check
-        const usernameField = document.getElementById('usernameField');
-        const usernameMsg   = document.getElementById('usernameMsg');
-        let usernameTimer;
-
-        usernameField?.addEventListener('input', () => {
-            clearTimeout(usernameTimer);
-            const val = usernameField.value.trim();
-            if (val.length < 3) {
-                usernameMsg.innerHTML = '<span style="color:#7f8c8d;">Too short...</span>';
-                return;
-            }
-
-            usernameMsg.innerHTML = '<span style="color:#2F80ED;"><i class="fas fa-spinner fa-spin"></i> Checking...</span>';
-            usernameTimer = setTimeout(() => {
-                const fd = new FormData();
-                fd.append('username', val);
-                fetch('../ajax/check_username.php', { method: 'POST', body: fd })
-                    .then(r => r.json())
-                    .then(d => {
-                        if (d.ok) {
-                            usernameMsg.innerHTML = '<span style="color:#27ae60;"><i class="fas fa-check-circle"></i> ' + d.msg + '</span>';
-                        } else {
-                            usernameMsg.innerHTML = '<span style="color:#e74c3c;"><i class="fas fa-times-circle"></i> ' + d.msg + '</span>';
-                        }
-                    })
-                    .catch(() => {
-                        usernameMsg.innerHTML = '<span style="color:#e74c3c;">Error checking username.</span>';
-                    });
-            }, 500);
-        });
-    </script>
+const themeIcon = document.getElementById('themeIcon');
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const html = document.documentElement;
+    const t = html.getAttribute('data-theme')==='dark'?'light':'dark';
+    html.setAttribute('data-theme', t);
+    localStorage.setItem('rmu_theme', t);
+    themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+});
+</script>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script>
 </body>
 </html>

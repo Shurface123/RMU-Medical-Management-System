@@ -253,6 +253,12 @@ require_once 'maintenance_guard.php';
 
         <span class="adm-nav-section-label">System</span>
 
+        <a href="/RMU-Medical-Management-System/php/admin/notifications.php"
+           class="adm-nav-item <?php echo $active_page === 'notifications' ? 'active' : ''; ?>">
+            <i class="fas fa-bell"></i>
+            <span>Notifications Center</span>
+        </a>
+
         <a href="/RMU-Medical-Management-System/php/booking.php"
            class="adm-nav-item <?php echo $active_page === 'booking' ? 'active' : ''; ?>">
             <i class="fas fa-calendar-plus"></i>

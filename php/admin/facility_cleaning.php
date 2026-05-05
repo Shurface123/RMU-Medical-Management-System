@@ -46,6 +46,19 @@ if ($qa)
         $alerts[] = $r;
 ?>
 
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<style>
+.staff-hero{display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;background:linear-gradient(135deg,#059669,#064e3b);border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap;position:relative;overflow:hidden;}
+.staff-hero-avatar{width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.35);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0;z-index:2;}
+.staff-hero-info{z-index:2;}.staff-hero-info h2{font-size:2rem;font-weight:700;margin:0;}.staff-hero-info p{font-size:1.3rem;margin:.3rem 0 0;opacity:.85;}
+.hero-bg-icon{position:absolute;right:-20px;bottom:-40px;font-size:15rem;opacity:.07;transform:rotate(-15deg);z-index:1;}
+.stf-table{width:100%;border-collapse:collapse;font-size:1.15rem;}
+.stf-table th{background:var(--surface-2);color:var(--text-secondary);font-weight:600;text-transform:uppercase;font-size:1rem;letter-spacing:.04em;padding:1.2rem 1.6rem;text-align:left;}
+.stf-table td{padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle;}
+.stf-table tr:hover td{background:var(--surface-2);}
+.contamination-card { background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:12px; padding:1.5rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; backdrop-filter:blur(5px); }
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
@@ -53,37 +66,72 @@ if ($qa)
             <span class="adm-page-title"><i class="fas fa-broom"></i> Hygiene & Infection Control</span>
         </div>
         <div class="adm-topbar-right">
+            <div class="adm-topbar-datetime">
+                <i class="far fa-calendar-alt"></i>
+                <span><?php echo date('D, M d, Y'); ?></span>
+            </div>
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
-            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+            <div class="adm-avatar"><?php echo strtoupper(substr($_SESSION['name'] ?? 'A', 0, 1)); ?></div>
         </div>
     </div>
 
-    <div class="adm-content">
-        <div class="adm-page-header">
-            <div>
-                <h1>Infection Control Command</h1>
+    <div class="adm-content" style="animation:fadeIn .35s ease;">
+        <div class="staff-hero">
+            <i class="fas fa-virus-slash hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-hand-sparkles"></i></div>
+            <div class="staff-hero-info">
+                <h2>Infection Control Command</h2>
                 <p>Manage cleaning tasks, isolation wards, and biological contamination reports.</p>
             </div>
-            <button class="btn btn-primary" onclick="document.getElementById('cleanModal').classList.add('active')"><span class="btn-text">
-                <i class="fas fa-plus"></i> Dispatch Cleaner
-            </span></button>
+            <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
+                <button class="btn btn-primary" onclick="document.getElementById('cleanModal').classList.add('active')" style="background:#fff; color:#059669; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+                    <i class="fas fa-plus"></i> Dispatch Cleaner
+                </button>
+            </div>
+        </div>
+
+        <div class="adm-stats-grid">
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #ef4444, #dc2626);"><i class="fas fa-biohazard"></i></div>
+                <div class="adm-stat-label">Active Alerts</div>
+                <div class="adm-stat-value" style="color:#ef4444;"><?php echo count($alerts); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-exclamation-triangle"></i> Requires attention</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-broom"></i></div>
+                <div class="adm-stat-label">Active Tasks</div>
+                <div class="adm-stat-value"><?php echo count(array_filter($schedules, fn($s) => in_array($s['status'], ['Dispatched', 'In Progress']))); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-sync-alt"></i> Cleaners in field</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-check-double"></i></div>
+                <div class="adm-stat-label">Completed Today</div>
+                <div class="adm-stat-value"><?php echo count(array_filter($schedules, fn($s) => in_array($s['status'], ['Completed', 'Inspected']))); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-history"></i> Last 24 hours</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #6366f1, #4f46e5);"><i class="fas fa-shield-virus"></i></div>
+                <div class="adm-stat-label">Hygiene Rating</div>
+                <div class="adm-stat-value">98<span style="font-size:1.5rem; opacity:0.6;">%</span></div>
+                <div class="adm-stat-footer"><i class="fas fa-chart-line"></i> Operational health</div>
+            </div>
         </div>
 
         <?php if (!empty($alerts)): ?>
-        <div class="adm-card" style="border:1px solid var(--danger); background:rgba(231,76,60,0.05); margin-bottom:2rem;">
-            <div class="adm-card-header" style="border-bottom:1px solid rgba(231,76,60,0.2);">
-                <h3 style="color:var(--danger);"><i class="fas fa-biohazard"></i> Active Contamination Alerts</h3>
+        <div class="adm-card shadow-sm" style="border:1px solid rgba(231,76,60,0.3); background:var(--surface); margin-bottom:2.5rem; border-radius:20px; overflow:hidden;">
+            <div class="adm-card-header" style="background:rgba(231,76,60,0.05); padding:1.5rem 2.5rem; border-bottom:1px solid rgba(231,76,60,0.2);">
+                <h3 style="color:var(--danger); font-size:1.4rem;"><i class="fas fa-biohazard"></i> Active Contamination Alerts</h3>
             </div>
-            <div class="adm-card-body" style="padding:1rem;">
+            <div class="adm-card-body" style="padding:1.5rem 2.5rem;">
                 <?php foreach ($alerts as $al): ?>
-                <div class="adm-alert-item" style="background:var(--bg-surface); padding:1rem; border-radius:8px; border-left:4px solid var(--danger); margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--shadow-sm);">
+                <div class="contamination-card">
                     <div>
-                        <strong style="color:var(--danger); font-size:1.1rem;"><?php echo htmlspecialchars($al['location']); ?>: <?php echo ucfirst($al['contamination_type']); ?></strong>
-                        <div style="font-size:.85rem; color:var(--text-muted); margin-top:.3rem;"><?php echo htmlspecialchars($al['description']); ?></div>
-                        <div style="font-size:.75rem; margin-top:.5rem; opacity:0.8;">Reported by <?php echo htmlspecialchars($al['reporter_name']); ?> at <?php echo date('g:i A', strtotime($al['reported_at'])); ?></div>
+                        <strong style="color:var(--danger); font-size:1.2rem; display:block; margin-bottom:0.4rem;"><?php echo htmlspecialchars($al['location'] ?? ''); ?>: <?php echo ucfirst($al['contamination_type']); ?></strong>
+                        <div style="font-size:1rem; color:var(--text-secondary);"><?php echo htmlspecialchars($al['description'] ?? ''); ?></div>
+                        <div style="font-size:0.85rem; margin-top:0.8rem; color:var(--text-muted);"><i class="far fa-user"></i> Reported by <?php echo htmlspecialchars($al['reporter_name'] ?? ''); ?> • <i class="far fa-clock"></i> <?php echo date('g:i A', strtotime($al['reported_at'])); ?></div>
                     </div>
                     <div style="text-align:right;">
-                        <span class="adm-badge adm-badge-danger" style="animation:pulse 2s infinite;"><i class="fas fa-exclamation-triangle"></i> <?php echo strtoupper($al['severity']); ?> SEVERITY</span>
+                        <span class="adm-badge" style="background:var(--danger-light); color:var(--danger); font-weight:800; padding:0.6rem 1.2rem; font-size:0.9rem; animation:pulse 2s infinite;"><i class="fas fa-exclamation-triangle"></i> <?php echo strtoupper($al['severity']); ?> SEVERITY</span>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -92,27 +140,27 @@ if ($qa)
         <?php endif; ?>
 
         <?php if (isset($_GET['success'])): ?>
-            <div class="adm-alert adm-alert-success" style="margin-bottom:2rem;"><i class="fas fa-check-circle"></i> Cleaning task dispatched successfully.</div>
+            <div class="adm-alert adm-alert-success" style="margin-bottom:2.5rem; border-radius:12px;"><i class="fas fa-check-circle"></i> Cleaning task dispatched successfully.</div>
         <?php endif; ?>
 
-        <div class="adm-card">
-            <div class="adm-card-header">
-                <h3><i class="fas fa-clipboard-check"></i> Cleaning & Sanitization Log</h3>
+        <div class="adm-card shadow-sm" style="border-radius:20px; border:1px solid var(--border); overflow:hidden;">
+            <div class="adm-card-header" style="padding: 1.8rem 2.5rem; background:var(--surface-2); border-bottom:1px solid var(--border);">
+                <h3><i class="fas fa-clipboard-check" style="color:var(--primary);"></i> Cleaning & Sanitization Log</h3>
             </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table">
+            <div class="adm-table-wrap" style="padding:0;">
+                <table class="stf-table">
                     <thead>
                         <tr>
                             <th>Task Issued</th>
-                            <th>Location / Ward</th>
+                            <th>Location / Zone</th>
                             <th>Type & Protocol</th>
-                            <th>Assigned Cleaner</th>
+                            <th>Staff Assignment</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($schedules)): ?>
-                            <tr><td colspan="5" style="text-align:center;padding:4rem;color:var(--text-muted);">No active cleaning schedules.</td></tr>
+                            <tr><td colspan="5" style="text-align:center;padding:5rem;color:var(--text-muted);">No active cleaning schedules.</td></tr>
                         <?php else:
                             foreach ($schedules as $cs):
                                 $sc = ($cs['status'] === 'Completed' || $cs['status'] === 'Inspected') ? 'success' : ($cs['status'] === 'In Progress' ? 'warning' : 'info');
@@ -122,42 +170,29 @@ if ($qa)
                         ?>
                         <tr <?php if($is_overdue) echo 'style="background-color: var(--warning-light);"'; ?> <?php if($is_hazard) echo 'style="background-color: rgba(231,76,60,0.05);"'; ?>>
                             <td style="white-space:nowrap;">
-                                <strong><?php echo date('d M, g:i A', strtotime($cs['scheduled_time'])); ?></strong>
-                                <?php if($cs['recurrence_pattern']): ?><br><span class="adm-badge adm-badge-secondary" style="margin-top:4px;"><i class="fas fa-redo-alt"></i> <?php echo htmlspecialchars($cs['recurrence_pattern']); ?></span><?php endif; ?>
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo date('d M, g:i A', strtotime($cs['scheduled_time'])); ?></strong>
+                                <?php if($cs['recurrence_pattern']): ?><br><span class="adm-badge" style="background:var(--primary-light); color:var(--primary); font-size:0.8rem; margin-top:4px;"><i class="fas fa-redo-alt"></i> <?php echo htmlspecialchars($cs['recurrence_pattern']); ?></span><?php endif; ?>
                             </td>
                             <td>
-                                <strong><?php echo htmlspecialchars($cs['ward_area'] ?? 'General Area'); ?></strong>
-                                <?php if($cs['specific_room']) echo " - " . htmlspecialchars($cs['specific_room']); ?>
-                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-building"></i> <?php echo htmlspecialchars($cs['location_type']); ?> <?php echo $cs['floor_building'] ? "({$cs['floor_building']})" : ''; ?></div>
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo htmlspecialchars($cs['ward_area'] ?? 'General Area'); ?></strong>
+                                <?php if($cs['specific_room']) echo " <span style='color:var(--text-muted);'>• " . htmlspecialchars($cs['specific_room']) . "</span>"; ?>
+                                <div style="font-size:.9rem;color:var(--text-muted); margin-top:0.3rem;"><i class="fas fa-building"></i> <?php echo htmlspecialchars($cs['location_type']); ?> <?php echo $cs['floor_building'] ? "({$cs['floor_building']})" : ''; ?></div>
                             </td>
                             <td>
-                                <strong><?php echo htmlspecialchars($cs['cleaning_type']); ?></strong>
+                                <strong style="font-size:1rem;"><?php echo htmlspecialchars($cs['cleaning_type']); ?></strong>
                                 <?php 
                                 $lvl = strtolower($cs['contamination_level'] ?? 'none');
-                                if($lvl === 'biohazard') echo '<span class="adm-badge adm-badge-danger" style="animation:pulse 2s infinite;"><i class="fas fa-biohazard"></i> BIOHAZARD</span>';
-                                elseif($lvl === 'high') echo '<span class="adm-badge adm-badge-warning">High Risk</span>';
-                                elseif($lvl === 'medium') echo '<span class="adm-badge adm-badge-info">Medium Risk</span>';
+                                if($lvl === 'biohazard') echo '<br><span class="adm-badge" style="background:var(--danger-light); color:var(--danger); font-size:0.75rem; font-weight:800; margin-top:4px;"><i class="fas fa-biohazard"></i> BIOHAZARD</span>';
+                                elseif($lvl === 'high') echo '<br><span class="adm-badge" style="background:var(--warning-light); color:var(--warning); font-size:0.75rem; font-weight:800; margin-top:4px;">High Risk</span>';
                                 ?>
-                                <?php if(!empty($ppe)): ?>
-                                    <div style="margin-top:6px; display:flex; gap:4px;">
-                                        <?php foreach($ppe as $p): 
-                                            $icon = 'fa-shield-virus';
-                                            if(stripos($p, 'glove') !== false) $icon = 'fa-hands-wash';
-                                            if(stripos($p, 'mask') !== false) $icon = 'fa-head-side-mask';
-                                            if(stripos($p, 'eye') !== false) $icon = 'fa-glasses';
-                                        ?>
-                                            <span class="adm-badge adm-badge-secondary" title="<?php echo htmlspecialchars($p); ?>"><i class="fas <?php echo $icon; ?>"></i></span>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
                             </td>
                             <td>
-                                <strong><?php echo htmlspecialchars($cs['primary_cleaner'] ?? 'Unassigned'); ?></strong>
-                                <?php if($cs['backup_cleaner']): ?><div style="font-size:0.75rem; color:var(--text-muted);">Backup: <?php echo htmlspecialchars($cs['backup_cleaner']); ?></div><?php endif; ?>
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo htmlspecialchars($cs['primary_cleaner'] ?? 'Unassigned'); ?></strong>
+                                <?php if($cs['backup_cleaner']): ?><div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">Backup: <?php echo htmlspecialchars($cs['backup_cleaner']); ?></div><?php endif; ?>
                             </td>
                             <td>
-                                <span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($cs['status']); ?></span>
-                                <?php if($is_overdue): ?><br><span class="adm-badge adm-badge-danger" style="margin-top:4px; font-size:0.75rem;">OVERDUE</span><?php endif; ?>
+                                <span class="adm-badge" style="background:var(--<?php echo $sc; ?>-light); color:var(--<?php echo $sc; ?>); font-weight:700;"><?php echo ucfirst($cs['status']); ?></span>
+                                <?php if($is_overdue): ?><br><span class="adm-badge" style="background:var(--danger-light); color:var(--danger); margin-top:6px; font-size:0.75rem; font-weight:800;">OVERDUE</span><?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; endif; ?>

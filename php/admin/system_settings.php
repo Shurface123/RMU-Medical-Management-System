@@ -1,565 +1,282 @@
 <?php
-session_start();
+require_once '../includes/auth_middleware.php';
+enforceSingleDashboard('admin');
 require_once '../db_conn.php';
 require_once '../classes/AuditLogger.php';
 
-// Check admin authentication
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+$active_page = 'system_settings';
+$page_title  = 'Global System Configuration';
 
 $auditLogger = new AuditLogger($conn);
-
 $message = '';
 $error = '';
 
-// Handle settings updates
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    switch ($_POST['action']) {
-        case 'update_general':
-            $siteName = $_POST['site_name'];
-            $siteEmail = $_POST['site_email'];
-            $timezone = $_POST['timezone'];
-            
-            // Update or insert settings
-            $settings = [
-                'site_name' => $siteName,
-                'site_email' => $siteEmail,
-                'timezone' => $timezone
-            ];
-            
-            foreach ($settings as $key => $value) {
-                $query = "INSERT INTO system_config (config_key, config_value, updated_by) 
-                          VALUES (?, ?, ?) 
-                          ON DUPLICATE KEY UPDATE config_value = ?, updated_by = ?, updated_at = NOW()";
-                $stmt = $conn->prepare($query);
-                $userId = $_SESSION['user_id'];
-                $stmt->bind_param("ssisi", $key, $value, $userId, $value, $userId);
-                $stmt->execute();
-            }
-            
-            $auditLogger->log($_SESSION['user_id'], 'config_update', 'system_config', null, null, 'Updated general settings');
-            $message = "General settings updated successfully!";
-            break;
-            
-        case 'update_security':
-            $sessionTimeout = $_POST['session_timeout'];
-            $maxLoginAttempts = $_POST['max_login_attempts'];
-            $lockoutDuration = $_POST['lockout_duration'];
-            $passwordExpiry = $_POST['password_expiry'];
-            $require2FA = isset($_POST['require_2fa']) ? '1' : '0';
-            
-            $settings = [
-                'session_timeout' => $sessionTimeout,
-                'max_login_attempts' => $maxLoginAttempts,
-                'lockout_duration' => $lockoutDuration,
-                'password_expiry_days' => $passwordExpiry,
-                'require_2fa' => $require2FA
-            ];
-            
-            foreach ($settings as $key => $value) {
-                $query = "INSERT INTO system_config (config_key, config_value, updated_by) 
-                          VALUES (?, ?, ?) 
-                          ON DUPLICATE KEY UPDATE config_value = ?, updated_by = ?, updated_at = NOW()";
-                $stmt = $conn->prepare($query);
-                $userId = $_SESSION['user_id'];
-                $stmt->bind_param("ssisi", $key, $value, $userId, $value, $userId);
-                $stmt->execute();
-            }
-            
-            $auditLogger->log($_SESSION['user_id'], 'config_update', 'system_config', null, null, 'Updated security settings');
-            $message = "Security settings updated successfully!";
-            break;
-            
-        case 'update_email':
-            $smtpHost = $_POST['smtp_host'];
-            $smtpPort = $_POST['smtp_port'];
-            $smtpUsername = $_POST['smtp_username'];
-            $smtpPassword = $_POST['smtp_password'];
-            $smtpFrom = $_POST['smtp_from'];
-            
-            $settings = [
-                'smtp_host' => $smtpHost,
-                'smtp_port' => $smtpPort,
-                'smtp_username' => $smtpUsername,
-                'smtp_from' => $smtpFrom
-            ];
-            
-            // Only update password if provided
-            if (!empty($smtpPassword)) {
-                $settings['smtp_password'] = base64_encode($smtpPassword); // Basic encoding
-            }
-            
-            foreach ($settings as $key => $value) {
-                $query = "INSERT INTO system_config (config_key, config_value, updated_by) 
-                          VALUES (?, ?, ?) 
-                          ON DUPLICATE KEY UPDATE config_value = ?, updated_by = ?, updated_at = NOW()";
-                $stmt = $conn->prepare($query);
-                $userId = $_SESSION['user_id'];
-                $stmt->bind_param("ssisi", $key, $value, $userId, $value, $userId);
-                $stmt->execute();
-            }
-            
-            $auditLogger->log($_SESSION['user_id'], 'config_update', 'system_config', null, null, 'Updated email settings');
-            $message = "Email settings updated successfully!";
-            break;
+// Fetch current settings
+$settings = [];
+$q = mysqli_query($conn, "SELECT * FROM system_settings");
+while($r = mysqli_fetch_assoc($q)) $settings[$r['setting_key']] = $r['setting_value'];
+
+// Handle POST updates
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
+    $to_update = [
+        'hospital_name' => $_POST['hospital_name'],
+        'hospital_email' => $_POST['hospital_email'],
+        'hospital_phone' => $_POST['hospital_phone'],
+        'hospital_address' => $_POST['hospital_address'],
+        'system_timezone' => $_POST['system_timezone'],
+        'session_timeout' => $_POST['session_timeout'],
+        'maintenance_mode' => isset($_POST['maintenance_mode']) ? '1' : '0',
+        'allow_patient_registration' => isset($_POST['allow_patient_registration']) ? '1' : '0',
+        'allow_staff_registration' => isset($_POST['allow_staff_registration']) ? '1' : '0',
+        'require_otp' => isset($_POST['require_otp']) ? '1' : '0'
+    ];
+
+    $success_count = 0;
+    foreach ($to_update as $key => $val) {
+        $val_esc = mysqli_real_escape_string($conn, $val);
+        $res = mysqli_query($conn, "INSERT INTO system_settings (setting_key, setting_value) VALUES ('$key', '$val_esc') ON DUPLICATE KEY UPDATE setting_value='$val_esc', updated_at=NOW()");
+        if ($res) $success_count++;
+    }
+
+    if ($success_count > 0) {
+        $auditLogger->logAction($_SESSION['user_id'], 'settings_update', 'system', null, "Updated system-wide configurations.");
+        $message = "System settings updated successfully.";
+        // Refresh local settings array
+        $q = mysqli_query($conn, "SELECT * FROM system_settings");
+        while($r = mysqli_fetch_assoc($q)) $settings[$r['setting_key']] = $r['setting_value'];
+    } else {
+        $error = "Failed to update system settings.";
     }
 }
 
-// Get current settings
-function getSetting($conn, $key, $default = '') {
-    $query = "SELECT config_value FROM system_config WHERE config_key = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("s", $key);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        return $row['config_value'];
-    }
-    return $default;
-}
-
-$settings = [
-    'site_name' => getSetting($conn, 'site_name', 'RMU Medical Sickbay'),
-    'site_email' => getSetting($conn, 'site_email', 'sickbay.txt@rmu.edu.gh'),
-    'timezone' => getSetting($conn, 'timezone', 'Africa/Accra'),
-    'session_timeout' => getSetting($conn, 'session_timeout', '30'),
-    'max_login_attempts' => getSetting($conn, 'max_login_attempts', '5'),
-    'lockout_duration' => getSetting($conn, 'lockout_duration', '15'),
-    'password_expiry_days' => getSetting($conn, 'password_expiry_days', '90'),
-    'require_2fa' => getSetting($conn, 'require_2fa', '0'),
-    'smtp_host' => getSetting($conn, 'smtp_host', 'smtp.gmail.com'),
-    'smtp_port' => getSetting($conn, 'smtp_port', '587'),
-    'smtp_username' => getSetting($conn, 'smtp_username', ''),
-    'smtp_from' => getSetting($conn, 'smtp_from', 'sickbay.txt@rmu.edu.gh')
-];
-
-// Get PHP info
-$phpVersion = phpversion();
-$maxUploadSize = ini_get('upload_max_filesize');
-$maxPostSize = ini_get('post_max_size');
-$memoryLimit = ini_get('memory_limit');
+include '../includes/_sidebar.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Settings - RMU Medical Sickbay</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .header h1 {
-            color: #2c3e50;
-            font-size: 28px;
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .tab {
-            padding: 12px 24px;
-            background: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .tab.active {
-            background: #3498db;
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .settings-card {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        
-        .settings-card h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .form-group small {
-            color: #7f8c8d;
-            font-size: 12px;
-            display: block;
-            margin-top: 5px;
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-        }
-        
-        .info-item {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .info-item strong {
-            color: #2c3e50;
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .info-item span {
-            color: #7f8c8d;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-cog"></i> System Settings</h1>
-            <p style="color: #7f8c8d; margin-top: 5px;">Configure system-wide settings and preferences</p>
+
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<style>
+/* ── Premium Admin Variables ── */
+:root {
+  --primary: #6366f1; /* Indigo for settings */
+  --primary-light: color-mix(in srgb, var(--primary) 15%, transparent);
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+}
+
+/* ── Hero Banner ── */
+.staff-hero { display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;
+  background:linear-gradient(135deg, var(--primary), #4338ca);
+  border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap; position:relative; overflow:hidden;}
+.staff-hero-avatar { width:72px;height:72px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0; z-index:2;}
+.staff-hero-info { z-index:2; }
+.staff-hero-info h2 { font-size:2rem;font-weight:700;margin:0; }
+.staff-hero-info p  { font-size:1.3rem;margin:.3rem 0 0;opacity:.85; }
+.hero-bg-icon { position:absolute; right:-20px; bottom:-40px; font-size:15rem; opacity:0.1; transform:rotate(-15deg); z-index:1; }
+
+/* ── Analytical Layout ── */
+.settings-grid { display:grid; grid-template-columns:2fr 1fr; gap:2.5rem; margin-bottom:2.5rem; }
+@media(max-width:1000px) { .settings-grid { grid-template-columns:1fr; } }
+
+/* ── Cards ── */
+.card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden; margin-bottom:2.5rem; }
+.card-header { padding:1.8rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; background:var(--surface-2); }
+.card-header h3 { font-size:1.4rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:.9rem;margin:0; }
+.card-body { padding:2rem; }
+
+/* ── Form Controls ── */
+.form-row { display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.6rem; }
+@media(max-width:768px){.form-row{grid-template-columns:1fr;}}
+.form-group { margin-bottom:1.6rem; }
+.form-group label { display:block;font-size:1.1rem;font-weight:600;color:var(--text-secondary);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em; }
+.form-control { width:100%;padding:1rem 1.3rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--text-primary);font-family:'Poppins',sans-serif;font-size:1.15rem;
+  transition:var(--transition);outline:none;box-sizing:border-box; }
+.form-control:focus { border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light); }
+
+/* ── Toggle Switch ── */
+.switch-group { display:flex; align-items:center; justify-content:space-between; padding:1.5rem; background:var(--surface-2); border-radius:var(--radius-sm); margin-bottom:1rem; border:1px solid var(--border); }
+.switch-label { display:flex; flex-direction:column; gap:0.2rem; }
+.switch-label strong { font-size:1.2rem; color:var(--text-primary); }
+.switch-label span { font-size:0.95rem; color:var(--text-muted); }
+
+.switch { position:relative; display:inline-block; width:52px; height:28px; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; cursor:pointer; inset:0; background-color:var(--border); transition:.4s; border-radius:34px; }
+.slider:before { position:absolute; content:""; height:20px; width:20px; left:4px; bottom:4px; background-color:white; transition:.4s; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.2);}
+input:checked + .slider { background-color:var(--primary); }
+input:checked + .slider:before { transform:translateX(24px); }
+
+/* ── Buttons ── */
+.btn { display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 1.8rem;border-radius:var(--radius-sm);
+  font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:600;cursor:pointer;border:none;transition:var(--transition);text-decoration:none; justify-content:center;}
+.btn-primary { background:var(--primary);color:#fff; }
+.btn-primary:hover { opacity:.88;transform:translateY(-1px); box-shadow:0 8px 24px var(--primary-light); }
+
+.alert { padding:1.2rem 2rem; border-radius:var(--radius-sm); margin-bottom:2rem; display:flex; align-items:center; gap:1rem; font-weight:600; font-size:1.15rem; animation:fadeIn 0.3s ease; }
+.alert-success { background:rgba(16,185,129,0.15); color:var(--success); border-left:5px solid var(--success); }
+.alert-error { background:rgba(239,68,68,0.15); color:var(--danger); border-left:5px solid var(--danger); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+</style>
+
+<main class="adm-main">
+    <div class="adm-topbar">
+        <div class="adm-topbar-left">
+            <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <span class="adm-page-title"><i class="fas fa-cog"></i> Global System Settings</span>
         </div>
-        
-        <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
-        
-        <div class="tabs">
-            <button class="btn btn-primary tab active" onclick="switchTab('general')"><span class="btn-text">
-                <i class="fas fa-info-circle"></i> General
-            </span></button>
-            <button class="btn btn-primary tab" onclick="switchTab('security')"><span class="btn-text">
-                <i class="fas fa-shield-alt"></i> Security
-            </span></button>
-            <button class="btn btn-primary tab" onclick="switchTab('email')"><span class="btn-text">
-                <i class="fas fa-envelope"></i> Email
-            </span></button>
-            <button class="btn btn-primary tab" onclick="switchTab('system')"><span class="btn-text">
-                <i class="fas fa-server"></i> System Info
-            </span></button>
-        </div>
-        
-        <!-- General Settings -->
-        <div id="general" class="tab-content active">
-            <div class="settings-card">
-                <h2>General Settings</h2>
-                <form method="POST">
-                    <input type="hidden" name="action" value="update_general">
-                    
-                    <div class="form-group">
-                        <label>Site Name</label>
-                        <input type="text" name="site_name" value="<?php echo htmlspecialchars($settings['site_name']); ?>" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Site Email</label>
-                        <input type="email" name="site_email" value="<?php echo htmlspecialchars($settings['site_email']); ?>" required>
-                        <small>Main contact email for the system</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Timezone</label>
-                        <select name="timezone" required>
-                            <option value="Africa/Accra" <?php echo $settings['timezone'] === 'Africa/Accra' ? 'selected' : ''; ?>>Africa/Accra (GMT)</option>
-                            <option value="Africa/Lagos" <?php echo $settings['timezone'] === 'Africa/Lagos' ? 'selected' : ''; ?>>Africa/Lagos (WAT)</option>
-                            <option value="UTC" <?php echo $settings['timezone'] === 'UTC' ? 'selected' : ''; ?>>UTC</option>
-                            <option value="America/New_York" <?php echo $settings['timezone'] === 'America/New_York' ? 'selected' : ''; ?>>America/New_York (EST)</option>
-                            <option value="Europe/London" <?php echo $settings['timezone'] === 'Europe/London' ? 'selected' : ''; ?>>Europe/London (GMT)</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary"><span class="btn-text">
-                        <i class="fas fa-save"></i> Save General Settings
-                    </span></button>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Security Settings -->
-        <div id="security" class="tab-content">
-            <div class="settings-card">
-                <h2>Security Settings</h2>
-                <form method="POST">
-                    <input type="hidden" name="action" value="update_security">
-                    
-                    <div class="form-group">
-                        <label>Session Timeout (minutes)</label>
-                        <input type="number" name="session_timeout" value="<?php echo htmlspecialchars($settings['session_timeout']); ?>" min="5" max="1440" required>
-                        <small>How long before inactive users are logged out</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Max Login Attempts</label>
-                        <input type="number" name="max_login_attempts" value="<?php echo htmlspecialchars($settings['max_login_attempts']); ?>" min="3" max="10" required>
-                        <small>Number of failed login attempts before account lockout</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Lockout Duration (minutes)</label>
-                        <input type="number" name="lockout_duration" value="<?php echo htmlspecialchars($settings['lockout_duration']); ?>" min="5" max="60" required>
-                        <small>How long accounts remain locked after max failed attempts</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Password Expiry (days)</label>
-                        <input type="number" name="password_expiry" value="<?php echo htmlspecialchars($settings['password_expiry_days']); ?>" min="0" max="365" required>
-                        <small>Set to 0 to disable password expiry</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input type="checkbox" name="require_2fa" id="require_2fa" <?php echo $settings['require_2fa'] === '1' ? 'checked' : ''; ?>>
-                            <label for="require_2fa" style="margin: 0;">Require 2FA for all users</label>
-                        </div>
-                        <small>Force all users to enable two-factor authentication</small>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary"><span class="btn-text">
-                        <i class="fas fa-save"></i> Save Security Settings
-                    </span></button>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Email Settings -->
-        <div id="email" class="tab-content">
-            <div class="settings-card">
-                <h2>Email Settings</h2>
-                <form method="POST">
-                    <input type="hidden" name="action" value="update_email">
-                    
-                    <div class="form-group">
-                        <label>SMTP Host</label>
-                        <input type="text" name="smtp_host" value="<?php echo htmlspecialchars($settings['smtp_host']); ?>" required>
-                        <small>e.g., smtp.gmail.com, smtp.office365.com</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>SMTP Port</label>
-                        <input type="number" name="smtp_port" value="<?php echo htmlspecialchars($settings['smtp_port']); ?>" required>
-                        <small>Usually 587 for TLS or 465 for SSL</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>SMTP Username</label>
-                        <input type="text" name="smtp_username" value="<?php echo htmlspecialchars($settings['smtp_username']); ?>" required>
-                        <small>Your email address</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>SMTP Password</label>
-                        <input type="password" name="smtp_password" placeholder="Leave blank to keep current password">
-                        <small>App password for Gmail, or regular password for other providers</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>From Email Address</label>
-                        <input type="email" name="smtp_from" value="<?php echo htmlspecialchars($settings['smtp_from']); ?>" required>
-                        <small>Email address shown as sender</small>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary"><span class="btn-text">
-                        <i class="fas fa-save"></i> Save Email Settings
-                    </span></button>
-                </form>
-            </div>
-        </div>
-        
-        <!-- System Info -->
-        <div id="system" class="tab-content">
-            <div class="settings-card">
-                <h2>System Information</h2>
-                
-                <div class="info-grid">
-                    <div class="info-item">
-                        <strong>PHP Version</strong>
-                        <span><?php echo $phpVersion; ?></span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <strong>Max Upload Size</strong>
-                        <span><?php echo $maxUploadSize; ?></span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <strong>Max POST Size</strong>
-                        <span><?php echo $maxPostSize; ?></span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <strong>Memory Limit</strong>
-                        <span><?php echo $memoryLimit; ?></span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <strong>Server Software</strong>
-                        <span><?php echo $_SERVER['SERVER_SOFTWARE']; ?></span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <strong>Database</strong>
-                        <span>MySQL <?php echo mysqli_get_server_info($conn); ?></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </span></a>
+        <div class="adm-topbar-right">
+            <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="adm-avatar"><i class="fas fa-user"></i></div>
         </div>
     </div>
     
-    <script>
-        function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Remove active class from all tab buttons
-            document.querySelectorAll('.tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked button
-            event.target.closest('.tab').classList.add('active');
-        }
-    </script>
+    <div class="adm-content" style="animation:fadeIn .35s ease;">
+        <div class="staff-hero">
+            <i class="fas fa-tools hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-sliders-h"></i></div>
+            <div class="staff-hero-info">
+                <h2>Platform Governance & Control</h2>
+                <p>Configure hospital meta-data, security protocols, and system-wide feature flags.</p>
+            </div>
+        </div>
+
+        <?php if ($message): ?>
+            <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($message) ?></div>
+        <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
+        <form method="POST">
+            <div class="settings-grid">
+                <div class="left-col">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-hospital-alt" style="color:var(--primary);"></i> Hospital Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Hospital Name</label>
+                                <input type="text" name="hospital_name" class="form-control" value="<?= htmlspecialchars($settings['hospital_name'] ?? 'RMU Medical Sickbay') ?>" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Contact Email</label>
+                                    <input type="email" name="hospital_email" class="form-control" value="<?= htmlspecialchars($settings['hospital_email'] ?? 'admin@rmu.edu.gh') ?>" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Contact Phone</label>
+                                    <input type="text" name="hospital_phone" class="form-control" value="<?= htmlspecialchars($settings['hospital_phone'] ?? '+233 123 456 789') ?>" required>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Physical Address</label>
+                                <textarea name="hospital_address" class="form-control" rows="3" required><?= htmlspecialchars($settings['hospital_address'] ?? 'Maritime University, Nungua, Accra') ?></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-user-shield" style="color:var(--primary);"></i> Security & Session Control</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>System Timezone</label>
+                                    <select name="system_timezone" class="form-control">
+                                        <option value="UTC" <?= ($settings['system_timezone'] ?? '') === 'UTC' ? 'selected' : '' ?>>UTC</option>
+                                        <option value="Africa/Accra" <?= ($settings['system_timezone'] ?? '') === 'Africa/Accra' ? 'selected' : '' ?>>Africa/Accra (GMT)</option>
+                                        <option value="Europe/London" <?= ($settings['system_timezone'] ?? '') === 'Europe/London' ? 'selected' : '' ?>>Europe/London</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Session Timeout (Minutes)</label>
+                                    <input type="number" name="session_timeout" class="form-control" value="<?= htmlspecialchars($settings['session_timeout'] ?? '30') ?>" min="5" max="1440">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-toggle-on" style="color:var(--primary);"></i> System Flags</h3>
+                        </div>
+                        <div class="card-body" style="padding:1.5rem;">
+                            <div class="switch-group">
+                                <div class="switch-label">
+                                    <strong>Maintenance Mode</strong>
+                                    <span>Disable public access</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" name="maintenance_mode" <?= ($settings['maintenance_mode'] ?? '0') === '1' ? 'checked' : '' ?>>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-group">
+                                <div class="switch-label">
+                                    <strong>Patient Signup</strong>
+                                    <span>Allow new self-registration</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" name="allow_patient_registration" <?= ($settings['allow_patient_registration'] ?? '1') === '1' ? 'checked' : '' ?>>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-group">
+                                <div class="switch-label">
+                                    <strong>Staff Signup</strong>
+                                    <span>Enable staff portal registration</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" name="allow_staff_registration" <?= ($settings['allow_staff_registration'] ?? '1') === '1' ? 'checked' : '' ?>>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-group" style="margin-bottom:0;">
+                                <div class="switch-label">
+                                    <strong>2FA / OTP Requirement</strong>
+                                    <span>Enforce login verification</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" name="require_otp" <?= ($settings['require_otp'] ?? '0') === '1' ? 'checked' : '' ?>>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="border:none; background:transparent; box-shadow:none;">
+                        <button type="submit" name="update_settings" class="btn btn-primary" style="width:100%; padding:1.2rem;">
+                            <i class="fas fa-save"></i> Save Global Configuration
+                        </button>
+                        <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-top:1rem;">
+                            <i class="fas fa-info-circle"></i> Changes affect all users immediately.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    const themeIcon = document.getElementById('themeIcon');
+    document.getElementById('themeToggle')?.addEventListener('click', () => {
+        const html = document.documentElement;
+        const t = html.getAttribute('data-theme')==='dark'?'light':'dark';
+        html.setAttribute('data-theme', t);
+        localStorage.setItem('rmu_theme', t);
+        if (themeIcon) themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+    });
+</script>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script>
 </body>
 </html>

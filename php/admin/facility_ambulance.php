@@ -44,6 +44,18 @@ if ($qt)
         $trips[] = $r;
 ?>
 
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<style>
+.staff-hero{display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;background:linear-gradient(135deg,#dc2626,#991b1b);border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap;position:relative;overflow:hidden;}
+.staff-hero-avatar{width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.35);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0;z-index:2;}
+.staff-hero-info{z-index:2;}.staff-hero-info h2{font-size:2rem;font-weight:700;margin:0;}.staff-hero-info p{font-size:1.3rem;margin:.3rem 0 0;opacity:.85;}
+.hero-bg-icon{position:absolute;right:-20px;bottom:-40px;font-size:15rem;opacity:.07;transform:rotate(-15deg);z-index:1;}
+.stf-table{width:100%;border-collapse:collapse;font-size:1.15rem;}
+.stf-table th{background:var(--surface-2);color:var(--text-secondary);font-weight:600;text-transform:uppercase;font-size:1rem;letter-spacing:.04em;padding:1.2rem 1.6rem;text-align:left;}
+.stf-table td{padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle;}
+.stf-table tr:hover td{background:var(--surface-2);}
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
@@ -51,60 +63,94 @@ if ($qt)
             <span class="adm-page-title"><i class="fas fa-ambulance"></i> Emergency Dispatch Hub</span>
         </div>
         <div class="adm-topbar-right">
+            <div class="adm-topbar-datetime">
+                <i class="far fa-calendar-alt"></i>
+                <span><?php echo date('D, M d, Y'); ?></span>
+            </div>
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
-            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+            <div class="adm-avatar"><?php echo strtoupper(substr($_SESSION['name'] ?? 'A', 0, 1)); ?></div>
         </div>
     </div>
 
-    <div class="adm-content">
-        <div class="adm-page-header">
-            <div>
-                <h1>Ambulance Dispatch Hub</h1>
+    <div class="adm-content" style="animation:fadeIn .35s ease;">
+        <div class="staff-hero">
+            <i class="fas fa-ambulance hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-truck-medical"></i></div>
+            <div class="staff-hero-info">
+                <h2>Emergency Dispatch Command</h2>
                 <p>Assign trips to drivers and monitor fleet movements in real-time.</p>
             </div>
-            <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="btn-icon btn btn-ghost"><span class="btn-text"><i class="fas fa-car-side"></i> View Fleet</span></a>
-                <button class="btn btn-danger" onclick="document.getElementById('dispModal').classList.add('active')"><span class="btn-text">
+            <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
+                <a href="/RMU-Medical-Management-System/php/Ambulence/ambulence.php" class="btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3);"><i class="fas fa-car-side"></i> View Fleet</a>
+                <button class="btn btn-primary" onclick="document.getElementById('dispModal').classList.add('active')" style="background:#fff; color:#dc2626; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
                     <i class="fas fa-plus"></i> Dispatch Ambulance
-                </span></button>
+                </button>
+            </div>
+        </div>
+
+        <div class="adm-stats-grid">
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #ef4444, #dc2626);"><i class="fas fa-route"></i></div>
+                <div class="adm-stat-label">Total Missions</div>
+                <div class="adm-stat-value"><?php echo count($trips); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-history"></i> Lifetime trips</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #22c55e, #16a34a);"><i class="fas fa-check-circle"></i></div>
+                <div class="adm-stat-label">Available Fleet</div>
+                <div class="adm-stat-value"><?php echo count($ambulances); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-truck-medical"></i> Ready for dispatch</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-user-check"></i></div>
+                <div class="adm-stat-label">Standby Drivers</div>
+                <div class="adm-stat-value"><?php echo count($drivers); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-id-card"></i> Ready to move</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-satellite"></i></div>
+                <div class="adm-stat-label">Active Missions</div>
+                <div class="adm-stat-value">
+                    <?php 
+                        $active = array_filter($trips, fn($t) => in_array($t['trip_status'], ['assigned', 'en route', 'arrived']));
+                        echo count($active);
+                    ?>
+                </div>
+                <div class="adm-stat-footer"><i class="fas fa-signal"></i> Real-time tracking</div>
             </div>
         </div>
 
         <?php if (isset($_GET['success'])): ?>
-            <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Ambulance dispatched successfully. Sent to driver's dashboard.</div>
-        <?php
-endif; ?>
+            <div class="adm-alert adm-alert-success" style="margin-bottom:2rem; border-radius:12px;"><i class="fas fa-check-circle"></i> Ambulance dispatched successfully. Sent to driver's dashboard.</div>
+        <?php endif; ?>
 
-        <div class="adm-card">
-            <div class="adm-card-header">
-                <h3><i class="fas fa-route"></i> Live Dispatch & Trip Logs</h3>
+        <div class="adm-card shadow-sm" style="border-radius:20px; border:1px solid var(--border); overflow:hidden;">
+            <div class="adm-card-header" style="padding: 1.8rem 2.5rem; background:var(--surface-2); border-bottom:1px solid var(--border);">
+                <h3><i class="fas fa-route" style="color:var(--primary);"></i> Live Dispatch & Trip Logs</h3>
             </div>
-            <div class="adm-table-wrap" style="overflow-x: auto; width: 100%;">
-                <table class="adm-table" style="width: 100%; min-width: 800px;">
+            <div class="adm-table-wrap" style="padding:0;">
+                <table class="stf-table">
                     <thead><tr><th>Dispatched</th><th>Driver & Vehicle</th><th>Route (Pickup ➔ Dropoff)</th><th>Purpose</th><th>Status</th></tr></thead>
                     <tbody>
-                        <?php if (empty($trips)): ?><tr><td colspan="5" style="text-align:center;padding:2rem;">No trips logged.</td></tr>
-                        <?php
-else:
-    foreach ($trips as $t):
-        $sc = $t['trip_status'] === 'completed' ? 'success' : ($t['trip_status'] === 'en route' ? 'info' : 'warning');
-?>
+                        <?php if (empty($trips)): ?><tr><td colspan="5" style="text-align:center;padding:5rem; color:var(--text-muted);">No trips logged.</td></tr>
+                        <?php else:
+                            foreach ($trips as $t):
+                                $sc = $t['trip_status'] === 'completed' ? 'success' : ($t['trip_status'] === 'en route' ? 'info' : 'warning');
+                        ?>
                         <tr>
                             <td style="white-space:nowrap;"><?php echo date('d M Y, g:i A', strtotime($t['created_at'])); ?></td>
                             <td>
-                                <strong><?php echo htmlspecialchars($t['driver_name']); ?></strong>
-                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-truck-medical"></i> <?php echo htmlspecialchars($t['vehicle_number']); ?></div>
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo htmlspecialchars($t['driver_name']); ?></strong>
+                                <div style="font-size:.9rem;color:var(--text-muted);"><i class="fas fa-truck-medical"></i> <?php echo htmlspecialchars($t['vehicle_number']); ?></div>
                             </td>
                             <td>
                                 <div><span style="color:var(--success);"><i class="fas fa-map-marker-alt"></i></span> <?php echo htmlspecialchars($t['pickup_location']); ?></div>
-                                <div><span style="color:var(--danger);"><i class="fas fa-map-pin"></i></span> <?php echo htmlspecialchars($t['destination'] ?: 'Hospital'); ?></div>
+                                <div style="margin-top:0.3rem;"><span style="color:var(--danger);"><i class="fas fa-map-pin"></i></span> <?php echo htmlspecialchars($t['destination'] ?: 'Hospital'); ?></div>
                             </td>
-                            <td><?php echo htmlspecialchars($t['trip_notes']); ?></td>
-                            <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($t['trip_status']); ?></span></td>
+                            <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?php echo htmlspecialchars($t['trip_notes']); ?></td>
+                            <td><span class="adm-badge" style="background:var(--<?php echo $sc; ?>-light); color:var(--<?php echo $sc; ?>); font-weight:700;"><?php echo ucfirst($t['trip_status']); ?></span></td>
                         </tr>
-                        <?php
-    endforeach;
-endif; ?>
+                        <?php endforeach; endif; ?>
                     </tbody>
                 </table>
             </div>

@@ -32,6 +32,18 @@ if ($q)
         $orders[] = $r;
 ?>
 
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<style>
+.staff-hero{display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap;position:relative;overflow:hidden;}
+.staff-hero-avatar{width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.35);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0;z-index:2;}
+.staff-hero-info{z-index:2;}.staff-hero-info h2{font-size:2rem;font-weight:700;margin:0;}.staff-hero-info p{font-size:1.3rem;margin:.3rem 0 0;opacity:.85;}
+.hero-bg-icon{position:absolute;right:-20px;bottom:-40px;font-size:15rem;opacity:.07;transform:rotate(-15deg);z-index:1;}
+.stf-table{width:100%;border-collapse:collapse;font-size:1.15rem;}
+.stf-table th{background:var(--surface-2);color:var(--text-secondary);font-weight:600;text-transform:uppercase;font-size:1rem;letter-spacing:.04em;padding:1.2rem 1.6rem;text-align:left;}
+.stf-table td{padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle;}
+.stf-table tr:hover td{background:var(--surface-2);}
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
@@ -39,33 +51,75 @@ if ($q)
             <span class="adm-page-title"><i class="fas fa-utensils"></i> Dietary & Kitchen</span>
         </div>
         <div class="adm-topbar-right">
+            <div class="adm-topbar-datetime">
+                <i class="far fa-calendar-alt"></i>
+                <span><?php echo date('D, M d, Y'); ?></span>
+            </div>
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
-            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+            <div class="adm-avatar"><?php echo strtoupper(substr($_SESSION['name'] ?? 'A', 0, 1)); ?></div>
         </div>
     </div>
 
-    <div class="adm-content">
-        <div class="adm-page-header">
-            <div>
-                <h1>Meal & Dietary Orders</h1>
+    <div class="adm-content" style="animation:fadeIn .35s ease;">
+        <div class="staff-hero">
+            <i class="fas fa-utensils hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-concierge-bell"></i></div>
+            <div class="staff-hero-info">
+                <h2>Dietary Command Center</h2>
                 <p>Assign dietary requirements and meal prep tasks to the kitchen staff.</p>
             </div>
-            <button class="btn btn-primary" onclick="document.getElementById('dietModal').classList.add('active')"><span class="btn-text">
-                <i class="fas fa-plus"></i> New Dietary Order
-            </span></button>
+            <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
+                <button class="btn btn-primary" onclick="document.getElementById('dietModal').classList.add('active')" style="background:#fff; color:#d97706; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+                    <i class="fas fa-plus"></i> New Dietary Order
+                </button>
+            </div>
+        </div>
+
+        <div class="adm-stats-grid">
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-clock"></i></div>
+                <div class="adm-stat-label">Pending Orders</div>
+                <div class="adm-stat-value"><?php echo count(array_filter($orders, fn($o) => $o['preparation_status'] === 'pending')); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-hourglass-start"></i> Waiting for prep</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-spinner"></i></div>
+                <div class="adm-stat-label">In Preparation</div>
+                <div class="adm-stat-value"><?php echo count(array_filter($orders, fn($o) => $o['preparation_status'] === 'in preparation')); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-fire"></i> Active cooking</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-check-circle"></i></div>
+                <div class="adm-stat-label">Ready / Delivered</div>
+                <div class="adm-stat-value"><?php echo count(array_filter($orders, fn($o) => in_array($o['preparation_status'], ['ready', 'delivered']))); ?></div>
+                <div class="adm-stat-footer"><i class="fas fa-truck"></i> Fulfilled today</div>
+            </div>
+            <div class="adm-stat-card">
+                <div class="adm-stat-icon" style="background:linear-gradient(135deg, #ef4444, #dc2626);"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="adm-stat-label">Critical Diets</div>
+                <div class="adm-stat-value" style="color:#ef4444;">
+                    <?php 
+                        $crit = array_filter($orders, function($o) {
+                            $d = json_decode($o['dietary_requirements'], true);
+                            return ($d['type'] ?? '') === 'NPO' || !empty(json_decode($d['allergies'] ?? '[]', true));
+                        });
+                        echo count($crit);
+                    ?>
+                </div>
+                <div class="adm-stat-footer"><i class="fas fa-biohazard"></i> NPO & Allergies</div>
+            </div>
         </div>
 
         <?php if (isset($_GET['success'])): ?>
-            <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Dietary order dispatched to kitchen.</div>
-        <?php
-endif; ?>
+            <div class="adm-alert adm-alert-success" style="margin-bottom:2.5rem; border-radius:12px;"><i class="fas fa-check-circle"></i> Dietary order dispatched to kitchen.</div>
+        <?php endif; ?>
 
-        <div class="adm-card">
-            <div class="adm-card-header">
-                <h3><i class="fas fa-concierge-bell"></i> Kitchen Ticket Queue</h3>
+        <div class="adm-card shadow-sm" style="border-radius:20px; border:1px solid var(--border); overflow:hidden;">
+            <div class="adm-card-header" style="padding: 1.8rem 2.5rem; background:var(--surface-2); border-bottom:1px solid var(--border);">
+                <h3><i class="fas fa-concierge-bell" style="color:var(--primary);"></i> Kitchen Ticket Queue</h3>
             </div>
-            <div class="adm-table-wrap">
-                <table class="adm-table">
+            <div class="adm-table-wrap" style="padding:0;">
+                <table class="stf-table">
                     <thead>
                         <tr>
                             <th>Time Created</th>
@@ -77,7 +131,7 @@ endif; ?>
                     </thead>
                     <tbody>
                         <?php if (empty($orders)): ?>
-                            <tr><td colspan="5" style="text-align:center;padding:4rem;color:var(--text-muted);">No active kitchen orders.</td></tr>
+                            <tr><td colspan="5" style="text-align:center;padding:5rem;color:var(--text-muted);">No active kitchen orders.</td></tr>
                         <?php else:
                             foreach ($orders as $o):
                                 $sc = $o['preparation_status'] === 'delivered' ? 'success' : ($o['preparation_status'] === 'ready' ? 'success' : ($o['preparation_status'] === 'in preparation' ? 'warning' : 'info'));
@@ -91,24 +145,24 @@ endif; ?>
                         ?>
                         <tr <?php if($is_overdue) echo 'style="background-color: var(--warning-light);"'; ?>>
                             <td style="white-space:nowrap;">
-                                <strong><?php echo date('d M, g:i A', $created); ?></strong>
-                                <?php if($prio === 'Emergency'): ?><br><span class="adm-badge adm-badge-danger" style="margin-top:4px;"><i class="fas fa-siren-on"></i> EMERGENCY</span>
-                                <?php elseif($prio === 'Urgent'): ?><br><span class="adm-badge adm-badge-warning" style="margin-top:4px;">URGENT</span><?php endif; ?>
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo date('d M, g:i A', $created); ?></strong>
+                                <?php if($prio === 'Emergency'): ?><br><span class="adm-badge" style="background:var(--danger-light); color:var(--danger); font-size:0.75rem; font-weight:800; margin-top:4px;"><i class="fas fa-siren-on"></i> EMERGENCY</span>
+                                <?php elseif($prio === 'Urgent'): ?><br><span class="adm-badge" style="background:var(--warning-light); color:var(--warning); font-size:0.75rem; font-weight:800; margin-top:4px;">URGENT</span><?php endif; ?>
                             </td>
                             <td>
-                                <strong><?php echo htmlspecialchars($o['patient_name'] ?? 'Unregistered Patient'); ?></strong>
-                                <div style="font-size:.8rem;color:var(--text-muted);"><i class="fas fa-bed"></i> <?php echo htmlspecialchars($o['ward_department']); ?> <?php echo !empty($o['bed_number']) ? ' - ' . htmlspecialchars($o['bed_number']) : ''; ?></div>
+                                <strong style="font-size:1.1rem; color:var(--text-primary);"><?php echo htmlspecialchars($o['patient_name'] ?? 'Unregistered Patient'); ?></strong>
+                                <div style="font-size:.9rem;color:var(--text-muted); margin-top:0.3rem;"><i class="fas fa-bed"></i> <?php echo htmlspecialchars($o['ward_department']); ?> <?php echo !empty($o['bed_number']) ? ' - ' . htmlspecialchars($o['bed_number']) : ''; ?></div>
                             </td>
-                            <td><span class="adm-badge adm-badge-secondary"><?php echo strtoupper($o['meal_type']); ?></span></td>
+                            <td><span class="adm-badge" style="background:var(--surface-2); color:var(--text-secondary); font-weight:700;"><?php echo strtoupper($o['meal_type']); ?></span></td>
                             <td>
-                                <strong><?php echo ucfirst($diet['type'] ?? 'Standard'); ?></strong>
-                                <?php if($is_npo): ?><span class="adm-badge adm-badge-danger"><i class="fas fa-ban"></i> NPO</span><?php endif; ?>
+                                <strong style="font-size:1rem;"><?php echo ucfirst($diet['type'] ?? 'Standard'); ?></strong>
+                                <?php if($is_npo): ?><span class="adm-badge" style="background:var(--danger-light); color:var(--danger); font-size:0.75rem; margin-left:5px;"><i class="fas fa-ban"></i> NPO</span><?php endif; ?>
                                 <?php if(!empty($allergies)): ?>
                                     <div style="margin-top:4px;">
-                                        <span class="adm-badge adm-badge-danger" style="background:var(--danger);color:#fff;"><i class="fas fa-exclamation-triangle"></i> ALLERGIES</span>
+                                        <span class="adm-badge" style="background:var(--danger);color:#fff; font-size:0.75rem;"><i class="fas fa-exclamation-triangle"></i> ALLERGIES</span>
                                     </div>
                                 <?php endif; ?>
-                                <?php if ($o['notes']) echo '<div style="font-size:.75rem;color:var(--danger); margin-top:4px;"><i class="fas fa-notes-medical"></i> ' . htmlspecialchars($o['notes']) . '</div>'; ?>
+                                <?php if ($o['notes']) echo '<div style="font-size:.85rem;color:var(--danger); margin-top:6px; font-style:italic;"><i class="fas fa-notes-medical"></i> ' . htmlspecialchars($o['notes']) . '</div>'; ?>
                             </td>
                             <td>
                                 <div style="display:flex; align-items:center; gap:8px;">
@@ -117,11 +171,8 @@ endif; ?>
                                     <?php elseif($o['preparation_status'] === 'ready'): ?> <i class="fas fa-check-circle" style="color:var(--success);"></i>
                                     <?php elseif($o['preparation_status'] === 'delivered'): ?> <i class="fas fa-check-double" style="color:var(--success);"></i>
                                     <?php endif; ?>
-                                    <span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo ucfirst($o['preparation_status']); ?></span>
+                                    <span class="adm-badge" style="background:var(--<?php echo $sc; ?>-light); color:var(--<?php echo $sc; ?>); font-weight:700;"><?php echo ucfirst($o['preparation_status']); ?></span>
                                 </div>
-                                <?php if ($o['delivery_status'] === 'delivered' && $o['preparation_status'] !== 'delivered'): ?>
-                                    <span class="adm-badge adm-badge-success" style="margin-top:4px;">Delivered</span>
-                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; endif; ?>

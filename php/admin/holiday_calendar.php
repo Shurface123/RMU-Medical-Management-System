@@ -108,576 +108,297 @@ $stats = $stmt->get_result()->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holiday Calendar - RMU Medical Sickbay</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Holiday Calendar | RMU Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        :root { --primary: #8b5cf6; --primary-light: rgba(139, 92, 246, 0.15); }
+        .staff-hero { display:flex; align-items:center; gap:2rem; padding:2.5rem; margin-bottom:2.5rem; background:linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius:var(--radius-lg); color:#fff; position:relative; overflow:hidden; box-shadow:var(--shadow-md); }
+        .hero-bg-icon { position:absolute; right:-20px; bottom:-40px; font-size:15rem; opacity:0.1; transform:rotate(-15deg); z-index:1; }
+        .staff-hero-avatar { width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.2); border:3px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:2.5rem; z-index:2; }
+        .staff-hero-info { z-index:2; }
+        .staff-hero-info h2 { font-size:2.2rem; font-weight:700; margin:0; font-family:'Outfit',sans-serif; }
+        .staff-hero-info p { font-size:1.2rem; margin:0.4rem 0 0; opacity:0.9; }
+
+        .holiday-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1.5rem; margin-top:2rem; }
+        .holiday-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.8rem; transition:all 0.3s ease; position:relative; overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow-sm); }
+        .holiday-card:hover { transform:translateY(-5px); box-shadow:var(--shadow-md); border-color:var(--primary); }
+        .holiday-card::before { content:''; position:absolute; left:0; top:0; width:6px; height:100%; background:var(--primary); opacity:0.8; }
+        .holiday-card.medical::before { background:#ef4444; }
+        .holiday-card.public::before { background:#3b82f6; }
         
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
-        }
+        .holiday-date-circle { width:55px; height:55px; border-radius:14px; background:var(--surface-2); display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:700; margin-bottom:1.2rem; border:1px solid var(--border); }
+        .holiday-date-circle span:first-child { font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); line-height:1; }
+        .holiday-date-circle span:last-child { font-size:1.3rem; color:var(--text-primary); }
+
+        .holiday-name { font-size:1.4rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem; display:flex; align-items:center; gap:0.6rem; }
+        .holiday-desc { font-size:1rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1.5rem; flex-grow:1; }
         
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+        .holiday-meta { display:flex; flex-wrap:wrap; gap:0.6rem; margin-bottom:1.5rem; }
+        .h-badge { padding:0.4rem 0.9rem; border-radius:20px; font-size:0.85rem; font-weight:600; text-transform:uppercase; display:flex; align-items:center; gap:0.4rem; }
+        .h-badge-public { background:#dbeafe; color:#1e40af; }
+        .h-badge-medical { background:#fee2e2; color:#991b1b; }
+        .h-badge-recurring { background:#f3e8ff; color:#6b21a8; }
+
+        .card-actions { display:flex; gap:0.8rem; border-top:1px solid var(--border); padding-top:1.2rem; }
         
-        .header {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .header h1 {
-            color: #2c3e50;
-            font-size: 28px;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .year-selector {
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .stat-card h3 {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .stat-card .value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .calendar-container {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-        }
-        
-        .holiday-card {
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid;
-            background: #f8f9fa;
-            position: relative;
-        }
-        
-        .holiday-card.public {
-            border-left-color: #3498db;
-        }
-        
-        .holiday-card.medical {
-            border-left-color: #e74c3c;
-        }
-        
-        .holiday-card.other {
-            border-left-color: #95a5a6;
-        }
-        
-        .holiday-card h3 {
-            color: #2c3e50;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .holiday-card .date {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        
-        .holiday-card .description {
-            color: #7f8c8d;
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-        
-        .holiday-card .actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .badge-public {
-            background: #3498db;
-            color: white;
-        }
-        
-        .badge-medical {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .badge-other {
-            background: #95a5a6;
-            color: white;
-        }
-        
-        .badge-recurring {
-            background: #9b59b6;
-            color: white;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #27ae60;
-            color: white;
-        }
-        
-        .btn-warning {
-            background: #f39c12;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #2c3e50;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #7f8c8d;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #7f8c8d;
-        }
-        
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #bdc3c7;
-        }
+        .btn-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; border:none; }
+        .btn-edit { background:var(--primary-light); color:var(--primary); }
+        .btn-edit:hover { background:var(--primary); color:#fff; }
+        .btn-delete { background:rgba(239, 68, 68, 0.1); color:#ef4444; }
+        .btn-delete:hover { background:#ef4444; color:#fff; }
+
+        .adm-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(8px); z-index:1000; align-items:center; justify-content:center; animation:fadeIn 0.3s ease; }
+        .adm-modal.active { display:flex; }
+        .adm-modal-content { background:var(--surface); border-radius:20px; width:95%; max-width:550px; padding:2.5rem; border:1px solid var(--border); box-shadow:var(--shadow-lg); }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-bottom:1.5rem; }
+        .adm-form-group { margin-bottom:1.5rem; }
+        .adm-form-group label { display:block; margin-bottom:0.6rem; font-weight:600; color:var(--text-secondary); font-size:0.95rem; }
+        .adm-input { width:100%; padding:0.9rem 1.2rem; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--text-primary); font-size:1rem; outline:none; transition:all 0.2s; }
+        .adm-input:focus { border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-light); }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-calendar-alt"></i> Holiday Calendar</h1>
-            <div class="header-actions">
-                <select class="year-selector" onchange="window.location.href='?year=' + this.value">
-                    <?php for ($y = $currentYear - 2; $y <= $currentYear + 5; $y++): ?>
-                        <option value="<?php echo $y; ?>" <?php echo $y == $selectedYear ? 'selected' : ''; ?>>
-                            <?php echo $y; ?>
-                        </option>
-                    <?php endfor; ?>
-                </select>
-                <button class="btn btn-success" onclick="openModal('addModal')"><span class="btn-text">
-                    <i class="fas fa-plus"></i> Add Holiday
-                </span></button>
+<body data-theme="<?php echo $_SESSION['rmu_theme'] ?? 'light'; ?>">
+    <?php $active_page = 'holidays'; include '../includes/_sidebar.php'; ?>
+
+    <main class="adm-main">
+        <div class="adm-topbar">
+            <div class="adm-topbar-left">
+                <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                <span class="adm-page-title"><i class="fas fa-calendar-alt"></i> Institutional Calendar</span>
+            </div>
+            <div class="adm-topbar-right">
+                <div class="adm-topbar-datetime"><i class="far fa-calendar-alt"></i> <span><?php echo date('D, M d, Y'); ?></span></div>
+                <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+                <div class="adm-avatar"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'A', 0, 1)); ?></div>
             </div>
         </div>
-        
-        <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
-        
-        <!-- Statistics -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Holidays</h3>
-                <div class="value"><?php echo $stats['total_holidays']; ?></div>
-            </div>
-            <div class="stat-card">
-                <h3>Public Holidays</h3>
-                <div class="value"><?php echo $stats['public_holidays']; ?></div>
-            </div>
-            <div class="stat-card">
-                <h3>Medical Holidays</h3>
-                <div class="value"><?php echo $stats['medical_holidays']; ?></div>
-            </div>
-            <div class="stat-card">
-                <h3>Recurring</h3>
-                <div class="value"><?php echo $stats['recurring_holidays']; ?></div>
-            </div>
-        </div>
-        
-        <!-- Holidays -->
-        <div class="calendar-container">
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">
-                <i class="fas fa-calendar-day"></i> Holidays for <?php echo $selectedYear; ?>
-            </h2>
-            
-            <?php if (empty($holidays)): ?>
-                <div class="empty-state">
-                    <i class="fas fa-calendar-times"></i>
-                    <h3>No Holidays Defined</h3>
-                    <p>Click "Add Holiday" to create your first holiday entry.</p>
+
+        <div class="adm-content" style="animation:fadeIn 0.4s ease;">
+            <div class="staff-hero">
+                <i class="fas fa-calendar-check hero-bg-icon"></i>
+                <div class="staff-hero-avatar"><i class="fas fa-calendar-day"></i></div>
+                <div class="staff-hero-info">
+                    <h2>Holiday Management</h2>
+                    <p>Configure public holidays and medical facility closures for <?php echo $selectedYear; ?>.</p>
                 </div>
-            <?php else: ?>
-                <div class="calendar-grid">
-                    <?php foreach ($holidays as $holiday): ?>
-                        <div class="holiday-card <?php echo $holiday['holiday_type']; ?>">
-                            <h3>
-                                <?php echo htmlspecialchars($holiday['holiday_name']); ?>
-                                <?php if ($holiday['recurring']): ?>
-                                    <i class="fas fa-sync-alt" title="Recurring" style="font-size: 14px; color: #9b59b6;"></i>
-                                <?php endif; ?>
-                            </h3>
-                            <div class="date">
-                                <i class="fas fa-calendar"></i> 
-                                <?php echo date('F j, Y (l)', strtotime($holiday['holiday_date'])); ?>
-                            </div>
-                            <?php if ($holiday['description']): ?>
-                                <div class="description">
-                                    <?php echo htmlspecialchars($holiday['description']); ?>
-                                </div>
+                <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
+                    <select class="adm-input" style="width:auto; padding:0.6rem 1rem;" onchange="window.location.href='?year=' + this.value">
+                        <?php for ($y = $currentYear - 2; $y <= $currentYear + 5; $y++): ?>
+                            <option value="<?php echo $y; ?>" <?php echo $y == $selectedYear ? 'selected' : ''; ?>><?php echo $y; ?></option>
+                        <?php endfor; ?>
+                    </select>
+                    <button class="btn btn-primary" onclick="openModal('addModal')" style="background:#fff; color:var(--primary); border:none; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+                        <i class="fas fa-plus"></i> Add Holiday
+                    </button>
+                </div>
+            </div>
+
+            <div class="adm-stats-grid">
+                <div class="adm-stat-card">
+                    <div class="adm-stat-icon" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9);"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="adm-stat-label">Total Holidays</div>
+                    <div class="adm-stat-value"><?php echo $stats['total_holidays']; ?></div>
+                    <div class="adm-stat-footer"><i class="fas fa-history"></i> Logged for year</div>
+                </div>
+                <div class="adm-stat-card">
+                    <div class="adm-stat-icon" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);"><i class="fas fa-flag"></i></div>
+                    <div class="adm-stat-label">Public Holidays</div>
+                    <div class="adm-stat-value"><?php echo $stats['public_holidays']; ?></div>
+                    <div class="adm-stat-footer"><i class="fas fa-globe"></i> National observance</div>
+                </div>
+                <div class="adm-stat-card">
+                    <div class="adm-stat-icon" style="background:linear-gradient(135deg, #ef4444, #b91c1c);"><i class="fas fa-hospital-user"></i></div>
+                    <div class="adm-stat-label">Facility Closures</div>
+                    <div class="adm-stat-value"><?php echo $stats['medical_holidays']; ?></div>
+                    <div class="adm-stat-footer"><i class="fas fa-lock"></i> Service restriction</div>
+                </div>
+                <div class="adm-stat-card">
+                    <div class="adm-stat-icon" style="background:linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-sync-alt"></i></div>
+                    <div class="adm-stat-label">Recurring</div>
+                    <div class="adm-stat-value"><?php echo $stats['recurring_holidays']; ?></div>
+                    <div class="adm-stat-footer"><i class="fas fa-calendar-check"></i> Annual repeats</div>
+                </div>
+            </div>
+
+            <?php if ($message): ?>
+                <div class="adm-alert adm-alert-success" style="margin-bottom:2rem;"><i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?></div>
+            <?php endif; ?>
+
+            <div class="holiday-grid">
+                <?php if (empty($holidays)): ?>
+                    <div style="grid-column:1/-1; text-align:center; padding:5rem; background:var(--surface); border-radius:20px; border:2px dashed var(--border);">
+                        <i class="fas fa-calendar-times" style="font-size:4rem; color:var(--border); margin-bottom:1.5rem;"></i>
+                        <h3>No Holidays Scheduled</h3>
+                        <p style="color:var(--text-muted);">Add public holidays or facility closures for the selected year.</p>
+                    </div>
+                <?php else: 
+                    foreach ($holidays as $h): 
+                        $dt = strtotime($h['holiday_date']);
+                ?>
+                    <div class="holiday-card <?php echo $h['holiday_type']; ?>">
+                        <div class="holiday-date-circle">
+                            <span><?php echo date('M', $dt); ?></span>
+                            <span><?php echo date('d', $dt); ?></span>
+                        </div>
+                        <h3 class="holiday-name">
+                            <?php echo htmlspecialchars($h['holiday_name']); ?>
+                            <?php if ($h['recurring']): ?><i class="fas fa-sync-alt" style="font-size:0.9rem; color:#8b5cf6;" title="Recurring Annual"></i><?php endif; ?>
+                        </h3>
+                        <p class="holiday-desc"><?php echo htmlspecialchars($h['description'] ?: 'No additional details provided for this event.'); ?></p>
+                        
+                        <div class="holiday-meta">
+                            <span class="h-badge h-badge-<?php echo $h['holiday_type']; ?>">
+                                <i class="fas <?php echo $h['holiday_type'] === 'public' ? 'fa-flag' : ($h['holiday_type'] === 'medical' ? 'fa-medkit' : 'fa-calendar'); ?>"></i>
+                                <?php echo ucfirst($h['holiday_type']); ?>
+                            </span>
+                            <?php if ($h['recurring']): ?>
+                                <span class="h-badge h-badge-recurring"><i class="fas fa-redo"></i> Recurring</span>
                             <?php endif; ?>
-                            <div style="margin: 10px 0;">
-                                <span class="badge badge-<?php echo $holiday['holiday_type']; ?>">
-                                    <?php echo ucfirst($holiday['holiday_type']); ?>
-                                </span>
-                                <?php if ($holiday['recurring']): ?>
-                                    <span class="badge badge-recurring">Recurring</span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="actions">
-                                <button class="btn btn-warning btn-sm" onclick='editHoliday(<?php echo json_encode($holiday); ?>)'><span class="btn-text">
-                                    <i class="fas fa-edit"></i> Edit
-                                </span></button>
-                                <button class="btn-icon btn btn-danger btn-sm" onclick="deleteHoliday(<?php echo $holiday['id']; ?>, '<?php echo htmlspecialchars($holiday['holiday_name']); ?>')"><span class="btn-text">
-                                    <i class="fas fa-trash"></i> Delete
-                                </span></button>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-icon btn-edit" onclick='editHoliday(<?php echo json_encode($h); ?>)' title="Edit Entry"><i class="fas fa-pen-to-square"></i></button>
+                            <button class="btn-icon btn-delete" onclick="deleteHoliday(<?php echo $h['id']; ?>, '<?php echo htmlspecialchars($h['holiday_name']); ?>')" title="Delete Entry"><i class="fas fa-trash-can"></i></button>
+                            <div style="margin-left:auto; font-size:0.8rem; color:var(--text-muted); display:flex; flex-direction:column; align-items:flex-end;">
+                                <span>Logged by:</span>
+                                <span style="font-weight:600;"><?php echo htmlspecialchars($h['created_by_name'] ?: 'Admin'); ?></span>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                    </div>
+                <?php endforeach; endif; ?>
+            </div>
         </div>
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <a href="../home.php" class="btn btn-primary"><span class="btn-text">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </span></a>
-        </div>
-    </div>
-    
-    <!-- Add Holiday Modal -->
-    <div id="addModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Add Holiday</h2>
-                <button class="btn btn-primary close-modal" onclick="closeModal('addModal')"><span class="btn-text">&times;</span></button>
+    </main>
+
+    <!-- Modals -->
+    <div id="addModal" class="adm-modal">
+        <div class="adm-modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <h3 style="margin:0; font-size:1.6rem;"><i class="fas fa-plus-circle" style="color:var(--primary);"></i> Add Holiday</h3>
+                <button class="btn-icon btn-ghost" onclick="closeModal('addModal')"><i class="fas fa-times"></i></button>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="add_holiday">
-                
-                <div class="form-group">
-                    <label>Holiday Name *</label>
-                    <input type="text" name="holiday_name" required placeholder="e.g., Christmas Day">
+                <div class="adm-form-group">
+                    <label>Holiday Event Name</label>
+                    <input type="text" name="holiday_name" class="adm-input" required placeholder="e.g. Independence Day">
                 </div>
-                
-                <div class="form-group">
-                    <label>Date *</label>
-                    <input type="date" name="holiday_date" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Type *</label>
-                    <select name="holiday_type" required>
-                        <option value="public">Public Holiday</option>
-                        <option value="medical">Medical Facility Closure</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea name="description" rows="3" placeholder="Optional description..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="recurring" id="add_recurring">
-                        <label for="add_recurring" style="margin: 0;">Recurring annually</label>
+                <div class="form-row">
+                    <div class="adm-form-group">
+                        <label>Date</label>
+                        <input type="date" name="holiday_date" class="adm-input" required>
                     </div>
-                    <small style="color: #7f8c8d; display: block; margin-top: 5px;">
-                        Check this if the holiday occurs every year on the same date
-                    </small>
+                    <div class="adm-form-group">
+                        <label>Type</label>
+                        <select name="holiday_type" class="adm-input" required>
+                            <option value="public">Public Holiday</option>
+                            <option value="medical">Facility Closure</option>
+                            <option value="other">Other Event</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <button type="submit" class="btn btn-success" style="width: 100%;"><span class="btn-text">
-                    <i class="fas fa-plus"></i> Add Holiday
-                </span></button>
+                <div class="adm-form-group">
+                    <label>Description / Notes</label>
+                    <textarea name="description" class="adm-input" rows="3" placeholder="Briefly describe the holiday or closure reason..."></textarea>
+                </div>
+                <div class="adm-form-group" style="display:flex; align-items:center; gap:0.8rem; background:var(--surface-2); padding:1rem; border-radius:12px;">
+                    <input type="checkbox" name="recurring" id="add_recurring" style="width:20px; height:20px; cursor:pointer;">
+                    <label for="add_recurring" style="margin:0; cursor:pointer;">Mark as Recurring (Annual observance on same date)</label>
+                </div>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;"><i class="fas fa-save"></i> Save Holiday</button>
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+                </div>
             </form>
         </div>
     </div>
-    
-    <!-- Edit Holiday Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Edit Holiday</h2>
-                <button class="btn btn-primary close-modal" onclick="closeModal('editModal')"><span class="btn-text">&times;</span></button>
+
+    <div id="editModal" class="adm-modal">
+        <div class="adm-modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <h3 style="margin:0; font-size:1.6rem;"><i class="fas fa-edit" style="color:var(--primary);"></i> Edit Holiday</h3>
+                <button class="btn-icon btn-ghost" onclick="closeModal('editModal')"><i class="fas fa-times"></i></button>
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="update_holiday">
                 <input type="hidden" name="holiday_id" id="edit_holiday_id">
-                
-                <div class="form-group">
-                    <label>Holiday Name *</label>
-                    <input type="text" name="holiday_name" id="edit_holiday_name" required>
+                <div class="adm-form-group">
+                    <label>Holiday Event Name</label>
+                    <input type="text" name="holiday_name" id="edit_holiday_name" class="adm-input" required>
                 </div>
-                
-                <div class="form-group">
-                    <label>Date *</label>
-                    <input type="date" name="holiday_date" id="edit_holiday_date" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Type *</label>
-                    <select name="holiday_type" id="edit_holiday_type" required>
-                        <option value="public">Public Holiday</option>
-                        <option value="medical">Medical Facility Closure</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea name="description" id="edit_description" rows="3"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="recurring" id="edit_recurring">
-                        <label for="edit_recurring" style="margin: 0;">Recurring annually</label>
+                <div class="form-row">
+                    <div class="adm-form-group">
+                        <label>Date</label>
+                        <input type="date" name="holiday_date" id="edit_holiday_date" class="adm-input" required>
+                    </div>
+                    <div class="adm-form-group">
+                        <label>Type</label>
+                        <select name="holiday_type" id="edit_holiday_type" class="adm-input" required>
+                            <option value="public">Public Holiday</option>
+                            <option value="medical">Facility Closure</option>
+                            <option value="other">Other Event</option>
+                        </select>
                     </div>
                 </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;"><span class="btn-text">
-                    <i class="fas fa-save"></i> Update Holiday
-                </span></button>
+                <div class="adm-form-group">
+                    <label>Description / Notes</label>
+                    <textarea name="description" id="edit_description" class="adm-input" rows="3"></textarea>
+                </div>
+                <div class="adm-form-group" style="display:flex; align-items:center; gap:0.8rem; background:var(--surface-2); padding:1rem; border-radius:12px;">
+                    <input type="checkbox" name="recurring" id="edit_recurring" style="width:20px; height:20px; cursor:pointer;">
+                    <label for="edit_recurring" style="margin:0; cursor:pointer;">Mark as Recurring (Annual observance)</label>
+                </div>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;"><i class="fas fa-save"></i> Update Entry</button>
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('editModal')">Cancel</button>
+                </div>
             </form>
         </div>
     </div>
-    
-    <!-- Delete Form -->
-    <form id="deleteForm" method="POST" style="display: none;">
+
+    <form id="deleteForm" method="POST" style="display:none;">
         <input type="hidden" name="action" value="delete_holiday">
         <input type="hidden" name="holiday_id" id="delete_holiday_id">
     </form>
-    
+
     <script>
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-        
-        function editHoliday(holiday) {
-            document.getElementById('edit_holiday_id').value = holiday.id;
-            document.getElementById('edit_holiday_name').value = holiday.holiday_name;
-            document.getElementById('edit_holiday_date').value = holiday.holiday_date;
-            document.getElementById('edit_holiday_type').value = holiday.holiday_type;
-            document.getElementById('edit_description').value = holiday.description || '';
-            document.getElementById('edit_recurring').checked = holiday.recurring == 1;
+        const sidebar = document.getElementById('admSidebar');
+        const overlay = document.getElementById('admOverlay');
+        document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
+        overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function editHoliday(h) {
+            document.getElementById('edit_holiday_id').value = h.id;
+            document.getElementById('edit_holiday_name').value = h.holiday_name;
+            document.getElementById('edit_holiday_date').value = h.holiday_date;
+            document.getElementById('edit_holiday_type').value = h.holiday_type;
+            document.getElementById('edit_description').value = h.description || '';
+            document.getElementById('edit_recurring').checked = h.recurring == 1;
             openModal('editModal');
         }
-        
-        function deleteHoliday(holidayId, holidayName) {
-            if (confirm(`Are you sure you want to delete "${holidayName}"? This action cannot be undone.`)) {
-                document.getElementById('delete_holiday_id').value = holidayId;
+
+        function deleteHoliday(id, name) {
+            if (confirm(`Are you sure you want to delete "${name}"? This will remove it from all payroll and scheduling calculations.`)) {
+                document.getElementById('delete_holiday_id').value = id;
                 document.getElementById('deleteForm').submit();
             }
         }
-        
-        // Close modal on outside click
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.classList.remove('active');
-            }
-        }
+
+        const themeIcon = document.getElementById('themeIcon');
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            const html = document.documentElement;
+            const t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', t);
+            localStorage.setItem('rmu_theme', t);
+            themeIcon.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+
+        window.onclick = e => { if (e.target.classList.contains('adm-modal')) e.target.classList.remove('active'); };
     </script>
 </body>
 </html>

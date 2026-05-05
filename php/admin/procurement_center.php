@@ -8,6 +8,18 @@ $page_title = 'Procurement Center';
 include '../includes/_sidebar.php';
 ?>
 
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<style>
+.staff-hero{display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;background:linear-gradient(135deg,#4f46e5,#3730a3);border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap;position:relative;overflow:hidden;}
+.staff-hero-avatar{width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.35);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0;z-index:2;}
+.staff-hero-info{z-index:2;}.staff-hero-info h2{font-size:2rem;font-weight:700;margin:0;}.staff-hero-info p{font-size:1.3rem;margin:.3rem 0 0;opacity:.85;}
+.hero-bg-icon{position:absolute;right:-20px;bottom:-40px;font-size:15rem;opacity:.07;transform:rotate(-15deg);z-index:1;}
+.stf-table{width:100%;border-collapse:collapse;font-size:1.15rem;}
+.stf-table th{background:var(--surface-2);color:var(--text-secondary);font-weight:600;text-transform:uppercase;font-size:1rem;letter-spacing:.04em;padding:1.2rem 1.6rem;text-align:left;}
+.stf-table td{padding:1.2rem 1.6rem;border-bottom:1px solid var(--border);color:var(--text-primary);vertical-align:middle;}
+.stf-table tr:hover td{background:var(--surface-2);}
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
@@ -24,37 +36,35 @@ include '../includes/_sidebar.php';
         </div>
     </div>
 
-    <div class="adm-content">
-        <div class="adm-page-header">
-            <div class="adm-page-header-left">
-                <h1>Supplier & Purchase Operations</h1>
+    <div class="adm-content" style="animation:fadeIn .35s ease;">
+        <div class="staff-hero">
+            <i class="fas fa-truck hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div class="staff-hero-info">
+                <h2>Supplier & Purchase Operations</h2>
                 <p>Manage medical supply chains, vendor relations, and procurement lifecycle.</p>
             </div>
-            <div style="display:flex; gap:1rem;">
-                <button class="btn btn-outline" style="background:var(--surface); border:1px solid var(--border);"><span class="btn-text">
-                    <i class="fas fa-truck"></i> Vendor Directory
-                </span></button>
-                <button class="btn btn-primary"><span class="btn-text">
-                    <i class="fas fa-plus"></i> New Purchase Order
-                </span></button>
+            <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
+                <button class="btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3);"><i class="fas fa-truck"></i> Vendor Directory</button>
+                <button class="btn btn-primary" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:#fff; backdrop-filter:blur(5px);"><i class="fas fa-plus"></i> New Purchase Order</button>
             </div>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 380px; gap:2.5rem;">
             <!-- Purchase Orders -->
-            <div class="adm-card shadow-sm" style="border-radius:20px;">
-                <div class="adm-card-header" style="padding: 1.8rem 2.5rem;">
-                    <h3><i class="fas fa-file-invoice-dollar"></i> Active Purchase Orders</h3>
+            <div class="adm-card shadow-sm" style="border-radius:20px; overflow:hidden; border:1px solid var(--border);">
+                <div class="adm-card-header" style="padding: 1.8rem 2.5rem; background:var(--surface-2); border-bottom:1px solid var(--border);">
+                    <h3><i class="fas fa-file-invoice-dollar" style="color:var(--primary);"></i> Active Purchase Orders</h3>
                     <div style="display:flex; align-items:center; gap:1rem;">
-                        <span class="adm-badge" style="background:var(--primary-light); color:var(--primary);">Processing</span>
+                        <span class="adm-badge" style="background:var(--primary-light); color:var(--primary); font-weight:700;">Processing</span>
                     </div>
                 </div>
                 <div class="adm-table-wrap" style="padding:0;">
-                    <table class="adm-table">
+                    <table class="stf-table">
                         <thead>
                             <tr>
-                                <th>Order Reference</th>
-                                <th>Primary Supplier</th>
+                                <th>Order Ref</th>
+                                <th>Supplier</th>
                                 <th>Issue Date</th>
                                 <th>Status</th>
                                 <th>Total Value</th>
@@ -75,14 +85,12 @@ include '../includes/_sidebar.php';
 
             <!-- Audit Trail -->
             <div style="display:flex; flex-direction:column; gap:2.5rem;">
-                <div class="adm-card shadow-sm" style="border-radius:20px; height:fit-content;">
-                    <div class="adm-card-header" style="padding: 1.8rem 2rem;">
-                        <h3><i class="fas fa-history"></i> Stock Audit Trail</h3>
-                        <button class="btn btn-primary btn btn-sm" style="background:transparent; color:var(--primary); padding:0; height:auto; width:auto;"><span class="btn-text"><i class="fas fa-external-link-alt"></i></span></button>
+                <div class="adm-card shadow-sm" style="border-radius:20px; border:1px solid var(--border); overflow:hidden;">
+                    <div class="adm-card-header" style="padding: 1.8rem 2rem; background:var(--surface-2); border-bottom:1px solid var(--border);">
+                        <h3><i class="fas fa-history" style="color:var(--text-muted);"></i> Stock Audit Trail</h3>
                     </div>
-                    <div class="adm-card-body" style="padding: 0;">
+                    <div class="adm-card-body" style="padding: 0; background:var(--surface);">
                         <div id="transactionFeed" style="padding: 1.5rem; display:flex; flex-direction:column; gap:1.2rem; max-height:700px; overflow-y:auto;">
-                            <!-- Dynamic rendering -->
                             <div style="text-align:center; padding:3rem; color:var(--text-muted);">
                                 <i class="fas fa-sync fa-spin" style="font-size:1.5rem; margin-bottom:0.5rem; opacity:0.5;"></i>
                                 <p>Syncing transactions...</p>

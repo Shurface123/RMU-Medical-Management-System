@@ -1,45 +1,19 @@
 <?php
+require_once '../includes/auth_middleware.php';
+enforceSingleDashboard('admin');
+require_once '../db_conn.php';
+
 $active_page = 'payment';
-$page_title = 'Payment Management';
+$page_title  = 'Financial Hub';
 include '../includes/_sidebar.php';
-include 'db_conn.php';
 
 date_default_timezone_set('Africa/Accra');
-
-// ── AJAX: mark as paid ─────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    header('Content-Type: application/json');
-    $action = $_POST['action'];
-    if ($action === 'mark_paid') {
-        $id = (int) $_POST['id'];
-        if ($id > 0 && mysqli_query($conn, "UPDATE payments SET status='Paid', payment_date=NOW() WHERE payment_id=$id")) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Update failed']);
-        }
-    }
-    exit;
-}
 
 // ── Check table exists ─────────────────────────────────────────
 $tbl_check = mysqli_query($conn, "SHOW TABLES LIKE 'payments'");
 $tbl_exists = $tbl_check && mysqli_num_rows($tbl_check) > 0;
 
 if ($tbl_exists) {
-    // Filters
-    $search = isset($_GET['q']) ? mysqli_real_escape_string($conn, trim($_GET['q'])) : '';
-    $stat_f = isset($_GET['status']) ? mysqli_real_escape_string($conn, $_GET['status']) : '';
-    $date_f = isset($_GET['date']) ? mysqli_real_escape_string($conn, $_GET['date']) : '';
-
-    $where = ['1=1'];
-    if ($search)
-        $where[] = "(u.name LIKE '%$search%' OR pm.receipt_number LIKE '%$search%')";
-    if ($stat_f)
-        $where[] = "pm.status = '$stat_f'";
-    if ($date_f)
-        $where[] = "DATE(pm.created_at) = '$date_f'";
-    $where_sql = implode(' AND ', $where);
-
     // Stats
     $today_str = date('Y-m-d');
     $stat_total = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM payments"))[0] ?? 0;
@@ -50,291 +24,281 @@ if ($tbl_exists) {
 }
 ?>
 
+<!-- DataTables Dependencies -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+<style>
+/* ── V2 Payment Styles ── */
+.payment-hero {
+    background: linear-gradient(135deg, #27AE60 0%, #1a2a6c 100%);
+    color: white;
+    padding: 3rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-v2-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.stat-v2-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 2.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+    transition: var(--transition);
+}
+
+.payment-status { padding: 0.5rem 1rem; border-radius: 10px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; }
+.status-paid { background: rgba(39, 174, 96, 0.1); color: #27AE60; }
+.status-pending { background: rgba(243, 156, 18, 0.1); color: #F39C12; }
+.status-overdue { background: rgba(231, 76, 60, 0.1); color: #E74C3C; }
+.status-refunded { background: rgba(47, 128, 237, 0.1); color: #2F80ED; }
+
+/* Modal Styling */
+.modal-glass {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 22, 40, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.modal-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 550px;
+    padding: 3rem;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalSlide { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
             <button class="adm-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-            <span class="adm-page-title"><i class="fas fa-credit-card"
-                    style="color:var(--primary);margin-right:.8rem;"></i>Payment Management</span>
+            <span class="adm-page-title"><i class="fas fa-receipt" style="color:var(--success);margin-right:.8rem;"></i>Financial Operations</span>
         </div>
         <div class="adm-topbar-right">
             <button class="adm-theme-toggle" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
-            <div class="adm-avatar"><i class="fas fa-user"></i></div>
+            <div class="adm-avatar" style="overflow:hidden; border:2px solid rgba(39, 174, 96, 0.2);">
+                <img src="/RMU-Medical-Management-System/uploads/profiles/<?= $_SESSION['profile_image'] ?? 'default-avatar.png' ?>" style="width:100%; height:100%; object-fit:cover;">
+            </div>
         </div>
     </div>
 
     <div class="adm-content">
-        <div class="adm-page-header">
-            <div class="adm-page-header-left">
-                <h1>Payment Management</h1>
-                <p>Track consultation fees, receipts, and payment statuses.</p>
+        <div class="payment-hero">
+            <div>
+                <h1 style="font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;">Financial Hub</h1>
+                <p style="opacity: 0.9; font-size: 1.3rem;">Audit consultation fees, insurance claims, and real-time revenue streams.</p>
             </div>
-            <?php if ($tbl_exists): ?>
-                <button class="btn btn-primary"
-                    onclick="document.getElementById('addPayModal').style.display='flex'"><span class="btn-text">
-                    <i class="fas fa-plus"></i> Add Payment
-                </span></button>
-            <?php endif; ?>
+            <button class="btn btn-primary" style="background:white; color:var(--success); border:none; padding:1.2rem 2.5rem; font-weight:700; border-radius:15px; box-shadow:0 10px 20px rgba(0,0,0,0.1);" onclick="$('#addPayModal').css('display', 'flex')"><span class="btn-text">
+                <i class="fas fa-plus-circle"></i> Create New Invoice
+            </span></button>
         </div>
 
-        <?php if (!$tbl_exists): ?>
-            <!-- Module not yet set up -->
-            <div class="adm-card" style="padding:3rem;text-align:center;">
-                <i class="fas fa-credit-card"
-                    style="font-size:3rem;color:var(--text-muted);opacity:.3;display:block;margin-bottom:1rem;"></i>
-                <h3 style="margin-bottom:.5rem;">Payment Module Not Yet Configured</h3>
-                <p
-                    style="color:var(--text-secondary);margin-bottom:1.5rem;max-width:480px;margin-left:auto;margin-right:auto;">
-                    The <code>payments</code> table has not been created in the database. Run the SQL below to enable this
-                    module.
-                </p>
-                <pre
-                    style="background:var(--bg-secondary);border-radius:12px;padding:1.5rem;text-align:left;font-size:.8rem;overflow-x:auto;max-width:640px;margin:0 auto;">CREATE TABLE IF NOT EXISTS payments (
-      id             INT AUTO_INCREMENT PRIMARY KEY,
-      receipt_id     VARCHAR(30) NOT NULL UNIQUE,
-      appointment_id INT DEFAULT NULL,
-      patient_id     INT DEFAULT NULL,
-      amount         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-      method         ENUM('Cash','GhIPSS','Mobile Money','Card') DEFAULT 'Cash',
-      status         ENUM('Pending','Paid','Overdue','Refunded') DEFAULT 'Pending',
-      notes          TEXT,
-      paid_at        DATETIME DEFAULT NULL,
-      created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
-      FOREIGN KEY (patient_id)     REFERENCES patients(id)     ON DELETE SET NULL
-    );</pre>
+        <?php if ($tbl_exists): ?>
+        <div class="stat-v2-grid">
+            <div class="stat-v2-card" style="border-bottom:4px solid var(--success);">
+                <div style="font-size:2.8rem; font-weight:900; color:var(--success);">GH₵<?= number_format($stat_revenue, 2) ?></div>
+                <div style="font-size:1rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-left:1rem;">Total Revenue</div>
             </div>
+            <div class="stat-v2-card" style="border-bottom:4px solid var(--primary);">
+                <div style="font-size:2.8rem; font-weight:900; color:var(--primary);">GH₵<?= number_format($stat_today, 2) ?></div>
+                <div style="font-size:1rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-left:1rem;">Today's Settlement</div>
+            </div>
+            <div class="stat-v2-card" style="border-bottom:4px solid var(--warning);">
+                <div style="font-size:2.8rem; font-weight:900; color:var(--warning);"><?= $stat_pending ?></div>
+                <div style="font-size:1rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-left:1rem;">Pending Invoices</div>
+            </div>
+            <div class="stat-v2-card" style="border-bottom:4px solid #9b59b6;">
+                <div style="font-size:2.8rem; font-weight:900; color:#9b59b6;"><?= $stat_total ?></div>
+                <div style="font-size:1rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-left:1rem;">Transactions</div>
+            </div>
+        </div>
 
+        <div class="adm-card" style="padding:2.5rem; border-radius:24px;">
+            <table class="clinical-table display responsive nowrap" id="paymentsTable" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>Invoice / Receipt</th>
+                        <th>Patient Entity</th>
+                        <th>Amount (GH₵)</th>
+                        <th>Settlement Method</th>
+                        <th>Status</th>
+                        <th>Financial Date</th>
+                        <th>Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $sql = "SELECT pm.*, u.name AS patient_name
+                            FROM payments pm
+                            LEFT JOIN patients p ON pm.patient_id = p.id
+                            LEFT JOIN users u ON p.user_id = u.id
+                            ORDER BY pm.created_at DESC";
+                    $q = mysqli_query($conn, $sql);
+                    while ($pm = mysqli_fetch_assoc($q)):
+                        $s_cls = 'status-' . strtolower($pm['status']);
+                        $method_icons = ['Cash' => 'fa-coins', 'GhIPSS' => 'fa-university', 'Mobile Money' => 'fa-mobile-alt', 'Card' => 'fa-credit-card'];
+                        $mi = $method_icons[$pm['payment_method'] ?? ''] ?? 'fa-wallet';
+                    ?>
+                    <tr>
+                        <td><span class="adm-badge adm-badge-primary" style="font-weight:700; letter-spacing:1px;"><?= htmlspecialchars($pm['receipt_number']) ?></span></td>
+                        <td>
+                            <div style="font-weight:800; font-size:1.3rem; color:var(--text-primary);"><?= htmlspecialchars($pm['patient_name'] ?? 'Walk-in Patient') ?></div>
+                        </td>
+                        <td><div style="font-weight:900; font-size:1.5rem; color:var(--text-primary);">GH₵ <?= number_format($pm['amount'], 2) ?></div></td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:0.8rem; font-weight:700; color:var(--text-secondary);">
+                                <i class="fas <?= $mi ?>" style="font-size:1.2rem; color:var(--primary);"></i>
+                                <?= htmlspecialchars($pm['payment_method']) ?>
+                            </div>
+                        </td>
+                        <td><span class="payment-status <?= $s_cls ?>"><?= $pm['status'] ?></span></td>
+                        <td>
+                            <div style="font-weight:700; color:var(--text-primary);"><?= date('d M Y', strtotime($pm['payment_date'] ?? $pm['created_at'])) ?></div>
+                            <div style="font-size:0.9rem; color:var(--text-muted);"><?= date('H:i A', strtotime($pm['created_at'])) ?></div>
+                        </td>
+                        <td>
+                            <?php if ($pm['status'] !== 'Paid'): ?>
+                                <button class="btn btn-success btn-sm" style="border-radius:10px; padding:0 1.2rem;" onclick="markPaid(<?= $pm['payment_id'] ?>, this)"><i class="fas fa-check-double"></i> Settle</button>
+                            <?php else: ?>
+                                <button class="btn btn-outline btn-sm" style="border-radius:10px; cursor:default; opacity:0.6;"><i class="fas fa-file-invoice"></i> Receipt</button>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
         <?php else: ?>
-
-            <!-- Stats -->
-            <div class="adm-summary-strip">
-                <div class="adm-mini-card">
-                    <div class="adm-mini-card-num"><?php echo $stat_total; ?></div>
-                    <div class="adm-mini-card-label">Total Records</div>
-                </div>
-                <div class="adm-mini-card">
-                    <div class="adm-mini-card-num green">GH₵<?php echo number_format($stat_revenue, 2); ?></div>
-                    <div class="adm-mini-card-label">Total Revenue</div>
-                </div>
-                <div class="adm-mini-card">
-                    <div class="adm-mini-card-num blue">GH₵<?php echo number_format($stat_today, 2); ?></div>
-                    <div class="adm-mini-card-label">Today's Income</div>
-                </div>
-                <div class="adm-mini-card">
-                    <div class="adm-mini-card-num orange"><?php echo $stat_pending; ?></div>
-                    <div class="adm-mini-card-label">Pending</div>
-                </div>
-                <div class="adm-mini-card">
-                    <div class="adm-mini-card-num green"><?php echo $stat_paid; ?></div>
-                    <div class="adm-mini-card-label">Paid</div>
-                </div>
-            </div>
-
-            <!-- Filters -->
-            <form method="get" class="adm-card"
-                style="padding:1rem 1.5rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-bottom:1rem;">
-                <div style="flex:1;min-width:180px;">
-                    <label
-                        style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem;color:var(--text-secondary);">Search</label>
-                    <input type="text" name="q" class="adm-search-input" placeholder="Patient name or receipt ID"
-                        value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>">
-                </div>
-                <div style="min-width:140px;">
-                    <label
-                        style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem;color:var(--text-secondary);">Status</label>
-                    <select name="status" class="adm-search-input">
-                        <option value="">All Statuses</option>
-                        <?php foreach (['Paid', 'Pending', 'Overdue', 'Refunded'] as $s): ?>
-                            <option value="<?php echo $s; ?>" <?php echo ($stat_f === $s) ? 'selected' : ''; ?>><?php echo $s; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div style="min-width:150px;">
-                    <label
-                        style="font-size:.8rem;font-weight:600;display:block;margin-bottom:.3rem;color:var(--text-secondary);">Date</label>
-                    <input type="date" name="date" class="adm-search-input"
-                        value="<?php echo htmlspecialchars($_GET['date'] ?? ''); ?>">
-                </div>
-                <div style="display:flex;gap:.5rem;">
-                    <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-search"></i> Filter</span></button>
-                    <a href="payment.php" class="btn btn-danger btn-sm btn-icon btn btn-back"><span class="btn-text"><i class="fas fa-times"></i> Clear</span></a>
-                </div>
-            </form>
-
-            <!-- Table -->
-            <div class="adm-card">
-                <div class="adm-card-header">
-                    <h3><i class="fas fa-list"></i> Payment Records</h3>
-                </div>
-                <div class="adm-table-wrap">
-                    <table class="adm-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Receipt ID</th>
-                                <th>Patient</th>
-                                <th>Amount</th>
-                                <th>Method</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Notes</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $sql = "SELECT pm.*, u.name AS patient_name
-                    FROM payments pm
-                    LEFT JOIN patients p ON pm.patient_id = p.id
-                    LEFT JOIN users u ON p.user_id = u.id
-                    WHERE $where_sql
-                    ORDER BY pm.created_at DESC LIMIT 100";
-                            $q = mysqli_query($conn, $sql);
-                            if (!$q || mysqli_num_rows($q) === 0) {
-                                echo "<tr><td colspan='9' style='text-align:center;padding:3rem;color:var(--text-muted);'><i class='fas fa-receipt' style='font-size:2rem;display:block;margin-bottom:.75rem;opacity:.3;'></i>No payment records found.</td></tr>";
-                            } else {
-                                $n = 1;
-                                while ($pm = mysqli_fetch_assoc($q)):
-                                    $sc = ($pm['status'] ?? '') === 'Paid' ? 'success' : (($pm['status'] ?? '') === 'Overdue' ? 'danger' : (($pm['status'] ?? '') === 'Refunded' ? 'info' : 'warning'));
-                                    $method_icons = ['Cash' => 'fa-coins', 'GhIPSS' => 'fa-building-columns', 'Mobile Money' => 'fa-mobile-alt', 'Card' => 'fa-credit-card'];
-                                    $mi = $method_icons[$pm['payment_method'] ?? ''] ?? 'fa-circle-dollar-to-slot';
-                                    ?>
-                                    <tr>
-                                        <td><?php echo $n++; ?></td>
-                                        <td><span class="adm-badge adm-badge-primary"
-                                                style="font-size:.72rem;"><?php echo htmlspecialchars($pm['receipt_number'] ?? ''); ?></span>
-                                        </td>
-                                        <td><strong><?php echo htmlspecialchars($pm['patient_name'] ?? 'Walk-in'); ?></strong></td>
-                                        <td><strong
-                                                style="color:var(--primary);">GH₵<?php echo number_format($pm['amount'] ?? 0, 2); ?></strong>
-                                        </td>
-                                        <td><i class="fas <?php echo $mi; ?>"
-                                                style="margin-right:.35rem;color:var(--text-secondary);"></i><?php echo htmlspecialchars($pm['payment_method'] ?? ''); ?>
-                                        </td>
-                                        <td><span class="adm-badge adm-badge-<?php echo $sc; ?>"><?php echo htmlspecialchars($pm['status'] ?? ''); ?></span>
-                                        </td>
-                                        <td><?php echo ($pm['payment_date'] ?? null) ? date('d M Y', strtotime($pm['payment_date'])) : date('d M Y', strtotime($pm['created_at'])); ?>
-                                        </td>
-                                        <td style="max-width:160px;font-size:.8rem;color:var(--text-muted);">
-                                            <?php echo htmlspecialchars(substr($pm['notes'] ?? '', 0, 50)); ?></td>
-                                        <td>
-                                            <div class="adm-table-actions">
-                                                <?php if (($pm['status'] ?? '') !== 'Paid'): ?>
-                                                    <button class="btn btn-success btn-sm"
-                                                        onclick="markPaid(<?php echo $pm['payment_id'] ?? 0; ?>, this)" title="Mark as Paid"><span class="btn-text"><i
-                                                            class="fas fa-check"></i></span></button>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endwhile;
-                            } ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Add Payment Modal -->
-            <div id="addPayModal"
-                style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
-                <div
-                    style="background:var(--bg-card);border-radius:20px;padding:2rem;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
-                        <h3 style="margin:0;"><i class="fas fa-plus"
-                                style="color:var(--primary);margin-right:.5rem;"></i>Add Payment</h3>
-                        <button onclick="document.getElementById('addPayModal').style.display='none'"
-                            style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);" class="btn btn-primary"><span class="btn-text">&times;</span></button>
-                    </div>
-                    <form id="addPayForm">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-                            <div>
-                                <label style="font-size:.85rem;font-weight:600;display:block;margin-bottom:.3rem;">Patient
-                                    Name</label>
-                                <input type="text" name="patient_name" class="adm-search-input" placeholder="Patient name"
-                                    style="width:100%;box-sizing:border-box;" required>
-                            </div>
-                            <div>
-                                <label style="font-size:.85rem;font-weight:600;display:block;margin-bottom:.3rem;">Amount
-                                    (GH₵)</label>
-                                <input type="number" name="amount" class="adm-search-input" placeholder="0.00" step="0.01"
-                                    min="0" style="width:100%;box-sizing:border-box;" required>
-                            </div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-                            <div>
-                                <label style="font-size:.85rem;font-weight:600;display:block;margin-bottom:.3rem;">Payment
-                                    Method</label>
-                                <select name="method" class="adm-search-input" style="width:100%;box-sizing:border-box;">
-                                    <option>Cash</option>
-                                    <option>GhIPSS</option>
-                                    <option>Mobile Money</option>
-                                    <option>Card</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label
-                                    style="font-size:.85rem;font-weight:600;display:block;margin-bottom:.3rem;">Status</label>
-                                <select name="status" class="adm-search-input" style="width:100%;box-sizing:border-box;">
-                                    <option>Pending</option>
-                                    <option>Paid</option>
-                                    <option>Overdue</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="margin-bottom:1.2rem;">
-                            <label style="font-size:.85rem;font-weight:600;display:block;margin-bottom:.3rem;">Notes</label>
-                            <textarea name="notes" class="adm-search-input" rows="2" placeholder="Optional notes…"
-                                style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
-                        </div>
-                        <div id="addPayError" style="display:none;" class="adm-alert adm-alert-danger"></div>
-                        <div style="display:flex;gap:.75rem;justify-content:flex-end;">
-                            <button type="button" onclick="document.getElementById('addPayModal').style.display='none'"
-                                class="btn btn-ghost btn btn-back"><span class="btn-text">Cancel</span></button>
-                            <button type="submit" class="btn btn-primary"><span class="btn-text"><i class="fas fa-save"></i> Save
-                                Payment</span></button>
-                        </div>
-                    </form>
-                </div>
+            <div class="adm-card" style="padding:5rem; text-align:center;">
+                <i class="fas fa-database" style="font-size:4rem; color:var(--text-muted); opacity:0.3; margin-bottom:2rem;"></i>
+                <h2 style="font-weight:800;">Schema Not Found</h2>
+                <p style="color:var(--text-muted); font-size:1.2rem;">The payments module requires a schema update. Please contact the system administrator.</p>
             </div>
         <?php endif; ?>
-
     </div>
 </main>
 
+<!-- Add Payment Modal -->
+<div class="modal-glass" id="addPayModal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem;">
+            <h3 style="font-size:1.8rem; font-weight:800; color:var(--text-primary);"><i class="fas fa-plus-circle" style="color:var(--success);"></i> Generate Invoice</h3>
+            <button onclick="$('#addPayModal').fadeOut()" style="background:none; border:none; font-size:1.8rem; color:var(--text-muted); cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="addPayForm">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem;">
+                <div class="form-group">
+                    <label>Patient Reference</label>
+                    <input type="text" name="patient_name" class="form-control" placeholder="Full legal name" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount (GH₵)</label>
+                    <input type="number" name="amount" class="form-control" placeholder="0.00" step="0.01" required>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem;">
+                <div class="form-group">
+                    <label>Payment Mode</label>
+                    <select name="method" class="form-control">
+                        <option>Cash</option>
+                        <option>GhIPSS</option>
+                        <option>Mobile Money</option>
+                        <option>Card</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Initial Status</label>
+                    <select name="status" class="form-control">
+                        <option>Pending</option>
+                        <option>Paid</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Institutional Notes</label>
+                <textarea name="notes" class="form-control" rows="3" placeholder="Description of services provided..."></textarea>
+            </div>
+            <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top:2rem;">
+                <button type="button" class="btn btn-outline" onclick="$('#addPayModal').fadeOut()">Discard</button>
+                <button type="submit" class="btn btn-primary" style="padding:1rem 3rem;"><i class="fas fa-save"></i> Post Invoice</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+async function markPaid(id, btn) {
+    if (!confirm('Authorize manual settlement for this invoice?')) return;
+    btn.disabled = true;
+    const fd = new FormData(); fd.append('action', 'mark_paid'); fd.append('id', id);
+    try {
+        const r = await fetch('payment.php', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (d.success) location.reload();
+        else alert('Settlement failed: ' + d.message);
+    } catch(e) { alert('Network error during settlement.'); }
+    finally { btn.disabled = false; }
+}
+
+$(document).ready(function() {
+    $('#paymentsTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        language: { search: "_INPUT_", searchPlaceholder: "Search ledger..." },
+        dom: '<"top"f>rt<"bottom"lip><"clear">',
+    });
+
+    $('#addPayForm').on('submit', async function(e) {
+        e.preventDefault();
+        const fd = new FormData(this);
+        try {
+            const r = await fetch('/RMU-Medical-Management-System/php/payment/payment_handler.php', { method: 'POST', body: fd });
+            const d = await r.json();
+            if (d.success) location.reload();
+            else alert('Creation failed: ' + d.message);
+        } catch(e) { alert('Network error.'); }
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon   = document.getElementById('themeIcon');
+    const html        = document.documentElement;
+    function applyTheme(t) { html.setAttribute('data-theme',t); localStorage.setItem('rmu_theme',t); themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon'; }
+    themeToggle?.addEventListener('click', () => applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+    
     const sidebar = document.getElementById('admSidebar');
     const overlay = document.getElementById('admOverlay');
     document.getElementById('menuToggle')?.addEventListener('click', () => { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); });
     overlay?.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
-    const html = document.documentElement;
-    const themeIcon = document.getElementById('themeIcon');
-    function applyTheme(t) { html.setAttribute('data-theme', t); localStorage.setItem('rmu_theme', t); themeIcon.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; }
-    applyTheme(localStorage.getItem('rmu_theme') || 'light');
-    document.getElementById('themeToggle')?.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
-
-    async function markPaid(id, btn) {
-        if (!confirm('Mark this payment as Paid?')) return;
-        btn.disabled = true;
-        const fd = new FormData(); fd.append('action', 'mark_paid'); fd.append('id', id);
-        const r = await fetch('payment.php', { method: 'POST', body: fd });
-        const d = await r.json();
-        if (d.success) location.reload();
-        else { alert('Could not update payment.'); btn.disabled = false; }
-    }
-
-    document.getElementById('addPayForm')?.addEventListener('submit', async e => {
-        e.preventDefault();
-        const errEl = document.getElementById('addPayError');
-        errEl.style.display = 'none';
-        const fd = new FormData(e.target);
-        const r = await fetch('/RMU-Medical-Management-System/php/payment/payment_handler.php', { method: 'POST', body: fd });
-        const d = await r.json();
-        if (d.success) location.reload();
-        else { errEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + (d.message || 'Failed to add payment.'); errEl.style.display = 'flex'; }
-    });
+});
 </script>
+<script src="/RMU-Medical-Management-System/assets/js/logout.js"></script>
 </body>
-
 </html>

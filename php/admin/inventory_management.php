@@ -13,6 +13,14 @@ $lowStock = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FRO
 $expired = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM pharmacy_inventory WHERE expiry_date <= CURDATE()"))['count'];
 ?>
 
+<link rel="stylesheet" href="/RMU-Medical-Management-System/assets/css/logout.css">
+<style>
+.staff-hero{display:flex;align-items:center;gap:2rem;padding:2rem 2.5rem;margin-bottom:2.5rem;background:linear-gradient(135deg,#0891b2,#164e63);border-radius:var(--radius-lg);color:#fff;box-shadow:var(--shadow-md);flex-wrap:wrap;position:relative;overflow:hidden;}
+.staff-hero-avatar{width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.35);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:2.6rem;flex-shrink:0;z-index:2;}
+.staff-hero-info{z-index:2;}.staff-hero-info h2{font-size:2rem;font-weight:700;margin:0;}.staff-hero-info p{font-size:1.3rem;margin:.3rem 0 0;opacity:.85;}
+.hero-bg-icon{position:absolute;right:-20px;bottom:-40px;font-size:15rem;opacity:.07;transform:rotate(-15deg);z-index:1;}
+</style>
+
 <main class="adm-main">
     <div class="adm-topbar">
         <div class="adm-topbar-left">
@@ -30,22 +38,20 @@ $expired = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM
     </div>
 
     <div class="adm-content">
-        <div class="adm-page-header">
-            <div class="adm-page-header-left">
-                <h1>Global Inventory Command</h1>
+        <div class="staff-hero">
+            <i class="fas fa-pills hero-bg-icon"></i>
+            <div class="staff-hero-avatar"><i class="fas fa-boxes"></i></div>
+            <div class="staff-hero-info">
+                <h2>Global Inventory Command</h2>
                 <p>Unified drug catalog, stock tracking, and real-time fulfillment monitoring.</p>
             </div>
-            <div style="display:flex; gap:1rem;">
-                <div class="adm-search-wrapper" style="position:relative;">
-                    <i class="fas fa-search" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
-                    <input type="text" id="searchMed" class="adm-form-input" placeholder="Search medicine..." style="padding-left:3rem; width:280px; height:48px; border-radius:12px;">
+            <div style="margin-left:auto;display:flex;gap:1rem;z-index:2;">
+                <div style="position:relative;">
+                    <i class="fas fa-search" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.6);"></i>
+                    <input type="text" id="searchMed" placeholder="Search medicine..." style="padding:.8rem 1rem .8rem 3rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:12px;color:#fff;font-size:1rem;width:240px;outline:none;">
                 </div>
-                <button id="refreshInv" class="btn btn-primary btn" style="background:var(--surface); border:1px solid var(--border); width:48px; height:48px; justify-content:center; padding:0;"><span class="btn-text">
-                    <i class="fas fa-sync-alt" style="color:var(--primary);"></i>
-                </span></button>
-                <button class="btn btn-primary"><span class="btn-text">
-                    <i class="fas fa-plus"></i> New Medicine
-                </span></button>
+                <button id="refreshInv" style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;cursor:pointer;"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-primary" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;backdrop-filter:blur(5px);"><i class="fas fa-plus"></i> New Medicine</button>
             </div>
         </div>
 
@@ -100,9 +106,8 @@ $expired = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM
                     </div>
                     <div class="adm-card-body" style="padding: 0;">
                         <div id="alertFeed" style="padding: 1.5rem; max-height:600px; overflow-y:auto;">
-                            <!-- Dynamic Content -->
                             <div style="text-align:center; color:var(--text-muted); padding:2rem;">
-                                <i class="fas fa-radar fa-spin-pulse" style="font-size:2rem; margin-bottom:1rem; opacity:0.5;"></i>
+                                <i class="fas fa-sync fa-spin" style="font-size:2rem; margin-bottom:1rem; opacity:0.5;"></i>
                                 <p>Scanning for anomalies...</p>
                             </div>
                         </div>
