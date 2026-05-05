@@ -82,6 +82,50 @@ $active_visitors = dbSelect($conn,"SELECT * FROM visitor_logs WHERE logged_by=? 
 
 </div>
 
+<!-- ════════════════ VISITOR MODALS ════════════════ -->
+<div class="modal-bg" id="addVisitorModal">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header" style="background:var(--role-accent); color:#fff; border:none; padding:1.5rem 2.5rem;">
+            <h3 style="font-size:1.8rem; font-weight:700;"><i class="fas fa-user-plus mr-2"></i> Register Arrival</h3>
+            <button class="modal-close" onclick="closeModal('addVisitorModal')" style="background:rgba(255,255,255,0.2); color:#fff; border:none; width:34px; height:34px; border-radius:10px; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmVisitor" onsubmit="event.preventDefault(); submitVisitor();">
+                <input type="hidden" name="action" value="log_visitor">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.8rem;">Visitor Name *</label>
+                    <input type="text" name="visitor_name" class="form-control" placeholder="Full legal name" required>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.8rem;">ID / Passport Number *</label>
+                    <input type="text" name="id_number" class="form-control" placeholder="e.g. GHA-123456789" required>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.8rem;">Purpose of Visit *</label>
+                    <select name="purpose" class="form-control" required>
+                        <option value="Patient Visit">Patient Visit</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Maintenance">Maintenance / Contractor</option>
+                        <option value="Official Business">Official Business</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
+                    <div class="form-group">
+                        <label style="font-weight:700; display:block; margin-bottom:.8rem;">Person Visiting</label>
+                        <input type="text" name="person_visiting" class="form-control" placeholder="Optional">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight:700; display:block; margin-bottom:.8rem;">Ward / Dept</label>
+                        <input type="text" name="ward" class="form-control" placeholder="Optional">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-wide">GRANT ACCESS</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
 .btn-xs { padding:.4rem .9rem; font-size:1rem; font-weight:900; border-radius:8px; }
 </style>

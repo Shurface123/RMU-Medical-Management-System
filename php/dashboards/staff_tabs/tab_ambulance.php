@@ -45,7 +45,6 @@ $recent_trips = dbSelect($conn,"SELECT * FROM ambulance_trips WHERE driver_id=? 
             
             <div class="mission-pipeline">
                 <?php foreach(['en route','patient onboard','arrived','completed'] as $st):
-                    $is_done = false; // Logic to determine if stage is done
                     $is_active = ($cur_st === $st);
                     $s_icons = ['en route'=>'fa-car-side','patient onboard'=>'fa-user-injured','arrived'=>'fa-hospital-alt','completed'=>'fa-check-double'];
                 ?>
@@ -192,6 +191,59 @@ $recent_trips = dbSelect($conn,"SELECT * FROM ambulance_trips WHERE driver_id=? 
 .log-stat strong { font-size:1.4rem; font-weight:800; }
 </style>
 
+<!-- ════════════════ AMBULANCE MODALS ════════════════ -->
+<div class="modal-bg" id="fuelModal">
+    <div class="modal-box" style="max-width:450px;">
+        <div class="modal-header" style="background:#27AE60; color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-gas-pump mr-2"></i> Fuel Consumption Log</h3>
+            <button class="modal-close" onclick="closeModal('fuelModal')" style="background:rgba(255,255,255,0.2); color:#fff; border:none; width:34px; height:34px; border-radius:10px; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmFuel" onsubmit="event.preventDefault(); submitFuel();">
+                <input type="hidden" name="action" value="log_fuel">
+                <input type="hidden" name="vehicle_id" value="<?= $vehicle['vehicle_id']??0 ?>">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Fuel Litres *</label>
+                    <input type="number" step="0.01" name="litres" class="form-control" placeholder="e.g. 45.50" required>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Total Cost (GHS) *</label>
+                    <input type="number" step="0.01" name="cost" class="form-control" required>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Current Odometer (KM) *</label>
+                    <input type="number" name="mileage" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-success btn-wide">SAVE LOG</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="vehicleIssueModal">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header" style="background:#EB5757; color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-tools mr-2"></i> Report Vehicle Fault</h3>
+            <button class="modal-close" onclick="closeModal('vehicleIssueModal')" style="background:rgba(255,255,255,0.2); color:#fff; border:none; width:34px; height:34px; border-radius:10px; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmVehicleIssue" onsubmit="event.preventDefault(); submitVehicleIssue();" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="report_vehicle_issue">
+                <input type="hidden" name="vehicle_id" value="<?= $vehicle['vehicle_id']??0 ?>">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Issue Description *</label>
+                    <textarea name="description" class="form-control" rows="4" required placeholder="Describe the engine, body, or equipment issue..."></textarea>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Photo Evidence (Optional)</label>
+                    <input type="file" name="photo" class="form-control" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-danger btn-wide">TRANSMIT REPORT</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 $(document).ready(function() {
     if ($.fn.DataTable) {
@@ -216,11 +268,11 @@ async function updateTripStatus(tripId, status){
 async function submitVehicleIssue(){
     const fd = new FormData(document.getElementById('frmVehicleIssue'));
     const res = await doAction(fd, 'Fault log transmitted to maintenance hub.');
-    if(res) { closeModal('vehicleIssueModal'); }
+    if(res) { closeModal('vehicleIssueModal'); setTimeout(()=>location.reload(), 800); }
 }
 async function submitFuel(){
     const fd = new FormData(document.getElementById('frmFuel'));
     const res = await doAction(fd, 'Resource consumption logged.');
-    if(res) { closeModal('fuelModal'); }
+    if(res) { closeModal('fuelModal'); setTimeout(()=>location.reload(), 800); }
 }
 </script>

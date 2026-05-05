@@ -64,20 +64,20 @@ $dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(
                             </div>
                         </td>
                         <td><div style="font-size:1.2rem; font-weight:600;"><?= e($t['ward_department']) ?></div></td>
-                        <td><strong>x<?= $t['quantity'] ?></strong></td>
+                        <td><strong>x<?= (int)$t['quantity'] ?></strong></td>
                         <td>
                             <?php if($has_dietary): ?>
-                            <span class="p-badge" style="background:#EB575722; color:#EB5757; font-weight:900;"><?= strtoupper(e($t['dietary_requirements'])) ?></span>
+                            <span class="p-badge" style="background:#EB575722; color:#EB5757; font-weight:900;"><?= strtoupper(e($t['dietary_requirements']??'FLAGGED')) ?></span>
                             <?php else: ?><span class="p-badge" style="background:#27AE6015; color:#27AE60; font-weight:800;">STANDARD</span><?php endif; ?>
                         </td>
                         <td><span style="font-size:1.2rem; font-weight:700; color:var(--text-muted);"><?= date('H:i', strtotime($t['scheduled_time'])) ?></span></td>
                         <td><span class="p-badge status active" style="background:<?= $st_clr ?>22; color:<?= $st_clr ?>;"><i class="fas fa-radar-pulse mr-2"></i><?= strtoupper($st) ?></span></td>
                         <td>
                             <?php if($next_st): ?>
-                            <button class="btn btn-primary btn-xs" onclick="updateKitchenTask(<?= $t['task_id'] ?>,'<?= e($next_st) ?>')">
+                            <button class="btn btn-primary btn-xs" onclick="updateKitchenTask(<?= (int)$t['task_id'] ?>,'<?= e($next_st) ?>')">
                                 <i class="fas <?= $n_icons[$next_st]??'fa-arrow-right' ?> mr-1"></i> <?= strtoupper($next_st) ?>
                             </button>
-                            <?php else: ?><i class="fas fa-check-double text-success text-2xl"></i><?php endif; ?>
+                            <?php else: ?><i class="fas fa-check-double text-success"></i><?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -87,6 +87,36 @@ $dietary_flags = dbSelect($conn,"SELECT * FROM kitchen_dietary_flags WHERE DATE(
     </div>
 
 </div>
+
+<!-- ════════════════ KITCHEN MODALS ════════════════ -->
+<div class="modal-bg" id="dietaryModal">
+    <div class="modal-box" style="max-width:450px;">
+        <div class="modal-header" style="background:#EB5757; color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-allergies mr-2"></i> Report Dietary Alarm</h3>
+            <button class="modal-close" onclick="closeModal('dietaryModal')" style="background:rgba(255,255,255,0.2); color:#fff; border:none; width:34px; height:34px; border-radius:10px; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmDietary" onsubmit="event.preventDefault(); submitDietary();">
+                <input type="hidden" name="action" value="report_dietary_issue">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Patient Name *</label>
+                    <input type="text" name="patient_name" class="form-control" placeholder="Identify patient..." required>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Dietary / Allergy Issue *</label>
+                    <textarea name="issue" class="form-control" rows="3" placeholder="e.g. Severe nut allergy discovered..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger btn-wide">TRANSMIT ALARM</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-xs { padding:.4rem .9rem; font-size:1rem; font-weight:900; border-radius:8px; }
+.dietary-ticker { animation: alert-pulse 4s infinite; }
+@keyframes alert-pulse { 0% { box-shadow: 0 0 0 0 rgba(235, 87, 87, 0.1); } 50% { box-shadow: 0 0 0 10px rgba(235, 87, 87, 0); } 100% { box-shadow: 0 0 0 0 rgba(235, 87, 87, 0); } }
+</style>
 
 <script>
 $(document).ready(function() {

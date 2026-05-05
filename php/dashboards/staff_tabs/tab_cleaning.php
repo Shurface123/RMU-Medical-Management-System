@@ -8,7 +8,9 @@ $schedules = dbSelect($conn,"SELECT * FROM cleaning_schedules WHERE assigned_to=
 $my_reports = dbSelect($conn,"SELECT * FROM contamination_reports WHERE reported_by=? ORDER BY reported_at DESC LIMIT 20","i",[$staff_id]);
 
 // Sanitation board overview
-$sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as san_status FROM cleaning_logs WHERE completed_at IS NOT NULL GROUP BY ward_room_area ORDER BY ward_room_area LIMIT 24");
+$sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as san_status FROM cleaning_logs GROUP BY ward_room_area ORDER BY ward_room_area LIMIT 24");
+$all_locations = dbSelect($conn, "SELECT ward_name FROM wards WHERE status != 'Inactive' ORDER BY ward_name ASC");
+$locations = array_merge(['Facility Wide','OPD Waiting Hall','Emergency Room','Isolation Unit','Staff Lounge','Corridor North','Corridor South'], array_column($all_locations, 'ward_name'));
 ?>
 <div id="sec-cleaning" class="dash-section">
 
@@ -70,12 +72,12 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
                         <tr>
                             <td><div style="font-weight:800; font-size:1.35rem;"><i class="fas fa-door-open mr-2 opacity-50"></i><?= e($s['ward_room_area']) ?></div></td>
                             <td><div style="font-size:1.2rem;"><i class="fas <?= $type_ico ?> mr-2" style="color:var(--role-accent);"></i><?= e(ucfirst($s['cleaning_type'])) ?></div></td>
-                            <td><span style="font-size:1.15rem; color:var(--text-muted); font-weight:700;"><?= $s['start_time']?date('H:i, d M',strtotime($s['start_time'])):'—' ?></span></td>
+                            <td><span style="font-size:1.15rem; color:var(--text-muted); font-weight:700;"><?= $s['schedule_date']?date('d M',strtotime($s['schedule_date'])):'' ?> <?= $s['start_time']?date('H:i',strtotime($s['start_time'])):'—' ?></span></td>
                             <td>
                                 <?php if($st==='scheduled'||$st==='urgent'): ?>
-                                <button class="btn btn-primary btn-xs" onclick="startCleaning(<?= $s['schedule_id'] ?>)"><i class="fas fa-play mr-1"></i> EXECUTE</button>
+                                <button class="btn btn-primary btn-xs" onclick="startCleaning(<?= $s['id'] ?>)"><i class="fas fa-play mr-1"></i> EXECUTE</button>
                                 <?php elseif($st==='in progress'): ?>
-                                <button class="btn btn-success btn-xs" onclick="openCompleteClean(<?= $s['schedule_id'] ?>, '<?= e($s['ward_room_area']) ?>')"><i class="fas fa-check-double mr-1"></i> FINAL</button>
+                                <button class="btn btn-success btn-xs" onclick="openCompleteClean(<?= $s['id'] ?>, '<?= e($s['ward_room_area']) ?>')"><i class="fas fa-check-double mr-1"></i> FINAL</button>
                                 <?php else: ?>
                                 <span class="p-badge status active"><i class="fas fa-check"></i> SECURED</span>
                                 <?php endif; ?>
@@ -112,6 +114,90 @@ $sanit_board = dbSelect($conn,"SELECT ward_room_area, MAX(sanitation_status) as 
         </div>
     </div>
 
+</div>
+
+<!-- ════════════════ CLEANING MODALS ════════════════ -->
+<div class="modal-bg" id="complCleaning">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header" style="background:#27AE60; color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-check-double mr-2"></i> Verify Sanitation</h3>
+            <button class="modal-close" onclick="closeModal('complCleaning')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmComplClean" onsubmit="event.preventDefault(); submitComplCleaning();" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="complete_cleaning">
+                <input type="hidden" name="schedule_id" id="complCleanId">
+                <p id="complCleanArea" style="font-weight:700; color:var(--role-accent); margin-bottom:1.5rem; font-size:1.2rem;"></p>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Sanitation Status *</label>
+                    <select name="sanitation_status" class="form-control" required>
+                        <option value="clean">Standard Clean</option>
+                        <option value="disinfected">Deeply Disinfected</option>
+                        <option value="sterilized">Sterilized</option>
+                    </select>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Notes / Observations</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Area cleared for clinical use..."></textarea>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Cleaning Proof (Photo)</label>
+                    <input type="file" name="proof" class="form-control" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-success btn-wide">CONFIRM SECURED</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="contamReportModal">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header" style="background:#EB5757; color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-biohazard mr-2"></i> Report Biohazard</h3>
+            <button class="modal-close" onclick="closeModal('contamReportModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmContam" onsubmit="event.preventDefault(); submitContam();" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="report_contamination">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Location *</label>
+                    <select name="location" class="form-control" required>
+                        <option value="">Select location...</option>
+                        <?php foreach($locations as $loc): ?>
+                            <option value="<?= e($loc) ?>"><?= e($loc) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Contamination Type *</label>
+                    <select name="contamination_type" class="form-control" required>
+                        <option value="chemical">Chemical Spill</option>
+                        <option value="biological">Biological Fluid</option>
+                        <option value="biohazard">Sharps Risk</option>
+                        <option value="general">Waste Overflow / Other</option>
+                    </select>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Severity *</label>
+                    <select name="severity" class="form-control" required>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Hazard Description *</label>
+                    <textarea name="description" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Hazard Photo</label>
+                    <input type="file" name="photo" class="form-control" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-danger btn-wide">TRANSMIT HAZARD REPORT</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <style>

@@ -11,6 +11,12 @@ $csrf = $_POST['csrf'] ?? '';
 $origin = $_POST['origin'] ?? 'unknown';
 
 // Verifications
+if (!$uid) {
+    // If no user_id in session, it might be a missing cookie or already logged out
+    echo json_encode(['success'=>true, 'redirect'=>'/RMU-Medical-Management-System/php/index.php', 'info'=>'No active session found']);
+    exit;
+}
+
 if (!empty($_SESSION['csrf_token']) && !hash_equals($_SESSION['csrf_token'], $csrf)) {
     echo json_encode(['success'=>false, 'error'=>'Invalid CSRF token', 'redirect'=>'/RMU-Medical-Management-System/php/index.php']);
     exit;

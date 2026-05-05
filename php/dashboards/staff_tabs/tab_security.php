@@ -32,7 +32,7 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
         foreach($stats_sec as $s): ?>
         <div class="stat-card-v2">
             <div class="s-icon" style="background:<?= $s['clr'] ?>15; color:<?= $s['clr'] ?>;"><i class="fas <?= $s['icon'] ?>"></i></div>
-            <div class="s-data"><span><?= $s['label'] ?></span><strong><?= $s['val']??0 ?></strong></div>
+            <div class="s-data"><span><?= $s['label'] ?></span><strong><?= (int)($s['val']??0) ?></strong></div>
         </div>
         <?php endforeach; ?>
     </div>
@@ -90,9 +90,81 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
 
 </div>
 
+<!-- ════════════════ SECURITY MODALS ════════════════ -->
+<div class="modal-bg" id="incidentModal">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header" style="background:#EB5757; color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-exclamation-triangle mr-2"></i> Report Security Incident</h3>
+            <button class="modal-close" onclick="closeModal('incidentModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmIncident" onsubmit="event.preventDefault(); submitIncident();">
+                <input type="hidden" name="action" value="report_incident">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Incident Type *</label>
+                    <select name="type" class="form-control" required>
+                        <option value="Unauthorized Access">Unauthorized Access</option>
+                        <option value="Theft / Vandalism">Theft / Vandalism</option>
+                        <option value="Disturbance">Disturbance / Altercation</option>
+                        <option value="Suspicious Activity">Suspicious Activity</option>
+                        <option value="Medical Emergency">Medical Emergency</option>
+                        <option value="Fire Alarm">Fire Alarm</option>
+                    </select>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Location *</label>
+                    <input type="text" name="location" class="form-control" placeholder="Specific area" required>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Severity *</label>
+                    <select name="severity" class="form-control" required>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Description *</label>
+                    <textarea name="description" class="form-control" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger btn-wide">SUBMIT INCIDENT REPORT</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="patrolModal">
+    <div class="modal-box" style="max-width:450px;">
+        <div class="modal-header" style="background:var(--role-accent); color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-route mr-2"></i> Log Patrol Checkpoint</h3>
+            <button class="modal-close" onclick="closeModal('patrolModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmPatrol" onsubmit="event.preventDefault(); submitPatrol();">
+                <input type="hidden" name="action" value="log_patrol_checkin">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Checkpoint / Location *</label>
+                    <input type="text" name="checkpoint" class="form-control" placeholder="e.g. Ward B Perimeter" required>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Observation Notes</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="No anomalies detected. All secure."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-wide">LOG CHECK-IN</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
+.stat-card-v2 { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:2rem; display:flex; align-items:center; gap:1.8rem; box-shadow:var(--shadow-sm); }
+.s-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:2.2rem; }
+.s-data span { display:block; font-size:1.15rem; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:.2rem; }
+.s-data strong { font-size:2.2rem; font-weight:900; color:var(--text-primary); }
 .patrol-item { transition: .3s; }
 .patrol-item:hover { background: color-mix(in srgb, var(--role-accent) 5%, var(--surface-2)); transform: translateX(5px); }
+.btn-xs { padding:.4rem .9rem; font-size:1rem; font-weight:900; border-radius:8px; }
 </style>
 
 <script>

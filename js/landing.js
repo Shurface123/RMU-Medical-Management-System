@@ -8,6 +8,17 @@
 const BASE = '/RMU-Medical-Management-System';
 const API  = `${BASE}/php/public/landing_api.php`;
 
+/**
+ * Helper to ensure image paths are correct
+ * Handles cases where path might already include the BASE or be absolute
+ */
+function fixPath(path) {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('//') || path.startsWith('data:')) return path;
+  if (path.startsWith(BASE)) return path;
+  return BASE + (path.startsWith('/') ? '' : '/') + path;
+}
+
 /* ============================================================
    THEME MANAGEMENT
    ============================================================ */
@@ -492,7 +503,7 @@ const Loader = (() => {
            data-name="${escHtml(doc.name)}" data-dept="${escHtml(doc.department || '')}"
            onclick="openDoctorModal(${doc.doctor_id})">
         <img class="lp-doctor-photo"
-             src="${doc.profile_image ? BASE + '/' + escHtml(doc.profile_image) : 'data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%232F80ED22\'/><text x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%232F80ED\'>👨‍⚕️</text></svg>'}"
+             src="${doc.profile_image ? fixPath(doc.profile_image) : 'data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%232F80ED22\'/><text x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%232F80ED\'>👨‍⚕️</text></svg>'}"
              alt="${escHtml(doc.name)}" onerror="this.src='data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'50\' fill=\'%232F80ED22\'/><text x=\'50\' y=\'62\' font-size=\'42\' text-anchor=\'middle\'>👨‍⚕️</text></svg>'">
         <div class="lp-doctor-name">${escHtml(doc.name)}</div>
         <div class="lp-doctor-spec">${escHtml(doc.specialization || 'General Physician')}</div>
@@ -531,7 +542,7 @@ const Loader = (() => {
         <div class="lp-staff-flip-inner">
           <div class="lp-staff-front">
             ${s.photo_path
-              ? `<img class="lp-staff-photo" src="${BASE}/${escHtml(s.photo_path)}" alt="${escHtml(s.name)}">`
+              ? `<img class="lp-staff-photo" src="${fixPath(s.photo_path)}" alt="${escHtml(s.name)}">`
               : `<div class="lp-staff-photo" style="background:var(--lp-primary-bg);display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:var(--lp-primary)"><i class="fas fa-user-nurse"></i></div>`}
             <div style="font-size:1rem;font-weight:700;">${escHtml(s.name)}</div>
             <div style="font-size:0.85rem;color:var(--lp-text-muted);">${escHtml(s.role_title)}</div>
@@ -655,7 +666,7 @@ window.openDoctorModal = function(id) {
   m.querySelector('.lp-modal-body').innerHTML = `
     <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;">
       ${data.profile_image
-        ? `<img src="${BASE}/${escHtml(data.profile_image)}" alt="${escHtml(data.name)}"
+        ? `<img src="${fixPath(data.profile_image)}" alt="${escHtml(data.name)}"
                style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--lp-primary-bg);">`
         : `<div style="width:110px;height:110px;border-radius:50%;background:var(--lp-primary-bg);display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--lp-primary);">👨‍⚕️</div>`}
       <div style="flex:1;">
@@ -688,7 +699,7 @@ window.openStaffModal = function(id) {
   m.querySelector('.lp-modal-body').innerHTML = `
     <div style="text-align:center;margin-bottom:1.5rem;">
       ${data.photo_path
-        ? `<img src="${BASE}/${escHtml(data.photo_path)}" alt="${escHtml(data.name)}"
+        ? `<img src="${fixPath(data.photo_path)}" alt="${escHtml(data.name)}"
                style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--lp-primary-bg);margin:0 auto;">`
         : `<div style="width:120px;height:120px;border-radius:50%;background:var(--lp-primary-bg);display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--lp-primary);margin:0 auto;"><i class="fas fa-user-nurse"></i></div>`}
       <h3 style="font-size:1.2rem;font-weight:700;margin-top:1rem;">${escHtml(data.name)}</h3>

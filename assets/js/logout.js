@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let fetchedMsg = "Your health is your greatest wealth.";
         
         // 1. Fetch Health Config & Msg Concurrently
-        fetch('/RMU-Medical-Management-System/php/get_health_message.php')
+        fetch('/RMU-Medical-Management-System/php/get_health_message.php', { credentials: 'include' })
             .then(r => r.json())
             .then(data => {
                 if(data.success && data.message) {
@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2. Execute Backend Logout Cleanly
         fetch('/RMU-Medical-Management-System/php/logout_handler.php', {
             method: 'POST',
+            credentials: 'include',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `csrf=${encodeURIComponent(csrfToken)}&origin=${encodeURIComponent(origin)}`
         }).then(r => r.json()).then(d => {

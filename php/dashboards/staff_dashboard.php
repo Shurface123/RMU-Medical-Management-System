@@ -106,6 +106,11 @@ $user_id   = (int)$_SESSION['user_id'];
 $staffRole = $_SESSION['user_role'] ?? 'staff';
 $today     = date('Y-m-d');
 
+// Ensure CSRF token is available for the logout system
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // ── Fetch Staff Row ──────────────────────────────────────────
 // NOTE: sc.completeness_score does not exist — real column is sc.overall_percentage
 //       ST.theme does not exist           — real column is ST.theme_preference
@@ -136,7 +141,7 @@ $active_tab = isset($_GET['tab']) ? sanitize($_GET['tab']) : 'overview';
 
 // ── Live Stats (role-adaptive, used in sidebar badges) ───────
 $unread_notifs = $staff_id ? (int)dbVal($conn,"SELECT COUNT(*) FROM staff_notifications WHERE staff_id=? AND is_read=0","i",[$staff_id]) : 0;
-$unread_msgs   = $staff_id ? (int)dbVal($conn,"SELECT COUNT(*) FROM staff_messages WHERE receiver_id=? AND is_read=0","i",[$staff_id]) : 0;
+$unread_msgs   = $user_id ? (int)dbVal($conn,"SELECT COUNT(*) FROM staff_messages WHERE receiver_id=? AND is_read=0","i",[$user_id]) : 0;
 $pending_tasks = $staff_id ? (int)dbVal($conn,"SELECT COUNT(*) FROM staff_tasks WHERE assigned_to=? AND status='pending'","i",[$staff_id]) : 0;
 
 // ── Sidebar Nav Config (fetched from staff_roles, then mapped) ─
@@ -167,26 +172,26 @@ $profile_nav = [
     ['tab'=>'settings', 'icon'=>'fa-gear',       'label'=>'Settings'],
 ];
 
-// Sidebar gradient per role
+// Sidebar gradient per role (Unified to Blue Excellence)
 $gradients = [
-    'ambulance_driver' => 'linear-gradient(175deg,#0F2027 0%,#cc0000 60%,#ff6b6b 100%)',
-    'cleaner'          => 'linear-gradient(175deg,#0F2027 0%,#1ABC9C 60%,#48C9B0 100%)',
-    'laundry_staff'    => 'linear-gradient(175deg,#0F2027 0%,#8E44AD 60%,#BB8FCE 100%)',
+    'ambulance_driver' => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
+    'cleaner'          => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
+    'laundry_staff'    => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
     'maintenance'      => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
-    'security'         => 'linear-gradient(175deg,#0F2027 0%,#2C3E50 60%,#4CA1AF 100%)',
-    'kitchen_staff'    => 'linear-gradient(175deg,#0F2027 0%,#c0392b 60%,#e55039 100%)',
-    'default'          => 'linear-gradient(175deg,#1C3A6B 0%,#4F46E5 60%,#818CF8 100%)',
+    'security'         => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
+    'kitchen_staff'    => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
+    'default'          => 'linear-gradient(175deg,#0F2027 0%,#1C3A6B 60%,#2F80ED 100%)',
 ];
 $sidebar_gradient = $gradients[$staffRole] ?? $gradients['default'];
 
 $role_accent_map = [
-    'ambulance_driver' => '#CC0000',
-    'cleaner'          => '#1ABC9C',
-    'laundry_staff'    => '#8E44AD',
+    'ambulance_driver' => '#2F80ED',
+    'cleaner'          => '#2F80ED',
+    'laundry_staff'    => '#2F80ED',
     'maintenance'      => '#2F80ED',
-    'security'         => '#2C3E50',
-    'kitchen_staff'    => '#c0392b',
-    'default'          => '#4F46E5',
+    'security'         => '#2F80ED',
+    'kitchen_staff'    => '#2F80ED',
+    'default'          => '#2F80ED',
 ];
 $roleAccent = $role_accent_map[$staffRole] ?? $role_accent_map['default'];
 ?>
@@ -212,6 +217,7 @@ $roleAccent = $role_accent_map[$staffRole] ?? $role_accent_map['default'];
   --role-accent: <?= $roleAccent ?>;
   --role-accent-dark: color-mix(in srgb, <?= $roleAccent ?> 80%, #000 20%);
   --role-accent-light: color-mix(in srgb, <?= $roleAccent ?> 15%, #fff 85%);
+  --primary: var(--role-accent);
 }
 [data-theme="dark"] { --role-accent-light: color-mix(in srgb, <?= $roleAccent ?> 20%, #0F1628 80%); }
 

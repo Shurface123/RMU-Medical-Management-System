@@ -237,7 +237,7 @@ function handleUpload($fileKey, $subDir, $allowedTypes = ['jpg', 'jpeg', 'png', 
         return ['error' => 'File type not allowed'];
     $dir = __DIR__ . "/../../uploads/staff/$subDir/";
     if (!is_dir($dir))
-        mkdir($dir, 0755, true);
+        @mkdir($dir, 0755, true);
     $fname = uniqid('stf_', true) . '.' . $ext;
     if (!move_uploaded_file($file['tmp_name'], $dir . $fname))
         return ['error' => 'Upload failed'];
@@ -247,12 +247,14 @@ function handleUpload($fileKey, $subDir, $allowedTypes = ['jpg', 'jpeg', 'png', 
 /* ─── JSON Response Helper (for AJAX endpoints) ───────────── */
 function json_ok($msg = 'Success', $data = [])
 {
+    if (ob_get_length()) ob_clean(); // Discard background notices/garbage
     echo json_encode(['success' => true, 'message' => $msg] + $data);
     exit();
 }
 function json_err($msg = 'Error', $code = 400)
 {
     http_response_code($code);
+    if (ob_get_length()) ob_clean(); // Discard background notices/garbage
     echo json_encode(['success' => false, 'message' => $msg]);
     exit();
 }

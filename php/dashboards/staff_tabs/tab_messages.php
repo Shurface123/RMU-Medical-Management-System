@@ -9,10 +9,10 @@ $conversations = dbSelect($conn,
      LEFT JOIN users s2 ON m.receiver_id = s2.id
      WHERE m.sender_id=? OR m.receiver_id=?
      ORDER BY m.sent_at DESC LIMIT 100",
-    "ii", [$staff_id, $staff_id]);
+    "ii", [$user_id, $user_id]);
 
 
-$unread_msg_count = (int)dbVal($conn, "SELECT COUNT(*) FROM staff_messages WHERE receiver_id=? AND is_read=0", "i", [$staff_id]);
+$unread_msg_count = (int)dbVal($conn, "SELECT COUNT(*) FROM staff_messages WHERE receiver_id=? AND is_read=0", "i", [$user_id]);
 ?>
 <div id="sec-messages" class="dash-section">
     
@@ -64,7 +64,7 @@ $unread_msg_count = (int)dbVal($conn, "SELECT COUNT(*) FROM staff_messages WHERE
         <?php else: ?>
             <div id="messageList">
                 <?php foreach($conversations as $m):
-                    $is_mine = ((int)$m['sender_id'] === $staff_id);
+                    $is_mine = ((int)$m['sender_id'] === $user_id);
                     $is_unread = !$is_mine && !(bool)$m['is_read'];
                     $other_name = $is_mine ? ($m['receiver_name'] ?? 'Facility Admin') : ($m['sender_name'] ?? 'Facility Admin');
                     $priority = strtolower($m['priority'] ?? 'normal');
@@ -211,7 +211,7 @@ async function viewMessage(msg, el) {
     currentViewingMsg = msg;
     
     // Fill UI
-    document.getElementById('msgSender').innerText = (msg.sender_id == <?= $staff_id ?>) ? "To: " + (msg.receiver_name || "Admin") : "From: " + (msg.sender_name || "Admin");
+    document.getElementById('msgSender').innerText = (msg.sender_id == <?= $user_id ?>) ? "To: " + (msg.receiver_name || "Admin") : "From: " + (msg.sender_name || "Admin");
     document.getElementById('msgTime').innerText = msg.sent_at;
     document.getElementById('msgAvatar').innerText = (msg.sender_name || "A").substring(0,1).toUpperCase();
     document.getElementById('vSubject').innerText = msg.subject || "(No Subject)";
@@ -219,7 +219,7 @@ async function viewMessage(msg, el) {
 
     
     if (el.classList.contains('unread')) {
-        await doAction({action: 'mark_message_read', message_id: msg.id});
+        await doAction({action: 'mark_message_read', message_id: msg.message_id});
         el.classList.remove('unread');
         el.style.boxShadow = 'none';
         el.querySelector('[style*="color:var(--role-accent)"]')?.remove();

@@ -29,7 +29,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
             if($i['available_quantity'] <= ($i['reorder_level']??10)) $c['low']++;
             return $c;
         }, ['total'=>0, 'low'=>0]);
-        $active_batches = count(array_filter($batches, fn($b)=>$b['delivery_status']!=='delivered'));
+        $active_batches_count = count(array_filter($batches, fn($b)=>$b['delivery_status']!=='delivered'));
         ?>
         <div class="stat-card-v2">
             <div class="s-icon" style="background:#2F80ED15; color:#2F80ED;"><i class="fas fa-boxes-stacked"></i></div>
@@ -37,15 +37,16 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
         </div>
         <div class="stat-card-v2">
             <div class="s-icon" style="background:#F2994A15; color:#F2994A;"><i class="fas fa-hourglass-half"></i></div>
-            <div class="s-data"><span>Active Batches</span><strong><?= $active_batches ?></strong></div>
+            <div class="s-data"><span>Active Batches</span><strong><?= $active_batches_count ?></strong></div>
         </div>
         <div class="stat-card-v2">
             <div class="s-icon" style="background:#EB575715; color:#EB5757;"><i class="fas fa-triangle-exclamation"></i></div>
             <div class="s-data"><span>Stock Alerts</span><strong><?= $stock_counts['low'] ?></strong></div>
         </div>
         <div class="stat-card-v2">
-            <div class="s-icon" style="background:#27AE6015; color:#27AE60;"><i class="fas fa-check-double"></i></div>
-            <div class="s-data"><span>Processed Today</span><strong>14</strong></div>
+            <?php $done_today = count($batches); ?>
+            <div class="s-icon" style="background:var(--role-accent)15; color:var(--role-accent);"><i class="fas fa-check-double"></i></div>
+            <div class="s-data"><span>Today Total</span><strong><?= $done_today ?></strong></div>
         </div>
     </div>
 
@@ -54,26 +55,33 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
         <div class="card">
             <div class="card-header" style="padding:1.8rem 2.5rem; display:flex; justify-content:space-between; align-items:center;">
                 <h3 style="font-size:1.6rem; font-weight:800;"><i class="fas fa-sync-alt mr-2 text-primary"></i> Sterilization Pipeline</h3>
-                <span class="p-badge"><?= $active_batches ?> Active</span>
+                <span class="p-badge"><?= $active_batches_count ?> Active</span>
             </div>
             <div style="padding:1.5rem 2.5rem;">
                 <table id="tblBatches" class="display responsive nowrap" style="width:100%">
                     <thead><tr><th>Batch Code</th><th>Specs</th><th>Origin</th><th>Phase status</th><th>Actions</th></tr></thead>
                     <tbody>
                         <?php foreach($batches as $b):
-                            $bs = $b['delivery_status']==='delivered'?'delivered':($b['washing_status']==='in progress'?'washing':($b['collection_status']==='collected'?'collected':'pending'));
-                            $pipeline = ['collected','washing','ironing','quality check','delivered'];
+                            $collection_st = $b['collection_status'] ?? '';
+                            $washing_st = $b['washing_status'] ?? '';
+                            $ironing_st = $b['ironing_status'] ?? '';
+                            $delivery_st = $b['delivery_status'] ?? 'pending';
+                            
+                            $bs = ($delivery_st === 'delivered') ? 'delivered' : 
+                                 (($ironing_st === 'completed') ? 'ironing' : 
+                                 (($washing_st === 'completed') ? 'washing' : 'collected'));
+
+                            $pipeline = ['collected','washing','ironing','delivered'];
                             $pi = array_search($bs,$pipeline);
-                            $sc_map = ['collected'=>'#F2994A','washing'=>'#2F80ED','ironing'=>'#9B51E0','quality check'=>'var(--role-accent)','delivered'=>'#27AE60'];
+                            $sc_map = ['collected'=>'#F2994A','washing'=>'#2F80ED','ironing'=>'#9B51E0','delivered'=>'#27AE60'];
                             $sc = $sc_map[$bs]??'#999';
-                            $next_status = $pipeline[min($pi+1, 4)]??$bs;
+                            $next_status = $pipeline[min($pi+1, 3)]??$bs;
                         ?>
                         <tr>
                             <td>
                                 <div style="font-family:monospace; font-weight:800; color:var(--text-primary);"><?= e($b['batch_code']) ?></div>
-                                <?php if($b['contaminated_items_count']): ?><span class="p-badge" style="background:#EB575722; color:#EB5757; font-size:1rem; margin-top:.3rem;"><i class="fas fa-biohazard"></i> BIO</span><?php endif; ?>
                             </td>
-                            <td><div style="font-size:1.2rem; font-weight:600;"><?= e($b['item_count']) ?> pcs • <?= e(ucfirst($b['item_type'])) ?></div></td>
+                            <td><div style="font-size:1.2rem; font-weight:600;"><?= e($b['item_count']) ?> pcs • <?= e(ucfirst($b['batch_type'])) ?></div></td>
                             <td><span style="font-size:1.15rem; color:var(--text-muted);"><?= e($b['requested_by']??'General') ?></span></td>
                             <td>
                                 <div class="mini-pipe">
@@ -84,7 +92,7 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
                                 </div>
                             </td>
                             <td>
-                                <?php if($bs!=='delivered'): ?>
+                                <?php if($delivery_st!=='delivered'): ?>
                                 <button class="btn btn-primary btn-xs" onclick="updateBatch(<?= $b['batch_id'] ?>,'<?= e($next_status) ?>')">
                                     <i class="fas fa-chevron-right mr-1"></i> <?= strtoupper($next_status) ?>
                                 </button>
@@ -117,16 +125,74 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
                         <span style="font-size:1.4rem; font-weight:900; color:<?= $is_low?'#EB5757':'var(--text-primary)' ?>;"><?= $qty ?></span>
                     </div>
                     <div class="prog-track" style="height:6px;"><div class="prog-fill" style="width:<?= $prog ?>%; background:<?= $is_low?'#EB5757':'#27AE60' ?>;"></div></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:.5rem; font-size:1.05rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">
-                        <span>Min Safety: <?= $reorder ?></span>
-                        <span><?= $is_low ? 'CRITICAL' : 'SUFFICIENT' ?></span>
-                    </div>
                 </div>
                 <?php endforeach; ?>
             </div>
         </div>
     </div>
 
+</div>
+
+<!-- ════════════════ LAUNDRY MODALS ════════════════ -->
+<div class="modal-bg" id="newBatchModal">
+    <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header" style="background:var(--role-accent); color:#fff; border:none; padding:1.8rem 2.5rem;">
+            <h3 style="font-size:1.8rem; font-weight:700;"><i class="fas fa-layer-plus mr-2"></i> Register New Batch</h3>
+            <button class="modal-close" onclick="closeModal('newBatchModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmNewBatch" onsubmit="event.preventDefault(); submitBatch();">
+                <input type="hidden" name="action" value="register_laundry_batch">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.8rem;">Origin Ward / Unit *</label>
+                    <input type="text" name="origin_ward" class="form-control" placeholder="e.g. Emergency Ward" required>
+                </div>
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.8rem;">Textile Type *</label>
+                    <select name="item_type" class="form-control" required>
+                        <option value="Linen">Linen / Bedding</option>
+                        <option value="Uniforms">Staff Uniforms</option>
+                        <option value="Surgical">Surgical Scrubs</option>
+                        <option value="Gowns">Patient Gowns</option>
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
+                    <div class="form-group">
+                        <label style="font-weight:700; display:block; margin-bottom:.8rem;">Item Count</label>
+                        <input type="number" name="item_count" class="form-control" value="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight:700; display:block; margin-bottom:.8rem;">Weight (kg)</label>
+                        <input type="number" step="0.1" name="weight" class="form-control" value="5.0">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-wide">REGISTER SEQUENCE</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="damageModal">
+    <div class="modal-box" style="max-width:450px;">
+        <div class="modal-header" style="background:#EB5757; color:#fff; border:none; padding:1.5rem 2rem;">
+            <h3 style="font-size:1.6rem; font-weight:700;"><i class="fas fa-exclamation-triangle mr-2"></i> Report Linen Damage</h3>
+            <button class="modal-close" onclick="closeModal('damageModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:2.5rem;">
+            <form id="frmDamage" onsubmit="event.preventDefault(); submitDamage();">
+                <input type="hidden" name="action" value="report_laundry_damage">
+                <div class="form-group mb-6">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Item Type *</label>
+                    <input type="text" name="item_type" class="form-control" placeholder="e.g. Bed Sheet" required>
+                </div>
+                <div class="form-group mb-8">
+                    <label style="font-weight:700; display:block; margin-bottom:.5rem;">Description of Damage *</label>
+                    <textarea name="description" class="form-control" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger btn-wide">LOG DAMAGE REPORT</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -139,7 +205,6 @@ $damage_reports = dbSelect($conn,"SELECT * FROM laundry_damage_reports ORDER BY 
 .pipe-dot { width:10px; height:4px; border-radius:3px; background:var(--border); transition:.3s; }
 .pipe-dot.done { background:var(--dot-clr); box-shadow:0 0 5px var(--dot-clr); }
 
-.inv-item:last-child { margin-bottom:0; }
 .btn-xs { padding:.4rem .9rem; font-size:1rem; font-weight:900; border-radius:8px; }
 </style>
 
