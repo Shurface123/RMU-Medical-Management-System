@@ -47,13 +47,13 @@ switch ($action) {
         if ($staffRole !== 'security') json_err('Access denied.', 403);
         $checkpoint = sanitize($_POST['checkpoint'] ?? '');
         $notes = sanitize($_POST['notes'] ?? '');
-        dbInsert($conn, "INSERT INTO security_logs (staff_id, log_type, checkpoint, notes, logged_at) VALUES (?, 'patrol_checkin', ?, ?, NOW())", "iss", [$staff_id, $checkpoint, $notes]);
+        dbInsert($conn, "INSERT INTO security_logs (staff_id, incident_type, location, description, reported_at, notes) VALUES (?, 'patrol log', ?, 'Patrol checkpoint logged.', NOW(), ?)", "iss", [$staff_id, $checkpoint, $notes]);
         json_ok('Patrol check-in logged.');
         break;
 
     case 'report_incident':
         if ($staffRole !== 'security') json_err('Access denied.', 403);
-        $type      = sanitize($_POST['incident_type'] ?? '');
+        $type      = sanitize($_POST['type'] ?? $_POST['incident_type'] ?? '');
         $location  = sanitize($_POST['location'] ?? '');
         $desc      = sanitize($_POST['description'] ?? '');
         $severity  = sanitize($_POST['severity'] ?? 'low');

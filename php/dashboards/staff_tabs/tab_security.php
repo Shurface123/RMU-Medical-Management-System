@@ -24,8 +24,8 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
     <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:2.5rem; margin-bottom:3.5rem;">
         <?php
         $stats_sec = [
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_incidents WHERE staff_id=? AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Active Incidents','icon'=>'fa-sensor-alert','clr'=>'#EB5757'],
-            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_logs WHERE staff_id=? AND incident_type='patrol log' AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Patrol Checks','icon'=>'fa-user-police-tie','clr'=>'#2F80ED'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_incidents WHERE staff_id=? AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Active Incidents','icon'=>'fa-exclamation-circle','clr'=>'#EB5757'],
+            ['val'=>dbVal($conn,"SELECT COUNT(*) FROM security_logs WHERE staff_id=? AND incident_type='patrol log' AND DATE(reported_at)=?","is",[$staff_id,$today]), 'label'=>'Patrol Checks','icon'=>'fa-user-shield','clr'=>'#2F80ED'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM visitor_logs WHERE logged_by=? AND DATE(entry_time)=?","is",[$staff_id,$today]), 'label'=>'Total Visitors','icon'=>'fa-id-card-clip','clr'=>'#27AE60'],
             ['val'=>dbVal($conn,"SELECT COUNT(*) FROM visitor_logs WHERE logged_by=? AND exit_time IS NULL","i",[$staff_id]), 'label'=>'On-Site Now','icon'=>'fa-users-viewfinder','clr'=>'#9B51E0'],
         ];
@@ -103,12 +103,13 @@ $patrol_logs  = dbSelect($conn,"SELECT * FROM security_logs WHERE staff_id=? AND
                 <div class="form-group mb-6">
                     <label style="font-weight:700; display:block; margin-bottom:.5rem;">Incident Type *</label>
                     <select name="type" class="form-control" required>
-                        <option value="Unauthorized Access">Unauthorized Access</option>
-                        <option value="Theft / Vandalism">Theft / Vandalism</option>
-                        <option value="Disturbance">Disturbance / Altercation</option>
-                        <option value="Suspicious Activity">Suspicious Activity</option>
-                        <option value="Medical Emergency">Medical Emergency</option>
-                        <option value="Fire Alarm">Fire Alarm</option>
+                        <option value="access control">Unauthorized Access (Access Control)</option>
+                        <option value="theft">Theft / Vandalism</option>
+                        <option value="violence">Disturbance / Violence</option>
+                        <option value="trespassing">Trespassing / Suspicious Activity</option>
+                        <option value="medical emergency">Medical Emergency</option>
+                        <option value="fire">Fire Alarm</option>
+                        <option value="other">Other Incident</option>
                     </select>
                 </div>
                 <div class="form-group mb-6">
