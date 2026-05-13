@@ -9,7 +9,7 @@ include '../includes/_sidebar.php';
 
 // Fetch real stats
 $totalStaff = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM users WHERE user_role != 'patient'"))['count'] ?? 0;
-$pendingLeaves = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM leave_requests WHERE status = 'Pending'"))['count'] ?? 0;
+$pendingLeaves = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM staff_leaves WHERE status = 'pending'"))['count'] ?? 0;
 $pendingApprovals = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM users WHERE status = 'pending'"))['count'] ?? 0;
 ?>
 

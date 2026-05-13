@@ -3,7 +3,7 @@
  * tab_schedule.php — Module 9: My Shift Schedule + Leave Requests (Modernized)
  */
 $leaves = dbSelect($conn, "SELECT * FROM staff_leaves WHERE staff_id=? ORDER BY created_at DESC LIMIT 50", "i", [$staff_id]);
-$all_shifts = dbSelect($conn, "SELECT * FROM staff_shifts WHERE staff_id=? AND shift_date >= DATE_SUB(?, INTERVAL 7 DAY) ORDER BY shift_date ASC LIMIT 31", "is", [$staff_id, $today]);
+$all_shifts = dbSelect($conn, "SELECT * FROM staff_shifts WHERE staff_id=? ORDER BY shift_date DESC LIMIT 100", "i", [$staff_id]);
 
 // Group shifts for calendar-like display
 $calendar_shifts = [];

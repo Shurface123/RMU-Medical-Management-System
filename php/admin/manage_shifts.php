@@ -25,9 +25,9 @@ $q_shifts = mysqli_query($conn, "
     FROM staff_shifts sh
     JOIN staff s ON sh.staff_id = s.id
     JOIN users u ON s.user_id = u.id
-    WHERE sh.shift_date >= CURRENT_DATE() 
-      AND sh.shift_date <= DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY)
+    WHERE sh.shift_date >= CURRENT_DATE()
     ORDER BY sh.shift_date ASC, sh.start_time ASC
+    LIMIT 1000
 ");
 if ($q_shifts) {
     while ($r = mysqli_fetch_assoc($q_shifts)) {
@@ -153,7 +153,7 @@ textarea.form-control { resize:vertical; min-height:80px; }
             <div class="staff-hero-avatar"><i class="fas fa-clock"></i></div>
             <div class="staff-hero-info">
                 <h2>Shift Scheduling & Roster</h2>
-                <p>Manage and allocate working shifts for all hospital staff and personnel over the next 7 days.</p>
+                <p>Manage and allocate working shifts for all hospital staff and personnel.</p>
             </div>
             <div style="margin-left:auto; display:flex; gap:1rem; z-index:2;">
                 <button class="btn" onclick="document.getElementById('shiftModal').classList.add('active');" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.3); backdrop-filter:blur(5px);">
@@ -182,7 +182,7 @@ textarea.form-control { resize:vertical; min-height:80px; }
 
         <div class="card">
             <div class="card-header">
-                <h3><i class="fas fa-list-ul" style="color:var(--primary);"></i> Upcoming Shifts Roster (Next 7 Days)</h3>
+                <h3><i class="fas fa-list-ul" style="color:var(--primary);"></i> Upcoming Shifts Roster</h3>
             </div>
             <div class="card-body" style="padding:1rem;">
                 <table class="stf-table" id="shiftsTable">
@@ -278,12 +278,23 @@ textarea.form-control { resize:vertical; min-height:80px; }
                 <div class="form-row">
                     <div class="form-group">
                         <label>Ward / Department *</label>
-                        <select name="location_ward_assigned" class="form-control" required>
-                            <option value="">-- Select Location --</option>
+                        <input list="locations_list" name="location_ward_assigned" class="form-control" placeholder="-- Type or Select Location --" required autocomplete="off">
+                        <datalist id="locations_list">
                             <?php foreach($depts as $d): ?>
-                                <option value="<?php echo htmlspecialchars($d['name']); ?>"><?php echo htmlspecialchars($d['name']); ?></option>
+                                <option value="<?php echo htmlspecialchars($d['name']); ?>">
                             <?php endforeach; ?>
-                        </select>
+                            <?php
+                            $qloc = mysqli_query($conn, "SELECT DISTINCT location_ward_assigned FROM staff_shifts WHERE location_ward_assigned IS NOT NULL AND location_ward_assigned != ''");
+                            if($qloc) {
+                                while($loc = mysqli_fetch_assoc($qloc)) {
+                                    $l = $loc['location_ward_assigned'];
+                                    $found = false;
+                                    foreach($depts as $d) { if($d['name'] === $l) { $found = true; break; } }
+                                    if(!$found) echo '<option value="'.htmlspecialchars($l).'">';
+                                }
+                            }
+                            ?>
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label>Shift Status *</label>

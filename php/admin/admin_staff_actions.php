@@ -249,7 +249,7 @@ switch ($action) {
         $leave_id = (int)($_POST['leave_id'] ?? 0);
         if (!$leave_id) die(json_encode(['success' => false, 'message' => 'Invalid Leave ID.']));
         
-        $sql = "UPDATE staff_leave_requests SET status = 'approved', approved_by = ? WHERE id = ?";
+        $sql = "UPDATE staff_leaves SET status = 'approved', reviewed_by = ?, reviewed_at = NOW() WHERE leave_id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "ii", $admin_id, $leave_id);
         if (mysqli_stmt_execute($stmt)) echo json_encode(['success' => true, 'message' => 'Leave approved.']);
@@ -262,7 +262,7 @@ switch ($action) {
         $reason   = trim($_POST['reason'] ?? 'Rejected by administration');
         if (!$leave_id) die(json_encode(['success' => false, 'message' => 'Invalid Leave ID.']));
         
-        $sql = "UPDATE staff_leave_requests SET status = 'rejected', approved_by = ?, rejection_reason = ? WHERE id = ?";
+        $sql = "UPDATE staff_leaves SET status = 'rejected', reviewed_by = ?, reviewed_at = NOW(), admin_notes = ? WHERE leave_id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "isi", $admin_id, $reason, $leave_id);
         if (mysqli_stmt_execute($stmt)) echo json_encode(['success' => true, 'message' => 'Leave rejected.']);

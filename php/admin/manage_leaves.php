@@ -11,7 +11,7 @@ include '../includes/_sidebar.php';
 $leaves = [];
 $q_leaves = mysqli_query($conn, "
     SELECT lr.*, u.name, u.user_role as role
-    FROM staff_leave_requests lr
+    FROM staff_leaves lr
     JOIN staff s ON lr.staff_id = s.id
     JOIN users u ON s.user_id = u.id
     ORDER BY lr.applied_at DESC LIMIT 500

@@ -55,7 +55,7 @@ $tasks = dbSelect($conn,"SELECT * FROM staff_tasks WHERE assigned_to=? ORDER BY 
         $pri_colors = ['urgent'=>'#EB5757','high'=>'#F2994A','medium'=>'#F2C94C','low'=>'#27AE60'];
         $clr = $pri_colors[$pri] ?? 'var(--role-accent)';
 
-        $checklists = dbSelect($conn,"SELECT * FROM staff_task_checklists WHERE task_id=? ORDER BY id ASC","i",[$t['task_id']]);
+        $checklists = dbSelect($conn,"SELECT * FROM staff_task_checklists WHERE task_id=? ORDER BY checklist_id ASC","i",[$t['task_id']]);
         $checked_count = count(array_filter($checklists, fn($c) => $c['is_completed']));
         $total_checks  = count($checklists);
         $prog = $total_checks ? round(($checked_count/$total_checks)*100) : 0;
