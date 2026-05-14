@@ -506,7 +506,7 @@ select.form-control { cursor:pointer; }
 </div><!-- /adm-layout -->
 
 <!-- ══ TOAST & BROADCASTS ══ -->
-<div id="toastWrap"></div>
+<div id="toastWrap" style="position:fixed; bottom:30px; right:30px; z-index:99999; display:flex; flex-direction:column; gap:1.2rem; align-items:flex-end; pointer-events:none;"></div>
 <script src="/RMU-Medical-Management-System/php/includes/BroadcastReceiver.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {

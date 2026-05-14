@@ -183,11 +183,11 @@ $(document).ready(function() {
 async function submitIncident(){
     const fd = new FormData(document.getElementById('frmIncident'));
     const res = await doAction(fd, 'Incident report successfully uplinked to central command.');
-    if(res){ closeModal('incidentModal'); setTimeout(()=>location.reload(), 800); }
+    if(res){ closeModal('incidentModal'); setTimeout(()=>location.reload(), 1500); }
 }
 async function submitPatrol(){
     const fd = new FormData(document.getElementById('frmPatrol'));
     const res = await doAction(fd, 'Patrol telemetry synchronized. Checkpoint verified.');
-    if(res){ closeModal('patrolModal'); setTimeout(()=>location.reload(), 800); }
+    if(res){ closeModal('patrolModal'); setTimeout(()=>location.reload(), 1500); }
 }
 </script>
