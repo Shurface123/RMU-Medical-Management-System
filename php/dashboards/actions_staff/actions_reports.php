@@ -111,6 +111,24 @@ switch ($action) {
                 'types'  => 'iss',
                 'params' => [$staff_id, $from, $to],
             ],
+            'trip_summary' => [
+                'title'  => 'Dispatch History',
+                'sql'    => 'SELECT pickup_location AS "Pickup", destination AS "Destination", request_type AS "Type", trip_status AS "Status", distance_km AS "Distance (km)", completed_at AS "Completed" FROM ambulance_trips WHERE driver_id=? AND trip_status="completed" AND DATE(completed_at) BETWEEN ? AND ? ORDER BY completed_at DESC',
+                'types'  => 'iss',
+                'params' => [$staff_id, $from, $to],
+            ],
+            'fuel_log' => [
+                'title'  => 'Fuel Consumption Logs',
+                'sql'    => 'SELECT fuel_litres AS "Litres", cost AS "Cost", odometer_reading AS "Odometer", notes AS "Notes", logged_at AS "Logged" FROM vehicle_fuel_logs WHERE logged_by_staff_id=? AND DATE(logged_at) BETWEEN ? AND ? ORDER BY logged_at DESC',
+                'types'  => 'iss',
+                'params' => [$staff_id, $from, $to],
+            ],
+            'vehicle_issues' => [
+                'title'  => 'Vehicle Maintenance Issues',
+                'sql'    => 'SELECT issue_description AS "Issue", maintenance_type AS "Type", status AS "Status", cost AS "Cost", performed_at AS "Performed", created_at AS "Reported" FROM vehicle_maintenance_logs WHERE reported_by=? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC',
+                'types'  => 'iss',
+                'params' => [$staff_id, $from, $to],
+            ],
         ];
 
         if (!isset($report_map[$report_key])) {

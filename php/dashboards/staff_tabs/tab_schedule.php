@@ -213,7 +213,7 @@ foreach ($all_shifts as $s) {
                     </select>
                 </div>
                 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-bottom:2rem;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:2rem; margin-bottom:2rem;">
                     <div class="form-group">
                         <label style="font-weight:700; display:block; margin-bottom:.8rem; font-size:1.2rem;">Start Date *</label>
                         <input type="date" name="start_date" class="form-control" required min="<?= date('Y-m-d') ?>" style="padding:1.2rem; border-radius:10px;">
@@ -229,9 +229,9 @@ foreach ($all_shifts as $s) {
                     <textarea name="reason" class="form-control" rows="4" required style="resize:none; padding:1.2rem; border-radius:10px;" placeholder="Detailed reason for your leave request..."></textarea>
                 </div>
                 
-                <div style="display:flex; gap:1.2rem;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('mdlLeaveRequest')" style="flex:1;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btnSubmitLeave" style="flex:2; padding:1.3rem; font-weight:700; font-size:1.4rem;">
+                <div style="display:flex; flex-wrap:wrap; gap:1.2rem;">
+                    <button type="button" class="btn" onclick="closeModal('mdlLeaveRequest')" style="flex:1; background:var(--surface-2); color:var(--text-primary); padding:1.3rem; border-radius:10px; font-weight:700; font-size:1.4rem;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitLeave" style="flex:2; padding:1.3rem; border-radius:10px; font-weight:700; font-size:1.4rem;">
                         <span class="btn-text">Submit Request</span>
                     </button>
                 </div>

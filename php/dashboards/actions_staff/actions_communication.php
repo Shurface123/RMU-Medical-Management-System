@@ -61,7 +61,7 @@ switch ($action) {
         json_err('Failed to send message.');
 
     case 'get_available_recipients':
-        $list = dbSelect($conn, "SELECT id, name AS full_name, user_role AS role FROM users WHERE id != ? AND user_role != 'patient' AND status='active' ORDER BY name ASC", "i", [$user_id]);
+        $list = dbSelect($conn, "SELECT id, name AS full_name, user_role AS role FROM users WHERE id != ? AND user_role != 'patient' AND (status='active' OR user_role='admin') ORDER BY name ASC", "i", [$user_id]);
         json_ok('Recipients fetched.', ['recipients' => $list]);
         break;
 
